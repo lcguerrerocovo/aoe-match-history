@@ -173,6 +173,12 @@ Monitor job via this URL:
 - Ensure your Cloud Run Job's service account has permissions for:
   - Reading/writing to your GCS buckets (`aoe2-recs`, `aoe2-match-history-site`)
   - (Optional) Pub/Sub if using Cloud Scheduler with Pub/Sub
+- **Grant Cloud Run Invoker role to the service account used by Cloud Scheduler:**
+  ```sh
+  gcloud projects add-iam-policy-binding aoe2-site \
+    --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+    --role="roles/run.invoker"
+  ```
 
 ---
 
