@@ -5,15 +5,31 @@ import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 import zipfile
+from google.cloud import storage
 
 # Config
 PROFILE_ID = int(os.getenv('AOE2_PROFILE_ID', '4764337'))  # Set your profile ID
 SEEN_FILE = Path('seen_matches.json')
 RECS_DIR = Path('recs')
+RECS_BUCKET = 'aoe2-recs'
 API_URL = os.getenv('AOE2_API_URL', 'https://aoe-api.reliclink.com/community/leaderboard/getRecentMatchHistory')
 
 
+def download_file_from_gcs(bucket_name, blob_name, local_path):
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    if blob.exists():
+        blob.download_to_filename(local_path)
+        print(f"Downloaded gs://{bucket_name}/{blob_name} to {local_path}")
+        return True
+    return False
+
 def load_seen_matches():
+    # Try to download from GCS first
+    if download_file_from_gcs(RECS_BUCKET, 'seen_matches.json', SEEN_FILE):
+        with open(SEEN_FILE, 'r') as f:
+            return json.load(f)
     if SEEN_FILE.exists():
         with open(SEEN_FILE, 'r') as f:
             return json.load(f)
@@ -22,6 +38,8 @@ def load_seen_matches():
 def save_seen_matches(match_dict):
     with open(SEEN_FILE, 'w') as f:
         json.dump(match_dict, f, indent=2)
+    # Upload to GCS
+    upload_file_to_gcs(str(SEEN_FILE), RECS_BUCKET, 'seen_matches.json')
 
 def fetch_matches():
     params = {
@@ -31,6 +49,13 @@ def fetch_matches():
     resp = requests.get(API_URL, params=params, verify=False)  # verify=False for SSL issues
     resp.raise_for_status()
     return resp.json()
+
+def upload_file_to_gcs(local_path, bucket_name, dest_path=None):
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(dest_path or Path(local_path).name)
+    blob.upload_from_filename(local_path)
+    print(f"Uploaded {local_path} to gs://{bucket_name}/{blob.name}")
 
 def download_rec(match_id, profile_id, start_ts):
     RECS_DIR.mkdir(exist_ok=True)
@@ -56,6 +81,8 @@ def download_rec(match_id, profile_id, start_ts):
         with open(fpath, 'wb') as f:
             f.write(r.content)
         print(f"Saved rec: {fpath}")
+        # Upload to GCS
+        upload_file_to_gcs(str(fpath), RECS_BUCKET, f"recs/{fname}")
         return str(fpath)
     except Exception as e:
         print(f"Failed to download rec for match {match_id}: {e}")

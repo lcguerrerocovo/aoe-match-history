@@ -1,11 +1,10 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 import chartify
 import pandas as pd
 from bokeh.models import HoverTool, Label
 from bokeh.core.properties import value
 from bokeh.io import output_file, save
 from bokeh.embed import components
+import re
 
 import colorsys
 
@@ -244,6 +243,14 @@ def plot_apm(df_rec, output_html=None, return_components=False, max_minute=None)
             # For saving as standalone HTML
             output_file(output_html)
             save(ch.figure)
+            # Patch the HTML file to ensure <meta charset="UTF-8"> is present
+            with open(output_html, 'r+', encoding='utf-8') as f:
+                html = f.read()
+                if '<meta charset="UTF-8">' not in html:
+                    html = re.sub(r'(<head[^>]*>)', r'\1<meta charset="UTF-8">', html, count=1)
+                    f.seek(0)
+                    f.write(html)
+                    f.truncate()
         else:
             # For interactive use (notebook or direct script)
             ch.show()
