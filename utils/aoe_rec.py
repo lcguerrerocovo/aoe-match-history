@@ -3,6 +3,7 @@ import pandas as pd
 from mgz.model import parse_match, serialize
 from mgz.summary import Summary
 from datetime import datetime, timezone
+from io import StringIO
 
 ACTION_TYPE_DESCRIPTIONS = {
     "ERROR": "Error or unknown action.",
@@ -120,7 +121,7 @@ def prepare_rec(filename, actions_to_remove = []):
         match = parse_match(in_file)
         jsonFile = json.dumps(serialize(match.actions), indent=2)
     
-    df = pd.read_json(jsonFile)
+    df = pd.read_json(StringIO(jsonFile))
     
     df['player'] = df['player'].apply(lambda x: x.get('number') if isinstance(x, dict) else x)
         

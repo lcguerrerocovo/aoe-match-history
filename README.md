@@ -44,6 +44,10 @@ This project fetches, processes, and visualizes **Age of Empires II: Definitive 
    ```
 4. *(Optional)* Set up a cron job to automate polling and site generation
 
+## Development
+
+See [ui/README.md](ui/README.md) for frontend development instructions.
+
 ---
 
 ## Usage
@@ -72,25 +76,69 @@ This project fetches, processes, and visualizes **Age of Empires II: Definitive 
 
 ---
 
-## Local Development: Docker Build & Run
+## Local Development
 
-### Build the Docker image
-```sh
-# For most users (x86_64):
-docker build -t aoe2-match-history:latest .
-# If you are on Apple Silicon (M1/M2) or ARM, build for Cloud Run compatibility:
-docker buildx build --platform linux/amd64 -t aoe2-match-history:latest .
-```
+### Python Backend
+1. **Clone the repository**
+2. *(Recommended)* Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Run the poller and generate static site:**
+   ```bash
+   python aoe2_poller.py
+   python generate_apm_site.py
+   ```
 
-### Run the container with Google Cloud credentials
-Replace `/path/to/your/credentials.json` with the path to your downloaded Google Cloud service account key file.
-```sh
-docker run --rm -it \
-  -v /path/to/your/credentials.json:/tmp/creds.json:ro \
-  -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/creds.json \
-  aoe2-match-history:latest
-```
-*This will mount your credentials into the container and set the environment variable so the scripts can access Google Cloud Storage.*
+### React Frontend
+1. **Install Node.js dependencies:**
+   ```bash
+   cd ui
+   npm install
+   ```
+2. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+   This will start the Vite dev server at http://localhost:5173
+
+### Full Stack Development
+1. **Run the Python backend to generate data:**
+   ```bash
+   python aoe2_poller.py
+   python generate_apm_site.py
+   ```
+2. **Start the React frontend:**
+   ```bash
+   cd ui
+   npm run dev
+   ```
+3. **Build for production:**
+   ```bash
+   cd ui
+   npm run build
+   ```
+   This will create a `dist` directory with the production build.
+
+### Testing the Full Pipeline
+1. **Build and run the Docker container:**
+   ```bash
+   docker build -t aoe2-match-history:latest .
+   docker run --rm -it \
+     -v /path/to/your/credentials.json:/tmp/creds.json:ro \
+     -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/creds.json \
+     aoe2-match-history:latest
+   ```
+   This will:
+   - Run the poller to fetch new matches
+   - Generate the static site with APM charts
+   - Build the React app
+   - Deploy everything to GCS using gsutil
 
 ---
 
@@ -135,15 +183,14 @@ gcloud beta run jobs create aoe2-match-history-job \
 gcloud beta run jobs update aoe2-match-history-job \
   --region=us-east1 \
   --memory=2Gi \
-  --service-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com
+  --service-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com \
+  --port=8080
 ```
 
 **Run the job manually:**
 ```sh
 gcloud beta run jobs execute aoe2-match-history-job --region=us-east1
 ```
-
----
 
 ### 3. Set Up Cloud Scheduler (Cron)
 - To run the job every 15 minutes, use the following cron schedule: `*/15 * * * *`
@@ -178,6 +225,12 @@ Monitor job via this URL:
   gcloud projects add-iam-policy-binding aoe2-site \
     --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
     --role="roles/run.invoker"
+  ```
+- **Grant Storage Admin role for GCS bucket management:**
+  ```sh
+  gcloud projects add-iam-policy-binding aoe2-site \
+    --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+    --role="roles/storage.admin"
   ```
 
 ---

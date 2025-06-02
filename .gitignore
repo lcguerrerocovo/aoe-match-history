@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 env/
 build/
@@ -17,6 +13,43 @@ eggs/
 .eggs/
 lib/
 lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Build
+ui/dist/
+ui/build/
+
+# Data files
+data/matches/
+seen_matches.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution / packaging
+env/
+.Python
 parts/
 sdist/
 var/
@@ -55,19 +88,22 @@ coverage.xml
 .mypy_cache/
 .dmypy.json
 
-# IDEs and editors
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
 # Local files
 *.swp
 *~
-.DS_Store
 
 # Project-specific
 recs/
 site/
 
 venv/*
+
+# React / Vite
+ui/.env
+ui/.env.local
+ui/.env.development.local
+ui/.env.test.local
+ui/.env.production.local
+
+# TypeScript
+*.tsbuildinfo
