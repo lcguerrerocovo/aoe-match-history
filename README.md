@@ -140,6 +140,30 @@ See [ui/README.md](ui/README.md) for frontend development instructions.
    - Build the React app
    - Deploy everything to GCS using gsutil
 
+   To test with service account credentials (matching production environment):
+   1. Create a service-account key:
+      ```bash
+      gcloud iam service-accounts keys create sa-key.json \
+          --iam-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com
+      ```
+   2. Build for amd64 (if on Apple Silicon/ARM):
+      ```bash
+      docker buildx build \
+          --platform linux/amd64 \
+          --progress=plain \
+          -t aoe2-match-history:latest \
+          .
+      ```
+   3. Run with service account:
+      ```bash
+      docker run --rm -it \
+          --platform linux/amd64 \
+          -v "$(pwd)/sa-key.json:/tmp/creds.json:ro" \
+          -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/creds.json \
+          -e PYTHONUNBUFFERED=1 \
+          aoe2-match-history:latest
+      ```
+
 ---
 
 ## Google Cloud Deployment

@@ -56,8 +56,7 @@ def extract_match_summary(match_id):
     with open(match_json, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def download_file_from_gcs(bucket_name, blob_name, local_path):
-    client = storage.Client()
+def download_file_from_gcs(client, bucket_name, blob_name, local_path):
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
     if blob.exists():
@@ -66,8 +65,7 @@ def download_file_from_gcs(bucket_name, blob_name, local_path):
         return True
     return False
 
-def upload_dir_to_gcs(local_dir, bucket_name, dest_prefix=""):
-    client = storage.Client()
+def upload_dir_to_gcs(client, local_dir, bucket_name, dest_prefix=""):
     bucket = client.bucket(bucket_name)
     for root, _, files in os.walk(local_dir):
         for file in files:
@@ -79,9 +77,12 @@ def upload_dir_to_gcs(local_dir, bucket_name, dest_prefix=""):
             print(f"Uploaded {local_path} to gs://{bucket_name}/{blob_path}")
 
 def main():
+    # Create a single storage client
+    client = storage.Client()
+    site_bucket = client.bucket(SITE_BUCKET)
+    recs_bucket = client.bucket(RECS_BUCKET)
+
     # Download all summary.json files from site bucket if not present locally
-    site_client = storage.Client()
-    site_bucket = site_client.bucket(SITE_BUCKET)
     for blob in site_bucket.list_blobs(prefix='data/matches/'):
         if blob.name.endswith('.json'):
             match_id = os.path.basename(blob.name).replace('.json', '')
@@ -92,8 +93,6 @@ def main():
                 print(f"Downloaded {blob.name} to {local_file}")
 
     # Step 1: Find all rec files, download from GCS if not present
-    recs_client = storage.Client()
-    recs_bucket = recs_client.bucket(RECS_BUCKET)
     blobs = list(recs_bucket.list_blobs(prefix='recs/'))
     for blob in blobs:
         if blob.name.endswith('.zip'):
@@ -108,7 +107,7 @@ def main():
                 local_path = RECS_DIR / os.path.basename(blob.name)
                 if not local_path.exists():
                     RECS_DIR.mkdir(exist_ok=True)
-                    download_file_from_gcs(RECS_BUCKET, blob.name, local_path)
+                    download_file_from_gcs(client, RECS_BUCKET, blob.name, local_path)
                 # Process rec and generate summary.json
                 m = re.match(r'.*?(\d+)\.zip$', os.path.basename(blob.name))
                 if not m:
