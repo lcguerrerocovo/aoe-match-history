@@ -3,11 +3,12 @@ import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { useEffect, useState } from 'react';
 import { getMatches } from './services/matchService';
-import type { Match, MatchGroup, Map } from './types/match';
+import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 
 function App() {
   const [matchGroups, setMatchGroups] = useState<MatchGroup[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const updateMatches = async (filter?: (matches: Match[]) => Match[]) => {
     const matches = await getMatches();
@@ -30,9 +31,7 @@ function App() {
       return acc;
     }, {});
     // Convert to array and sort by date
-    return Object.entries(groups)
-      .map(([date, matches]) => ({ date, matches }))
-      .sort((a, b) => b.date.localeCompare(a.date));
+    return Object.entries(groups).map(([date, matches]) => ({ date, matches }));
   };
 
   const getMapsWithCounts = (matches: Match[]): Map[] => {
@@ -50,11 +49,20 @@ function App() {
     updateMatches(map ? (matches) => matches.filter((m) => m.map === map) : undefined);
   };
 
+  const handleSortChange = (sortDirection: SortDirection) => {
+    setSortDirection(sortDirection);
+    setMatchGroups(
+      matchGroups.sort((a, b) =>
+        sortDirection === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
+      )
+    );
+  };
+
   return (
     <ChakraProvider>
       <Container maxW="container.xl" py={8}>
         <VStack gap={8} align="stretch">
-          <FilterBar onMapChange={handleMapFilter} maps={maps} />
+          <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
           <MatchList matchGroups={matchGroups} />
         </VStack>
       </Container>

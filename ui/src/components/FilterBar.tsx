@@ -1,13 +1,14 @@
 import { HStack, Input } from '@chakra-ui/react';
 import { Select } from '@chakra-ui/select';
-import type { Map } from '../types/match';
+import type { Map, SortDirection } from '../types/match';
 
 interface FilterBarProps {
   onMapChange: (map: string) => void;
+  onSortChange: (sortDirection: SortDirection) => void;
   maps: Map[];
 }
 
-export const FilterBar = ({ onMapChange, maps }: FilterBarProps) => {
+export const FilterBar = ({ onMapChange, onSortChange, maps }: FilterBarProps) => {
   return (
     <HStack gap={4}>
       <Input placeholder="Search matches..." />
@@ -18,10 +19,9 @@ export const FilterBar = ({ onMapChange, maps }: FilterBarProps) => {
           </option>
         ))}
       </Select>
-      <Select placeholder="Sort by">
-        <option value="date-desc">Date (Newest)</option>
-        <option value="date-asc">Date (Oldest)</option>
-        <option value="duration">Duration</option>
+      <Select onChange={(e) => onSortChange(e.target.value as SortDirection)} defaultValue="desc">
+        <option value="desc">Recent</option>
+        <option value="asc">Oldest</option>
       </Select>
     </HStack>
   );

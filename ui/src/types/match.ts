@@ -30,6 +30,8 @@ export interface Match {
   winning_team_players?: string[];
 }
 
+export type SortDirection = 'asc' | 'desc';
+
 export interface MatchGroup {
   date: string;
   matches: Match[];
