@@ -57,13 +57,20 @@ function renderTeams(match: any, civMap: Record<string, string>) {
 
 export function MatchList({ matchGroups }: MatchListProps) {
   const [civMap, setCivMap] = useState<Record<string, string>>({});
+  const [openDates, setOpenDates] = useState<string[]>([]);
 
   useEffect(() => {
     getCivMap().then(setCivMap);
   }, []);
 
   return (
-    <Accordion allowMultiple>
+    <Accordion
+      allowMultiple
+      index={matchGroups
+        .map((group, index) => (openDates.includes(group.date) ? index : -1))
+        .filter((index) => index !== -1)}
+      onChange={(indexes: number[]) => setOpenDates(indexes.map((i) => matchGroups[i].date))}
+    >
       {matchGroups.map((group) => (
         <AccordionItem key={group.date}>
           <h2>

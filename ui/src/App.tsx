@@ -49,11 +49,11 @@ function App() {
     updateMatches(map ? (matches) => matches.filter((m) => m.map === map) : undefined);
   };
 
-  const handleSortChange = (sortDirection: SortDirection) => {
-    setSortDirection(sortDirection);
+  const handleSortChange = (direction: SortDirection) => {
+    setSortDirection(direction);
     setMatchGroups(
       matchGroups.sort((a, b) =>
-        sortDirection === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
+        sortDirection === 'desc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)
       )
     );
   };
