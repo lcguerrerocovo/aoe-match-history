@@ -34,3 +34,8 @@ export interface MatchGroup {
   date: string;
   matches: Match[];
 }
+
+export interface Map {
+    name: string;
+    count: number;
+}
