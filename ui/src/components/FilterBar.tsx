@@ -11,8 +11,7 @@ export const FilterBar = ({ onMapChange, maps }: FilterBarProps) => {
   return (
     <HStack gap={4}>
       <Input placeholder="Search matches..." />
-      <Select placeholder="Filter by map" onChange={(e) => onMapChange(e.target.value)}>
-        <option value="">All Maps</option>
+      <Select placeholder="All maps" onChange={(e) => onMapChange(e.target.value)}>
         {maps.map(({ name, count }) => (
           <option key={name} value={name}>
             {name} ({count})
