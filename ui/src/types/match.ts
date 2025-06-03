@@ -36,6 +36,6 @@ export interface MatchGroup {
 }
 
 export interface Map {
-    name: string;
-    count: number;
+  name: string;
+  count: number;
 }

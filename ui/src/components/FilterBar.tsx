@@ -1,14 +1,13 @@
-import { HStack, Input } from '@chakra-ui/react'
-import { Select } from '@chakra-ui/select'
-import type { Map } from '../types/match'
-
+import { HStack, Input } from '@chakra-ui/react';
+import { Select } from '@chakra-ui/select';
+import type { Map } from '../types/match';
 
 interface FilterBarProps {
-  onMapChange: (map: string) => void
-  maps: Map[]
+  onMapChange: (map: string) => void;
+  maps: Map[];
 }
 
-export const FilterBar = ({onMapChange, maps}: FilterBarProps) => {
+export const FilterBar = ({ onMapChange, maps }: FilterBarProps) => {
   return (
     <HStack gap={4}>
       <Input placeholder="Search matches..." />
@@ -26,5 +25,5 @@ export const FilterBar = ({onMapChange, maps}: FilterBarProps) => {
         <option value="duration">Duration</option>
       </Select>
     </HStack>
-  )
-}
+  );
+};

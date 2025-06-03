@@ -1,11 +1,17 @@
-import { Box, VStack, Text, Link } from '@chakra-ui/react'
-import { Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from '@chakra-ui/accordion'
-import type { MatchGroup } from '../types/match'
-import { ExternalLinkIcon } from '@chakra-ui/icons'
-import { useEffect, useState } from 'react'
-import { getCivMap } from '../services/matchService'
+import { Box, VStack, Text, Link } from '@chakra-ui/react';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+} from '@chakra-ui/accordion';
+import type { MatchGroup } from '../types/match';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { useEffect, useState } from 'react';
+import { getCivMap } from '../services/matchService';
 
-const BASE_URL = import.meta.env.PROD 
+const BASE_URL = import.meta.env.PROD
   ? 'https://aoe2-match-history-site.storage.googleapis.com'
   : window.location.origin;
 
@@ -19,10 +25,19 @@ function renderTeams(match: any, civMap: Record<string, string>) {
     return (
       <Box>
         {match.teams.map((team: any[], idx: number) => {
-          console.log('Team index:', idx, 'Team number:', idx + 1, 'Is winner:', match.winning_team === idx + 1);
+          console.log(
+            'Team index:',
+            idx,
+            'Team number:',
+            idx + 1,
+            'Is winner:',
+            match.winning_team === idx + 1
+          );
           return (
             <Box key={idx} mb={1} display="flex" alignItems="center">
-              <Text as="span" fontWeight="bold" mr={2}>Team {idx + 1}:</Text>
+              <Text as="span" fontWeight="bold" mr={2}>
+                Team {idx + 1}:
+              </Text>
               <Text as="span">
                 {team.map((p, i) => (
                   <span key={p.name}>
@@ -66,9 +81,14 @@ export function MatchList({ matchGroups }: MatchListProps) {
                 return (
                   <Box key={matchId} p={4} borderWidth="1px" borderRadius="lg">
                     <Box mb={2}>
-                      <Text as="span" fontWeight="bold">Match {matchId}</Text>
+                      <Text as="span" fontWeight="bold">
+                        Match {matchId}
+                      </Text>
                       {' | '}
-                      <Link href={`${BASE_URL}/site/matches/${matchId}/match.html`} color="blue.500">
+                      <Link
+                        href={`${BASE_URL}/site/matches/${matchId}/match.html`}
+                        color="blue.500"
+                      >
                         View Match Charts <ExternalLinkIcon mx="2px" />
                       </Link>
                     </Box>
@@ -82,9 +102,10 @@ export function MatchList({ matchGroups }: MatchListProps) {
                           <td style={{ fontWeight: 'bold' }}>Type</td>
                           <td>
                             {match.diplomacy?.type}
-                            {match.teams?.reduce((total, team) => total + team.length, 0) > 2 && match.diplomacy?.team_size
-                                ? ` ${match.diplomacy.team_size}`
-                                : ''}
+                            {match.teams?.reduce((total, team) => total + team.length, 0) > 2 &&
+                            match.diplomacy?.team_size
+                              ? ` ${match.diplomacy.team_size}`
+                              : ''}
                           </td>
                         </tr>
                         <tr>
