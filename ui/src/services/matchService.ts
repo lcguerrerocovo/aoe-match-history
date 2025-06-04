@@ -1,8 +1,6 @@
 import type { Match } from '../types/match';
 
-const BASE_URL = import.meta.env.PROD
-  ? 'https://aoe2-match-history-site.storage.googleapis.com'
-  : window.location.origin;
+const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
 let civMap: Record<string, string> | null = null;
 

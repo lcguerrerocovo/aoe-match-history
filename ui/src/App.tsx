@@ -23,7 +23,8 @@ function App() {
 
   const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
     const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
-      const date = match.start_time.split(' ')[0];
+      // Parse the UTC timestamp and convert to local date
+      const date = new Date(match.start_time).toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -31,7 +32,9 @@ function App() {
       return acc;
     }, {});
     // Convert to array and sort by date
-    return Object.entries(groups).map(([date, matches]) => ({ date, matches }));
+    return Object.entries(groups)
+      .map(([date, matches]) => ({ date, matches }))
+      .sort((a, b) => b.date.localeCompare(a.date)); // Sort descending by date
   };
 
   const getMapsWithCounts = (matches: Match[]): Map[] => {
