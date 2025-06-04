@@ -5,6 +5,19 @@ import { useEffect, useState } from 'react';
 import { getMatches } from './services/matchService';
 import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 
+function toISODateString(dateStr: string): string {
+  // Handles 'YYYY-MM-DD HH:mm UTC' and similar
+  if (dateStr.includes('UTC')) {
+    // If missing seconds, add ':00'
+    let iso = dateStr.replace(' ', 'T').replace(' UTC', 'Z');
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(iso)) {
+      iso = iso.replace('Z', ':00Z');
+    }
+    return iso;
+  }
+  return dateStr;
+}
+
 function App() {
   const [matchGroups, setMatchGroups] = useState<MatchGroup[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
@@ -23,8 +36,7 @@ function App() {
 
   const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
     const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
-      // Parse the UTC timestamp and convert to local date
-      const date = new Date(match.start_time).toISOString().split('T')[0];
+      const date = new Date(toISODateString(match.start_time)).toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = [];
       }
