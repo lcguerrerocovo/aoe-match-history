@@ -1,4 +1,4 @@
-import { Container, VStack, ChakraProvider } from '@chakra-ui/react';
+import { Box, Container, VStack, ChakraProvider } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { useEffect, useState } from 'react';
@@ -63,12 +63,14 @@ function App() {
 
   return (
     <ChakraProvider>
-      <Container maxW="container.xl" py={8}>
-        <VStack gap={8} align="stretch">
-          <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-          <MatchList matchGroups={matchGroups} />
-        </VStack>
-      </Container>
+      <Box maxWidth="100vw" overflowX="hidden">
+        <Container maxW="container.xl" py={8} mx="auto">
+          <VStack gap={8} align="stretch">
+            <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
+            <MatchList matchGroups={matchGroups} />
+          </VStack>
+        </Container>
+      </Box>
     </ChakraProvider>
   );
 }

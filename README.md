@@ -1,6 +1,6 @@
 # AoE2 Match History & APM Static Site Generator
 
-site: https://aoe2-match-history-site.storage.googleapis.com/index.html
+site: https://aoe2.site
 
 ---
 
@@ -242,7 +242,7 @@ Monitor job via this URL:
 
 ### 5. IAM & Permissions
 - Ensure your Cloud Run Job's service account has permissions for:
-  - Reading/writing to your GCS buckets (`aoe2-recs`, `aoe2-match-history-site`)
+  - Reading/writing to your GCS buckets (`aoe2-recs`, `aoe2.site`)
   - (Optional) Pub/Sub if using Cloud Scheduler with Pub/Sub
 - **Grant Cloud Run Invoker role to the service account used by Cloud Scheduler:**
   ```sh

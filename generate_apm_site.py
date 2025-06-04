@@ -17,7 +17,7 @@ DATA_DIR = Path('data')
 MATCHES_DATA_DIR = DATA_DIR / 'matches'
 RECS_DIR = Path('recs')
 RECS_BUCKET = 'aoe2-recs'
-SITE_BUCKET = 'aoe2-match-history-site'
+SITE_BUCKET = 'aoe2.site'
 
 DATA_DIR.mkdir(exist_ok=True)
 MATCHES_DATA_DIR.mkdir(exist_ok=True)
@@ -173,7 +173,12 @@ def main():
                         if player:
                             team_players.append({
                                 'name': player['name'] if isinstance(player, dict) else player,
-                                'civ': player.get('civilization') if isinstance(player, dict) else None
+                                'civ': player.get('civilization') if isinstance(player, dict) else None,
+                                'number': player.get('number') if isinstance(player, dict) else None,
+                                'color_id': player.get('color_id') if isinstance(player, dict) else None,
+                                'user_id': player.get('user_id') if isinstance(player, dict) else None,
+                                'winner': player.get('winner') if isinstance(player, dict) else None,
+                                'rate_snapshot': player.get('rate_snapshot') if isinstance(player, dict) else None,
                             })
                     teams_summary.append(team_players)
             summary_index[match_id] = {
