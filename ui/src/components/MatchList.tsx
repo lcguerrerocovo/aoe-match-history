@@ -117,9 +117,9 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
   }
 
   return (
-    <Box w="100%" mb={2} p={2} borderWidth="1px" borderRadius="md" bg="gray.50" fontSize="sm">
-      <VStack spacing={1} align="stretch">
-        <HStack justify="space-between" spacing={4} wrap="wrap">
+    <Box w="100%" mb={1} p={1} borderWidth="1px" borderRadius="md" bg="gray.50" fontSize="sm">
+      <VStack spacing={0.5} align="stretch">
+        <HStack justify="space-between" spacing={2} wrap="wrap">
           <Text fontWeight="bold">#{match.match_id}</Text>
           <Text>{diplomacyDisplay}</Text>
           <Link
@@ -135,24 +135,24 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
         <Box
           display="flex"
           flexDirection={{ base: 'column', md: 'row' }}
-          gap={{ base: 2, md: 4 }}
+          gap={{ base: 1, md: 2 }}
           alignItems={{ base: 'flex-start', md: 'center' }}
           justifyContent="space-between"
         >
-          <HStack>
+          <HStack spacing={1}>
             <CalendarIcon boxSize={3} />
             <Text as="span" color="gray.600">
               {formatDateTime(match.start_time)}
             </Text>
           </HStack>
-          <HStack spacing={4}>
-            <HStack>
+          <HStack spacing={2}>
+            <HStack spacing={1}>
               <TimeIcon boxSize={3} color="blue.400" />
               <Text as="span" color="gray.600">
                 Game: {formatDuration(durationSec)}
               </Text>
             </HStack>
-            <HStack>
+            <HStack spacing={1}>
               <TimeIcon boxSize={3} color="orange.400" />
               <Tooltip label="Real time (1.7x game time)" fontSize="xs">
                 <Text as="span" color="gray.600">
@@ -175,7 +175,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
       <Box
         display="flex"
         flexDirection={isMobile ? 'column' : 'row'}
-        gap={4}
+        gap={1}
         width="100%"
         justifyContent="center"
       >
@@ -189,7 +189,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                 borderWidth={isWinner ? '2px' : '1px'}
                 borderColor={isWinner ? 'gold' : 'gray.200'}
                 borderRadius="md"
-                p={2}
+                p={1}
                 minW={{ base: '100%', md: '140px' }}
                 bg="white"
                 boxShadow={isWinner ? '0 0 8px gold' : undefined}
@@ -204,7 +204,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                     🏆
                   </Box>
                 )}
-                <VStack spacing={2} align="stretch" width="100%">
+                <VStack spacing={0} align="stretch" width="100%">
                   {team.map((p, _) => (
                     <Box
                       key={p.name}
@@ -213,28 +213,29 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                       borderWidth="1px"
                       borderColor="gray.100"
                       borderRadius="sm"
-                      p={1}
+                      p={0.5}
                       bg="gray.50"
                       minW={{ base: '0', md: '200px' }}
                       maxW="100%"
+                      m={0}
                     >
                       {/* Color strip */}
                       <Box
-                        w="6px"
-                        h="28px"
+                        w="8px"
+                        h="16px"
                         bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
                         borderRadius="sm"
-                        mr={2}
+                        mr={1}
                         flexShrink={0}
                       />
                       {/* Civ image placeholder with abbreviation label */}
                       <Box
                         position="relative"
-                        w="24px"
-                        h="24px"
+                        w="21px"
+                        h="21px"
                         bg="gray.300"
                         borderRadius="sm"
-                        mr={2}
+                        mr={1}
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
@@ -245,7 +246,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                           top={0}
                           left="50%"
                           transform="translateX(-50%)"
-                          fontSize="10px"
+                          fontSize="9px"
                           fontWeight="bold"
                           color="gray.700"
                           zIndex={1}
@@ -256,13 +257,13 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                       {/* Player name and rating (only for 1v1) */}
                       <Text
                         as="span"
-                        fontSize={{ base: 'xs', md: 'sm' }}
+                        fontSize="12px"
                         noOfLines={1}
                         style={{
                           textOverflow: 'ellipsis',
                           overflow: 'hidden',
                           whiteSpace: 'nowrap',
-                          maxWidth: is1v1 ? '180px' : '240px',
+                          maxWidth: is1v1 ? '90px' : '130px',
                           display: 'inline-block',
                         }}
                       >
@@ -271,10 +272,10 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                       {is1v1 && p.rate_snapshot !== undefined && p.rate_snapshot !== null && (
                         <Text
                           as="span"
-                          fontSize={{ base: 'xs', md: 'sm' }}
+                          fontSize="12px"
                           color="gray.500"
-                          ml={2}
-                          minW="32px"
+                          ml={0.5}
+                          minW="22px"
                           textAlign="right"
                           flexShrink={0}
                         >
@@ -419,20 +420,20 @@ export function MatchList({ matchGroups }: MatchListProps) {
                     <Box
                       display="flex"
                       flexDirection={{ base: 'column', md: 'row' }}
-                      gap={2}
+                      gap={1}
                       alignItems={{ base: 'stretch', md: 'center' }}
-                      mb={2}
+                      mb={1}
                       width="100%"
                       flexWrap="wrap"
                     >
                       <Box
-                        px={3}
-                        py={1}
+                        px={2}
+                        py={0.5}
                         borderRadius="md"
                         bg="blue.100"
                         minW={{ base: '100%', md: '90px' }}
                         justifyContent="center"
-                        fontSize="md"
+                        fontSize="sm"
                         fontWeight="semibold"
                         display="flex"
                         alignItems="center"
@@ -440,7 +441,7 @@ export function MatchList({ matchGroups }: MatchListProps) {
                         <Text as="span" fontWeight="bold">
                           Matches
                         </Text>
-                        <Text as="span" ml={2}>
+                        <Text as="span" ml={1}>
                           {group.matches.length}
                         </Text>
                       </Box>
@@ -449,14 +450,14 @@ export function MatchList({ matchGroups }: MatchListProps) {
                           key={diplo}
                           display="flex"
                           alignItems="center"
-                          gap={2}
-                          px={3}
-                          py={1}
+                          gap={1}
+                          px={2}
+                          py={0.5}
                           borderRadius="md"
                           bg="gray.100"
                           minW={{ base: '100%', md: '120px' }}
                           justifyContent="center"
-                          fontSize="md"
+                          fontSize="sm"
                           fontWeight="semibold"
                         >
                           <Text as="span" fontWeight="bold">
@@ -479,9 +480,9 @@ export function MatchList({ matchGroups }: MatchListProps) {
                     <Box
                       display="flex"
                       flexDirection={{ base: 'column', md: 'row' }}
-                      gap={4}
+                      gap={2}
                       alignItems={{ base: 'flex-start', md: 'center' }}
-                      mb={1}
+                      mb={0.5}
                       width="100%"
                     >
                       <Box
