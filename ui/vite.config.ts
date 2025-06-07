@@ -57,6 +57,32 @@ export default defineConfig({
           }
         })
       }
+    },
+    {
+      name: 'proxy-api',
+      configureServer(server) {
+        server.middlewares.use('/api', async (req, res) => {
+          const targetUrl = 'https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory' + (req.url || '');
+          try {
+            const response = await fetch(targetUrl, {
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'aoe2-site'
+              }
+            });
+            if (!response.ok) {
+              throw new Error(`API responded with status ${response.status}`);
+            }
+            const data = await response.json();
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(data));
+          } catch (error: any) {
+            console.error('Proxy error:', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Failed to fetch from API', details: error?.message || 'Unknown error' }));
+          }
+        });
+      }
     }
   ],
   server: {

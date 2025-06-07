@@ -107,3 +107,6 @@ ui/.env.production.local
 
 # TypeScript
 *.tsbuildinfo
+
+# Assets
+ui/src/assets/maps/

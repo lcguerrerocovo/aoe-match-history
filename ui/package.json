@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:prod": "vite --mode production",
+    "prebuild": "node scripts/check-maps.js",
     "build": "tsc -b && vite build",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
@@ -23,7 +24,9 @@
     "@chakra-ui/select": "^2.1.2",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@types/pako": "^2.0.3",
     "framer-motion": "^11.0.5",
+    "pako": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

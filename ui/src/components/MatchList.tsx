@@ -8,8 +8,7 @@ import {
 } from '@chakra-ui/accordion';
 import type { MatchGroup } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
-import { useEffect, useState } from 'react';
-import { getCivMap } from '../services/matchService';
+import { useState } from 'react';
 import { useBreakpointValue } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
@@ -71,6 +70,9 @@ function formatDayDate(dateStr: string): string {
 }
 
 function MapCard({ match }: { match: any }) {
+  const mapName = match.map || '';
+  const imageUrl = `https://storage.googleapis.com/aoe2.site/assets/maps/${mapName}.png`;
+
   return (
     <Box
       display="flex"
@@ -83,11 +85,11 @@ function MapCard({ match }: { match: any }) {
       mb={{ base: 2, md: 0 }}
       mx="auto"
     >
-      {/* Diamond-shaped map image placeholder */}
+      {/* Diamond-shaped map image */}
       <Box
-        w="60px"
-        h="60px"
-        bg="gray.200"
+        w="75px"
+        h="75px"
+        bg="white"
         borderRadius="md"
         display="flex"
         alignItems="center"
@@ -96,12 +98,21 @@ function MapCard({ match }: { match: any }) {
         fontWeight="bold"
         transform="rotate(45deg)"
         mb={2}
-      >
-        <Box transform="rotate(-45deg)">MAP</Box>
+        overflow="visible"
+        border="0.1px solid #f7fafc" // ultra-thin, very light border
+        boxShadow="0 0.1px 0.1px 0 rgba(0,0,0,0.02)" // even softer shadow
+        >
+        <Box transform="rotate(-45deg)" w="75px" h="75px" overflow="hidden">
+          <img
+            src={imageUrl}
+            alt={mapName}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+          />
+        </Box>
       </Box>
       {/* Map name below image */}
       <Box mt={1} textAlign="center" fontSize="xs">
-        <Text as="span">{match.map || ''}</Text>
+        <Text as="span">{mapName}</Text>
       </Box>
     </Box>
   );
@@ -167,9 +178,10 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
   );
 }
 
-function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string> }) {
+function TeamCard({ match }: { match: any }) {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const is1v1 = match.diplomacy?.type === '1v1';
+
   return (
     <Box width="100%">
       <Box
@@ -251,7 +263,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                           color="gray.700"
                           zIndex={1}
                         >
-                          {(civMap[String(p.civ)] || p.civ).slice(0, 3).toUpperCase()}
+                          {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
                         </Text>
                       </Box>
                       {/* Player name and rating (only for 1v1) */}
@@ -295,14 +307,13 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
 
 function MatchCard({
   match,
-  civMap,
   BASE_URL,
 }: {
   match: any;
-  civMap: Record<string, string>;
   BASE_URL: string;
 }) {
   const isMobile = useBreakpointValue({ base: true, md: false });
+
   return (
     <Box
       p={4}
@@ -323,7 +334,7 @@ function MatchCard({
       >
         <MapCard match={match} />
         <Box flex="1" width="100%">
-          <TeamCard match={match} civMap={civMap} />
+          <TeamCard match={match} />
         </Box>
       </Box>
     </Box>
@@ -331,12 +342,7 @@ function MatchCard({
 }
 
 export function MatchList({ matchGroups }: MatchListProps) {
-  const [civMap, setCivMap] = useState<Record<string, string>>({});
   const [openDates, setOpenDates] = useState<string[]>([]);
-
-  useEffect(() => {
-    getCivMap().then(setCivMap);
-  }, []);
 
   // Helper to sum durations for a group
   function sumDurations(matches: any[]) {
@@ -527,7 +533,7 @@ export function MatchList({ matchGroups }: MatchListProps) {
                       display="flex"
                       flexDirection="column"
                     >
-                      <MatchCard match={match} civMap={civMap} BASE_URL={BASE_URL} />
+                      <MatchCard match={match} BASE_URL={BASE_URL} />
                     </Box>
                   ))}
                 </VStack>

@@ -197,3 +197,7 @@ If automated deployment fails, you can deploy manually:
 - [RelicLink API](https://app.swaggerhub.com/apis/simonsan/RelicLinkCommunityAPI_OA3/0.1#/)
 - Civ mapping: [100.json](https://raw.githubusercontent.com/SiegeEngineers/aoc-reference-data/master/data/datasets/100.json)
 - [mgz Python library](https://github.com/happyleavesaoc/python-mgz)
+- [worlds edge api client](https://github.com/oliverfenwick90/edgelink-api-client/blob/main/src/util.ts#L3)
+- [age lan server](https://github.com/luskaner/ageLANServer/tree/d52e38b647f1226255dd74b4ab3f6d7ee08720d1)
+- [libre match thread](https://discord.com/channels/952812514272489503/1023626327342993511)
+- [aoe companion](https://github.com/denniske/aoe2companion)
