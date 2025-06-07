@@ -5,11 +5,13 @@ on:
     branches: [ master ]
     paths:
       - 'ui/**'
+      - 'data/100.json'
       - '.github/workflows/deploy.yml'
   pull_request:
     branches: [ master ]
     paths:
       - 'ui/**'
+      - 'data/100.json'
       - '.github/workflows/deploy.yml'
 
 jobs:
@@ -71,5 +73,10 @@ jobs:
       
       - name: Deploy to GCS
         run: |
+          # Deploy UI build
           gsutil -m cp -r ui/dist/* gs://aoe2.site/
-          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/ 
+          # Deploy static data with long cache
+          gsutil -m cp -r data/100.json gs://aoe2.site/data/
+          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json
+          # Set ACL only for deployed paths
+          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/100.json 
