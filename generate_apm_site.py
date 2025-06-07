@@ -18,9 +18,11 @@ MATCHES_DATA_DIR = DATA_DIR / 'matches'
 RECS_DIR = Path('recs')
 RECS_BUCKET = 'aoe2-recs'
 SITE_BUCKET = 'aoe2.site'
+SITE_DIR = Path('site')
 
 DATA_DIR.mkdir(exist_ok=True)
 MATCHES_DATA_DIR.mkdir(exist_ok=True)
+SITE_DIR.mkdir(exist_ok=True)
 
 rec_files = list(RECS_DIR.glob('*.zip'))
 
@@ -65,16 +67,68 @@ def download_file_from_gcs(client, bucket_name, blob_name, local_path):
         return True
     return False
 
-def upload_dir_to_gcs(client, local_dir, bucket_name, dest_prefix=""):
-    bucket = client.bucket(bucket_name)
-    for root, _, files in os.walk(local_dir):
-        for file in files:
-            local_path = os.path.join(root, file)
-            rel_path = os.path.relpath(local_path, local_dir)
-            blob_path = os.path.join(dest_prefix, rel_path).replace("\\", "/")
-            blob = bucket.blob(blob_path)
-            blob.upload_from_filename(local_path)
-            print(f"Uploaded {local_path} to gs://{bucket_name}/{blob_path}")
+def generate_apm_charts(df, match_id, match_summary):
+    """Generate APM charts for each player in the match."""
+    if not match_summary or 'players' not in match_summary:
+        print(f"Skipping APM chart generation for match {match_id}: missing player data")
+        return
+
+    # Create match directory in site folder
+    match_dir = SITE_DIR / 'matches' / match_id
+    match_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate individual player charts and collect their scripts and divs
+    all_scripts = []
+    all_divs = []
+    for player in df['player'].unique():
+        player_df = df[df['player'] == player]
+        player_html = match_dir / f"{match_id}_{player}.html"
+        plot_apm(player_df, output_html=str(player_html))
+        with open(player_html) as f:
+            soup = BeautifulSoup(f.read(), 'html.parser')
+            all_scripts += [str(s) for s in soup.find_all('script')]
+            all_divs.append((player, str(soup.find('div', id=True))))
+
+    # Generate the combined match HTML
+    match_html = match_dir / "match.html"
+    teams = match_summary['teams']
+    players = match_summary['players']
+    winning_team = match_summary['winning_team']
+
+    with open(match_html, 'w') as f:
+        f.write('<html><head><meta charset="UTF-8"><title>APM Charts</title></head><body>\n')
+        f.write(f'<h1>Match {match_id}</h1>\n')
+        for script in all_scripts:
+            f.write(script)
+        for idx, team in enumerate(teams):
+            is_winner = (winning_team == idx+1)
+            winner_span = '<span style="color:green">(Winner)</span>' if is_winner else ''
+            f.write(f'<h2>Team {idx+1} {winner_span}</h2>\n')
+            team_players = [p for p in players if p['number'] in team]
+            for p in team_players:
+                civ_name = civ_map.get(str(p.get('civilization')), '?')
+                name = p['name']
+                player = name
+                div = None
+                for pl, d in all_divs:
+                    if pl == player:
+                        div = d
+                        break
+                winner_mark = ' <b>★</b>' if is_winner else ''
+                f.write(f'<div style="margin-bottom:30px;">')
+                f.write(f'<h3>{name} ({civ_name}){winner_mark}</h3>')
+                if div:
+                    f.write(div)
+                f.write('</div>')
+        f.write('</body></html>\n')
+
+    # Clean up individual player HTML files
+    for player in df['player'].unique():
+        player_html = match_dir / f"{match_id}_{player}.html"
+        if player_html.exists():
+            player_html.unlink()
+
+    print(f"Generated APM charts for match {match_id}")
 
 def main():
     # Create a single storage client
@@ -99,10 +153,14 @@ def main():
             match_id_match = re.match(r'.*?(\d+)\.zip$', os.path.basename(blob.name))
             if match_id_match:
                 match_id = match_id_match.group(1)
+                # Check if match.html exists
+                match_html = SITE_DIR / 'matches' / match_id / 'match.html'
+                if match_html.exists():
+                    continue  # Skip if match.html already exists
                 # Check if summary.json exists locally
                 summary_json_local = MATCHES_DATA_DIR / f"{match_id}.json"
-                if summary_json_local.exists():
-                    continue  # Skip download and processing if file exists locally
+                if not summary_json_local.exists():
+                    continue  # Skip if no summary.json
                 # Download rec if not present
                 local_path = RECS_DIR / os.path.basename(blob.name)
                 if not local_path.exists():
@@ -129,9 +187,8 @@ def main():
                         # Save summary.json
                         with open(summary_json, 'w') as f:
                             json.dump(match_summary, f)
-                        # Upload summary.json to site bucket
-                        site_bucket.blob(f"data/matches/{match_id}.json").upload_from_filename(summary_json)
-                        print(f"Uploaded data/matches/{match_id}.json to {SITE_BUCKET}")
+                        # Generate APM charts
+                        generate_apm_charts(df, match_id, match_summary)
                         continue
                     max_minute_val = df['relative_minute'].max()
                     if pd.isna(max_minute_val):
@@ -146,9 +203,8 @@ def main():
                     # Save summary.json
                     with open(summary_json, 'w') as f:
                         json.dump(match_summary, f)
-                    # Upload summary.json to site bucket
-                    site_bucket.blob(f"data/matches/{match_id}.json").upload_from_filename(summary_json)
-                    print(f"Uploaded data/matches/{match_id}.json to {SITE_BUCKET}")
+                    # Generate APM charts
+                    generate_apm_charts(df, match_id, match_summary)
                 except Exception as e:
                     print(f"Error processing {rec_path.name}: {e}")
                     continue
