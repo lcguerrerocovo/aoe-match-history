@@ -7,10 +7,14 @@ echo "[deploy] Starting deployment..."
 echo "[deploy] Cleaning up old match files"
 gsutil -m rm -r gs://aoe2.site/matches/ || true
 
+# Create site/matches directory if it doesn't exist
+echo "[deploy] Ensuring site/matches directory exists"
+mkdir -p site/matches
+
 # Upload data files
 echo "[deploy] Uploading match data"
 gsutil -m cp -n -r data/matches/* gs://aoe2.site/data/matches/
-gsutil -m cp -n -r site/matches/* gs://aoe2.site/site/matches/
+gsutil -m cp -n -r site/matches/* gs://aoe2.site/site/matches/ || true
 gsutil -m cp data/100.json gs://aoe2.site/data/100.json
 
 # Force no-cache on index.json

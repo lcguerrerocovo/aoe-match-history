@@ -146,68 +146,73 @@ def main():
                 blob.download_to_filename(local_file)
                 print(f"Downloaded {blob.name} to {local_file}")
 
+    # Get all existing match.html files in GCS
+    existing_matches = set()
+    for blob in site_bucket.list_blobs(prefix='site/matches/'):
+        if blob.name.endswith('/match.html'):
+            match_id = blob.name.split('/')[2]  # site/matches/{match_id}/match.html
+            existing_matches.add(match_id)
+
     # Step 1: Find all rec files, download from GCS if not present
-    blobs = list(recs_bucket.list_blobs(prefix='recs/'))
+    blobs = list(recs_bucket.list_blobs(prefix='recs/AgeIIDE_Replay_'))
     for blob in blobs:
         if blob.name.endswith('.zip'):
-            match_id_match = re.match(r'.*?(\d+)\.zip$', os.path.basename(blob.name))
-            if match_id_match:
-                match_id = match_id_match.group(1)
-                # Check if match.html exists
-                match_html = SITE_DIR / 'matches' / match_id / 'match.html'
-                if match_html.exists():
-                    continue  # Skip if match.html already exists
-                # Check if summary.json exists locally
-                summary_json_local = MATCHES_DATA_DIR / f"{match_id}.json"
-                if not summary_json_local.exists():
-                    continue  # Skip if no summary.json
-                # Download rec if not present
-                local_path = RECS_DIR / os.path.basename(blob.name)
-                if not local_path.exists():
-                    RECS_DIR.mkdir(exist_ok=True)
-                    download_file_from_gcs(client, RECS_BUCKET, blob.name, local_path)
-                # Process rec and generate summary.json
-                m = re.match(r'.*?(\d+)\.zip$', os.path.basename(blob.name))
-                if not m:
-                    continue
-                match_id = m.group(1)
-                summary_json = MATCHES_DATA_DIR / f"{match_id}.json"
-                rec_path = extract_rec(local_path, match_id)
-                if not rec_path or not rec_path.exists():
-                    continue
-                dt = datetime.fromtimestamp(local_path.stat().st_mtime)
-                print(f"Processing {rec_path.name}")
-                try:
-                    df = prepare_rec(str(rec_path))
-                    if df.empty or 'relative_minute' not in df or df['relative_minute'].dropna().empty:
-                        print(f"Skipping {rec_path.name}: DataFrame is empty or missing relative_minute.")
-                        # Try to generate summary from rec anyway
-                        from utils.aoe_rec import extract_match_summary as extract_summary_from_rec
-                        match_summary = extract_summary_from_rec(str(rec_path))
-                        # Save summary.json
-                        with open(summary_json, 'w') as f:
-                            json.dump(match_summary, f)
-                        # Generate APM charts
-                        generate_apm_charts(df, match_id, match_summary)
-                        continue
-                    max_minute_val = df['relative_minute'].max()
-                    if pd.isna(max_minute_val):
-                        print(f"Skipping {rec_path.name}: max relative_minute is NaN.")
-                        continue
-                    max_minute = int(max_minute_val)
+            match_id = os.path.basename(blob.name).replace('AgeIIDE_Replay_', '').replace('.zip', '')
+            # Check if match.html exists in GCS
+            if match_id in existing_matches:
+                print(f"Skipping {match_id}: match.html already exists in GCS")
+                continue
+            # Check if summary.json exists locally
+            summary_json_local = MATCHES_DATA_DIR / f"{match_id}.json"
+            if not summary_json_local.exists():
+                continue  # Skip if no summary.json
+            # Download rec if not present
+            local_path = RECS_DIR / os.path.basename(blob.name)
+            if not local_path.exists():
+                RECS_DIR.mkdir(exist_ok=True)
+                download_file_from_gcs(client, RECS_BUCKET, blob.name, local_path)
+            # Process rec and generate summary.json
+            m = re.match(r'.*?(\d+)\.zip$', os.path.basename(blob.name))
+            if not m:
+                continue
+            match_id = m.group(1)
+            summary_json = MATCHES_DATA_DIR / f"{match_id}.json"
+            rec_path = extract_rec(local_path, match_id)
+            if not rec_path or not rec_path.exists():
+                continue
+            dt = datetime.fromtimestamp(local_path.stat().st_mtime)
+            print(f"Processing {rec_path.name}")
+            try:
+                df = prepare_rec(str(rec_path))
+                if df.empty or 'relative_minute' not in df or df['relative_minute'].dropna().empty:
+                    print(f"Skipping {rec_path.name}: DataFrame is empty or missing relative_minute.")
+                    # Try to generate summary from rec anyway
                     from utils.aoe_rec import extract_match_summary as extract_summary_from_rec
                     match_summary = extract_summary_from_rec(str(rec_path))
-                    if not match_summary or 'teams' not in match_summary or 'players' not in match_summary or 'winning_team' not in match_summary:
-                        print(f"Skipping {rec_path.name}: match_summary missing required keys.")
-                        continue
                     # Save summary.json
                     with open(summary_json, 'w') as f:
                         json.dump(match_summary, f)
                     # Generate APM charts
                     generate_apm_charts(df, match_id, match_summary)
-                except Exception as e:
-                    print(f"Error processing {rec_path.name}: {e}")
                     continue
+                max_minute_val = df['relative_minute'].max()
+                if pd.isna(max_minute_val):
+                    print(f"Skipping {rec_path.name}: max relative_minute is NaN.")
+                    continue
+                max_minute = int(max_minute_val)
+                from utils.aoe_rec import extract_match_summary as extract_summary_from_rec
+                match_summary = extract_summary_from_rec(str(rec_path))
+                if not match_summary or 'teams' not in match_summary or 'players' not in match_summary or 'winning_team' not in match_summary:
+                    print(f"Skipping {rec_path.name}: match_summary missing required keys.")
+                    continue
+                # Save summary.json
+                with open(summary_json, 'w') as f:
+                    json.dump(match_summary, f)
+                # Generate APM charts
+                generate_apm_charts(df, match_id, match_summary)
+            except Exception as e:
+                print(f"Error processing {rec_path.name}: {e}")
+                continue
 
     # After seen_matches.json is generated, copy it to data/matches/index.json
     shutil.copyfile('seen_matches.json', 'data/matches/index.json')
