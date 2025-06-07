@@ -1,9 +1,11 @@
 import { Box, Container, VStack, ChakraProvider } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
+import { ProfileHeader } from './components/ProfileHeader';
 import { useEffect, useState, useCallback } from 'react';
-import { getMatches } from './services/matchService';
+import { getMatches, clearMatchesCache } from './services/matchService';
 import type { Match, MatchGroup, Map, SortDirection } from './types/match';
+import { useParams } from 'react-router-dom';
 
 function toISODateString(dateStr: string): string {
   // Handles 'YYYY-MM-DD HH:mm UTC' and similar
@@ -19,20 +21,31 @@ function toISODateString(dateStr: string): string {
 }
 
 function App() {
+  const { profileId } = useParams<{ profileId: string }>();
   const [matchGroups, setMatchGroups] = useState<MatchGroup[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [openDates, setOpenDates] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState<{ id: string, name: string } | null>(null);
 
   const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
-    const matches = await getMatches();
-    const filtered = filterFn ? filterFn(matches) : matches;
-    setMaps(getMapsWithCounts(filtered));
-    setMatchGroups(groupMatchesByDate(filtered));
-  }, []);
+    setIsLoading(true);
+    try {
+      const data = await getMatches(profileId);
+      const filtered = filterFn ? filterFn(data.matches) : data.matches;
+      setMaps(getMapsWithCounts(filtered));
+      setMatchGroups(groupMatchesByDate(filtered));
+      setProfile({ id: data.id, name: data.name });
+      setOpenDates([]); // Reset accordion state when profile changes
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profileId]);
 
   useEffect(() => {
+    clearMatchesCache(profileId);
     updateMatches();
-  }, [updateMatches]);
+  }, [profileId, updateMatches]);
 
   const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
     const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
@@ -65,10 +78,9 @@ function App() {
   };
 
   const handleSortChange = (direction: SortDirection) => {
-    setSortDirection(direction);
     setMatchGroups(
       matchGroups.sort((a, b) =>
-        sortDirection === 'desc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)
+        direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
       )
     );
   };
@@ -76,10 +88,11 @@ function App() {
   return (
     <ChakraProvider>
       <Box maxWidth="100vw" overflowX="hidden">
-        <Container maxW="container.xl" py={8} mx="auto">
+        {profileId && <ProfileHeader profileId={profileId} profile={profile} isLoading={isLoading} />}
+        <Container maxW="container.xl" py={8} mx="auto" ml="280px">
           <VStack gap={8} align="stretch">
             <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-            <MatchList matchGroups={matchGroups} />
+            <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />
           </VStack>
         </Container>
       </Box>

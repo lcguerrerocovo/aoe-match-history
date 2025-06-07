@@ -1,8 +1,11 @@
 export interface Player {
   name: string;
-  team: number;
-  civ: string;
-  apm: number;
+  civ: string | number;
+  number: number;
+  color_id: number;
+  user_id: string;
+  winner: boolean;
+  rate_snapshot: number;
 }
 
 export interface Team {
@@ -17,17 +20,14 @@ export interface Match {
   diplomacy: {
     type: string;
     team_size: string;
+    slot_info?: any;
   };
   map: string;
-  duration: string;
-  teams: string[];
-  players: string[];
-  apmCharts: {
-    player: string;
-    url: string;
-  }[];
+  options: string;
+  duration: number;
+  teams: Team[];
+  players: Player[];
   winning_team?: number;
-  winning_team_players?: string[];
 }
 
 export type SortDirection = 'asc' | 'desc';

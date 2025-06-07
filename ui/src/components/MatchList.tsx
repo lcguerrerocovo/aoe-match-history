@@ -1,16 +1,9 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip } from '@chakra-ui/react';
-import {
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-} from '@chakra-ui/accordion';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from '@chakra-ui/react';
 import type { MatchGroup } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
-import { useState } from 'react';
 import { useBreakpointValue } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
+import { Link as RouterLink } from 'react-router-dom';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
@@ -18,6 +11,8 @@ const PROFILE_ID = 4764337;
 
 interface MatchListProps {
   matchGroups: MatchGroup[];
+  openDates: string[];
+  onOpenDatesChange: (dates: string[]) => void;
 }
 
 function parseDuration(duration: string | number): number {
@@ -267,20 +262,22 @@ function TeamCard({ match }: { match: any }) {
                         </Text>
                       </Box>
                       {/* Player name and rating (only for 1v1) */}
-                      <Text
-                        as="span"
-                        fontSize="12px"
-                        noOfLines={1}
+                      <RouterLink 
+                        to={`/profile_id/${p.user_id.toString()}`}
                         style={{
                           textOverflow: 'ellipsis',
                           overflow: 'hidden',
                           whiteSpace: 'nowrap',
                           maxWidth: is1v1 ? '90px' : '130px',
                           display: 'inline-block',
+                          cursor: 'pointer',
+                          color: 'blue.500',
+                          textDecoration: 'none',
+                          fontSize: '12px'
                         }}
                       >
                         {p.name}
-                      </Text>
+                      </RouterLink>
                       {is1v1 && p.rate_snapshot !== undefined && p.rate_snapshot !== null && (
                         <Text
                           as="span"
@@ -341,9 +338,7 @@ function MatchCard({
   );
 }
 
-export function MatchList({ matchGroups }: MatchListProps) {
-  const [openDates, setOpenDates] = useState<string[]>([]);
-
+export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchListProps) {
   // Helper to sum durations for a group
   function sumDurations(matches: any[]) {
     let totalGame = 0;
@@ -390,7 +385,7 @@ export function MatchList({ matchGroups }: MatchListProps) {
         index={matchGroups
           .map((group, index) => (openDates.includes(group.date) ? index : -1))
           .filter((index) => index !== -1)}
-        onChange={(indexes: number[]) => setOpenDates(indexes.map((i) => matchGroups[i].date))}
+        onChange={(indexes: number[]) => onOpenDatesChange(indexes.map((i) => matchGroups[i].date))}
         width={{ base: '100%', md: '740px' }}
         mx="auto"
       >

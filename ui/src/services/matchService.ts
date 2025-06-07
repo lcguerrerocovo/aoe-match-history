@@ -4,6 +4,7 @@ import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 const API_URL = `${BASE_URL}/api`;
+const DEFAULT_PROFILE_ID = '4764337';
 
 let civMap: Record<string, string> | null = null;
 let mapMap: Record<string, string> | null = null;
@@ -24,8 +25,20 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-let matchesCache: CacheEntry<any[]> | null = null;
+interface MatchesCache {
+  [key: string]: CacheEntry<MatchData>;
+}
+
+let matchesCache: MatchesCache = {};
 const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
+
+export function clearMatchesCache(profileId?: string) {
+  if (profileId) {
+    delete matchesCache[`matches_${profileId}`];
+  } else {
+    matchesCache = {};
+  }
+}
 
 async function loadRlMappings() {
   if (!rlMappings) {
@@ -77,13 +90,23 @@ export async function getMapMap(): Promise<Record<string, string>> {
   return mapMap;
 }
 
-export async function getMatches(): Promise<any[]> {
-  const now = Date.now();
-  if (matchesCache && now - matchesCache.timestamp < CACHE_DURATION) {
-    return matchesCache.data;
-  }
+interface MatchData {
+  id: string;
+  name: string;
+  matches: any[];
+}
 
-  const response = await fetch(`${API_URL}?title=age2&profile_ids=['4764337']`, {
+export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promise<MatchData> {
+  const now = Date.now();
+  const cacheKey = `matches_${profileId}`;
+  
+  // Check cache first
+  const cachedData = matchesCache[cacheKey];
+  if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
+    return cachedData.data;
+  }
+  
+  const response = await fetch(`${API_URL}?title=age2&profile_ids=[${profileId}]`, {
     headers: {
       'Accept': 'application/json',
       'User-Agent': 'aoe2-site'
@@ -96,6 +119,13 @@ export async function getMatches(): Promise<any[]> {
   const data = await response.json();
   const mapMap = await getMapMap();
   const civMap = await getCivMap();
+
+  // Get profile info
+  const profile = data.profiles.find((p: any) => p.profile_id.toString() === profileId);
+  const profileInfo = {
+    id: profileId,
+    name: profile?.alias || profileId
+  };
 
   const matches = data.matchHistoryStats.map((match: any) => {
     // Create a map of profile IDs to aliases
@@ -176,8 +206,9 @@ export async function getMatches(): Promise<any[]> {
     return matchObject;
   });
   const sortedMatches = matches.sort((a: any, b: any) => b.start_time.localeCompare(a.start_time));
-  matchesCache = { data: sortedMatches, timestamp: now };
-  return sortedMatches;
+  const result = { ...profileInfo, matches: sortedMatches };
+  matchesCache[cacheKey] = { data: result, timestamp: now };
+  return result;
 }
 
 export async function getMatch(id: string): Promise<Match> {
