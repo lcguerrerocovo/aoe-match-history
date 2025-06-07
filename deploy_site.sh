@@ -3,10 +3,6 @@ set -e
 
 echo "[deploy] Starting deployment..."
 
-# Clean up old match files
-echo "[deploy] Cleaning up old match files"
-gsutil -m rm -r gs://aoe2.site/matches/ || true
-
 # Create site/matches directory if it doesn't exist
 echo "[deploy] Ensuring site/matches directory exists"
 mkdir -p site/matches
@@ -23,6 +19,6 @@ gsutil -h "Cache-Control:no-cache, max-age=0" \
 
 # Make match data public
 echo "[deploy] Setting public ACL on match data"
-gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/index.htmlgs://aoe2.site/data/matches/ gs://aoe2.site/site/matches/
+gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/index.html gs://aoe2.site/data/matches/ gs://aoe2.site/site/matches/
 
 echo "[deploy] Completed."
