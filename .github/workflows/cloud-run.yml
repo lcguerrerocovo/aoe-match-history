@@ -41,8 +41,11 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       
+      - name: Install beta component
+        run: gcloud components install beta --quiet
+      
       - name: Configure Docker
-        run: gcloud auth configure-docker us-east1-docker.pkg.dev
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
       
       - name: Build and push Docker image
         run: |
@@ -63,3 +66,12 @@ jobs:
             --memory=2Gi \
             --service-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com \
             --quiet 
+
+      - name: Update Cloud Scheduler
+        run: |
+          gcloud scheduler jobs update http aoe2-match-history-job-trigger \
+            --schedule="*/15 * * * *" \
+            --uri="https://us-east1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/aoe2-site/jobs/aoe2-match-history-job:run" \
+            --http-method=POST \
+            --oauth-service-account-email=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com \
+            --location=us-east1 
