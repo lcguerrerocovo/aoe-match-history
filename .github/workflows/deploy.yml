@@ -1,0 +1,75 @@
+name: Build and Deploy UI
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'ui/**'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'ui/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: node:20.11.1-slim
+      options: --platform linux/amd64
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y libc6 && \
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+      
+      - name: Install UI dependencies
+        working-directory: ui
+        run: |
+          rm -f package-lock.json && \
+          npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
+      
+      - name: Lint UI
+        working-directory: ui
+        run: npm run lint
+      
+      - name: Build UI
+        working-directory: ui
+        run: npm run build
+      
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Configure CORS
+        run: |
+          cat > cors.json << EOF
+          [
+            {
+              "origin": [
+                "http://localhost:4173",
+                "http://localhost:5173",
+                "https://aoe2-match-history-site.storage.googleapis.com",
+                "https://aoe2.site"
+              ],
+              "method": ["GET"],
+              "responseHeader": ["Content-Type"],
+              "maxAgeSeconds": 3600
+            }
+          ]
+          EOF
+          gsutil cors set cors.json gs://aoe2.site
+          rm cors.json
+      
+      - name: Deploy to GCS
+        run: |
+          gsutil -m cp -r ui/dist/* gs://aoe2.site/
+          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/ 

@@ -1,20 +1,4 @@
-# === Stage 1: UI Builder ===
-FROM --platform=linux/amd64 node:20.11.1-slim AS ui-builder
-
-WORKDIR /app/ui
-
-RUN apt-get update && apt-get install -y libc6 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-COPY ui/package*.json ./
-RUN rm -f package-lock.json && \
-    npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
-
-COPY ui/ ./
-RUN npm run build
-
-
-# === Stage 2: Python 3.11-slim + gsutil (no venv) ===
+# === Python 3.11-slim + gsutil (no venv) ===
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -34,9 +18,8 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 3) Copy application code + built UI assets
+# 3) Copy application code
 COPY . .
-COPY --from=ui-builder /app/ui/dist /app/site
 
 # 4) Copy + chmod the entrypoint/deploy scripts
 COPY entrypoint.sh /entrypoint.sh
