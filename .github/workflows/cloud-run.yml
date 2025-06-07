@@ -61,4 +61,5 @@ jobs:
             --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --region=us-east1 \
             --memory=2Gi \
-            --service-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com 
+            --service-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com \
+            --quiet 
