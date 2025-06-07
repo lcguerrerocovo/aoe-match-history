@@ -4,7 +4,7 @@ import type { Map, SortDirection } from '../types/match';
 
 interface FilterBarProps {
   onMapChange: (map: string) => void;
-  onSortChange: (sortDirection: SortDirection) => void;
+  onSortChange: (direction: SortDirection) => void;
   maps: Map[];
 }
 

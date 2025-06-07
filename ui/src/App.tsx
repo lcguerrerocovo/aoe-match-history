@@ -1,7 +1,7 @@
 import { Box, Container, VStack, ChakraProvider } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getMatches } from './services/matchService';
 import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 
@@ -23,16 +23,16 @@ function App() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const updateMatches = async (filter?: (matches: Match[]) => Match[]) => {
+  const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
     const matches = await getMatches();
-    const filtered = filter ? filter(matches) : matches;
+    const filtered = filterFn ? filterFn(matches) : matches;
     setMaps(getMapsWithCounts(filtered));
     setMatchGroups(groupMatchesByDate(filtered));
-  };
+  }, []);
 
   useEffect(() => {
     updateMatches();
-  }, []);
+  }, [updateMatches]);
 
   const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
     const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
@@ -86,5 +86,5 @@ function App() {
     </ChakraProvider>
   );
 }
-
 export default App;
+

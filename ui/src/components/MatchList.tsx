@@ -205,7 +205,7 @@ function TeamCard({ match, civMap }: { match: any; civMap: Record<string, string
                   </Box>
                 )}
                 <VStack spacing={0} align="stretch" width="100%">
-                  {team.map((p, _) => (
+                  {team.map((p) => (
                     <Box
                       key={p.name}
                       display="flex"
