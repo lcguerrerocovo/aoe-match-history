@@ -1,10 +1,9 @@
 import pako from 'pako';
 
 function cleanStr(str: string): string {
+  // eslint-disable-next-line no-control-regex
   return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
 }
-
-
 
 export function decodeSlotInfo(str: string) {
   let playersDataBlock: string;

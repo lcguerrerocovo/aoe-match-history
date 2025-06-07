@@ -32,7 +32,7 @@ function App() {
 
   useEffect(() => {
     updateMatches();
-  }, []);
+  }, [updateMatches]);
 
   const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
     const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
