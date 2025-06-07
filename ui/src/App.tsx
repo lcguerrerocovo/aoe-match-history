@@ -28,6 +28,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<{ id: string, name: string } | null>(null);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [profileId]);
+
   const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
     setIsLoading(true);
     try {
@@ -89,7 +93,7 @@ function App() {
     <ChakraProvider>
       <Box maxWidth="100vw" overflowX="hidden">
         {profileId && <ProfileHeader profileId={profileId} profile={profile} isLoading={isLoading} />}
-        <Container maxW="container.xl" py={8} mx="auto" ml="280px">
+        <Container maxW="container.xl" py={8} mx="auto" ml={{ base: 0, md: "280px" }}>
           <VStack gap={8} align="stretch">
             <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
             <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />

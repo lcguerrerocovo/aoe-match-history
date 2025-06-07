@@ -2,8 +2,8 @@ import type { Match } from '../types/match';
 import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
-const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
-const API_URL = `${BASE_URL}/api`;
+const API_URL = import.meta.env.VITE_AOE_API_URL!;
+console.log('API_URL=', API_URL)
 const DEFAULT_PROFILE_ID = '4764337';
 
 let civMap: Record<string, string> | null = null;
@@ -105,16 +105,24 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
     return cachedData.data;
   }
+
+  console.log('API_URL=', API_URL)
   
-  const response = await fetch(`${API_URL}?title=age2&profile_ids=[${profileId}]`, {
+  const response = await fetch(`${API_URL}?title=age2&profile_ids=["${profileId}"]`, {
     headers: {
       'Accept': 'application/json',
-      'User-Agent': 'aoe2-site'
+      'User-Agent': 'aoe2-site',
+      'Origin': import.meta.env.PROD && !import.meta.env.DEV ? 'https://aoe2.site' : 'http://localhost:4173'
     },
     mode: 'cors'
   });
   if (!response.ok) {
     throw new Error('Failed to fetch matches');
+  }
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    console.error('Invalid content type:', contentType);
+    throw new Error('Invalid response format');
   }
   const data = await response.json();
   const mapMap = await getMapMap();
@@ -212,7 +220,7 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
 }
 
 export async function getMatch(id: string): Promise<Match> {
-  const response = await fetch(`${BASE_URL}/data/matches/${id}.json`);
+  const response = await fetch(`/data/matches/${id}.json`);
   if (!response.ok) {
     throw new Error('Failed to fetch match');
   }
@@ -220,7 +228,7 @@ export async function getMatch(id: string): Promise<Match> {
   // Add APM chart links
   match.apmCharts = match.players.map((player: any) => ({
     player: typeof player === 'string' ? player : player.name,
-    url: `${BASE_URL}/site/matches/${id}/${(typeof player === 'string' ? player : player.name).replace('/', '_')}/${id}_${(typeof player === 'string' ? player : player.name).replace('/', '_')}.html`,
+    url: `/site/matches/${id}/${(typeof player === 'string' ? player : player.name).replace('/', '_')}/${id}_${(typeof player === 'string' ? player : player.name).replace('/', '_')}.html`,
   }));
   return match;
 }

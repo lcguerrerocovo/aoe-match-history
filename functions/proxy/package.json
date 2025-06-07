@@ -1,0 +1,13 @@
+{
+  "name": "aoe2-api-proxy",
+  "version": "1.0.0",
+  "description": "Proxy for AoE2 API with caching",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "node-fetch": "^2.6.7"
+  }
+} 

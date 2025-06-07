@@ -57,37 +57,29 @@ export default defineConfig({
           }
         })
       }
-    },
-    {
-      name: 'proxy-api',
-      configureServer(server) {
-        server.middlewares.use('/api', async (req, res) => {
-          const targetUrl = 'https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory' + (req.url || '');
-          try {
-            const response = await fetch(targetUrl, {
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'aoe2-site'
-              }
-            });
-            if (!response.ok) {
-              throw new Error(`API responded with status ${response.status}`);
-            }
-            const data = await response.json();
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(data));
-          } catch (error: any) {
-            console.error('Proxy error:', error);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: 'Failed to fetch from API', details: error?.message || 'Unknown error' }));
-          }
-        });
-      }
     }
   ],
   server: {
     fs: {
       allow: ['..', '../site', '../data']
+    },
+    proxy: {
+      '/api': {
+        target: 'https://aoe-api.worldsedgelink.com/community/leaderboard',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/getRecentMatchHistory'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, _req, _res) => {
+            console.log('Proxying to:', proxyReq.path);
+            proxyReq.setHeader('Accept', 'application/json');
+            proxyReq.setHeader('User-Agent', 'aoe2-site');
+          });
+        }
+      }
     }
   },
   resolve: {

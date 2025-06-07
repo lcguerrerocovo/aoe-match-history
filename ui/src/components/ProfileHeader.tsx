@@ -12,12 +12,13 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
 
   return (
     <Box 
-      w="280px" 
-      h="100vh" 
+      w={{ base: "full", md: "280px" }}
+      h={{ base: "auto", md: "100vh" }}
       bg="white" 
-      borderRight="1px" 
+      borderRight={{ base: "none", md: "1px" }}
+      borderBottom={{ base: "1px", md: "none" }}
       borderColor="gray.200"
-      position="fixed"
+      position={{ base: "relative", md: "fixed" }}
       left="0"
       top="0"
       overflowY="auto"

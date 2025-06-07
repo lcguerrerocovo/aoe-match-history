@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:prod": "vite --mode production",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --mode production",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "format": "npx prettier --write \"src/**/*.{ts,tsx}\"",
