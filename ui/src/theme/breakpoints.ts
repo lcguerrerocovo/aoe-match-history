@@ -120,13 +120,13 @@ const sharedValues = {
       inputWidth: '200px',
     },
     matchList: {
-      width: '680px',
-      maxWidth: '680px',
+      width: '740px',
+      maxWidth: '740px',
       overflow: 'hidden',
-      accordionWidth: '600px',
-      groupWidth: '600px',
+      accordionWidth: '740px',
+      groupWidth: '740px',
       groupMinHeight: '220px',
-      matchWidth: '560px',
+      matchWidth: '700px',
       groupGap: '2rem',
       groupPadding: '2rem',
     },
@@ -271,6 +271,5 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
 
 export function useLayoutConfig() {
   const config = useBreakpointValue(layoutConfig);
-  console.log('Current breakpoint:', Object.keys(layoutConfig).find(key => layoutConfig[key as Breakpoint] === config));
   return config;
 } 
