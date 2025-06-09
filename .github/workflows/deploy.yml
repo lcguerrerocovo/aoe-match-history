@@ -54,7 +54,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       
-      - name: Configure CORS
+      - name: Configure CORS and Website
         run: |
           cat > cors.json << EOF
           [
@@ -73,6 +73,7 @@ jobs:
           ]
           EOF
           gsutil cors set cors.json gs://aoe2.site
+          gsutil web set -m index.html -e index.html gs://aoe2.site
           rm cors.json
       
       - name: Deploy to GCS
