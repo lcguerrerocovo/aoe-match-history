@@ -1,4 +1,5 @@
 import type { Match } from '../types/match';
+import type { PersonalStats } from '../types/stats';
 import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
@@ -18,26 +19,6 @@ interface RlMappings {
 }
 
 let rlMappings: RlMappings | null = null;
-
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
-
-interface MatchesCache {
-  [key: string]: CacheEntry<MatchData>;
-}
-
-let matchesCache: MatchesCache = {};
-const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
-
-export function clearMatchesCache(profileId?: string) {
-  if (profileId) {
-    delete matchesCache[`matches_${profileId}`];
-  } else {
-    matchesCache = {};
-  }
-}
 
 async function loadRlMappings() {
   if (!rlMappings) {
@@ -96,22 +77,11 @@ interface MatchData {
 }
 
 export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promise<MatchData> {
-  const now = Date.now();
-  const cacheKey = `matches_${profileId}`;
-  
-  // Check cache first
-  const cachedData = matchesCache[cacheKey];
-  if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    return cachedData.data;
-  }
-  
-  const response = await fetch(`${API_URL}?title=age2&profile_ids=["${profileId}"]`, {
+  const response = await fetch(`${API_URL}/match-history/${profileId}`, {
     headers: {
       'Accept': 'application/json',
-      'User-Agent': 'aoe2-site',
-      'Origin': import.meta.env.PROD && !import.meta.env.DEV ? 'https://aoe2.site' : 'http://localhost:4173'
-    },
-    mode: 'cors'
+      'User-Agent': 'aoe2-site'
+    }
   });
   if (!response.ok) {
     throw new Error('Failed to fetch matches');
@@ -211,9 +181,7 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
     return matchObject;
   });
   const sortedMatches = matches.sort((a: any, b: any) => b.start_time.localeCompare(a.start_time));
-  const result = { ...profileInfo, matches: sortedMatches };
-  matchesCache[cacheKey] = { data: result, timestamp: now };
-  return result;
+  return { ...profileInfo, matches: sortedMatches };
 }
 
 export async function getMatch(id: string): Promise<Match> {
@@ -228,4 +196,40 @@ export async function getMatch(id: string): Promise<Match> {
     url: `/site/matches/${id}/${(typeof player === 'string' ? player : player.name).replace('/', '_')}/${id}_${(typeof player === 'string' ? player : player.name).replace('/', '_')}.html`,
   }));
   return match;
+}
+
+export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): Promise<PersonalStats> {
+  console.log('Fetching personal stats for:', profileId);
+  const response = await fetch(`${API_URL}/personal-stats/${profileId}`, {
+    headers: {
+      'Accept': 'application/json',
+      'User-Agent': 'aoe2-site'
+    }
+  });
+  if (!response.ok) {
+    console.error('Personal stats fetch failed:', response.status);
+    throw new Error('Failed to fetch personal stats');
+  }
+  const data = await response.json();
+  console.log('Personal stats data:', data);
+  return data;
+}
+
+export function extractSteamId(name: string): string | null {
+  const match = name.match(/\/steam\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+export async function getSteamAvatar(steamId: string): Promise<string> {
+  const response = await fetch(`${API_URL}/steam/avatar/${steamId}`, {
+    headers: {
+      'Accept': 'application/json',
+      'User-Agent': 'aoe2-site'
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch Steam avatar');
+  }
+  const data = await response.json();
+  return data.avatarUrl;
 }

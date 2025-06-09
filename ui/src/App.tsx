@@ -3,8 +3,9 @@ import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
 import { useEffect, useState, useCallback } from 'react';
-import { getMatches, clearMatchesCache } from './services/matchService';
+import { getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
 import type { Match, MatchGroup, Map, SortDirection } from './types/match';
+import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
 
@@ -27,7 +28,8 @@ function App() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [profile, setProfile] = useState<{ id: string, name: string } | null>(null);
+  const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string } | null>(null);
+  const [stats, setStats] = useState<PersonalStats | null>(null);
   const layout = useLayoutConfig();
 
   useEffect(() => {
@@ -37,11 +39,36 @@ function App() {
   const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
     setIsLoading(true);
     try {
-      const data = await getMatches(profileId);
+      const [data, statsData] = await Promise.all([
+        getMatches(profileId),
+        getPersonalStats(profileId)
+      ]);
+      console.log('Personal stats response:', statsData);
       const filtered = filterFn ? filterFn(data.matches) : data.matches;
       setMaps(getMapsWithCounts(filtered));
       setMatchGroups(groupMatchesByDate(filtered));
-      setProfile({ id: data.id, name: data.name });
+      
+      // Get Steam avatar if available
+      const playerInfo = statsData.statGroups[0]?.members[0];
+      console.log('Player info:', playerInfo);
+      let avatarUrl;
+      if (playerInfo?.name) {
+        const steamId = extractSteamId(playerInfo.name);
+        console.log('Extracted Steam ID:', steamId);
+        if (steamId) {
+          avatarUrl = await getSteamAvatar(steamId);
+          console.log('Got avatar URL:', avatarUrl);
+        }
+      }
+
+      const name = playerInfo?.alias || data.name || profileId;
+      console.log('name::::::', name);
+      setProfile({ 
+        id: String(profileId),
+        name: String(name),
+        avatarUrl 
+      });
+      setStats(statsData);
       setOpenDates([]); // Reset accordion state when profile changes
     } finally {
       setIsLoading(false);
@@ -49,7 +76,6 @@ function App() {
   }, [profileId]);
 
   useEffect(() => {
-    clearMatchesCache(profileId);
     updateMatches();
   }, [profileId, updateMatches]);
 
@@ -91,7 +117,7 @@ function App() {
 
   return (
     <Box maxWidth={layout?.container.maxWidth} overflowX="hidden">
-      {profileId && <ProfileHeader profileId={profileId} profile={profile} isLoading={isLoading} />}
+      {profileId && <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />}
       <Container 
         maxW={layout?.container.maxWidth} 
         py={layout?.container.padding} 

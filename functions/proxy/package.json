@@ -6,8 +6,14 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "scripts": {
+    "start": "functions-framework --target=proxy"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "@google-cloud/functions-framework": "^3.3.0"
   }
 } 

@@ -65,20 +65,9 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://aoe-api.worldsedgelink.com/community/leaderboard',
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/getRecentMatchHistory'),
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, _req, _res) => {
-            console.log('Proxying to:', proxyReq.path);
-            proxyReq.setHeader('Accept', 'application/json');
-            proxyReq.setHeader('User-Agent', 'aoe2-site');
-          });
-        }
+        secure: false
       }
     }
   },

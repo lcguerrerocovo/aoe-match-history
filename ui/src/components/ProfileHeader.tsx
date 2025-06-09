@@ -1,16 +1,20 @@
-import { Box, Text, VStack, Divider, HStack, Icon } from '@chakra-ui/react';
+import { Box, Text, VStack, Divider, HStack, Icon, Heading, Stat, StatLabel, StatNumber, StatHelpText, Avatar } from '@chakra-ui/react';
 import { FaUser, FaTrophy, FaChartLine } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
+import type { PersonalStats } from '../types/stats';
 
 interface ProfileHeaderProps {
   profileId: string;
-  profile: { id: string, name: string } | null;
+  profile: { id: string; name: string; avatarUrl?: string } | null;
+  stats: PersonalStats | null;
   isLoading: boolean;
 }
 
-export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderProps) {
-  const playerName = isLoading ? 'Loading...' : profile?.name || profileId;
+export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
+  const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
+  const leaderboardStats = stats?.leaderboardStats.find(s => s.leaderboard_id === 3); // 3 is 1v1 RM
+  const playerInfo = stats?.statGroups[0]?.members[0];
 
   return (
     <Box
@@ -29,19 +33,39 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
       <VStack spacing={6} align="stretch">
         {/* Profile Section */}
         <VStack spacing={4} align="center" pb={4}>
-          <Box 
-            w="120px"
-            h="120px"
-            bg="gray.50" 
-            borderRadius="full" 
-            display="flex" 
-            alignItems="center" 
-            justifyContent="center"
-            border="2px"
-            borderColor="gray.200"
-          >
-            <Icon as={FaUser} boxSize={8} color="gray.400" />
-          </Box>
+          {profile?.avatarUrl ? (
+            <Box 
+              w="120px"
+              h="120px"
+              bg="gray.50" 
+              borderRadius="full" 
+              display="flex" 
+              alignItems="center" 
+              justifyContent="center"
+              border="2px"
+              borderColor="gray.200"
+              overflow="hidden"
+            >
+              <Avatar 
+                size="full"
+                src={profile.avatarUrl}
+              />
+            </Box>
+          ) : (
+            <Box 
+              w="120px"
+              h="120px"
+              bg="gray.50" 
+              borderRadius="full" 
+              display="flex" 
+              alignItems="center" 
+              justifyContent="center"
+              border="2px"
+              borderColor="gray.200"
+            >
+              <Icon as={FaUser} boxSize={8} color="gray.400" />
+            </Box>
+          )}
           <VStack spacing={1}>
             <Text fontSize="xl" fontWeight="bold">{playerName}</Text>
             <Text fontSize="sm" color="gray.500">ID: {profileId}</Text>

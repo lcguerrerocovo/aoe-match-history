@@ -12,7 +12,9 @@
     "format": "npx prettier --write \"src/**/*.{ts,tsx}\"",
     "preview": "vite preview",
     "prod": "npm run build && npm run preview",
-    "start": "vite --host"
+    "start": "vite --host",
+    "dev:proxy": "cd ../functions/proxy && npm start",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:proxy\""
   },
   "dependencies": {
     "@chakra-ui/accordion": "^2.3.1",
@@ -39,6 +41,7 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^5.2.0",
