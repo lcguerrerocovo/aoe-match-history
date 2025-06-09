@@ -67,6 +67,7 @@ export interface LayoutConfig {
     width: string;
     padding: string;
     marginBottom: string;
+    gap: string;
   };
 }
 
@@ -119,6 +120,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '1rem',
       marginBottom: '1rem',
+      gap: '1rem',
     },
   },
   sm: {
@@ -169,6 +171,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '1rem',
       marginBottom: '1rem',
+      gap: '1rem',
     },
   },
   md: {
@@ -219,6 +222,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '1.5rem',
       marginBottom: '1.5rem',
+      gap: '1.5rem',
     },
   },
   lg: {
@@ -269,6 +273,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '2rem',
       marginBottom: '2rem',
+      gap: '2rem',
     },
   },
   xl: {
@@ -319,6 +324,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '2rem',
       marginBottom: '2rem',
+      gap: '2rem',
     },
   },
   '2xl': {
@@ -369,6 +375,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       width: '100%',
       padding: '2rem',
       marginBottom: '2rem',
+      gap: '2rem',
     },
   },
 };
