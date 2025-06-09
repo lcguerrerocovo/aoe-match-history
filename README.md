@@ -26,7 +26,8 @@ This project automatically fetches and processes your **Age of Empires II: Defin
 
 ### Prerequisites
 - Python 3.11+
-- Node.js
+- Node.js 20.x
+- npm
 - Docker
 - Google Cloud SDK
 - GitHub CLI (for local action testing)
@@ -45,14 +46,13 @@ This project automatically fetches and processes your **Age of Empires II: Defin
    npm install
    ```
 
-3. Run locally:
-   ```bash
-   # Terminal 1: Python backend
-   python aoe2_poller.py
-   python generate_apm_site.py
+3. Create a `.env` file in the root directory with:
+   ```
+   VITE_API_URL=http://localhost:5001/aoe2-site/us-east1/aoe2-api-proxy
+   ```
 
-   # Terminal 2: React frontend
-   cd ui
+4. Start the development server:
+   ```bash
    npm run dev
    ```
 
@@ -138,7 +138,7 @@ gsutil web set -m index.html -e index.html gs://aoe2.site
      --iam-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com
 
    # Test site deployment
-   GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/deploy.yml --job deploy --secret GCP_SA_KEY="$(cat sa-key.json)"
+   GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/deploy.yml -j build-and-deploy --secret GCP_SA_KEY="$(cat sa-key.json)" --container-architecture linux/amd64 --container-options "--platform linux/amd64" 
 
    # Test Cloud Run deployment
    GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/cloud-run.yml --job build-and-push --secret GCP_SA_KEY="$(cat sa-key.json)"

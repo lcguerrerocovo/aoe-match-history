@@ -23,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: node:20.11.1-slim
-      options: --platform linux/amd64
     steps:
       - uses: actions/checkout@v4
       
@@ -76,6 +75,41 @@ jobs:
           gsutil cors set cors.json gs://aoe2.site
           rm cors.json
       
+      - name: Deploy to GCS
+        run: |
+          # Deploy UI build
+          gsutil -m cp -r ui/dist/* gs://aoe2.site/
+          # Deploy static data with long cache
+          gsutil -m cp data/100.json gs://aoe2.site/data/
+          gsutil -m cp data/rl_api_mappings.json gs://aoe2.site/data/
+          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json
+          # Upload _redirects file
+          gsutil -m cp ui/_redirects gs://aoe2.site/_redirects
+          # Set ACL for public access
+          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/ gs://aoe2.site/_redirects
+
+  deploy-function:
+    if: contains(github.event.head_commit.modified, 'functions/') || contains(github.event.head_commit.added, 'functions/')
+    runs-on: ubuntu-latest
+    container:
+      image: node:20.11.1-slim
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y libc6 && \
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+      
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
       - name: Enable APIs
         run: |
           gcloud services enable cloudresourcemanager.googleapis.com
@@ -100,17 +134,4 @@ jobs:
             --timeout=30s \
             --min-instances=0 \
             --max-instances=10 \
-            --verbosity=debug
-      
-      - name: Deploy to GCS
-        run: |
-          # Deploy UI build
-          gsutil -m cp -r ui/dist/* gs://aoe2.site/
-          # Deploy static data with long cache
-          gsutil -m cp -r data/100.json gs://aoe2.site/data/
-          gsutil -m cp -r data/rl_api_mappings.json gs://aoe2.site/data/
-          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json
-          # Upload _redirects file
-          gsutil -m cp ui/_redirects gs://aoe2.site/_redirects -h "Cache-Control:no-cache, max-age=0"
-          # Set ACL only for deployed paths
-          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json gs://aoe2.site/_redirects 
+            --verbosity=debug 
