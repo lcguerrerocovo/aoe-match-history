@@ -110,5 +110,7 @@ jobs:
           gsutil -m cp -r data/100.json gs://aoe2.site/data/
           gsutil -m cp -r data/rl_api_mappings.json gs://aoe2.site/data/
           gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json
+          # Upload _redirects file
+          gsutil -m cp ui/_redirects gs://aoe2.site/_redirects -h "Cache-Control:no-cache, max-age=0"
           # Set ACL only for deployed paths
-          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json 
+          gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json gs://aoe2.site/_redirects 
