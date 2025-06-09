@@ -84,11 +84,9 @@ function App() {
   };
 
   const handleSortChange = (direction: SortDirection) => {
-    setMatchGroups(
-      matchGroups.sort((a, b) =>
-        direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
-      )
-    );
+    setMatchGroups([...matchGroups].sort((a, b) =>
+      direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
+    ));
   };
 
   return (
