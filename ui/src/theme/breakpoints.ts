@@ -10,7 +10,7 @@ export const breakpoints = {
   '2xl': '1536px',
 };
 
-export type Breakpoint = keyof typeof breakpoints;
+export type Breakpoint = 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 export interface LayoutConfig {
   // Main container layout
@@ -30,17 +30,18 @@ export interface LayoutConfig {
     width: string;
     marginBottom: string;
     padding: string;
-    flexDirection: string;
+    flexDirection: ResponsiveValue<'row' | 'column'>;
     gap: string;
-    alignItems: string;
+    alignItems: ResponsiveValue<'flex-start' | 'center'>;
     justifyContent: string;
   };
   // Team card layout
   teamCard: {
     width: string;
-    flexDirection: string;
+    flexDirection: ResponsiveValue<'row' | 'column'>;
     gap: string;
     minWidth: string;
+    playerBoxMinWidth: ResponsiveValue<string>;
   };
   // Map card layout
   mapCard: {
@@ -68,6 +69,18 @@ export interface LayoutConfig {
     padding: string;
     marginBottom: string;
     gap: string;
+  };
+  // Match list layout
+  matchList: {
+    width: string;
+    maxWidth: string;
+    overflow: string;
+    accordionWidth: string;
+    groupWidth: string;
+    groupMinHeight: string;
+    matchWidth: string;
+    groupGap: string;
+    groupPadding: string;
   };
 }
 
@@ -97,6 +110,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'column',
       gap: '0.5rem',
       minWidth: '100%',
+      playerBoxMinWidth: '0',
     },
     mapCard: {
       minWidth: '80px',
@@ -121,6 +135,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '1rem',
       marginBottom: '1rem',
       gap: '1rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '100%',
+      groupWidth: '100%',
+      groupMinHeight: '180px',
+      matchWidth: '100%',
+      groupGap: '1rem',
+      groupPadding: '1rem',
     },
   },
   sm: {
@@ -148,6 +173,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'column',
       gap: '0.5rem',
       minWidth: '100%',
+      playerBoxMinWidth: '0',
     },
     mapCard: {
       minWidth: '80px',
@@ -172,6 +198,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '1rem',
       marginBottom: '1rem',
       gap: '1rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '100%',
+      groupWidth: '100%',
+      groupMinHeight: '180px',
+      matchWidth: '100%',
+      groupGap: '1rem',
+      groupPadding: '1rem',
     },
   },
   md: {
@@ -199,6 +236,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'row',
       gap: '1rem',
       minWidth: '140px',
+      playerBoxMinWidth: '200px',
     },
     mapCard: {
       minWidth: '80px',
@@ -223,6 +261,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '1.5rem',
       marginBottom: '1.5rem',
       gap: '1.5rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '740px',
+      groupWidth: '740px',
+      groupMinHeight: '220px',
+      matchWidth: '700px',
+      groupGap: '1.5rem',
+      groupPadding: '1.5rem',
     },
   },
   lg: {
@@ -250,6 +299,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'row',
       gap: '1.5rem',
       minWidth: '140px',
+      playerBoxMinWidth: '200px',
     },
     mapCard: {
       minWidth: '80px',
@@ -274,6 +324,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '2rem',
       marginBottom: '2rem',
       gap: '2rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '740px',
+      groupWidth: '740px',
+      groupMinHeight: '220px',
+      matchWidth: '700px',
+      groupGap: '2rem',
+      groupPadding: '2rem',
     },
   },
   xl: {
@@ -301,6 +362,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'row',
       gap: '1.5rem',
       minWidth: '140px',
+      playerBoxMinWidth: '200px',
     },
     mapCard: {
       minWidth: '80px',
@@ -325,6 +387,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '2rem',
       marginBottom: '2rem',
       gap: '2rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '740px',
+      groupWidth: '740px',
+      groupMinHeight: '220px',
+      matchWidth: '700px',
+      groupGap: '2rem',
+      groupPadding: '2rem',
     },
   },
   '2xl': {
@@ -352,6 +425,7 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       flexDirection: 'row',
       gap: '1.5rem',
       minWidth: '140px',
+      playerBoxMinWidth: '200px',
     },
     mapCard: {
       minWidth: '80px',
@@ -376,6 +450,17 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       padding: '2rem',
       marginBottom: '2rem',
       gap: '2rem',
+    },
+    matchList: {
+      width: '100%',
+      maxWidth: '100vw',
+      overflow: 'hidden',
+      accordionWidth: '740px',
+      groupWidth: '740px',
+      groupMinHeight: '220px',
+      matchWidth: '700px',
+      groupGap: '2rem',
+      groupPadding: '2rem',
     },
   },
 };
