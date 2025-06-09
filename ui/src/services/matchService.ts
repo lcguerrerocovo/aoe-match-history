@@ -199,7 +199,6 @@ export async function getMatch(id: string): Promise<Match> {
 }
 
 export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): Promise<PersonalStats> {
-  console.log('Fetching personal stats for:', profileId);
   const response = await fetch(`${API_URL}/personal-stats/${profileId}`, {
     headers: {
       'Accept': 'application/json',
@@ -211,7 +210,6 @@ export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): 
     throw new Error('Failed to fetch personal stats');
   }
   const data = await response.json();
-  console.log('Personal stats data:', data);
   return data;
 }
 

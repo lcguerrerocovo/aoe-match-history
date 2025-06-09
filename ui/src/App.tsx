@@ -43,26 +43,21 @@ function App() {
         getMatches(profileId),
         getPersonalStats(profileId)
       ]);
-      console.log('Personal stats response:', statsData);
       const filtered = filterFn ? filterFn(data.matches) : data.matches;
       setMaps(getMapsWithCounts(filtered));
       setMatchGroups(groupMatchesByDate(filtered));
       
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups[0]?.members[0];
-      console.log('Player info:', playerInfo);
       let avatarUrl;
       if (playerInfo?.name) {
         const steamId = extractSteamId(playerInfo.name);
-        console.log('Extracted Steam ID:', steamId);
         if (steamId) {
           avatarUrl = await getSteamAvatar(steamId);
-          console.log('Got avatar URL:', avatarUrl);
         }
       }
 
       const name = playerInfo?.alias || data.name || profileId;
-      console.log('name::::::', name);
       setProfile({ 
         id: String(profileId),
         name: String(name),
