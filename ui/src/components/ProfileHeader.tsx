@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Divider, HStack, Icon, Avatar } from '@chakra-ui/react';
+import { Box, Text, VStack, Divider, HStack, Icon, Heading, Table, Thead, Tbody, Tr, Th, Td, Avatar } from '@chakra-ui/react';
 import { FaUser, FaTrophy, FaChartLine } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
 import type { PersonalStats } from '../types/stats';
@@ -10,12 +10,21 @@ interface ProfileHeaderProps {
   isLoading: boolean;
 }
 
-export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderProps) {
+const LEADERBOARD_NAMES: { [key: number]: string } = {
+  3: 'RM 1v1',
+  4: 'RM Team',
+  13: 'EW Team',
+  14: 'UNR'
+};
+
+export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
+  const playerInfo = stats?.result?.statGroups?.[0]?.members?.[0];
+  const leaderboardStats = playerInfo?.leaderboardStats || [];
 
   return (
-    <Box
+    <Box 
       w={layout?.profileHeader.width}
       h={layout?.profileHeader.height}
       p={layout?.profileHeader.padding}
@@ -33,8 +42,8 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
         <VStack spacing={4} align="center" pb={4}>
           {profile?.avatarUrl ? (
             <Box 
-              w="120px"
-              h="120px"
+              w={layout?.profileHeader.avatar.size}
+              h={layout?.profileHeader.avatar.size}
               bg="gray.50" 
               borderRadius="full" 
               display="flex" 
@@ -51,8 +60,8 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
             </Box>
           ) : (
             <Box 
-              w="120px"
-              h="120px"
+              w={layout?.profileHeader.avatar.size}
+              h={layout?.profileHeader.avatar.size}
               bg="gray.50" 
               borderRadius="full" 
               display="flex" 
@@ -61,12 +70,12 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
               border="2px"
               borderColor="gray.200"
             >
-              <Icon as={FaUser} boxSize={8} color="gray.400" />
+              <Icon as={FaUser} boxSize={layout?.profileHeader.avatar.iconSize} color="gray.400" />
             </Box>
           )}
           <VStack spacing={1}>
-            <Text fontSize="xl" fontWeight="bold">{playerName}</Text>
-            <Text fontSize="sm" color="gray.500">ID: {profileId}</Text>
+            <Text fontSize={layout?.profileHeader.text.nameSize} fontWeight="bold" textAlign="center" noOfLines={2}>{playerName}</Text>
+            <Text fontSize={layout?.profileHeader.text.idSize} color="gray.500">ID: {profileId}</Text>
           </VStack>
         </VStack>
 
@@ -74,37 +83,59 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
 
         {/* Stats Section */}
         <VStack spacing={4} align="stretch">
-          <Text fontSize="sm" fontWeight="medium" color="gray.500" px={2}>STATS</Text>
-          
-          <HStack 
-            p={3}
-            bg="gray.50" 
-            borderRadius="md"
-            cursor="pointer"
-            _hover={{ bg: 'gray.100' }}
-            transition="all 0.2s"
-          >
-            <Icon as={FaTrophy} color="yellow.500" />
-            <VStack align="start" spacing={0}>
-              <Text fontSize="sm" fontWeight="medium">Win Rate</Text>
-              <Text fontSize="xs" color="gray.500">Coming soon</Text>
-            </VStack>
-          </HStack>
+          <Text fontSize="xs" fontWeight="medium" color="gray.500" px={2}>RANKINGS</Text>
+          <Box w="100%" overflowX="auto">
+            <Table size="xs" variant="simple" w="100%">
+              <Thead>
+                <Tr>
+                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.rankWidth} fontSize="xs">Rank</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.ratingWidth} fontSize="xs">Rating</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.maxWidth} fontSize="xs">Max</Th>
+                  <Th width={layout?.profileHeader.table.changeWidth} fontSize="xs">Change</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {leaderboardStats.map((stat) => (
+                  <Tr key={stat.leaderboard_id}>
+                    <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{LEADERBOARD_NAMES[stat.leaderboard_id] || `Board ${stat.leaderboard_id}`}</Td>
+                    <Td isNumeric fontSize="xs">#{stat.rank.toLocaleString()}</Td>
+                    <Td isNumeric fontSize="xs">{stat.rating.toLocaleString()}</Td>
+                    <Td isNumeric fontSize="xs">{stat.highestrating?.toLocaleString() || '-'}</Td>
+                    <Td fontSize="xs">{stat.rank_change > 0 ? '↑' : stat.rank_change < 0 ? '↓' : '←'}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
 
-          <HStack 
-            p={3}
-            bg="gray.50" 
-            borderRadius="md"
-            cursor="pointer"
-            _hover={{ bg: 'gray.100' }}
-            transition="all 0.2s"
-          >
-            <Icon as={FaChartLine} color="blue.500" />
-            <VStack align="start" spacing={0}>
-              <Text fontSize="sm" fontWeight="medium">Performance</Text>
-              <Text fontSize="xs" color="gray.500">Coming soon</Text>
-            </VStack>
-          </HStack>
+          <Text fontSize="xs" fontWeight="medium" color="gray.500" px={2} mt={2}>PERFORMANCE</Text>
+          <Box w="100%" overflowX="auto">
+            <Table size="xs" variant="simple" w="100%">
+              <Thead>
+                <Tr>
+                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.gamesWidth} fontSize="xs">Games</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.wonWidth} fontSize="xs">Won</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.streakWidth} fontSize="xs">Streak</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {leaderboardStats.map((stat) => {
+                  const totalGames = stat.wins + stat.losses;
+                  const winRate = totalGames > 0 ? (stat.wins / totalGames * 100).toFixed(2) : '0.00';
+                  return (
+                    <Tr key={stat.leaderboard_id}>
+                      <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{LEADERBOARD_NAMES[stat.leaderboard_id] || `Board ${stat.leaderboard_id}`}</Td>
+                      <Td isNumeric fontSize="xs">{totalGames.toLocaleString()}</Td>
+                      <Td isNumeric fontSize="xs">{winRate}%</Td>
+                      <Td isNumeric fontSize="xs">{stat.streak > 0 ? `+${stat.streak}` : stat.streak}</Td>
+                    </Tr>
+                  );
+                })}
+              </Tbody>
+            </Table>
+          </Box>
         </VStack>
       </VStack>
     </Box>

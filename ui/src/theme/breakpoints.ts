@@ -47,6 +47,24 @@ const sharedValues = {
       top: 'auto',
       left: 'auto',
       zIndex: 'auto',
+      avatar: {
+        size: '100px',
+        iconSize: '6',
+      },
+      text: {
+        nameSize: 'lg',
+        idSize: 'xs',
+      },
+      table: {
+        boardWidth: '35%',
+        rankWidth: '20%',
+        ratingWidth: '20%',
+        maxWidth: '15%',
+        changeWidth: '10%',
+        gamesWidth: '25%',
+        wonWidth: '25%',
+        streakWidth: '15%',
+      }
     },
     filterBar: {
       width: '100%',
@@ -100,7 +118,7 @@ const sharedValues = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '280px',
+      width: '320px',
       height: '100vh',
       padding: '2rem',
       marginBottom: '1rem',
@@ -110,6 +128,24 @@ const sharedValues = {
       top: '0',
       left: '0',
       zIndex: '1',
+      avatar: {
+        size: '120px',
+        iconSize: '8',
+      },
+      text: {
+        nameSize: 'xl',
+        idSize: 'xs',
+      },
+      table: {
+        boardWidth: '35%',
+        rankWidth: '20%',
+        ratingWidth: '20%',
+        maxWidth: '15%',
+        changeWidth: '10%',
+        gamesWidth: '25%',
+        wonWidth: '25%',
+        streakWidth: '15%',
+      }
     },
     filterBar: {
       width: '100%',
@@ -163,9 +199,9 @@ const sharedValues = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '200px',
+      width: '240px',
       height: '100vh',
-      padding: '1rem',
+      padding: '1.5rem',
       marginBottom: '0.5rem',
       borderRight: '1px',
       borderBottom: 'none',
@@ -173,6 +209,24 @@ const sharedValues = {
       top: '0',
       left: '0',
       zIndex: '1',
+      avatar: {
+        size: '110px',
+        iconSize: '7',
+      },
+      text: {
+        nameSize: 'xl',
+        idSize: 'xs',
+      },
+      table: {
+        boardWidth: '35%',
+        rankWidth: '20%',
+        ratingWidth: '20%',
+        maxWidth: '15%',
+        changeWidth: '10%',
+        gamesWidth: '25%',
+        wonWidth: '25%',
+        streakWidth: '15%',
+      }
     },
     filterBar: {
       width: '100%',
@@ -238,6 +292,24 @@ export interface LayoutConfig {
     top: string;
     left: string;
     zIndex: string;
+    avatar: {
+      size: string;
+      iconSize: string;
+    };
+    text: {
+      nameSize: string;
+      idSize: string;
+    };
+    table: {
+      boardWidth: string;
+      rankWidth: string;
+      ratingWidth: string;
+      maxWidth: string;
+      changeWidth: string;
+      gamesWidth: string;
+      wonWidth: string;
+      streakWidth: string;
+    };
   };
   filterBar: {
     width: string;

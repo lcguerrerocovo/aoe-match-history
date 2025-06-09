@@ -43,12 +43,14 @@ function App() {
         getMatches(profileId),
         getPersonalStats(profileId)
       ]);
+      console.log('Stats data:', statsData);
       const filtered = filterFn ? filterFn(data.matches) : data.matches;
       setMaps(getMapsWithCounts(filtered));
       setMatchGroups(groupMatchesByDate(filtered));
       
       // Get Steam avatar if available
-      const playerInfo = statsData.statGroups[0]?.members[0];
+      const playerInfo = statsData.result?.statGroups?.[0]?.members?.[0];
+      console.log('Player info:', playerInfo);
       let avatarUrl;
       if (playerInfo?.name) {
         const steamId = extractSteamId(playerInfo.name);

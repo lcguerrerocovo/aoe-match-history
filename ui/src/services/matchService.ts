@@ -216,16 +216,21 @@ export function extractSteamId(name: string): string | null {
   return match ? match[1] : null;
 }
 
-export async function getSteamAvatar(steamId: string): Promise<string> {
-  const response = await fetch(`${API_URL}/steam/avatar/${steamId}`, {
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'aoe2-site'
-    }
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch Steam avatar');
+export async function getSteamAvatar(steamId: string): Promise<string | undefined> {
+  if (process.env.NODE_ENV !== 'production') {
+    return undefined;
   }
-  const data = await response.json();
-  return data.avatarUrl;
+  
+  try {
+    const response = await fetch(`/api/proxy/steam-avatar/${steamId}`);
+    if (!response.ok) {
+      console.error('Failed to fetch Steam avatar:', response.status);
+      return undefined;
+    }
+    const data = await response.json();
+    return data.avatarUrl;
+  } catch (error) {
+    console.error('Error fetching Steam avatar:', error);
+    return undefined;
+  }
 }
