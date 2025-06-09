@@ -1,5 +1,6 @@
 import { Box, Text, VStack, Divider, HStack, Icon } from '@chakra-ui/react';
 import { FaUser, FaTrophy, FaChartLine } from 'react-icons/fa';
+import { useLayoutConfig } from '../theme/breakpoints';
 
 interface ProfileHeaderProps {
   profileId: string;
@@ -9,26 +10,28 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name || profileId;
+  const layout = useLayoutConfig();
 
   return (
-    <Box 
-      w={{ base: "full", md: "280px" }}
-      h={{ base: "auto", md: "100vh" }}
-      bg="white" 
-      borderRight={{ base: "none", md: "1px" }}
-      borderBottom={{ base: "1px", md: "none" }}
-      borderColor="gray.200"
-      position={{ base: "relative", md: "fixed" }}
-      left="0"
-      top="0"
-      overflowY="auto"
+    <Box
+      w={layout?.profileHeader.width}
+      h={layout?.profileHeader.height}
+      p={layout?.profileHeader.padding}
+      mb={layout?.profileHeader.marginBottom}
+      borderRight={layout?.profileHeader.borderRight}
+      borderBottom={layout?.profileHeader.borderBottom}
+      position={layout?.profileHeader.position}
+      top={layout?.profileHeader.top}
+      left={layout?.profileHeader.left}
+      zIndex={layout?.profileHeader.zIndex}
+      bg="white"
     >
-      <VStack spacing={6} align="stretch" p={6}>
+      <VStack spacing={6} align="stretch">
         {/* Profile Section */}
         <VStack spacing={4} align="center" pb={4}>
           <Box 
-            w="120px" 
-            h="120px" 
+            w="120px"
+            h="120px"
             bg="gray.50" 
             borderRadius="full" 
             display="flex" 
@@ -52,9 +55,9 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
           <Text fontSize="sm" fontWeight="medium" color="gray.500" px={2}>STATS</Text>
           
           <HStack 
-            p={3} 
+            p={3}
             bg="gray.50" 
-            borderRadius="md" 
+            borderRadius="md"
             cursor="pointer"
             _hover={{ bg: 'gray.100' }}
             transition="all 0.2s"
@@ -67,7 +70,7 @@ export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderPr
           </HStack>
 
           <HStack 
-            p={3} 
+            p={3}
             bg="gray.50" 
             borderRadius="md"
             cursor="pointer"

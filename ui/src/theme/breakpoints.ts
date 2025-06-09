@@ -1,4 +1,5 @@
 import { useBreakpointValue } from '@chakra-ui/react';
+import type { ResponsiveValue } from '@chakra-ui/react';
 
 export const breakpoints = {
   base: '0px',
@@ -51,8 +52,15 @@ export interface LayoutConfig {
   // Profile header layout
   profileHeader: {
     width: string;
+    height: string;
     padding: string;
     marginBottom: string;
+    borderRight: string;
+    borderBottom: string;
+    position: ResponsiveValue<'relative' | 'fixed'>;
+    top: string;
+    left: string;
+    zIndex: string;
   };
   // Filter bar layout
   filterBar: {
@@ -97,8 +105,15 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
     },
     profileHeader: {
       width: '100%',
+      height: 'auto',
       padding: '1rem',
       marginBottom: '1rem',
+      borderRight: 'none',
+      borderBottom: '1px',
+      position: 'relative',
+      top: 'auto',
+      left: 'auto',
+      zIndex: 'auto',
     },
     filterBar: {
       width: '100%',
@@ -140,8 +155,15 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
     },
     profileHeader: {
       width: '100%',
+      height: 'auto',
       padding: '1rem',
       marginBottom: '1rem',
+      borderRight: 'none',
+      borderBottom: '1px',
+      position: 'relative',
+      top: 'auto',
+      left: 'auto',
+      zIndex: 'auto',
     },
     filterBar: {
       width: '100%',
@@ -182,9 +204,16 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '100%',
+      width: '280px',
+      height: '100vh',
       padding: '1.5rem',
       marginBottom: '1.5rem',
+      borderRight: '1px',
+      borderBottom: 'none',
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      zIndex: '1',
     },
     filterBar: {
       width: '100%',
@@ -225,9 +254,16 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '100%',
+      width: '280px',
+      height: '100vh',
       padding: '2rem',
       marginBottom: '2rem',
+      borderRight: '1px',
+      borderBottom: 'none',
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      zIndex: '1',
     },
     filterBar: {
       width: '100%',
@@ -268,9 +304,16 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '100%',
+      width: '280px',
+      height: '100vh',
       padding: '2rem',
       marginBottom: '2rem',
+      borderRight: '1px',
+      borderBottom: 'none',
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      zIndex: '1',
     },
     filterBar: {
       width: '100%',
@@ -311,9 +354,16 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '100%',
+      width: '280px',
+      height: '100vh',
       padding: '2rem',
       marginBottom: '2rem',
+      borderRight: '1px',
+      borderBottom: 'none',
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      zIndex: '1',
     },
     filterBar: {
       width: '100%',
@@ -323,6 +373,6 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
   },
 };
 
-export const useLayoutConfig = () => {
+export function useLayoutConfig() {
   return useBreakpointValue(layoutConfig);
-}; 
+} 
