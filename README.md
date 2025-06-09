@@ -138,7 +138,7 @@ gsutil web set -m index.html -e index.html gs://aoe2.site
      --iam-account=aoe2-site-bot@aoe2-site.iam.gserviceaccount.com
 
    # Test site deployment
-   GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/deploy.yml -j build-and-deploy --secret GCP_SA_KEY="$(cat sa-key.json)" --container-architecture linux/amd64 --container-options "--platform linux/amd64" 
+   GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/deploy.yml -j build-and-deploy --secret GCP_SA_KEY="$(cat sa-key.json)"  --container-architecture linux/amd64 
 
    # Test Cloud Run deployment
    GITHUB_TOKEN=$(gh auth token -h github.com) act push -W .github/workflows/cloud-run.yml --job build-and-push --secret GCP_SA_KEY="$(cat sa-key.json)"

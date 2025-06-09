@@ -1,0 +1,104 @@
+{
+  "result": {
+    "code": 0,
+    "message": "SUCCESS"
+  },
+  "statGroups": [
+    {
+      "id": 3883337,
+      "name": "",
+      "type": 1,
+      "members": [
+        {
+          "profile_id": 4764337,
+          "name": "/steam/76561199069333571",
+          "alias": "<NT>.tornasol",
+          "personal_statgroup_id": 3883337,
+          "xp": 2858,
+          "level": 2,
+          "leaderboardregion_id": 0,
+          "country": "se",
+          "clanlist_name": "zNTz"
+        }
+      ]
+    }
+  ],
+  "leaderboardStats": [
+    {
+      "statgroup_id": 3883337,
+      "leaderboard_id": 3,
+      "wins": 346,
+      "losses": 307,
+      "streak": 7,
+      "disputes": 0,
+      "drops": 4,
+      "rank": 4813,
+      "ranktotal": 44756,
+      "ranklevel": 1,
+      "rating": 1445,
+      "regionrank": 1756,
+      "regionranktotal": 16311,
+      "lastmatchdate": 1748226287,
+      "highestrank": 4813,
+      "highestranklevel": 1,
+      "highestrating": 1445
+    },
+    {
+      "statgroup_id": 3883337,
+      "leaderboard_id": 4,
+      "wins": 1005,
+      "losses": 939,
+      "streak": -3,
+      "disputes": 0,
+      "drops": 11,
+      "rank": 9908,
+      "ranktotal": 73969,
+      "ranklevel": 1,
+      "rating": 1340,
+      "regionrank": 3265,
+      "regionranktotal": 25904,
+      "lastmatchdate": 1749343370,
+      "highestrank": 2697,
+      "highestranklevel": 1,
+      "highestrating": 1469
+    },
+    {
+      "statgroup_id": 3883337,
+      "leaderboard_id": 14,
+      "wins": 9,
+      "losses": 2,
+      "streak": 2,
+      "disputes": 0,
+      "drops": 0,
+      "rank": -1,
+      "ranktotal": 5499,
+      "ranklevel": 0,
+      "rating": 1233,
+      "regionrank": -1,
+      "regionranktotal": 1622,
+      "lastmatchdate": 1716079097,
+      "highestrank": 466,
+      "highestranklevel": 1,
+      "highestrating": 1233
+    },
+    {
+      "statgroup_id": 3883337,
+      "leaderboard_id": 27,
+      "wins": 2,
+      "losses": 1,
+      "streak": 2,
+      "disputes": 0,
+      "drops": 0,
+      "rank": -1,
+      "ranktotal": -1,
+      "ranklevel": -1,
+      "rating": 1047,
+      "regionrank": -1,
+      "regionranktotal": -1,
+      "lastmatchdate": 1717125059,
+      "highestrank": 0,
+      "highestranklevel": 0,
+      "highestrating": 0
+    }
+  ]
+}
