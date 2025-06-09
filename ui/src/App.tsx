@@ -1,4 +1,4 @@
-import { Box, Container, VStack, ChakraProvider } from '@chakra-ui/react';
+import { Box, Container, VStack } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getMatches, clearMatchesCache } from './services/matchService';
 import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 import { useParams } from 'react-router-dom';
+import { useLayoutConfig } from './theme/breakpoints';
 
 function toISODateString(dateStr: string): string {
   // Handles 'YYYY-MM-DD HH:mm UTC' and similar
@@ -27,6 +28,7 @@ function App() {
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<{ id: string, name: string } | null>(null);
+  const layout = useLayoutConfig();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -90,17 +92,24 @@ function App() {
   };
 
   return (
-    <ChakraProvider>
-      <Box maxWidth="100vw" overflowX="hidden">
-        {profileId && <ProfileHeader profileId={profileId} profile={profile} isLoading={isLoading} />}
-        <Container maxW="container.xl" py={8} mx="auto" ml={{ base: 0, md: "280px" }}>
-          <VStack gap={8} align="stretch">
-            <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-            <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />
-          </VStack>
-        </Container>
-      </Box>
-    </ChakraProvider>
+    <Box maxWidth={layout?.container.maxWidth} overflowX="hidden">
+      {profileId && <ProfileHeader profileId={profileId} profile={profile} isLoading={isLoading} />}
+      <Container 
+        maxW={layout?.container.maxWidth} 
+        py={layout?.container.padding} 
+        mx="auto" 
+        ml={layout?.container.marginLeft}
+      >
+        <VStack 
+          gap={layout?.grid.gap} 
+          align="stretch"
+          p={layout?.grid.padding}
+        >
+          <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
+          <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />
+        </VStack>
+      </Container>
+    </Box>
   );
 }
 export default App;
