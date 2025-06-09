@@ -8,13 +8,11 @@ const sharedValues = {
   base: {
     container: {
       maxWidth: '100vw',
-      padding: '1rem',
+      padding: '0.25rem',
       marginLeft: '0',
     },
-    grid: {
-      templateColumns: '1fr',
-      gap: '1rem',
-      padding: '1rem',
+    mainContent: {
+      padding: '0.25rem',
     },
     matchCard: {
       width: '100%',
@@ -55,6 +53,8 @@ const sharedValues = {
       padding: '1rem',
       marginBottom: '1rem',
       gap: '1rem',
+      selectWidth: '120px',
+      inputWidth: '200px',
     },
     matchList: {
       width: '100%',
@@ -71,13 +71,11 @@ const sharedValues = {
   desktop: {
     container: {
       maxWidth: 'container.xl',
-      padding: '2rem',
+      padding: '1rem',
       marginLeft: '280px',
     },
-    grid: {
-      templateColumns: '1fr',
-      gap: '2rem',
-      padding: '2rem',
+    mainContent: {
+      padding: '1rem',
     },
     matchCard: {
       width: '100%',
@@ -105,7 +103,7 @@ const sharedValues = {
       width: '280px',
       height: '100vh',
       padding: '2rem',
-      marginBottom: '2rem',
+      marginBottom: '1rem',
       borderRight: '1px',
       borderBottom: 'none',
       position: 'fixed' as const,
@@ -116,19 +114,84 @@ const sharedValues = {
     filterBar: {
       width: '100%',
       padding: '2rem',
-      marginBottom: '2rem',
+      marginBottom: '1rem',
       gap: '2rem',
+      selectWidth: '140px',
+      inputWidth: '200px',
     },
     matchList: {
-      width: '100%',
-      maxWidth: '100vw',
+      width: '680px',
+      maxWidth: '680px',
       overflow: 'hidden',
-      accordionWidth: '740px',
-      groupWidth: '740px',
+      accordionWidth: '600px',
+      groupWidth: '600px',
       groupMinHeight: '220px',
-      matchWidth: '700px',
+      matchWidth: '560px',
       groupGap: '2rem',
       groupPadding: '2rem',
+    },
+  },
+  lg: {
+    container: {
+      maxWidth: 'container.lg',
+      padding: '0.5rem',
+      marginLeft: '200px',
+    },
+    mainContent: {
+      padding: '0.5rem',
+    },
+    matchCard: {
+      width: '100%',
+      marginBottom: '0.5rem',
+      padding: '1rem',
+      flexDirection: 'row' as const,
+      gap: '1rem',
+      alignItems: 'center' as const,
+      justifyContent: 'space-between',
+    },
+    teamCard: {
+      width: '100%',
+      flexDirection: 'row' as const,
+      gap: '1rem',
+      minWidth: '100px',
+      playerBoxMinWidth: '120px',
+    },
+    mapCard: {
+      minWidth: '70px',
+      maxWidth: '100px',
+      padding: '0.25rem',
+      marginBottom: '0',
+    },
+    profileHeader: {
+      width: '200px',
+      height: '100vh',
+      padding: '1rem',
+      marginBottom: '0.5rem',
+      borderRight: '1px',
+      borderBottom: 'none',
+      position: 'fixed' as const,
+      top: '0',
+      left: '0',
+      zIndex: '1',
+    },
+    filterBar: {
+      width: '100%',
+      padding: '0.5rem',
+      marginBottom: '0.5rem',
+      gap: '0.5rem',
+      selectWidth: '100px',
+      inputWidth: '200px',
+    },
+    matchList: {
+      width: '520px',
+      maxWidth: '520px',
+      overflow: 'hidden',
+      accordionWidth: '480px',
+      groupWidth: '480px',
+      groupMinHeight: '180px',
+      matchWidth: '440px',
+      groupGap: '1rem',
+      groupPadding: '1rem',
     },
   },
 };
@@ -139,9 +202,7 @@ export interface LayoutConfig {
     padding: string;
     marginLeft: string;
   };
-  grid: {
-    templateColumns: string;
-    gap: string;
+  mainContent: {
     padding: string;
   };
   matchCard: {
@@ -183,6 +244,8 @@ export interface LayoutConfig {
     padding: string;
     marginBottom: string;
     gap: string;
+    selectWidth: string;
+    inputWidth: string;
   };
   matchList: {
     width: string;
@@ -200,12 +263,14 @@ export interface LayoutConfig {
 export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
   base: sharedValues.base,
   sm: sharedValues.base,
-  md: sharedValues.desktop,
-  lg: sharedValues.desktop,
+  md: sharedValues.lg,
+  lg: sharedValues.lg,
   xl: sharedValues.desktop,
   '2xl': sharedValues.desktop,
 };
 
 export function useLayoutConfig() {
-  return useBreakpointValue(layoutConfig);
+  const config = useBreakpointValue(layoutConfig);
+  console.log('Current breakpoint:', Object.keys(layoutConfig).find(key => layoutConfig[key as Breakpoint] === config));
+  return config;
 } 

@@ -3,7 +3,6 @@ import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
 const API_URL = import.meta.env.VITE_AOE_API_URL!;
-console.log('API_URL=', API_URL)
 const DEFAULT_PROFILE_ID = '4764337';
 
 let civMap: Record<string, string> | null = null;
@@ -105,8 +104,6 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
     return cachedData.data;
   }
-
-  console.log('API_URL=', API_URL)
   
   const response = await fetch(`${API_URL}?title=age2&profile_ids=["${profileId}"]`, {
     headers: {

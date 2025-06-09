@@ -99,9 +99,8 @@ function App() {
         ml={layout?.container.marginLeft}
       >
         <VStack 
-          gap={layout?.grid.gap} 
           align="stretch"
-          p={layout?.grid.padding}
+          p={layout?.mainContent.padding}
         >
           <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
           <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />

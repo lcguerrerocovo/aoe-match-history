@@ -18,8 +18,8 @@ export const FilterBar = ({ onMapChange, onSortChange, maps }: FilterBarProps) =
       mb={layout?.filterBar.marginBottom}
     >
       <HStack gap={layout?.filterBar.gap}>
-        <Input placeholder="Search matches..." />
-        <Select defaultValue="" onChange={(e) => onMapChange(e.target.value)}>
+        <Input placeholder="Search matches..." w={layout?.filterBar.inputWidth} />
+        <Select defaultValue="" onChange={(e) => onMapChange(e.target.value)} w={layout?.filterBar.selectWidth}>
           <option key="all-maps" value="">All maps</option>
           {maps.map(({ name, count }) => (
             <option key={name} value={name}>
@@ -27,7 +27,7 @@ export const FilterBar = ({ onMapChange, onSortChange, maps }: FilterBarProps) =
             </option>
           ))}
         </Select>
-        <Select defaultValue="desc" onChange={(e) => onSortChange(e.target.value as SortDirection)}>
+        <Select defaultValue="desc" onChange={(e) => onSortChange(e.target.value as SortDirection)} w={layout?.filterBar.selectWidth}>
           <option key="sort-desc" value="desc">Recent</option>
           <option key="sort-asc" value="asc">Oldest</option>
         </Select>
