@@ -18,6 +18,7 @@ export interface LeaderboardStats {
   highestranklevel: number;
   disputes: number;
   drops: number;
+  total_players: number;
 }
 
 export interface StatGroupMember {

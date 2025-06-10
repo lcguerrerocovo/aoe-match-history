@@ -11,11 +11,24 @@ interface ProfileHeaderProps {
 }
 
 const LEADERBOARD_NAMES: { [key: number]: string } = {
+  0: 'Unranked',
+  1: 'DM 1v1',
+  2: 'DM Team',
   3: 'RM 1v1',
   4: 'RM Team',
-  13: 'EW Team',
-  14: 'UNR'
+  13: 'EW 1v1',
+  14: 'EW Team',
+  15: 'RM 1v1 (UNR)',
+  16: 'RM Team (UNR)',
+  17: 'EW 1v1 (UNR)',
+  18: 'EW Team (UNR)',
+  19: 'RM 1v1 (QM)',
+  20: 'RM Team (QM)',
+  21: 'EW 1v1 (QM)',
+  22: 'EW Team (QM)'
 };
+
+const getLeaderboardName = (id: number): string => LEADERBOARD_NAMES[id] ?? 'UNR';
 
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
@@ -90,49 +103,59 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
 
         {/* Stats Section */}
         <VStack spacing={4} align="stretch">
-          <Text fontSize="xs" fontWeight="medium" color="gray.500" px={2}>RANKINGS</Text>
           <Box w="100%" overflowX="auto">
             <Table size="xs" variant="simple" w="100%">
               <Thead>
                 <Tr>
-                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.rankWidth} fontSize="xs">Rank</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.ratingWidth} fontSize="xs">Rating</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.maxWidth} fontSize="xs">Max</Th>
-                  <Th width={layout?.profileHeader.table.changeWidth} fontSize="xs">Change</Th>
+                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="2xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
+                  <Th width={layout?.profileHeader.table.rankWidth} fontSize="2xs" textAlign="center">Rank</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.ratingWidth} fontSize="2xs">Rating</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.maxWidth} fontSize="2xs">Max</Th>
+                  <Th width={layout?.profileHeader.table.changeWidth} fontSize="2xs" textAlign="right">Diff</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {validLeaderboardStats.map((stat) => (
-                  <Tr key={stat.leaderboard_id}>
-                    <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{LEADERBOARD_NAMES[stat.leaderboard_id] || `Board ${stat.leaderboard_id}`}</Td>
-                    <Td isNumeric fontSize="xs">{stat.rank === -1 ? '' : `#${stat.rank.toLocaleString()}`}</Td>
-                    <Td isNumeric fontSize="xs">{stat.rating.toLocaleString()}</Td>
-                    <Td isNumeric fontSize="xs">{stat.highestrating?.toLocaleString() || '-'}</Td>
-                    <Td isNumeric fontSize="xs" textAlign="right">
-                      {stat.highestrating === 0 ? null : (
-                        stat.rating === stat.highestrating ? (
-                          <Text fontSize="xs" color="blue.600" fontWeight="bold">=</Text>
-                        ) : (
-                          <Text fontSize="xs" color="red.600" fontWeight="bold">-{Math.abs(stat.highestrating - stat.rating)}</Text>
-                        )
-                      )}
-                    </Td>
-                  </Tr>
-                ))}
+                {validLeaderboardStats.map((stat) => {
+                  const percentile = stat.rank === -1 ? 0 : (100 - (stat.rank / stat.ranktotal * 100)).toFixed(1);
+                  return (
+                    <Tr key={stat.leaderboard_id}>
+                      <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{getLeaderboardName(stat.leaderboard_id)}</Td>
+                      <Td isNumeric fontSize="xs">
+                        {stat.rank === -1 ? '' : (
+                          <HStack spacing={1} justify="flex-end">
+                            <Text color="blue.600">{stat.rank}</Text>
+                            <Text color="teal.500" fontSize="2xs">({percentile}%)</Text>
+                          </HStack>
+                        )}
+                      </Td>
+                      <Td isNumeric fontSize="xs">{stat.rating}</Td>
+                      <Td isNumeric fontSize="xs">{stat.highestrating || '-'}</Td>
+                      <Td isNumeric fontSize="xs" textAlign="right">
+                        {stat.highestrating === 0 ? null : (
+                          stat.rating === stat.highestrating ? (
+                            <Text fontSize="xs" color="blue.600">=</Text>
+                          ) : (
+                            <Text fontSize="xs" color="red.600">-{Math.abs(stat.highestrating - stat.rating)}</Text>
+                          )
+                        )}
+                      </Td>
+                    </Tr>
+                  );
+                })}
               </Tbody>
             </Table>
           </Box>
 
-          <Text fontSize="xs" fontWeight="medium" color="gray.500" px={2} mt={2}>PERFORMANCE</Text>
+          <Divider borderColor="gray.400" opacity={0.8} />
+
           <Box w="100%" overflowX="auto">
             <Table size="xs" variant="simple" w="100%">
               <Thead>
                 <Tr>
-                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.gamesWidth} fontSize="xs">Games</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.wonWidth} fontSize="xs">Won</Th>
-                  <Th isNumeric width={layout?.profileHeader.table.streakWidth} fontSize="xs">Streak</Th>
+                  <Th width={layout?.profileHeader.table.boardWidth} fontSize="2xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">Board</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.gamesWidth} fontSize="2xs">Games</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.wonWidth} fontSize="2xs">Won</Th>
+                  <Th isNumeric width={layout?.profileHeader.table.streakWidth} fontSize="2xs">Streak</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -141,10 +164,18 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
                   const winRate = totalGames > 0 ? (stat.wins / totalGames * 100).toFixed(2) : '0.00';
                   return (
                     <Tr key={stat.leaderboard_id}>
-                      <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{LEADERBOARD_NAMES[stat.leaderboard_id] || `Board ${stat.leaderboard_id}`}</Td>
-                      <Td isNumeric fontSize="xs">{totalGames.toLocaleString()}</Td>
+                      <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{getLeaderboardName(stat.leaderboard_id)}</Td>
+                      <Td isNumeric fontSize="xs">{totalGames}</Td>
                       <Td isNumeric fontSize="xs">{winRate}%</Td>
-                      <Td isNumeric fontSize="xs">{stat.streak > 0 ? `+${stat.streak}` : stat.streak}</Td>
+                      <Td isNumeric fontSize="xs">
+                        {stat.streak > 0 ? (
+                          <Text color="green.500">+{stat.streak}</Text>
+                        ) : stat.streak < 0 ? (
+                          <Text color="red.500">{stat.streak}</Text>
+                        ) : (
+                          stat.streak
+                        )}
+                      </Td>
                     </Tr>
                   );
                 })}

@@ -4,7 +4,6 @@ import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
 const API_URL = import.meta.env.VITE_AOE_API_URL!;
-console.log('Using API URL:', API_URL);
 const DEFAULT_PROFILE_ID = '4764337';
 
 let civMap: Record<string, string> | null = null;
