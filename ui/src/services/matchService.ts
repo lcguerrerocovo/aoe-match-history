@@ -212,9 +212,6 @@ export function extractSteamId(name: string): string | null {
 }
 
 export async function getSteamAvatar(steamId: string): Promise<string | undefined> {
-  if (import.meta.env.MODE !== 'production') {
-    return undefined;
-  }
   
   try {
     const response = await fetch(`${API_URL}/steam/avatar/${steamId}`);

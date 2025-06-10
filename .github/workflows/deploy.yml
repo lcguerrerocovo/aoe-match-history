@@ -134,4 +134,5 @@ jobs:
             --timeout=30s \
             --min-instances=0 \
             --max-instances=10 \
+            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }}" \
             --verbosity=debug 

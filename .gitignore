@@ -110,3 +110,6 @@ ui/.env.production.local
 
 # Assets
 ui/src/assets/maps/
+
+# Functions
+functions/proxy/.env

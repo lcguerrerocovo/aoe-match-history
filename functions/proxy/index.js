@@ -1,18 +1,20 @@
+require('dotenv').config();
+
 const cors = require('cors')({ 
   origin: [
     /^http:\/\/localhost:\d+$/,
-    'https://aoe2.site'
+    'https://aoe2.site',
+    'https://api.aoe2.site'
   ]
 });
 const fetch = require('node-fetch');
 
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 60 * 1000; // 1 minute
-
-const STEAM_API_KEY = '676056921CB63B6825BFED99BB7AAE1E';
+const STEAM_API_KEY = process.env.STEAM_API_KEY;
 
 async function handleSteamAvatar(steamId) {
+  if (!STEAM_API_KEY) {
+    throw new Error('STEAM_API_KEY environment variable is not set');
+  }
   const targetUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`;
   const response = await fetch(targetUrl, {
     headers: {
@@ -22,7 +24,13 @@ async function handleSteamAvatar(steamId) {
   });
   const data = await response.json();
   const avatarUrl = data.response?.players?.[0]?.avatarfull;
-  return { data: { avatarUrl } };
+  return { 
+    data: { avatarUrl },
+    headers: {
+      'Cache-Control': 'public, max-age=86400', // 24 hours for Steam avatars
+      'Vary': 'Accept-Encoding'
+    }
+  };
 }
 
 async function handleMatchHistory(profileId) {
@@ -39,7 +47,13 @@ async function handleMatchHistory(profileId) {
       throw new Error(`API responded with status ${response.status}`);
     }
     const data = await response.json();
-    return { data };
+    return { 
+      data,
+      headers: {
+        'Cache-Control': 'public, max-age=60', // 1 minute for match history
+        'Vary': 'Accept-Encoding'
+      }
+    };
   } catch (error) {
     throw error;
   }
@@ -54,7 +68,13 @@ async function handlePersonalStats(profileId) {
     }
   });
   const data = await response.json();
-  return { data };
+  return { 
+    data,
+    headers: {
+      'Cache-Control': 'public, max-age=60', // 1 minute for personal stats
+      'Vary': 'Accept-Encoding'
+    }
+  };
 }
 
 const routes = [
@@ -75,16 +95,6 @@ const routes = [
 exports.proxy = async (req, res) => {
   return cors(req, res, async () => {
     try {
-      
-      const cacheKey = req.url || '';
-      const now = Date.now();
-      
-      // Check cache
-      const cachedData = cache.get(cacheKey);
-      if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-        return res.status(200).json(cachedData.data);
-      }
-
       const route = routes.find(r => r.pattern.test(req.url));
       
       if (!route) {
@@ -94,10 +104,9 @@ exports.proxy = async (req, res) => {
       const match = req.url.match(route.pattern);
       const response = await route.handler(match[1]);
       
-      // Store in cache
-      cache.set(cacheKey, {
-        data: response.data,
-        timestamp: now
+      // Set headers from handler
+      Object.entries(response.headers).forEach(([key, value]) => {
+        res.set(key, value);
       });
 
       res.status(200).json(response.data);
