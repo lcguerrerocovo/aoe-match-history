@@ -90,7 +90,6 @@ jobs:
           gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/ gs://aoe2.site/_redirects
 
   deploy-function:
-    if: contains(github.event.head_commit.modified, 'functions/') || contains(github.event.head_commit.added, 'functions/')
     runs-on: ubuntu-latest
     container:
       image: node:20.11.1-slim

@@ -27,14 +27,27 @@ async function handleSteamAvatar(steamId) {
 
 async function handleMatchHistory(profileId) {
   const targetUrl = `https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory/?title=age2&profile_ids=["${profileId}"]`;
-  const response = await fetch(targetUrl, {
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'aoe2-site'
+  console.log('Calling AoE2 API:', targetUrl);
+  try {
+    const response = await fetch(targetUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'aoe2-site'
+      }
+    });
+    console.log('API Response status:', response.status);
+    console.log('API Response headers:', response.headers);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error response:', errorText);
+      throw new Error(`API responded with status ${response.status}`);
     }
-  });
-  const data = await response.json();
-  return { data };
+    const data = await response.json();
+    return { data };
+  } catch (error) {
+    console.error('Full error details:', error);
+    throw error;
+  }
 }
 
 async function handlePersonalStats(profileId) {
@@ -67,6 +80,11 @@ const routes = [
 exports.proxy = async (req, res) => {
   return cors(req, res, async () => {
     try {
+      console.log('Incoming request URL:', req.url);
+      console.log('Request path:', req.path);
+      console.log('Request baseUrl:', req.baseUrl);
+      console.log('Request originalUrl:', req.originalUrl);
+      
       const cacheKey = req.url || '';
       const now = Date.now();
       
@@ -77,11 +95,14 @@ exports.proxy = async (req, res) => {
       }
 
       const route = routes.find(r => r.pattern.test(req.url));
+      console.log('Found route:', route ? route.pattern : 'none');
+      
       if (!route) {
         return res.status(404).json({ error: 'Route not found' });
       }
 
       const match = req.url.match(route.pattern);
+      console.log('Route match:', match);
       const response = await route.handler(match[1]);
       
       // Store in cache
@@ -92,6 +113,7 @@ exports.proxy = async (req, res) => {
 
       res.status(200).json(response.data);
     } catch (error) {
+      console.error('Error details:', error);
       res.status(500).json({ error: 'Failed to fetch from API', details: error.message });
     }
   });
