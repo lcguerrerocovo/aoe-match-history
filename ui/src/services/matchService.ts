@@ -88,7 +88,6 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   }
   const contentType = response.headers.get('content-type');
   if (!contentType || !contentType.includes('application/json')) {
-    console.error('Invalid content type:', contentType);
     throw new Error('Invalid response format');
   }
   const data = await response.json();
@@ -206,7 +205,6 @@ export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): 
     }
   });
   if (!response.ok) {
-    console.error('Personal stats fetch failed:', response.status);
     throw new Error('Failed to fetch personal stats');
   }
   const data = await response.json();

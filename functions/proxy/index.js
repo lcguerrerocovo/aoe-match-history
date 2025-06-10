@@ -10,11 +10,10 @@ const fetch = require('node-fetch');
 const cache = new Map();
 const CACHE_DURATION = 60 * 1000; // 1 minute
 
-const STEAM_API_KEY = '91B31D3A113375C4B73F03925CFC4369';
+const STEAM_API_KEY = '676056921CB63B6825BFED99BB7AAE1E';
 
 async function handleSteamAvatar(steamId) {
   const targetUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`;
-  console.log('Fetching Steam avatar from:', targetUrl);
   const response = await fetch(targetUrl, {
     headers: {
       'Accept': 'application/json',
@@ -22,9 +21,7 @@ async function handleSteamAvatar(steamId) {
     }
   });
   const data = await response.json();
-  console.log('Steam API response:', JSON.stringify(data, null, 2));
   const avatarUrl = data.response?.players?.[0]?.avatarfull;
-  console.log('Extracted avatar URL:', avatarUrl);
   return { data: { avatarUrl } };
 }
 
@@ -76,7 +73,6 @@ exports.proxy = async (req, res) => {
       // Check cache
       const cachedData = cache.get(cacheKey);
       if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-        console.log('Serving from cache:', cachedData.data);
         return res.status(200).json(cachedData.data);
       }
 
@@ -87,7 +83,6 @@ exports.proxy = async (req, res) => {
 
       const match = req.url.match(route.pattern);
       const response = await route.handler(match[1]);
-      console.log('Handler response:', response);
       
       // Store in cache
       cache.set(cacheKey, {
@@ -95,10 +90,8 @@ exports.proxy = async (req, res) => {
         timestamp: now
       });
 
-      console.log('Sending response:', response.data);
       res.status(200).json(response.data);
     } catch (error) {
-      console.error('Proxy error:', error);
       res.status(500).json({ error: 'Failed to fetch from API', details: error.message });
     }
   });

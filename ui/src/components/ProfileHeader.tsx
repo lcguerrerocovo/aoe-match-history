@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Divider, HStack, Icon, Heading, Stat, StatLabel, StatNumber, StatHelpText, Avatar } from '@chakra-ui/react';
+import { Box, Text, VStack, Divider, HStack, Icon, Avatar } from '@chakra-ui/react';
 import { FaUser, FaTrophy, FaChartLine } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
 import type { PersonalStats } from '../types/stats';
@@ -10,11 +10,9 @@ interface ProfileHeaderProps {
   isLoading: boolean;
 }
 
-export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
+export function ProfileHeader({ profileId, profile, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
-  const leaderboardStats = stats?.leaderboardStats.find(s => s.leaderboard_id === 3); // 3 is 1v1 RM
-  const playerInfo = stats?.statGroups[0]?.members[0];
 
   return (
     <Box
