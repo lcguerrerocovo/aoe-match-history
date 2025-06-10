@@ -1,7 +1,7 @@
 import { Box, Text, VStack, Divider, HStack, Icon, Heading, Table, Thead, Tbody, Tr, Th, Td, Avatar } from '@chakra-ui/react';
-import { FaUser, FaTrophy, FaChartLine } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
-import type { PersonalStats } from '../types/stats';
+import type { PersonalStats, LeaderboardStats } from '../types/stats';
 
 interface ProfileHeaderProps {
   profileId: string;
@@ -20,8 +20,18 @@ const LEADERBOARD_NAMES: { [key: number]: string } = {
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
-  const playerInfo = stats?.result?.statGroups?.[0]?.members?.[0];
-  const leaderboardStats = playerInfo?.leaderboardStats || [];
+  console.log('ProfileHeader stats:', stats);
+  const playerInfo = stats?.statGroups?.[0]?.members?.[0];
+  console.log('ProfileHeader playerInfo:', playerInfo);
+  const leaderboardStats = stats?.leaderboardStats || [];
+  console.log('ProfileHeader leaderboardStats:', leaderboardStats);
+
+  // Filter out any leaderboard stats with invalid data
+  const validLeaderboardStats = leaderboardStats.filter((stat: LeaderboardStats) => 
+    stat && typeof stat.leaderboard_id === 'number' && 
+    typeof stat.rating === 'number' && 
+    typeof stat.rank === 'number'
+  );
 
   return (
     <Box 
@@ -96,13 +106,21 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
                 </Tr>
               </Thead>
               <Tbody>
-                {leaderboardStats.map((stat) => (
+                {validLeaderboardStats.map((stat) => (
                   <Tr key={stat.leaderboard_id}>
                     <Td fontSize="xs" whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">{LEADERBOARD_NAMES[stat.leaderboard_id] || `Board ${stat.leaderboard_id}`}</Td>
-                    <Td isNumeric fontSize="xs">#{stat.rank.toLocaleString()}</Td>
+                    <Td isNumeric fontSize="xs">{stat.rank === -1 ? '' : `#${stat.rank.toLocaleString()}`}</Td>
                     <Td isNumeric fontSize="xs">{stat.rating.toLocaleString()}</Td>
                     <Td isNumeric fontSize="xs">{stat.highestrating?.toLocaleString() || '-'}</Td>
-                    <Td fontSize="xs">{stat.rank_change > 0 ? '↑' : stat.rank_change < 0 ? '↓' : '←'}</Td>
+                    <Td isNumeric fontSize="xs" textAlign="right">
+                      {stat.highestrating === 0 ? null : (
+                        stat.rating === stat.highestrating ? (
+                          <Text fontSize="xs" color="blue.600" fontWeight="bold">=</Text>
+                        ) : (
+                          <Text fontSize="xs" color="red.600" fontWeight="bold">-{Math.abs(stat.highestrating - stat.rating)}</Text>
+                        )
+                      )}
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
@@ -121,7 +139,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
                 </Tr>
               </Thead>
               <Tbody>
-                {leaderboardStats.map((stat) => {
+                {validLeaderboardStats.map((stat) => {
                   const totalGames = stat.wins + stat.losses;
                   const winRate = totalGames > 0 ? (stat.wins / totalGames * 100).toFixed(2) : '0.00';
                   return (

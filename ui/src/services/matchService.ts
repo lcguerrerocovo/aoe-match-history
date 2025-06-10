@@ -4,6 +4,7 @@ import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 
 const API_URL = import.meta.env.VITE_AOE_API_URL!;
+console.log('Using API URL:', API_URL);
 const DEFAULT_PROFILE_ID = '4764337';
 
 let civMap: Record<string, string> | null = null;
@@ -198,16 +199,11 @@ export async function getMatch(id: string): Promise<Match> {
 }
 
 export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): Promise<PersonalStats> {
-  const response = await fetch(`${API_URL}/personal-stats/${profileId}`, {
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'aoe2-site'
-    }
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch personal stats');
-  }
+  console.log('Fetching personal stats for profile:', profileId);
+  const response = await fetch(`${API_URL}/personal-stats/${profileId}`);
+  console.log('Response status:', response.status);
   const data = await response.json();
+  console.log('Raw API response:', JSON.stringify(data, null, 2));
   return data;
 }
 

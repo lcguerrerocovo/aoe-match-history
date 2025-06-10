@@ -87,10 +87,12 @@ const sharedValues = {
     },
   },
   desktop: {
+    // Critical: marginLeft must be >= profileHeader.width (300px) + padding to prevent overlap
+    // This ensures the main content starts after the fixed profile header
     container: {
       maxWidth: 'container.xl',
       padding: '1rem',
-      marginLeft: '280px',
+      marginLeft: '320px',
     },
     mainContent: {
       padding: '1rem',
@@ -171,7 +173,7 @@ const sharedValues = {
     container: {
       maxWidth: 'container.lg',
       padding: '0.5rem',
-      marginLeft: '200px',
+      marginLeft: '320px',
     },
     mainContent: {
       padding: '0.5rem',
@@ -199,7 +201,7 @@ const sharedValues = {
       marginBottom: '0',
     },
     profileHeader: {
-      width: '240px',
+      width: '300px',
       height: '100vh',
       padding: '1.5rem',
       marginBottom: '0.5rem',
@@ -240,10 +242,10 @@ const sharedValues = {
       width: '520px',
       maxWidth: '520px',
       overflow: 'hidden',
-      accordionWidth: '480px',
-      groupWidth: '480px',
+      accordionWidth: '520px',
+      groupWidth: '520px',
       groupMinHeight: '180px',
-      matchWidth: '440px',
+      matchWidth: '520px',
       groupGap: '1rem',
       groupPadding: '1rem',
     },
