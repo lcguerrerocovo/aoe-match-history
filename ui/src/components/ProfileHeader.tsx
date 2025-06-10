@@ -20,11 +20,8 @@ const LEADERBOARD_NAMES: { [key: number]: string } = {
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
-  console.log('ProfileHeader stats:', stats);
   const playerInfo = stats?.statGroups?.[0]?.members?.[0];
-  console.log('ProfileHeader playerInfo:', playerInfo);
   const leaderboardStats = stats?.leaderboardStats || [];
-  console.log('ProfileHeader leaderboardStats:', leaderboardStats);
 
   // Filter out any leaderboard stats with invalid data
   const validLeaderboardStats = leaderboardStats.filter((stat: LeaderboardStats) => 

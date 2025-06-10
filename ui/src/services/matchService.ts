@@ -198,12 +198,12 @@ export async function getMatch(id: string): Promise<Match> {
   return match;
 }
 
-export async function getPersonalStats(profileId: string = DEFAULT_PROFILE_ID): Promise<PersonalStats> {
-  console.log('Fetching personal stats for profile:', profileId);
+export async function getPersonalStats(profileId: string): Promise<PersonalStats> {
   const response = await fetch(`${API_URL}/personal-stats/${profileId}`);
-  console.log('Response status:', response.status);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch personal stats: ${response.statusText}`);
+  }
   const data = await response.json();
-  console.log('Raw API response:', JSON.stringify(data, null, 2));
   return data;
 }
 

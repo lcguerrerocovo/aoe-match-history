@@ -37,30 +37,19 @@ function App() {
   }, [profileId]);
 
   const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
+    if (!profileId) return;
     setIsLoading(true);
     try {
       const [data, statsData] = await Promise.all([
         getMatches(profileId),
         getPersonalStats(profileId)
       ]);
-      console.log('Raw stats data:', JSON.stringify(statsData, null, 2));
-      console.log('Stats data structure:', {
-        hasResult: !!statsData.result,
-        resultCode: statsData.result?.code,
-        resultMessage: statsData.result?.message,
-        hasStatGroups: !!statsData.statGroups,
-        statGroupsLength: statsData.statGroups?.length,
-        firstStatGroup: statsData.statGroups?.[0],
-        firstMember: statsData.statGroups?.[0]?.members?.[0],
-        hasLeaderboardStats: !!statsData.leaderboardStats
-      });
       const filtered = filterFn ? filterFn(data.matches) : data.matches;
       setMaps(getMapsWithCounts(filtered));
       setMatchGroups(groupMatchesByDate(filtered));
       
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
-      console.log('Player info:', playerInfo);
       let avatarUrl;
       if (playerInfo?.name) {
         const steamId = extractSteamId(playerInfo.name);
