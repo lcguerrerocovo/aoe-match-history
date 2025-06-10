@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Divider, HStack, Icon, Heading, Table, Thead, Tbody, Tr, Th, Td, Avatar } from '@chakra-ui/react';
+import { Box, Text, VStack, Divider, HStack, Icon, Table, Thead, Tbody, Tr, Th, Td, Avatar } from '@chakra-ui/react';
 import { FaUser } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
@@ -33,7 +33,6 @@ const getLeaderboardName = (id: number): string => LEADERBOARD_NAMES[id] ?? 'UNR
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const layout = useLayoutConfig();
-  const playerInfo = stats?.statGroups?.[0]?.members?.[0];
   const leaderboardStats = stats?.leaderboardStats || [];
 
   // Filter out any leaderboard stats with invalid data

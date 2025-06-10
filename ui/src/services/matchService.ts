@@ -212,7 +212,7 @@ export function extractSteamId(name: string): string | null {
 }
 
 export async function getSteamAvatar(steamId: string): Promise<string | undefined> {
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.MODE !== 'production') {
     return undefined;
   }
   
