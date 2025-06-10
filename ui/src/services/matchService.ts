@@ -217,7 +217,7 @@ export async function getSteamAvatar(steamId: string): Promise<string | undefine
   }
   
   try {
-    const response = await fetch(`/api/proxy/steam-avatar/${steamId}`);
+    const response = await fetch(`${API_URL}/steam/avatar/${steamId}`);
     if (!response.ok) {
       console.error('Failed to fetch Steam avatar:', response.status);
       return undefined;
