@@ -1,4 +1,5 @@
 /assets/* /assets/:splat 200
 /data/* /data/:splat 200
 /site/* /site/:splat 200
+/profile_id/* /index.html 200
 /* /index.html 200 
