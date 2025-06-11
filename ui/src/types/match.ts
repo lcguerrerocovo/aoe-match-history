@@ -15,6 +15,7 @@ export interface Team {
 }
 
 export interface Match {
+  description: string;
   match_id: string;
   start_time: string;
   diplomacy: {

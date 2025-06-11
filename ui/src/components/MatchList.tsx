@@ -119,17 +119,13 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
   const durationSec = parseDuration(match.duration);
   const realTimeSec = Math.round(durationSec / 1.7);
 
-  let diplomacyDisplay = match.diplomacy?.type + ' ' + match.diplomacy?.team_size;
-  if (match.diplomacy?.type === match.diplomacy?.team_size) {
-    diplomacyDisplay = match.diplomacy.type;
-  }
 
   return (
     <Box w="100%" mb={1} p={1} borderWidth="1px" borderRadius="md" bg="gray.50" fontSize="sm">
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
           <Text fontWeight="bold">#{match.match_id}</Text>
-          <Text>{diplomacyDisplay}</Text>
+          <Text>{match.description}</Text>
           <Link
             href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
             color="blue.500"

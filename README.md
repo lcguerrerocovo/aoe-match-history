@@ -65,6 +65,49 @@ This project automatically fetches and processes your **Age of Empires II: Defin
 - Artifact Registry
 - Cloud Storage
 - Cloud Scheduler
+- Cloud Run (API Proxy)
+
+#### API Proxy Setup
+The project uses a Cloud Run service as a proxy to external APIs (RelicLink, Steam) with Cloudflare DNS for caching and SSL termination.
+
+1. **Cloud Run Domain Mapping**
+   ```bash
+   # Set project and region
+   gcloud config set project aoe2-site
+   gcloud config set run/region us-east1
+
+   # Create domain mapping for the API proxy service
+   gcloud beta run domain-mappings create \
+     --service aoe2-api-proxy \
+     --domain api.aoe2.site \
+     --platform managed \
+     --region us-east1
+
+   # Verify mapping and get DNS target
+   gcloud beta run domain-mappings describe \
+     --domain api.aoe2.site \
+     --platform managed \
+     --region us-east1
+   ```
+
+2. **Cloudflare DNS Configuration**
+   - Create a CNAME record in Cloudflare:
+     - Name: `api`
+     - Target: `ghs.googlehosted.com`
+     - Enable proxy (orange cloud)
+   - This setup allows Cloudflare to:
+     - Handle SSL termination
+     - Cache API responses
+     - Protect against DDoS attacks
+
+3. **Verify Setup**
+   ```bash
+   # Check DNS resolution
+   dig +short api.aoe2.site CNAME
+
+   # Test API endpoint
+   curl -I https://api.aoe2.site/api/steam/avatar/76561198377637238
+   ```
 
 #### Required IAM Roles
 The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
@@ -195,6 +238,7 @@ If automated deployment fails, you can deploy manually:
 
 ## Data/API References
 - [RelicLink API](https://app.swaggerhub.com/apis/simonsan/RelicLinkCommunityAPI_OA3/0.1#/)
+- [RecentMatchHistory LibreMatch](https://wiki.librematch.org/rlink/game/leaderboard/getrecentmatchhistory)
 - Civ mapping: [100.json](https://raw.githubusercontent.com/SiegeEngineers/aoc-reference-data/master/data/datasets/100.json)
 - [mgz Python library](https://github.com/happyleavesaoc/python-mgz)
 - [worlds edge api client](https://github.com/oliverfenwick90/edgelink-api-client/blob/main/src/util.ts#L3)

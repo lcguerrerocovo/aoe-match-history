@@ -9,6 +9,31 @@ const DEFAULT_PROFILE_ID = '4764337';
 let civMap: Record<string, string> | null = null;
 let mapMap: Record<string, string> | null = null;
 
+const GAME_MODES: { [key: number]: string } = {
+  1602: 'Quick Match',
+  1520: 'RM',
+  1607: 'RM',
+  1599: 'RM',
+  1507: 'RM',
+  1598: 'Custom',
+  1590: 'Lobby',
+} as const;
+
+const getGameMode = (mode: number): string => GAME_MODES[mode] ?? 'UNKNOWN';
+
+const getGameType = (gameMode: number, teams: any[][], description: string, options: any): string => {
+  const maxPlayersPerTeam = Math.max(...teams.map(team => team.length));
+  const numTeams = teams.length;
+  
+  let mode = 'RM';
+  if (options['11'] === 'n') mode = 'EW';
+  else if (description !== 'AUTOMATCH') mode = getGameMode(gameMode);
+  
+  if (maxPlayersPerTeam > 1) return `${mode} Team`;
+  if (numTeams > 2) return `${mode} FFA`;
+  return `${mode} 1v1`;
+};
+
 interface RlMappings {
   civs: {
     aoe2: Record<string, Record<string, number>>;
@@ -150,13 +175,12 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
     const matchObject = {
       match_id: match.id.toString(),
       start_time: new Date(match.startgametime * 1000).toISOString(),
+      description: match.description === "AUTOMATCH" ? getGameType(match.gamemod_id, teams, match.description, options) : match.description,
       diplomacy: {
-        type: match.description || 'Unknown',
+        type: getGameType(match.gamemod_id, teams, match.description, options) || 'Unknown',
         team_size: match.maxplayers.toString(),
-        slot_info: slotInfo
       },
       map: mapName,
-      options: match.options,
       duration: match.completiontime - match.startgametime,
       teams: teams,
       players: match.matchhistoryreportresults.map((result: any) => {
