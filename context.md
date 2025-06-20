@@ -71,3 +71,11 @@ The project has evolved from a static site to a dynamic React application while 
 - Vite for development and building
 - Chakra UI for components
 - TypeScript for type safety 
+
+
+Next steps for styling: 
+
+- Re-apply the Theme: The first step is to re-introduce the custom theme file (ui/src/theme/theme.ts) and apply it in main.tsx. This will set the foundation for the new color palette.
+- Remove Conflicting CSS: The background: #fff; in App.css will need to be removed to allow the new theme's background color to take effect.
+- Component-Level Styling: Update individual components to use the new brand colors from the theme (e.g., bg="brand.midnightBlue", color="brand.gold"). This will be a gradual process of going through each component and replacing hardcoded or default colors.
+- Verify and Iterate: After each change, verify that the styles are being applied correctly and that there are no unintended side effects.
