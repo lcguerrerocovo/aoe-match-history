@@ -11,11 +11,39 @@ This project automatically fetches and processes your **Age of Empires II: Defin
   - Downloads and processes rec files automatically
   - Updates site with new matches in real-time
 
-- **Interactive Match Analysis**
-  - Detailed APM charts for each player
+- **Modern UI with Medieval Design**
+  - Responsive design optimized for mobile, tablet, and desktop
+  - Medieval-themed color palette and typography
+  - Interactive match timeline with detailed breakdowns
   - Team composition and civilization information
-  - Match duration and timing analysis
   - Winner/team logic with clear visualization
+  - Professional landing page with logo branding
+
+## Architecture
+
+### Static vs Dynamic Components
+- **Dynamic UI**: React application serves the main interface (match browsing, filtering, responsive design)
+- **Static Charts**: APM charts are pre-generated Python files served directly from GCS bucket
+
+### Data Flow
+
+#### Development
+1. Python backend processes rec files → generates static APM charts + match JSON files
+2. Vite server serves React app + provides middleware for match data access from `/data` directory
+3. React app fetches match data through Vite middleware and renders responsive UI
+
+#### Production
+1. Python backend processes rec files → uploads static APM charts + match JSON files to GCS bucket
+2. React app is built and deployed to GCS bucket, served via Cloudflare
+3. Cloud Function at `/functions/proxy` handles API calls to external services (RelicLink, Steam)
+4. React app fetches match data directly from GCS bucket URLs
+5. Users can click through to static APM chart pages served from GCS
+
+## Documentation
+
+📖 **[UI Development Guide](ui/README.md)** - Component architecture, responsive design system, and frontend development guidelines
+
+📋 **Infrastructure Guide** (below) - Backend services, deployment, and Cloud infrastructure
 
 ## Quick Start
 1. Clone the repository
@@ -33,6 +61,19 @@ This project automatically fetches and processes your **Age of Empires II: Defin
 - GitHub CLI (for local action testing)
 
 ### Local Development
+
+#### Frontend (UI Development)
+```bash
+cd ui
+npm install
+npm run dev        # Start development server
+npm run test       # Run tests
+npm run cy:open    # Open Cypress for testing
+```
+
+See the **[UI README](ui/README.md)** for detailed frontend development guidelines.
+
+#### Backend (Match Processing)
 1. Set up Python environment:
    ```bash
    python3 -m venv venv
@@ -40,20 +81,9 @@ This project automatically fetches and processes your **Age of Empires II: Defin
    pip install -r requirements.txt
    ```
 
-2. Set up React environment:
-   ```bash
-   cd ui
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory with:
+2. Create a `.env` file in the root directory with:
    ```
    VITE_API_URL=http://localhost:5001/aoe2-site/us-east1/aoe2-api-proxy
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
    ```
 
 ## Production
@@ -235,6 +265,8 @@ If automated deployment fails, you can deploy manually:
 - If Cloud Run job fails, check the logs in Cloud Console
 - If site deployment fails, verify GCS bucket permissions
 - For local testing issues, ensure all prerequisites are installed
+
+
 
 ## Data/API References
 - [RelicLink API](https://app.swaggerhub.com/apis/simonsan/RelicLinkCommunityAPI_OA3/0.1#/)
