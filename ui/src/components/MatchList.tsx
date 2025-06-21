@@ -48,8 +48,8 @@ function MapCard({ match }: { match: any }) {
         transform="rotate(45deg)"
         mb={2}
         overflow="visible"
-        border="0.1px solid #f7fafc"
-        boxShadow="0 0.1px 0.1px 0 rgba(0,0,0,0.02)"
+        border="none"
+        boxShadow="0 0 2px rgba(0,0,0,0.04)"
       >
         <Box transform="rotate(-45deg)" w="75px" h="75px" overflow="hidden">
           <img
@@ -141,21 +141,10 @@ function TeamCard({ match }: { match: any }) {
           match.teams.map((team: any[], idx: number) => {
             const isWinner = match.winning_team === idx + 1;
             return (
-              <Box
+              <Card
                 key={idx}
-                position="relative"
-                borderWidth={isWinner ? '2px' : '1px'}
-                borderColor={isWinner ? 'gold' : 'gray.200'}
-                borderRadius="md"
-                p={1}
-                minW={layout?.teamCard.minWidth}
-                bg="white"
-                boxShadow={isWinner ? '0 0 8px gold' : undefined}
+                variant={isWinner ? 'winner' : 'loser'}
                 flex="1"
-                display="flex"
-                flexDirection="column"
-                alignItems="stretch"
-                justifyContent="flex-start"
               >
                 {isWinner && (
                   <Box position="absolute" top={1} right={1} zIndex={1}>
@@ -163,16 +152,16 @@ function TeamCard({ match }: { match: any }) {
                   </Box>
                 )}
                 <VStack spacing={0} align="stretch" width="100%">
-                  {team.map((p) => (
+                  {team.map((p, rowIndex) => (
                     <Box
                       key={p.name}
                       display="flex"
                       alignItems="center"
                       borderWidth="1px"
-                      borderColor="gray.100"
+                      borderColor="brand.stone"
                       borderRadius="sm"
                       p={0.5}
-                      bg="gray.50"
+                      bg={rowIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
                       minW={layout?.teamCard.playerBoxMinWidth}
                       maxW="100%"
                       m={0}
@@ -242,7 +231,7 @@ function TeamCard({ match }: { match: any }) {
                     </Box>
                   ))}
                 </VStack>
-              </Box>
+              </Card>
             );
           })}
       </Box>
@@ -251,22 +240,23 @@ function TeamCard({ match }: { match: any }) {
 }
 
 export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
+  const layout = useLayoutConfig();
+
   return (
-    <Card variant="match">
+    <Card variant="match" role="group">
       <MatchSummaryCard match={match} BASE_URL={BASE_URL} />
       <Box
-        role="group"
         display="flex"
-        flexDirection={{ base: 'column', md: 'row' }}
-        gap={{ base: '1rem', md: '1rem', xl: '2rem' }}
-        alignItems={{ base: 'flex-start', md: 'center' }}
-        justifyContent="space-between"
+        flexDirection={layout?.matchCard.flexDirection}
+        gap={layout?.matchCard.gap}
+        alignItems={layout?.matchCard.alignItems}
+        justifyContent={layout?.matchCard.justifyContent}
         width="100%"
+        mt={2}
+        data-testid="match-card-content"
       >
         <MapCard match={match} />
-        <Box flex="1" width="100%">
-          <TeamCard match={match} />
-        </Box>
+        <TeamCard match={match} />
       </Box>
     </Card>
   );
@@ -276,15 +266,16 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
   const layout = useLayoutConfig();
 
   return (
-    <Box w={layout?.matchList.width} maxW={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
+    <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
       <Accordion
         allowMultiple
         index={matchGroups
           .map((group, index) => (openDates.includes(group.date) ? index : -1))
           .filter((index) => index !== -1)}
         onChange={(indexes: number[]) => onOpenDatesChange(indexes.map((i) => matchGroups[i].date))}
-        width={layout?.matchList.accordionWidth}
+        w={layout?.matchList.accordionWidth}
         mx="auto"
+        variant="filled"
       >
         {matchGroups.map((group) => {
           const { totalGame, totalReal } = sumDurations(group.matches);
@@ -293,124 +284,55 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
             <AccordionItem key={group.date}>
               <h2>
                 <AccordionButton>
-                  <Box
-                    flex="1"
-                    textAlign="left"
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="stretch"
-                    width={layout?.matchList.groupWidth}
-                  >
-                    <Box
-                      fontWeight="bold"
-                      fontSize="xl"
-                      mb={2}
-                      letterSpacing="wide"
-                      px={2}
-                      py={1}
-                      borderRadius="md"
-                      border="1px solid #e2e8f0"
-                      bg="gray.50"
-                      width="100%"
-                    >
-                      <span title={group.date}>{formatDayDate(group.date)}</span>
+                  <VStack flex="1" align="stretch" spacing={2}>
+                    {/* Date Header */}
+                    <Box bg="brand.stoneLight" p={2} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
+                      <Text fontWeight="bold" fontSize="lg" letterSpacing="wide" color="brand.black">
+                        {formatDayDate(group.date)}
+                      </Text>
                     </Box>
-                    <Box
-                      display="flex"
-                      flexDirection={layout?.matchCard.flexDirection}
-                      gap={layout?.matchCard.gap}
-                      alignItems={layout?.matchCard.alignItems}
-                      mb={1}
-                      width="100%"
-                      flexWrap="wrap"
-                    >
-                      <Box
-                        px={2}
-                        py={0.5}
-                        borderRadius="md"
-                        bg="blue.100"
-                        minW={{ base: '100%', md: '90px' }}
-                        justifyContent="center"
-                        fontSize="sm"
-                        fontWeight="semibold"
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <Text as="span" fontWeight="bold">
-                          Matches
-                        </Text>
-                        <Text as="span" ml={1}>
-                          {group.matches.length}
-                        </Text>
+                    
+                    {/* Match Stats Row */}
+                    <HStack spacing={2} wrap="wrap">
+                      <Box bg="brand.parchment" color="brand.black" px={3} py={1} borderRadius="full" fontSize="sm" fontWeight="bold">
+                        <Text as="span">Matches: </Text>
+                        <Text as="span">{group.matches.length}</Text>
                       </Box>
                       {Object.entries(byDiplo).map(([diplo, rec]) => (
                         <Box
                           key={diplo}
-                          display="flex"
-                          alignItems="center"
-                          gap={1}
-                          px={2}
-                          py={0.5}
-                          borderRadius="md"
-                          bg="gray.100"
-                          minW={{ base: '100%', md: '120px' }}
-                          justifyContent="center"
+                          bg="brand.stone"
+                          color="brand.black"
+                          px={3}
+                          py={1}
+                          borderRadius="full"
                           fontSize="sm"
                           fontWeight="semibold"
                         >
-                          <Text as="span" fontWeight="bold">
-                            {diplo}
-                          </Text>
-                          <Text as="span" color="green.600">
-                            {rec.wins}W
-                          </Text>
-                          <Text as="span" color="red.600">
-                            {rec.losses}L
-                          </Text>
+                          <Text as="span" fontWeight="bold" mr={2}>{diplo}</Text>
+                          <Text as="span" color="brand.win" mr={1}>{rec.wins}W</Text>
+                          <Text as="span" color="brand.loss">{rec.losses}L</Text>
                           {rec.uncategorized > 0 && (
-                            <Text as="span" color="gray.500">
-                              {rec.uncategorized}?
-                            </Text>
+                            <Text as="span" color="gray.500" ml={1}>{rec.uncategorized}?</Text>
                           )}
                         </Box>
                       ))}
-                    </Box>
-                    <Box
-                      display="flex"
-                      flexDirection={layout?.matchCard.flexDirection}
-                      gap={layout?.matchCard.gap}
-                      alignItems={layout?.matchCard.alignItems}
-                      mb={0.5}
-                      width="100%"
-                    >
-                      <Box
-                        fontSize="sm"
-                        color="gray.600"
-                        display="flex"
-                        alignItems="center"
-                        gap={1}
-                      >
-                        <TimeIcon boxSize={3} color="blue.400" />
-                        <Text as="span">Game Time:</Text>
-                        <Text as="span" fontWeight="bold">
-                          {formatDuration(totalGame)}
-                        </Text>
-                      </Box>
-                      <Box
-                        fontSize="sm"
-                        color="gray.600"
-                        display="flex"
-                        alignItems="center"
-                        gap={1}
-                      >
-                        <TimeIcon boxSize={3} color="orange.400" />
-                        <Text as="span">Real Time:</Text>
-                        <Text as="span" fontWeight="bold">
-                          {formatDuration(totalReal)}
-                        </Text>
-                      </Box>
-                    </Box>
-                  </Box>
+                    </HStack>
+
+                    {/* Time Stats Row */}
+                    <HStack spacing={4} fontSize="sm" color="brand.steel">
+                      <HStack spacing={1}>
+                        <TimeIcon color="brand.same" />
+                        <Text>Game Time:</Text>
+                        <Text fontWeight="bold">{formatDuration(totalGame)}</Text>
+                      </HStack>
+                      <HStack spacing={1}>
+                        <TimeIcon color="brand.bronze" />
+                        <Text>Real Time:</Text>
+                        <Text fontWeight="bold">{formatDuration(totalReal)}</Text>
+                      </HStack>
+                    </HStack>
+                  </VStack>
                   <AccordionIcon />
                 </AccordionButton>
               </h2>

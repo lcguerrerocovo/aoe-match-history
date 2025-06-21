@@ -11,18 +11,38 @@ const { definePartsStyle: defineProfileHeaderPartsStyle, defineMultiStyleConfig:
 
 const colors = {
   brand: {
-    midnightBlue: '#003366', // A darker, more professional blue
-    gold: '#FFC72C',         // A vibrant, rich gold
-    bronze: '#CD7F32',       // Classic bronze
-    black: '#1A202C',         // Chakra's gray.800 for a softer black
-    parchment: '#FAF3E0',     // A warm, parchment-like background (toned down)
-    steel: '#4A5568',         // Dark steel for borders and accents
-    heraldic: '#2D3748',      // Deep heraldic blue
+    midnightBlue: '#19214E', // Deep noble blue
+    gold: '#D4AF37',         // Lustrous medieval gold
+    bronze: '#B37A3E',       // Authentic bronze accent
+    black: '#1C1C1C',        // Rich charcoal for high legibility
+    parchment: '#F8F3E6',    // Elegant parchment backdrop
+    steel: '#5A6478',        // Cool steel grey for outlines
+    heraldic: '#243773',     // Royal heraldic blue
     
     // Thematic status colors from user feedback
-    win: '#228B22',          // ForestGreen for wins/positive streaks
-    loss: '#B22222',         // Firebrick red for losses
-    same: '#2b6cb0',         // A rich blue for rank/same status
+    win: '#3AA76D',          // Bright victory green
+    loss: '#D64545',         // Clear defeat red
+    same: '#2B6CB0',         // Neutral status blue (unchanged)
+    zoolanderBlue: '#1E4BB8',// Heroic highlight blue
+    stone: '#E6E3D8',        // Light stone for subtle surfaces
+    stoneLight: '#F2F0EA',   // Extra-light stone for zebra stripes
+    fadedBlue: '#D1DFF7',    // Gentle faded blue
+  },
+};
+
+// Recreate the reusable style objects from breakpoints.ts for card layout
+const matchCardStyles = {
+  base: {
+    padding: '0.5rem',
+    marginBottom: '0.5rem',
+  },
+  lg: {
+    padding: '0.5rem',
+    marginBottom: '0.5rem',
+  },
+  desktop: {
+    padding: '0.75rem',
+    marginBottom: '0.75rem',
   },
 };
 
@@ -31,43 +51,66 @@ const cardTheme = defineCardMultiStyleConfig({
     match: defineCardPartsStyle({
       container: {
         backgroundColor: 'white',
-        borderWidth: '2px',
-        borderColor: 'brand.steel',
+        borderWidth: '1px',
+        borderColor: 'brand.stone',
         borderRadius: 'lg',
-        boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+
+        // Layout styles
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        padding: {
+          base: matchCardStyles.base.padding,
+          md: matchCardStyles.lg.padding,
+          xl: matchCardStyles.desktop.padding,
+        },
+        marginBottom: {
+          base: matchCardStyles.base.marginBottom,
+          md: matchCardStyles.lg.marginBottom,
+          xl: matchCardStyles.desktop.marginBottom,
+        },
         _hover: {
-          boxShadow: '0 8px 12px rgba(0, 51, 102, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.08)',
           transform: 'translateY(-2px)',
           transition: 'all 0.2s ease-in-out',
         },
-      },
+      }
     }),
     summary: defineCardPartsStyle({
       container: {
-        backgroundColor: 'brand.parchment',
+        backgroundColor: 'brand.stone',
         borderWidth: '1px',
-        borderColor: 'brand.gold',
+        borderColor: 'brand.steel',
         borderRadius: 'md',
-        position: 'relative',
-        _before: {
-          content: '""',
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          height: '2px',
-          background: 'linear-gradient(90deg, brand.gold, brand.bronze, brand.gold)',
-          borderRadius: 'md md 0 0',
-        },
-      },
+      }
+    }),
+    winner: defineCardPartsStyle({
+      container: {
+        bg: 'brand.parchment',
+        borderColor: 'brand.gold',
+        boxShadow: '0 0 8px rgba(212,175,55,0.6)',
+        borderWidth: '2px',
+        borderRadius: 'md',
+        p: 1,
+      }
+    }),
+    loser: defineCardPartsStyle({
+      container: {
+        bg: 'white',
+        borderColor: 'brand.stone',
+        borderWidth: '1px',
+        borderRadius: 'md',
+        p: 1,
+      }
     }),
     filter: defineCardPartsStyle({
       container: {
         bg: 'white',
-        borderWidth: '2px',
+        borderWidth: '1px',
         borderColor: 'brand.steel',
         borderRadius: 'lg',
-        boxShadow: '0 2px 4px rgba(0, 51, 102, 0.1)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }
     }),
   },
@@ -76,7 +119,7 @@ const cardTheme = defineCardMultiStyleConfig({
 const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
   baseStyle: defineProfileHeaderPartsStyle({
     container: {
-      bg: 'white',
+      bg: 'brand.parchment',
       borderWidth: '2px',
       borderRadius: 'lg',
       boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
@@ -109,7 +152,7 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
       }
     },
     avatar: {
-      bg: 'brand.parchment',
+      bg: 'white',
       border: '2px solid',
       borderColor: 'brand.gold',
       width: '100px',
@@ -177,6 +220,10 @@ const theme = extendTheme({
         bg: 'brand.parchment',
         color: 'brand.black',
         fontFamily: "'Lora', serif",
+        fontSize: '15px',
+      },
+      'a, button': {
+        transition: 'color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
       },
       '*, *::before, &::after': {
         borderColor: 'brand.steel',
@@ -184,8 +231,20 @@ const theme = extendTheme({
     },
   },
   components: {
-    Card: cardTheme,
-    ProfileHeader: profileHeaderTheme,
+    Heading: {
+      baseStyle: {
+        color: 'brand.midnightBlue',
+        fontWeight: 600,
+      },
+    },
+    Link: {
+      baseStyle: {
+        color: 'brand.heraldic',
+        _hover: {
+          color: '#b78b2b', // darkened gold
+        },
+      },
+    },
     Button: {
       variants: {
         solid: {
@@ -196,20 +255,29 @@ const theme = extendTheme({
         outline: {
           borderColor: 'brand.gold',
           color: 'brand.midnightBlue',
-          _hover: { bg: 'brand.gold', color: 'brand.black' },
+          _hover: { bg: '#b78b2b', color: 'white' },
         },
       },
     },
+    Divider: {
+      baseStyle: {
+        borderColor: 'brand.stone',
+        opacity: 0.4,
+      },
+    },
+    Card: cardTheme,
+    ProfileHeader: profileHeaderTheme,
     Input: {
       variants: {
         filled: {
           field: {
             bg: 'brand.parchment',
             borderColor: 'brand.steel',
+            borderRadius: 'md',
             _hover: { borderColor: 'brand.gold' },
             _focus: {
               borderColor: 'brand.gold',
-              boxShadow: '0 0 0 1px var(--chakra-colors-brand-gold)',
+              boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
             },
           },
         },
@@ -221,10 +289,11 @@ const theme = extendTheme({
           field: {
             bg: 'brand.parchment',
             borderColor: 'brand.steel',
+            borderRadius: 'md',
             _hover: { borderColor: 'brand.gold' },
             _focus: {
               borderColor: 'brand.gold',
-              boxShadow: '0 0 0 1px var(--chakra-colors-brand-gold)',
+              boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
             },
           },
         },
@@ -246,12 +315,33 @@ const theme = extendTheme({
         },
       },
     },
-    Divider: {
-      baseStyle: {
-        borderColor: 'brand.steel',
+    Accordion: {
+      variants: {
+        filled: {
+          container: {
+            border: 'none',
+            boxShadow: '0 2px 4px rgba(0, 51, 102, 0.1)',
+            borderRadius: 'lg',
+            overflow: 'hidden',
+            bg: 'white',
+          },
+          button: {
+            bg: 'white',
+            color: 'brand.black',
+            _hover: {
+              bg: 'gray.50',
+            },
+            borderRadius: 'lg',
+            borderBottomRadius: 'none',
+          },
+          panel: {
+            bg: 'white',
+            padding: 4,
+          },
+        },
       },
     },
   },
 });
 
-export default theme; 
+export default theme;

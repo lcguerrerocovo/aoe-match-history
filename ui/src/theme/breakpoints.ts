@@ -344,6 +344,20 @@ export const layoutConfig: Record<Breakpoint, LayoutConfig> = {
 };
 
 export function useLayoutConfig() {
-  const config = useBreakpointValue(layoutConfig);
-  return config;
+  const breakpoint = useBreakpointValue({ base: 'base', md: 'md', lg: 'lg', xl: 'desktop' });
+
+  const getConfigForBreakpoint = (bp: string | undefined): LayoutConfig => {
+    switch (bp) {
+      case 'md':
+        return sharedValues.lg; // Use 'lg' styles for 'md' for consistency
+      case 'lg':
+        return sharedValues.lg;
+      case 'desktop':
+        return sharedValues.desktop;
+      default:
+        return sharedValues.base;
+    }
+  };
+
+  return getConfigForBreakpoint(breakpoint);
 } 

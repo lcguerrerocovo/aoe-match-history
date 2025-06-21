@@ -21,10 +21,10 @@ describe('MatchCard Responsive Layout', () => {
 
     // Test the mobile view
     cy.viewport(400, 600);
-    cy.get('[role="group"]').should('have.css', 'flex-direction', 'column');
+    cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
 
     // Test the desktop view
     cy.viewport(1200, 800);
-    cy.get('[role="group"]').should('have.css', 'flex-direction', 'row');
+    cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
   });
 }); 
