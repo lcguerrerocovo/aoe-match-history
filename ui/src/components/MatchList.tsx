@@ -293,7 +293,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
                 <AccordionButton>
                   <VStack flex="1" align="stretch" spacing={2}>
                     {/* Date Header */}
-                    <Box bg="brand.stoneLight" p={2} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
+                    <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
                       <Text fontWeight="bold" fontSize="lg" letterSpacing="wide" color="brand.black">
                         {formatDayDate(group.date)}
                       </Text>

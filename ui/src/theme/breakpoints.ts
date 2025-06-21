@@ -86,8 +86,8 @@ const sharedValues = {
       padding: '0.5rem',
       marginBottom: '0.5rem',
       gap: '0.5rem',
-      selectWidth: '120px',
-      inputWidth: '200px',
+      selectWidth: '130px',
+      inputWidth: '180px',
     },
     matchList: {
       width: '100%',

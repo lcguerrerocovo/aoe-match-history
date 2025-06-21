@@ -24,14 +24,14 @@ export const FilterBar = ({ onMapChange, onSortChange, maps }: FilterBarProps) =
             placeholder="Search matches..."
             w={layout?.filterBar.inputWidth}
             variant="filled"
-            fontSize="sm"
+            fontSize={{ base: 'xs', md: 'sm' }}
           />
           <Select
             defaultValue=""
             onChange={(e) => onMapChange(e.target.value)}
             w={layout?.filterBar.selectWidth}
             variant="filled"
-            fontSize="sm"
+            fontSize={{ base: '2xs', md: 'sm' }}
           >
             <option key="all-maps" value="">All maps</option>
             {maps.map(({ name, count }) => (
@@ -45,7 +45,7 @@ export const FilterBar = ({ onMapChange, onSortChange, maps }: FilterBarProps) =
             onChange={(e) => onSortChange(e.target.value as SortDirection)}
             w={layout?.filterBar.selectWidth}
             variant="filled"
-            fontSize="sm"
+            fontSize={{ base: '2xs', md: 'sm' }}
           >
             <option key="sort-desc" value="desc">Recent</option>
             <option key="sort-asc" value="asc">Oldest</option>
