@@ -39,9 +39,14 @@ function PlayerRating({ player }: { player: Player }) {
   }
 
   return (
-    <Text color={changeColor} fontWeight="semibold" fontSize="xs" ml="auto" fontFamily="mono">
-      ({changeText})
-    </Text>
+    <HStack spacing={1} ml="auto">
+      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono">
+        {rating}
+      </Text>
+      <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
+        ({changeText})
+      </Text>
+    </HStack>
   );
 }
 
