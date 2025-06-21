@@ -297,11 +297,12 @@ function TeamCard({ match }: { match: any }) {
   );
 }
 
-function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
+export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
   return (
     <Card variant="match">
       <MatchSummaryCard match={match} BASE_URL={BASE_URL} />
       <Box
+        role="group"
         display="flex"
         flexDirection={{ base: 'column', md: 'row' }}
         gap={{ base: '1rem', md: '1rem', xl: '2rem' }}

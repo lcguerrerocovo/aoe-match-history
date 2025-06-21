@@ -37,4 +37,22 @@ export default [
       ]
     },
   },
+  {
+    files: ['**/*.cy.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        describe: 'readonly',
+        it: 'readonly',
+        cy: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        before: 'readonly',
+        after: 'readonly',
+        expect: 'readonly',
+        assert: 'readonly'
+      }
+    }
+  }
 ]

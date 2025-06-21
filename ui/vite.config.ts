@@ -1,7 +1,12 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import fs from 'fs'
+import { fileURLToPath } from 'url';
+
+// Modern equivalent for __dirname in ES Modules
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -84,5 +89,15 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html')
       }
     }
-  }
-})
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+  },
+}) 

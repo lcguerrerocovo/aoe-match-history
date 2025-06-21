@@ -69,7 +69,7 @@ This will start the development server at `http://localhost:5173` and read match
 
 2. **Production Mode** (reads from GCS):
 ```bash
-npm run dev:prod
+npm run dev
 ```
 This will start the development server at `http://localhost:4173` but read match data from the Google Cloud Storage bucket.
 
