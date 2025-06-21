@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card } from '@chakra-ui/react';
 import type { MatchGroup } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
@@ -121,7 +121,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 
   return (
-    <Box w="100%" mb={1} p={1} borderWidth="1px" borderRadius="md" bg="gray.50" fontSize="sm">
+    <Card variant="summary" w="100%" mb={1} p={1} fontSize="sm">
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
           <Text fontWeight="bold">#{match.match_id}</Text>
@@ -167,7 +167,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           </HStack>
         </Box>
       </VStack>
-    </Box>
+    </Card>
   );
 }
 
@@ -297,33 +297,16 @@ function TeamCard({ match }: { match: any }) {
   );
 }
 
-function MatchCard({
-  match,
-  BASE_URL,
-}: {
-  match: any;
-  BASE_URL: string;
-}) {
-  const layout = useLayoutConfig();
-
+function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
   return (
-    <Box
-      w={layout?.matchCard.width}
-      mb={layout?.matchCard.marginBottom}
-      p={layout?.matchCard.padding}
-      borderWidth="1px"
-      borderRadius="lg"
-      display="flex"
-      flexDirection="column"
-      gap={layout?.matchCard.gap}
-    >
+    <Card variant="match">
       <MatchSummaryCard match={match} BASE_URL={BASE_URL} />
       <Box
         display="flex"
-        flexDirection={layout?.matchCard.flexDirection}
-        gap={layout?.matchCard.gap}
-        alignItems={layout?.matchCard.alignItems}
-        justifyContent={layout?.matchCard.justifyContent}
+        flexDirection={{ base: 'column', md: 'row' }}
+        gap={{ base: '1rem', md: '1rem', xl: '2rem' }}
+        alignItems={{ base: 'flex-start', md: 'center' }}
+        justifyContent="space-between"
         width="100%"
       >
         <MapCard match={match} />
@@ -331,7 +314,7 @@ function MatchCard({
           <TeamCard match={match} />
         </Box>
       </Box>
-    </Box>
+    </Card>
   );
 }
 
