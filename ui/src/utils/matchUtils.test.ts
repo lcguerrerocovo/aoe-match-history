@@ -1,18 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { groupMatchesBySession, calculateSessionDuration, formatSessionStart } from './matchUtils';
-import type { Match } from '../types/match';
+import { groupMatchesBySession, calculateSessionDuration, formatSessionStart, countByDiplomacy } from './matchUtils';
+import type { Match, Player } from '../types/match';
 
 // Mock Data
-const mockMatch = (start: string, duration: number): Match => ({
+const mockPlayer = (userId: string, ratingChange: number | null, winner: boolean): Player => ({
+  user_id: userId,
+  rating_change: ratingChange,
+  winner: winner,
+  name: `Player ${userId}`,
+  civ: 'Britons',
+  number: 1,
+  color_id: 1,
+  rating: 1000,
+});
+
+const mockMatch = (start: string, duration: number, players: Player[] = [], diplomacyType = '1v1'): Match => ({
   match_id: Math.random().toString(),
   start_time: start,
   duration: duration,
   map: 'Arabia',
-  diplomacy: { type: '1v1', team_size: '1' },
+  diplomacy: { type: diplomacyType, team_size: '1' },
   options: '',
   description: 'RM 1v1',
   teams: [],
-  players: [],
+  players: players,
   winning_team: 1,
 });
 
@@ -86,6 +97,36 @@ describe('matchUtils', () => {
       // This is a bit tricky as it depends on the test runner's locale.
       // We are just checking if it doesn't throw and produces a string.
       expect(typeof formatted).toBe('string');
+    });
+  });
+
+  describe('countByDiplomacy', () => {
+    it('should correctly sum wins, losses, and elo changes', () => {
+      const profileId = '123';
+      const matches = [
+        mockMatch('2023-01-01T12:00:00Z', 1800, [
+          mockPlayer('123', 15, true),
+          mockPlayer('456', -15, false),
+        ], '1v1'),
+        mockMatch('2023-01-01T13:00:00Z', 1800, [
+          mockPlayer('123', -12, false),
+          mockPlayer('789', 12, true),
+        ], '1v1'),
+        mockMatch('2023-01-01T14:00:00Z', 1800, [
+          mockPlayer('123', 10, true),
+          mockPlayer('101', -10, false),
+        ], 'RM Team'),
+      ];
+
+      const result = countByDiplomacy(matches, profileId);
+
+      expect(result['1v1'].wins).toBe(1);
+      expect(result['1v1'].losses).toBe(1);
+      expect(result['1v1'].eloChange).toBe(3);
+
+      expect(result['RM Team'].wins).toBe(1);
+      expect(result['RM Team'].losses).toBe(0);
+      expect(result['RM Team'].eloChange).toBe(10);
     });
   });
 }); 
