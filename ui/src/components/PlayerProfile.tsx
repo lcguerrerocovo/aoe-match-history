@@ -1,4 +1,4 @@
-import { Box, Text, VStack, HStack, Icon, Avatar, useMultiStyleConfig } from '@chakra-ui/react';
+import { Box, Text, VStack, HStack, Icon, Avatar, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
 import { FaUser, FaFlag } from 'react-icons/fa';
 
 interface PlayerProfileProps {
@@ -10,9 +10,10 @@ interface PlayerProfileProps {
 export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfileProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const styles = useMultiStyleConfig('ProfileHeader', {});
+  const theme = useTheme();
 
   return (
-    <VStack spacing={2} align="center">
+    <VStack spacing={theme.spacing.component.profileSpacing} align="center">
       <Box
         sx={styles.avatar}
         borderRadius="full"
@@ -30,9 +31,9 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
           <Icon as={FaUser} w="50%" h="50%" />
         )}
       </Box>
-      <VStack spacing={1}>
+      <VStack spacing={theme.spacing.xs}>
         <Text sx={styles.name} textAlign="center" noOfLines={2}>{playerName}</Text>
-        <HStack spacing={2} align="center">
+        <HStack spacing={theme.spacing.sm} align="center">
           <Icon as={FaFlag} w={3} h={3} color="brand.steel" />
           <Text sx={styles.id}>ID: {profileId}</Text>
         </HStack>

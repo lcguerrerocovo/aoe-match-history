@@ -1,4 +1,4 @@
-import { Box, VStack, Divider, useMultiStyleConfig } from '@chakra-ui/react';
+import { Box, VStack, Divider, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerStats } from './PlayerStats';
 import type { PersonalStats } from '../types/stats';
@@ -12,10 +12,11 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const styles = useMultiStyleConfig('ProfileHeader', {});
+  const theme = useTheme();
   
   return (
     <Box sx={styles.container}>
-      <VStack spacing={2} align="stretch">
+      <VStack spacing={theme.spacing.component.profileSpacing} align="stretch">
         <PlayerProfile 
           profileId={profileId}
           profile={profile}

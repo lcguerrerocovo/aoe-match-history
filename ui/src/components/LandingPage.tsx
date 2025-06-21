@@ -1,10 +1,12 @@
-import { Box, VStack, Text, Image, Button } from '@chakra-ui/react';
+import { Box, VStack, Text, Image, Button, useTheme } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import logoImage from '../assets/logo/logo.png';
 
 const DEFAULT_PROFILE_ID = '4764337';
 
 export function LandingPage() {
+  const theme = useTheme();
+  
   return (
     <Box
       minH="100vh"
@@ -29,7 +31,13 @@ export function LandingPage() {
         zIndex="0"
       />
       
-      <VStack spacing={{ base: 1, md: 4 }} align="center" zIndex="1" textAlign="center" p={{ base: 2, md: 8 }}>
+      <VStack 
+        spacing={theme.spacing.responsive.landingSpacing} 
+        align="center" 
+        zIndex="1" 
+        textAlign="center" 
+        p={theme.spacing.responsive.landingPadding}
+      >
         {/* Logo */}
         <Box
           position="relative"
@@ -80,8 +88,8 @@ export function LandingPage() {
             transform: 'translateY(0)',
           }}
           borderRadius="full"
-          px={8}
-          py={6}
+          px={theme.spacing.xl}
+          py={theme.spacing.lg}
           fontSize="lg"
           fontWeight="bold"
           transition="all 0.2s ease"
@@ -92,7 +100,7 @@ export function LandingPage() {
         </Button>
 
         {/* Description */}
-        <VStack spacing={8} maxW="600px" align="stretch">
+        <VStack spacing={theme.spacing.xl} maxW="600px" align="stretch">
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"
@@ -107,7 +115,7 @@ export function LandingPage() {
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
 
           <Box
-            p={4}
+            p={theme.spacing.md}
             bg="white"
             borderRadius="md"
             borderLeft="4px solid"
@@ -125,9 +133,7 @@ export function LandingPage() {
               designed for serious Age of Empires II players.
             </Text>
           </Box>
-                </VStack>
-
- 
+        </VStack>
       </VStack>
     </Box>
   );

@@ -1,4 +1,5 @@
-import { Box, Text, VStack, useMultiStyleConfig } from '@chakra-ui/react';
+import React from 'react';
+import { Box, Text, VStack, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/leaderboardUtils';
 import { StatsTable } from './StatsTable';
@@ -9,6 +10,12 @@ interface PlayerStatsProps {
 
 export function PlayerStats({ stats }: PlayerStatsProps) {
   const styles = useMultiStyleConfig('PlayerStats', {});
+  const theme = useTheme();
+
+  if (!stats?.statGroups?.[0]?.members?.[0]) {
+    return null;
+  }
+
   const leaderboardStats = stats?.leaderboardStats || [];
 
   // Filter out any leaderboard stats with invalid data
@@ -97,7 +104,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
 
   return (
     <Box sx={styles.container}>
-      <VStack spacing={2} align="stretch" sx={styles.statsTable}>
+      <VStack spacing={theme.spacing.component.statsSpacing} align="stretch" sx={styles.statsTable}>
         <StatsTable data={validLeaderboardStats} columns={rankingColumns} />
         <StatsTable data={validLeaderboardStats} columns={performanceColumns} />
       </VStack>

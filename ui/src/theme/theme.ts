@@ -37,7 +37,33 @@ const colors = {
     brightGold: '#FFD700',   // Bolder gold for dark backgrounds
     brightGreen: '#4AE374', // Bright green for dark background wins
     brightRed: '#FF6B6B',   // Bright red for dark background losses
+    contrastRed: '#FF6B94', // High contrast pinkish-red for very dark backgrounds
   },
+};
+
+// Centralized spacing constants
+const spacing = {
+  xs: '0.25rem',    // 4px
+  sm: '0.5rem',     // 8px
+  md: '1rem',       // 16px
+  lg: '1.5rem',     // 24px
+  xl: '2rem',       // 32px
+  '2xl': '3rem',    // 48px
+  
+  // Component-specific spacing
+  component: {
+    profileSpacing: '0.5rem',      // 8px - spacing between profile elements
+    statsSpacing: '0.5rem',        // 8px - spacing between stats elements
+    cardSpacing: '1rem',           // 16px - spacing between cards
+    sectionSpacing: '1.5rem',      // 24px - spacing between major sections
+  },
+  
+  // Responsive spacing patterns
+  responsive: {
+    landingSpacing: { base: '0.25rem', md: '1rem' },     // Landing page main spacing
+    landingPadding: { base: '0.5rem', md: '2rem' },      // Landing page padding
+    sectionSpacing: { base: '2rem', md: '3rem' },        // Major section spacing
+  }
 };
 
 // Recreate the reusable style objects from breakpoints.ts for card layout
@@ -222,6 +248,28 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
       }
     },
     }),
+  variants: {
+    inline: defineProfileHeaderPartsStyle({
+      container: {
+        bg: 'brand.parchment',
+        borderWidth: '2px',
+        borderRadius: 'lg',
+        boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
+        width: '100%',
+        height: 'auto',
+        padding: '0.75rem',
+        marginBottom: '0.5rem',
+        borderColor: 'brand.steel',
+        position: 'relative',
+        '@media (min-width: 768px)': {
+          padding: '1.5rem',
+        },
+        '@media (min-width: 1280px)': {
+          padding: '2rem',
+        }
+      },
+    }),
+  },
 });
 
 const playerStatsTheme = definePlayerStatsMultiStyleConfig({
@@ -260,7 +308,8 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
         color: 'brand.brightGreen',
       },
       '.loss': {
-        color: 'brand.brightRed',
+        color: 'brand.contrastRed',
+        fontWeight: 'bold',
       },
       '.streak': {
         color: 'brand.brightGreen',
@@ -271,6 +320,7 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
 
 const theme = extendTheme({
   colors,
+  spacing,
   styles: {
     global: {
       body: {

@@ -23,7 +23,26 @@ export const mockProfile = {
 
 export const mockStats: PersonalStats = {
   result: { code: 200, message: 'OK' },
-  statGroups: [],
+  statGroups: [
+    {
+      id: 1,
+      name: 'Test Group',
+      type: 1,
+      members: [
+        {
+          profile_id: 12345,
+          name: 'TestPlayer',
+          alias: 'TestPlayer',
+          personal_statgroup_id: 1,
+          xp: 1000,
+          level: 10,
+          leaderboardregion_id: 1,
+          country: 'US',
+          clanlist_name: 'TestClan'
+        }
+      ]
+    }
+  ],
   leaderboardStats: [
     {
       leaderboard_id: 3,
