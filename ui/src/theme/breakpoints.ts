@@ -29,6 +29,11 @@ const sharedValues = {
       gap: '0.5rem',
       minWidth: '100%',
       playerBoxMinWidth: '0',
+      playerBoxMaxWidth: '100%',
+      playerBoxFlex: '1',
+      teamVStackSpacing: '0',
+      teamVStackAlign: 'stretch',
+      teamVStackWidth: '100%',
       colorBarWidth: '8px',
       colorBarHeight: '16px',
       civIconSize: '21px',
@@ -122,6 +127,11 @@ const sharedValues = {
       gap: '1.5rem',
       minWidth: '140px',
       playerBoxMinWidth: '200px',
+      playerBoxMaxWidth: '100%',
+      playerBoxFlex: '1',
+      teamVStackSpacing: '0',
+      teamVStackAlign: 'stretch',
+      teamVStackWidth: '100%',
       colorBarWidth: '8px',
       colorBarHeight: '16px',
       civIconSize: '21px',
@@ -212,8 +222,12 @@ const sharedValues = {
       flexDirection: 'row' as const,
       gap: '0.5rem',
       minWidth: '0',
-      playerBoxMinWidth: '100px',
-      playerBoxMaxWidth: '120px',
+      playerBoxMinWidth: '0',
+      playerBoxMaxWidth: '100%',
+      playerBoxFlex: '1',
+      teamVStackSpacing: '0',
+      teamVStackAlign: 'stretch',
+      teamVStackWidth: '100%',
       colorBarWidth: '6px',
       colorBarHeight: '14px',
       civIconSize: '18px',
@@ -276,7 +290,7 @@ const sharedValues = {
       accordionWidth: '520px',
       groupWidth: '520px',
       groupMinHeight: '180px',
-      matchWidth: '520px',
+      matchWidth: '480px',
       groupGap: '1rem',
       groupPadding: '1rem',
     },
@@ -308,6 +322,10 @@ export interface LayoutConfig {
     minWidth: string;
     playerBoxMinWidth: ResponsiveValue<string>;
     playerBoxMaxWidth?: string;
+    playerBoxFlex?: string;
+    teamVStackSpacing?: string;
+    teamVStackAlign?: string;
+    teamVStackWidth?: string;
     colorBarWidth?: string;
     colorBarHeight?: string;
     civIconSize?: string;

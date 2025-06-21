@@ -145,13 +145,15 @@ function TeamCard({ match }: { match: any }) {
                 key={idx}
                 variant={isWinner ? 'winner' : 'loser'}
                 flex="1"
+                minW="0"
+                overflow="hidden"
               >
                 {isWinner && (
                   <Box position="absolute" top={1} right={1} zIndex={1}>
                     🏆
                   </Box>
                 )}
-                <VStack spacing={0} align="stretch" width="100%">
+                <VStack spacing={layout?.teamCard.teamVStackSpacing} align={layout?.teamCard.teamVStackAlign} width={layout?.teamCard.teamVStackWidth}>
                   {team.map((p, rowIndex) => (
                     <Box
                       key={p.name}
@@ -163,7 +165,8 @@ function TeamCard({ match }: { match: any }) {
                       p={0.5}
                       bg={rowIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
                       minW={layout?.teamCard.playerBoxMinWidth}
-                      maxW="100%"
+                      maxW={layout?.teamCard.playerBoxMaxWidth}
+                      flex={layout?.teamCard.playerBoxFlex}
                       m={0}
                     >
                       <Box
