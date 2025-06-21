@@ -31,6 +31,10 @@ describe('FilterBar Responsive Layout', () => {
     cy.viewport(1200, 800);
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
+
+    // Test iPad Pro view
+    cy.viewport(1024,1366);
+    cy.get('input[placeholder="Search matches..."]').should('be.visible');
   });
 
   it('should handle map selection correctly', () => {

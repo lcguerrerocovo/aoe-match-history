@@ -26,5 +26,9 @@ describe('MatchCard Responsive Layout', () => {
     // Test the desktop view
     cy.viewport(1200, 800);
     cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
+
+    // Test the iPad Pro view
+    cy.viewport(1024, 1366);
+    cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
   });
 }); 

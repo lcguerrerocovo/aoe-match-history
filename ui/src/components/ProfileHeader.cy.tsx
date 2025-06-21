@@ -25,6 +25,11 @@ describe('ProfileHeader Responsive Layout', () => {
     cy.contains('TestPlayer').should('be.visible');
     cy.contains('ID: 12345').should('be.visible');
     cy.get('table').should('have.length', 2);
+
+    // iPad Pro
+    cy.viewport(1024,1366);
+    cy.contains('TestPlayer').should('be.visible');
+    cy.get('table').should('have.length', 2);
   });
 
   it('should display leaderboard stats correctly', () => {
