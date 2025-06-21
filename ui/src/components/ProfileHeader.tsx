@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Divider, HStack, Icon, Table, Thead, Tbody, Tr, Th, Td, Avatar, useMultiStyleConfig } from '@chakra-ui/react';
+import { Box, Text, VStack, Divider, Icon, Table, Thead, Tbody, Tr, Th, Td, Avatar, useMultiStyleConfig } from '@chakra-ui/react';
 import { FaUser } from 'react-icons/fa';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/leaderboardUtils';
@@ -24,9 +24,9 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
 
   return (
     <Box sx={styles.container}>
-      <VStack spacing={6} align="stretch">
+      <VStack spacing={2} align="stretch">
         {/* Profile Section */}
-        <VStack spacing={4} align="center" pb={4}>
+        <VStack spacing={2} align="center" pb={2}>
           <Box
             sx={styles.avatar}
             borderRadius="full"
@@ -53,35 +53,34 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         <Divider />
 
         {/* Stats Section */}
-        <VStack spacing={4} align="stretch" sx={styles.statsTable}>
+        <VStack spacing={1} align="stretch" sx={styles.statsTable}>
           <Box w="100%" overflowX="auto">
             <Table size="xs" variant="simple" w="100%">
               <Thead>
                 <Tr>
                   <Th>Board</Th>
-                  <Th>Rank</Th>
+                  <Th isNumeric>Rank</Th>
+                  <Th isNumeric>Top %</Th>
                   <Th isNumeric>Rating</Th>
                   <Th isNumeric>Max</Th>
-                  <Th>Diff</Th>
+                  <Th textAlign="right">Diff</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {validLeaderboardStats.map((stat) => {
-                  const percentile = stat.rank === -1 ? 0 : (100 - (stat.rank / stat.ranktotal * 100)).toFixed(1);
+                  const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
                   return (
                     <Tr key={stat.leaderboard_id}>
                       <Td>{getLeaderboardName(stat.leaderboard_id)}</Td>
                       <Td isNumeric>
-                        {stat.rank === -1 ? '' : (
-                          <HStack spacing={1} justify="flex-end">
-                            <Text className="rank">{stat.rank}</Text>
-                            <Text className="percentile">({percentile}%)</Text>
-                          </HStack>
-                        )}
+                        <Text className="rank">{stat.rank === -1 ? '' : stat.rank}</Text>
+                      </Td>
+                      <Td isNumeric>
+                        <Text className="percentile" fontWeight="900">{stat.rank === -1 ? '' : percentile}</Text>
                       </Td>
                       <Td isNumeric>{stat.rating}</Td>
                       <Td isNumeric>{stat.highestrating || '-'}</Td>
-                      <Td isNumeric>
+                      <Td textAlign="right">
                         {stat.highestrating === 0 ? null : (
                           stat.rating === stat.highestrating ? (
                             <Text as="span" className="rank">=</Text>

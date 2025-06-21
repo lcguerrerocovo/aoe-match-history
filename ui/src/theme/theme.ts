@@ -125,8 +125,8 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
       boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
       width: '100%',
       height: 'auto',
-      padding: '1rem',
-      marginBottom: '1rem',
+      padding: '0.75rem',
+      marginBottom: '0.5rem',
       borderRight: 'none',
       borderBottom: '1px solid',
       borderColor: 'brand.steel',
@@ -193,11 +193,13 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
         overflow: 'hidden',
       },
       '.rank': {
-        color: 'brand.same',
+        color: 'brand.zoolanderBlue',
+        fontWeight: '900',
       },
       '.percentile': {
         color: 'brand.steel',
-        fontSize: '2xs',
+        fontSize: 'xs',
+        fontWeight: 'bold',
       },
       '.win': {
         color: 'brand.win',
