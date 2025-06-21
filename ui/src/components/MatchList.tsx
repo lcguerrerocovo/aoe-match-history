@@ -1,11 +1,11 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue } from '@chakra-ui/react';
 import type { MatchGroup } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/durationUtils';
-import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatDayDate } from '../utils/matchUtils';
+import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionStart, calculateSessionDuration } from '../utils/matchUtils';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
@@ -271,6 +271,8 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchListProps) {
   const layout = useLayoutConfig();
+  const sessionDurationLabel = useBreakpointValue({ base: 'Session:', md: 'Session Duration:' });
+  const timePlayedLabel = useBreakpointValue({ base: 'Played:', md: 'Time Played:' });
 
   return (
     <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
@@ -285,7 +287,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
         variant="filled"
       >
         {matchGroups.map((group) => {
-          const { totalGame, totalReal } = sumDurations(group.matches);
+          const { totalReal } = sumDurations(group.matches);
+          const sessionDuration = calculateSessionDuration(group.matches);
           const byDiplo = countByDiplomacy(group.matches, PROFILE_ID.toString());
           return (
             <AccordionItem key={group.date}>
@@ -295,7 +298,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
                     {/* Date Header */}
                     <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
                       <Text fontWeight="bold" fontSize="lg" letterSpacing="wide" color="brand.black">
-                        {formatDayDate(group.date)}
+                        {formatSessionStart(group.date)}
                       </Text>
                     </Box>
                     
@@ -329,13 +332,13 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
                     {/* Time Stats Row */}
                     <HStack spacing={4} fontSize="sm" color="brand.steel">
                       <HStack spacing={1}>
-                        <TimeIcon color="brand.same" />
-                        <Text>Game Time:</Text>
-                        <Text fontWeight="bold">{formatDuration(totalGame)}</Text>
+                        <TimeIcon color="brand.bronze" />
+                        <Text>{sessionDurationLabel}</Text>
+                        <Text fontWeight="bold">{formatDuration(sessionDuration)}</Text>
                       </HStack>
                       <HStack spacing={1}>
                         <TimeIcon color="brand.bronze" />
-                        <Text>Real Time:</Text>
+                        <Text>{timePlayedLabel}</Text>
                         <Text fontWeight="bold">{formatDuration(totalReal)}</Text>
                       </HStack>
                     </HStack>

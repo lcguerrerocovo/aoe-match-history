@@ -8,7 +8,7 @@ import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
-import { toISODateString } from './utils/dateUtils';
+import { groupMatchesBySession } from './utils/matchUtils';
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -34,7 +34,7 @@ function App() {
       ]);
       const filtered = filterFn ? filterFn(data.matches) : data.matches;
       setMaps(getMapsWithCounts(filtered));
-      setMatchGroups(groupMatchesByDate(filtered));
+      setMatchGroups(groupMatchesBySession(filtered));
       
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
@@ -64,21 +64,6 @@ function App() {
   useEffect(() => {
     updateMatches();
   }, [profileId, updateMatches]);
-
-  const groupMatchesByDate = (matches: Match[]): MatchGroup[] => {
-    const groups = matches.reduce((acc: { [key: string]: Match[] }, match) => {
-      const date = new Date(toISODateString(match.start_time)).toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(match);
-      return acc;
-    }, {});
-    // Convert to array and sort by date
-    return Object.entries(groups)
-      .map(([date, matches]) => ({ date, matches }))
-      .sort((a, b) => b.date.localeCompare(a.date)); // Sort descending by date
-  };
 
   const getMapsWithCounts = (matches: Match[]): Map[] => {
     return Array.from(

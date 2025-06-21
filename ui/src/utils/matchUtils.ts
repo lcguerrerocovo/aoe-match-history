@@ -1,4 +1,56 @@
 import { parseDuration } from './durationUtils';
+import type { Match, MatchGroup } from '../types/match';
+
+export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
+  if (matches.length === 0) return [];
+  
+  // Sort matches by start time (newest first)
+  const sortedMatches = [...matches].sort((a, b) => 
+    new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+  );
+  
+  const sessions: MatchGroup[] = [];
+  let currentSession: Match[] = [];
+  
+  for (const match of sortedMatches) {
+    if (currentSession.length === 0) {
+      // Start new session
+      currentSession = [match];
+    } else {
+      // Check if this match is within 1 hour of the most recent match in the session
+      const lastMatchTime = new Date(currentSession[currentSession.length - 1].start_time);
+      const timeDiff = Math.abs(new Date(match.start_time).getTime() - lastMatchTime.getTime());
+      const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+      
+      if (timeDiff <= oneHour) {
+        // Add to current session
+        currentSession.push(match);
+      } else {
+        // End current session and start new one
+        const oldestMatchInSession = currentSession[currentSession.length - 1];
+        const sessionStart = new Date(oldestMatchInSession.start_time);
+        const newestMatchInSession = currentSession[0];
+        const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration) / 1.7) * 1000));
+        const sessionId = `${sessionStart.toISOString()}_${sessionEnd.toISOString()}`;
+        sessions.push({ date: sessionId, matches: currentSession });
+        
+        currentSession = [match];
+      }
+    }
+  }
+  
+  // Add the last session
+  if (currentSession.length > 0) {
+    const oldestMatchInSession = currentSession[currentSession.length - 1];
+    const sessionStart = new Date(oldestMatchInSession.start_time);
+    const newestMatchInSession = currentSession[0];
+    const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration) / 1.7) * 1000));
+    const sessionId = `${sessionStart.toISOString()}_${sessionEnd.toISOString()}`;
+    sessions.push({ date: sessionId, matches: currentSession });
+  }
+  
+  return sessions;
+}
 
 export function sumDurations(matches: any[]): { totalGame: number; totalReal: number } {
   let totalGame = 0;
@@ -60,7 +112,6 @@ export function formatDateTime(dt: string): string {
   return d.toLocaleString(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'UTC',
   });
 }
 
@@ -75,4 +126,79 @@ export function formatDayDate(dateStr: string): string {
     day: 'numeric',
     timeZone: 'UTC',
   });
+}
+
+export function formatSessionStart(sessionId: string): string {
+  // Session ID format is "startISO_endISO"
+  try {
+    const [startIso, endIso] = sessionId.split('_');
+
+    if (!endIso) {
+      // Fallback for any single-value format that might still exist
+      return new Date(sessionId).toLocaleString();
+    }
+
+    const startDate = new Date(startIso);
+    const endDate = new Date(endIso);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return sessionId;
+    }
+
+    // Check if session spans across days in the local timezone
+    const isCrossDay = startDate.getDate() !== endDate.getDate();
+
+    if (isCrossDay) {
+      // Format: "Jun 14 10:01 PM → Jun 15 6:25 PM"
+      const startFormatted = startDate.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      const endFormatted = endDate.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        year: 'numeric',
+      });
+
+      return `${startFormatted} → ${endFormatted}`;
+    } else {
+      // Format: "Jun 14, 2025 10:01 PM – 6:25 PM"
+      const dateFormatted = startDate.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+      const startTimeFormatted = startDate.toLocaleString(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      const endTimeFormatted = endDate.toLocaleString(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      return `${dateFormatted} ${startTimeFormatted} – ${endTimeFormatted}`;
+    }
+  } catch (error) {
+    return sessionId;
+  }
+}
+
+export function calculateSessionDuration(matches: any[]): number {
+  if (matches.length === 0) {
+    return 0;
+  }
+
+  const sessionStartTime = new Date(matches[matches.length - 1].start_time).getTime();
+  const lastMatch = matches[0];
+  const lastMatchEndTime = new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration) / 1.7) * 1000);
+
+  return Math.round((lastMatchEndTime - sessionStartTime) / 1000);
 } 
