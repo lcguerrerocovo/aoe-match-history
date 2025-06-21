@@ -114,7 +114,7 @@ function App() {
           mx="auto"
         >
           <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-          <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />
+          {profileId && <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} profileId={profileId} />}
         </VStack>
       </VStack>
     </Box>

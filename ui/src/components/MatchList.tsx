@@ -9,12 +9,11 @@ import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatS
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
-const PROFILE_ID = 4764337;
-
 interface MatchListProps {
   matchGroups: MatchGroup[];
   openDates: string[];
   onOpenDatesChange: (dates: string[]) => void;
+  profileId: string;
 }
 
 function MapCard({ match }: { match: any }) {
@@ -269,7 +268,7 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
   );
 }
 
-export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchListProps) {
+export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
   const sessionDurationLabel = useBreakpointValue({ base: 'Session:', md: 'Session Duration:' });
   const timePlayedLabel = useBreakpointValue({ base: 'Played:', md: 'Time Played:' });
@@ -289,7 +288,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
         {matchGroups.map((group) => {
           const { totalReal } = sumDurations(group.matches);
           const sessionDuration = calculateSessionDuration(group.matches);
-          const byDiplo = countByDiplomacy(group.matches, PROFILE_ID.toString());
+          const byDiplo = countByDiplomacy(group.matches, profileId);
           return (
             <AccordionItem key={group.date}>
               <h2>
