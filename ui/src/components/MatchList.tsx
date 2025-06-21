@@ -36,8 +36,8 @@ function MapCard({ match }: { match: any }) {
     >
       {/* Diamond-shaped map image */}
       <Box
-        w="75px"
-        h="75px"
+        w={layout?.mapCard.diamondSize}
+        h={layout?.mapCard.diamondSize}
         bg="white"
         borderRadius="md"
         display="flex"
@@ -51,7 +51,7 @@ function MapCard({ match }: { match: any }) {
         border="none"
         boxShadow="0 0 2px rgba(0,0,0,0.04)"
       >
-        <Box transform="rotate(-45deg)" w="75px" h="75px" overflow="hidden">
+        <Box transform="rotate(-45deg)" w={layout?.mapCard.diamondSize} h={layout?.mapCard.diamondSize} overflow="hidden">
           <img
             src={imageUrl}
             alt={mapName}
@@ -167,8 +167,8 @@ function TeamCard({ match }: { match: any }) {
                       m={0}
                     >
                       <Box
-                        w="8px"
-                        h="16px"
+                        w={layout?.teamCard.colorBarWidth}
+                        h={layout?.teamCard.colorBarHeight}
                         bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
                         borderRadius="sm"
                         mr={1}
@@ -176,8 +176,8 @@ function TeamCard({ match }: { match: any }) {
                       />
                       <Box
                         position="relative"
-                        w="21px"
-                        h="21px"
+                        w={layout?.teamCard.civIconSize}
+                        h={layout?.teamCard.civIconSize}
                         bg="gray.300"
                         borderRadius="sm"
                         mr={1}
@@ -191,7 +191,7 @@ function TeamCard({ match }: { match: any }) {
                           top={0}
                           left="50%"
                           transform="translateX(-50%)"
-                          fontSize="9px"
+                          fontSize={layout?.teamCard.civFontSize}
                           fontWeight="bold"
                           color="gray.700"
                           zIndex={1}
@@ -205,12 +205,12 @@ function TeamCard({ match }: { match: any }) {
                           textOverflow: 'ellipsis',
                           overflow: 'hidden',
                           whiteSpace: 'nowrap',
-                          maxWidth: is1v1 ? '90px' : '130px',
+                          maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
                           display: 'inline-block',
                           cursor: 'pointer',
                           color: 'blue.500',
                           textDecoration: 'none',
-                          fontSize: '12px'
+                          fontSize: layout?.teamCard.playerNameFontSize
                         }}
                       >
                         {p.name}
@@ -218,10 +218,10 @@ function TeamCard({ match }: { match: any }) {
                       {is1v1 && p.rate_snapshot !== undefined && p.rate_snapshot !== null && (
                         <Text
                           as="span"
-                          fontSize="12px"
+                          fontSize={layout?.teamCard.ratingFontSize}
                           color="gray.500"
                           ml={0.5}
-                          minW="22px"
+                          minW={layout?.teamCard.ratingMinWidth}
                           textAlign="right"
                           flexShrink={0}
                         >

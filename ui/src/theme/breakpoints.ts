@@ -29,12 +29,22 @@ const sharedValues = {
       gap: '0.5rem',
       minWidth: '100%',
       playerBoxMinWidth: '0',
+      colorBarWidth: '8px',
+      colorBarHeight: '16px',
+      civIconSize: '21px',
+      civFontSize: '9px',
+      playerNameFontSize: '12px',
+      playerNameMaxWidth1v1: '90px',
+      playerNameMaxWidthTeam: '130px',
+      ratingFontSize: '12px',
+      ratingMinWidth: '22px',
     },
     mapCard: {
       minWidth: '80px',
       maxWidth: '120px',
       padding: '0.5rem',
       marginBottom: '0.5rem',
+      diamondSize: '75px',
     },
     profileHeader: {
       width: '100%',
@@ -112,12 +122,22 @@ const sharedValues = {
       gap: '1.5rem',
       minWidth: '140px',
       playerBoxMinWidth: '200px',
+      colorBarWidth: '8px',
+      colorBarHeight: '16px',
+      civIconSize: '21px',
+      civFontSize: '9px',
+      playerNameFontSize: '12px',
+      playerNameMaxWidth1v1: '90px',
+      playerNameMaxWidthTeam: '130px',
+      ratingFontSize: '12px',
+      ratingMinWidth: '22px',
     },
     mapCard: {
       minWidth: '80px',
       maxWidth: '120px',
       padding: '0.5rem',
       marginBottom: '0',
+      diamondSize: '75px',
     },
     profileHeader: {
       width: '320px',
@@ -190,15 +210,26 @@ const sharedValues = {
     teamCard: {
       width: '100%',
       flexDirection: 'row' as const,
-      gap: '1rem',
-      minWidth: '100px',
-      playerBoxMinWidth: '120px',
+      gap: '0.5rem',
+      minWidth: '0',
+      playerBoxMinWidth: '100px',
+      playerBoxMaxWidth: '120px',
+      colorBarWidth: '6px',
+      colorBarHeight: '14px',
+      civIconSize: '18px',
+      civFontSize: '8px',
+      playerNameFontSize: '10px',
+      playerNameMaxWidth1v1: '80px',
+      playerNameMaxWidthTeam: '100px',
+      ratingFontSize: '10px',
+      ratingMinWidth: '18px',
     },
     mapCard: {
       minWidth: '70px',
       maxWidth: '100px',
       padding: '0.25rem',
       marginBottom: '0',
+      diamondSize: '75px',
     },
     profileHeader: {
       width: '300px',
@@ -276,12 +307,23 @@ export interface LayoutConfig {
     gap: string;
     minWidth: string;
     playerBoxMinWidth: ResponsiveValue<string>;
+    playerBoxMaxWidth?: string;
+    colorBarWidth?: string;
+    colorBarHeight?: string;
+    civIconSize?: string;
+    civFontSize?: string;
+    playerNameFontSize?: string;
+    playerNameMaxWidth1v1?: string;
+    playerNameMaxWidthTeam?: string;
+    ratingFontSize?: string;
+    ratingMinWidth?: string;
   };
   mapCard: {
     minWidth: string;
     maxWidth: string;
     padding: string;
     marginBottom: string;
+    diamondSize?: string;
   };
   profileHeader: {
     width: string;
