@@ -5,20 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
 import { MatchCard } from './MatchList';
 import theme from '../theme/theme';
-
-// Mock match data
-const mockMatch = {
-  match_id: '12345',
-  description: '1v1',
-  start_time: new Date().toISOString(),
-  duration: '00:25:00',
-  map: 'Arabia',
-  teams: [
-    [{ name: 'Player A', civ: 'Britons', color_id: 0, user_id: '1' }],
-    [{ name: 'Player B', civ: 'Franks', color_id: 1, user_id: '2' }],
-  ],
-  winning_team: 1,
-};
+import { mockMatch } from '../test/mocks';
 
 const BASE_URL = 'http://localhost';
 
