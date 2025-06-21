@@ -63,11 +63,11 @@ export function sumDurations(matches: any[]): { totalGame: number; totalReal: nu
   return { totalGame, totalReal };
 }
 
-export function countByDiplomacy(matches: any[], profileId: string): Record<string, { matches: number; wins: number; losses: number; uncategorized: number }> {
-  const byDiplo: Record<string, { matches: number; wins: number; losses: number; uncategorized: number }> = {};
+export function countByDiplomacy(matches: any[], profileId: string): Record<string, { matches: number; wins: number; losses: number; uncategorized: number; eloChange: number }> {
+  const byDiplo: Record<string, { matches: number; wins: number; losses: number; uncategorized: number; eloChange: number }> = {};
   for (const match of matches) {
     const diplo = match.diplomacy?.type || 'Unknown';
-    if (!byDiplo[diplo]) byDiplo[diplo] = { matches: 0, wins: 0, losses: 0, uncategorized: 0 };
+    if (!byDiplo[diplo]) byDiplo[diplo] = { matches: 0, wins: 0, losses: 0, uncategorized: 0, eloChange: 0 };
     byDiplo[diplo].matches++;
     let found = false;
     
@@ -82,6 +82,9 @@ export function countByDiplomacy(matches: any[], profileId: string): Record<stri
               byDiplo[diplo].losses++;
             }
             found = true;
+          }
+          if (player.rating_change !== null) {
+            byDiplo[diplo].eloChange += player.rating_change;
           }
         }
       }

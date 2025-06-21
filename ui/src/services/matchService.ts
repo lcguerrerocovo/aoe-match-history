@@ -1,4 +1,4 @@
-import type { Match } from '../types/match';
+import type { Match, Player } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
@@ -132,6 +132,13 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       data.profiles.map((profile: any) => [profile.profile_id.toString(), profile.alias])
     );
 
+    const ratingMap = new Map<number, { oldRating: number, newRating: number }>(
+      (match.matchhistorymember || []).map((member: any) => [
+        member.profile_id,
+        { oldRating: member.oldrating, newRating: member.newrating },
+      ])
+    );
+
     // Find winning team from resulttype
     const winningTeamId = match.matchhistoryreportresults.find((r: any) => r.resulttype === 1)?.teamid;
     // Add 1 to convert from 0-based to 1-based team numbers
@@ -140,24 +147,32 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
     // Decode slotinfo for diplomacy info
     const slotInfo = decodeSlotInfo(match.slotinfo);
 
-    // Group players by team
-    const teams = match.matchhistoryreportresults.reduce((acc: any[], result: any) => {
-      const teamIndex = result.teamid;
-      if (!acc[teamIndex]) acc[teamIndex] = [];
-      acc[teamIndex].push({
+    const players: Player[] = match.matchhistoryreportresults.map((result: any) => {
+      const profileId = parseInt(result.profile_id);
+      const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
+      const stationId = playerSlot?.stationID || 0;
+      const colorId = stationId > 0 ? stationId - 1 : 0;
+      const ratingInfo = ratingMap.get(result.profile_id);
+
+      return {
         name: profileMap.get(result.profile_id.toString()) || result.profile_id.toString(),
         civ: civMap[result.civilization_id] || result.civilization_id || 0,
         number: result.teamid + 1,
-        color_id: (() => {
-          const profileId = parseInt(result.profile_id);
-          const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
-          const stationId = playerSlot?.stationID || 0;
-          return stationId > 0 ? stationId - 1 : 0;
-        })(),
+        color_id: colorId,
         user_id: result.profile_id,
         winner: result.resulttype === 1,
-        rate_snapshot: 0
-      });
+        rating: ratingInfo?.newRating ?? null,
+        rating_change: ratingInfo ? ratingInfo.newRating - ratingInfo.oldRating : null,
+      };
+    });
+
+    // Group players by team
+    const teams: Player[][] = players.reduce((acc: Player[][], player) => {
+      const teamIndex = player.number - 1; // player.number is teamid + 1
+      if (!acc[teamIndex]) {
+        acc[teamIndex] = [];
+      }
+      acc[teamIndex].push(player);
       return acc;
     }, []);
 
@@ -183,21 +198,7 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       map: mapName,
       duration: match.completiontime - match.startgametime,
       teams: teams,
-      players: match.matchhistoryreportresults.map((result: any) => {
-        const profileId = parseInt(result.profile_id);
-        const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
-        const stationId = playerSlot?.stationID || 0;
-        const colorId = stationId > 0 ? stationId - 1 : 0;
-        return {
-          name: profileMap.get(result.profile_id.toString()) || result.profile_id.toString(),
-          civ: civMap[result.civilization_id] || result.civilization_id || 0,
-          number: result.teamid + 1,
-          color_id: colorId,
-          user_id: result.profile_id,
-          winner: result.resulttype === 1,
-          rate_snapshot: 0
-        };
-      }),
+      players: players,
       winning_team: winningTeam
     };
 

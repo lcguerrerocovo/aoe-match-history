@@ -5,7 +5,8 @@ export interface Player {
   color_id: number;
   user_id: string;
   winner: boolean;
-  rate_snapshot: number;
+  rating: number | null;
+  rating_change: number | null;
 }
 
 export interface Team {

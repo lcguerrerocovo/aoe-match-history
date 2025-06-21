@@ -1,5 +1,5 @@
 import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue } from '@chakra-ui/react';
-import type { MatchGroup } from '../types/match';
+import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
 import { Link as RouterLink } from 'react-router-dom';
@@ -14,6 +14,35 @@ interface MatchListProps {
   openDates: string[];
   onOpenDatesChange: (dates: string[]) => void;
   profileId: string;
+}
+
+function PlayerRating({ player }: { player: Player }) {
+  const { rating, rating_change: ratingChange } = player;
+  const displayMode = useBreakpointValue({ base: 'compact', md: 'full' });
+
+  if (rating == null || ratingChange == null) {
+    return null;
+  }
+
+  const changeColor = ratingChange > 0 ? 'brand.win' : 'brand.loss';
+  const changeText = ratingChange > 0 ? `+${ratingChange}` : ratingChange.toString();
+
+  if (displayMode === 'full') {
+    return (
+      <HStack spacing={2} ml="auto">
+        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono">{rating}</Text>
+        <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
+          {changeText}
+        </Text>
+      </HStack>
+    );
+  }
+
+  return (
+    <Text color={changeColor} fontWeight="semibold" fontSize="xs" ml="auto" fontFamily="mono">
+      ({changeText})
+    </Text>
+  );
 }
 
 function MapCard({ match }: { match: any }) {
@@ -145,10 +174,10 @@ function TeamCard({ match }: { match: any }) {
                 variant={isWinner ? 'winner' : 'loser'}
                 flex="1"
                 minW="0"
-                overflow="hidden"
+                position="relative"
               >
                 {isWinner && (
-                  <Box position="absolute" top={1} right={1} zIndex={1}>
+                  <Box position="absolute" top="-12px" right="-10px" zIndex={1} fontSize="xl">
                     🏆
                   </Box>
                 )}
@@ -221,19 +250,7 @@ function TeamCard({ match }: { match: any }) {
                       >
                         {p.name}
                       </RouterLink>
-                      {is1v1 && p.rate_snapshot !== undefined && p.rate_snapshot !== null && (
-                        <Text
-                          as="span"
-                          fontSize={layout?.teamCard.ratingFontSize}
-                          color="gray.500"
-                          ml={0.5}
-                          minW={layout?.teamCard.ratingMinWidth}
-                          textAlign="right"
-                          flexShrink={0}
-                        >
-                          {p.rate_snapshot}
-                        </Text>
-                      )}
+                      <PlayerRating player={p} />
                     </Box>
                   ))}
                 </VStack>
@@ -296,7 +313,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <VStack flex="1" align="stretch" spacing={2}>
                     {/* Date Header */}
                     <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
-                      <Text fontWeight="bold" fontSize="lg" letterSpacing="wide" color="brand.black">
+                      <Text fontWeight="bold" fontSize="md" letterSpacing="wide" color="brand.black">
                         {formatSessionStart(group.date)}
                       </Text>
                     </Box>
@@ -315,7 +332,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                           px={3}
                           py={1}
                           borderRadius="full"
-                          fontSize="sm"
+                          fontSize="0.8125rem"
                           fontWeight="semibold"
                         >
                           <Text as="span" fontWeight="bold" mr={2}>{diplo}</Text>
@@ -323,6 +340,11 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                           <Text as="span" color="brand.loss">{rec.losses}L</Text>
                           {rec.uncategorized > 0 && (
                             <Text as="span" color="gray.500" ml={1}>{rec.uncategorized}?</Text>
+                          )}
+                          {rec.eloChange !== 0 && (
+                            <Text as="span" color={rec.eloChange > 0 ? 'brand.win' : 'brand.loss'} ml={2}>
+                              ({rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange})
+                            </Text>
                           )}
                         </Box>
                       ))}
