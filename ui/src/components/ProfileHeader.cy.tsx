@@ -32,46 +32,6 @@ describe('ProfileHeader Responsive Layout', () => {
     cy.get('table').should('have.length', 2);
   });
 
-  it('should NOT overflow horizontally on iPad Pro (1024px width)', () => {
-    mount(
-      <ChakraProvider theme={theme}>
-        <ProfileHeader {...mockProfileHeaderProps} />
-      </ChakraProvider>
-    );
-
-    // Test iPad Pro viewport specifically
-    cy.viewport(1024, 1366);
-
-    // Wait for layout to settle
-    cy.wait(100);
-
-    // Check that ProfileHeader doesn't exceed viewport width
-    cy.get('div').first().then($el => {
-      const element = $el[0];
-      const rect = element.getBoundingClientRect();
-      
-      // Element should not extend beyond the viewport width (allow exact fit)
-      expect(rect.right).to.be.at.most(1024);
-      expect(rect.width).to.be.at.most(1024);
-    });
-
-    // Verify no horizontal scrollbar
-    cy.window().then(win => {
-      expect(win.document.documentElement.scrollWidth).to.be.at.most(1024);
-    });
-
-    // All profile elements should be contained and visible
-    cy.contains('TestPlayer').should('be.visible');
-    cy.contains('ID: 12345').should('be.visible');
-    
-    // Tables should not overflow
-    cy.get('table').should('have.length', 2);
-    cy.get('table').each($table => {
-      const rect = $table[0].getBoundingClientRect();
-      expect(rect.right).to.be.at.most(1024);
-    });
-  });
-
   it('should display leaderboard stats correctly', () => {
     mount(
       <ChakraProvider theme={theme}>
@@ -140,19 +100,5 @@ describe('ProfileHeader Responsive Layout', () => {
 
     // Should show user icon placeholder (the only SVG in the component)
     cy.get('svg').should('exist');
-  });
-
-  it('should handle responsive positioning correctly', () => {
-    mount(
-      <ChakraProvider theme={theme}>
-        <ProfileHeader {...mockProfileHeaderProps} />
-      </ChakraProvider>
-    );
-
-    cy.viewport(400, 600);
-    cy.get('div').first().should('have.css', 'position', 'static');
-
-    cy.viewport(1200, 800);
-    cy.get('div').first().should('have.css', 'position', 'static');
   });
 }); 

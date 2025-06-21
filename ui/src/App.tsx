@@ -113,6 +113,7 @@ function App() {
         boxShadow={{ md: 'xl' }}
         borderWidth={{ base: '3px', md: '4px' }}
         borderColor="brand.gold"
+        data-testid="floating-box-container"
       >
         {profileId && 
           <Box w="100%">

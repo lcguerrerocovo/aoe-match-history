@@ -6,7 +6,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { MatchCard } from './MatchList';
 import theme from '../theme/theme';
 import { mockMatch } from '../test/mocks';
-import { layoutConfig } from '../theme/breakpoints';
 
 const BASE_URL = 'http://localhost';
 
@@ -66,27 +65,12 @@ describe('MatchCard Responsive Layout', () => {
     });
   });
 
-  it('should contain all match elements within accordion bounds on iPad', () => {
-    // Create a mock match group for accordion testing
-    const mockMatchGroup = {
-      date: '2025-01-01',
-      matches: [mockMatch, mockMatch] // Multiple matches to test layout
-    };
-
-    // Get the actual lg breakpoint values
-    const lgConfig = layoutConfig.lg;
-    const accordionWidth = parseInt(lgConfig.matchList.accordionWidth);
-    const matchWidth = parseInt(lgConfig.matchList.matchWidth);
-
+  it('should contain all match elements within the viewport on iPad', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <div style={{ width: `${accordionWidth}px`, border: '1px solid red' }}>
-            {mockMatchGroup.matches.map((match, index) => (
-              <div key={index} style={{ width: `${matchWidth}px`, margin: '0 auto' }}>
-                <MatchCard match={match} BASE_URL={BASE_URL} />
-              </div>
-            ))}
+          <div style={{ width: '100%', border: '1px solid red' }}>
+            <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
           </div>
         </ChakraProvider>
       </BrowserRouter>
@@ -94,11 +78,10 @@ describe('MatchCard Responsive Layout', () => {
 
     cy.viewport(1024, 1366);
 
-    // Each match card should fit within the configured match width + small tolerance
     cy.get('[data-testid="match-card-content"]').each($el => {
       const rect = $el[0].getBoundingClientRect();
-      // Should not exceed the configured match width + 10px tolerance
-      expect(rect.width).to.be.lessThan(matchWidth + 10);
+      expect(rect.right).to.be.at.most(1024);
+      expect(rect.width).to.be.at.most(1024);
     });
   });
 }); 

@@ -26,6 +26,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         w="100%"
         mx="auto"
         gap={6}
+        data-testid="profile-header-stack"
       >
         <Flex flex={1} justify="center">
             <PlayerProfile 
