@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -b --noEmit",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:all": "vitest run && npm run cy:run",
@@ -37,7 +37,15 @@
     "react-country-flag": "^3.1.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.6.2"
+    "react-router-dom": "^7.6.2",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
   },
   "devDependencies": {
     "@cypress/react": "^9.0.1",
