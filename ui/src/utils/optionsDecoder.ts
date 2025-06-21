@@ -2,6 +2,11 @@ import { inflate } from 'pako';
 
 export function decodeOptions(encoded: string): Record<string, string> {
     try {
+        // Handle null/undefined input
+        if (!encoded || typeof encoded !== 'string') {
+            return {};
+        }
+
         // 1) Base64 → zlib
         const blob = atob(encoded);
         const data = inflate(new Uint8Array(blob.split('').map(c => c.charCodeAt(0))));
@@ -26,7 +31,7 @@ export function decodeOptions(encoded: string): Record<string, string> {
             return acc;
         }, {} as Record<string, string>);
     } catch (e) {
-        console.error('Failed to decode options:', e);
+        // Silently return empty object for any decoding errors
         return {};
     }
 } 

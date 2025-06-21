@@ -2,6 +2,7 @@ import { Box, Text, VStack, Divider, HStack, Icon, Table, Thead, Tbody, Tr, Th, 
 import { FaUser } from 'react-icons/fa';
 import { useLayoutConfig } from '../theme/breakpoints';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
+import { getLeaderboardName } from '../utils/leaderboardUtils';
 
 interface ProfileHeaderProps {
   profileId: string;
@@ -9,26 +10,6 @@ interface ProfileHeaderProps {
   stats: PersonalStats | null;
   isLoading: boolean;
 }
-
-const LEADERBOARD_NAMES: { [key: number]: string } = {
-  0: 'Unranked',
-  1: 'DM 1v1',
-  2: 'DM Team',
-  3: 'RM 1v1',
-  4: 'RM Team',
-  13: 'EW 1v1',
-  14: 'EW Team',
-  15: 'RM 1v1 (UNR)',
-  16: 'RM Team (UNR)',
-  17: 'EW 1v1 (UNR)',
-  18: 'EW Team (UNR)',
-  19: 'RM 1v1 (QM)',
-  20: 'RM Team (QM)',
-  21: 'EW 1v1 (QM)',
-  22: 'EW Team (QM)'
-};
-
-const getLeaderboardName = (id: number): string => LEADERBOARD_NAMES[id] ?? 'UNR';
 
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;

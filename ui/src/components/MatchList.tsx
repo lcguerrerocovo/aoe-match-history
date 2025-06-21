@@ -4,6 +4,8 @@ import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
+import { parseDuration } from '../utils/durationUtils';
+import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatDayDate } from '../utils/matchUtils';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
@@ -13,55 +15,6 @@ interface MatchListProps {
   matchGroups: MatchGroup[];
   openDates: string[];
   onOpenDatesChange: (dates: string[]) => void;
-}
-
-function parseDuration(duration: string | number): number {
-  if (typeof duration === 'number') return duration;
-  if (typeof duration === 'string' && duration.includes(':')) {
-    const parts = duration.split(':').map(Number);
-    if (parts.length === 3) {
-      // hh:mm:ss
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    } else if (parts.length === 2) {
-      // mm:ss
-      return parts[0] * 60 + parts[1];
-    }
-  }
-  return 0;
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) {
-    return `${h}h ${m}m`;
-  } else {
-    return `${m}m`;
-  }
-}
-
-function formatDateTime(dt: string): string {
-  // Parse UTC timestamp and convert to local time
-  const d = new Date(dt);
-  if (isNaN(d.getTime())) return dt;
-  return d.toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  });
-}
-
-function formatDayDate(dateStr: string): string {
-  // Parse UTC date and format for display
-  const d = new Date(dateStr + 'T00:00:00Z');
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
 }
 
 function MapCard({ match }: { match: any }) {
@@ -322,45 +275,6 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchListProps) {
   const layout = useLayoutConfig();
 
-  // Helper to sum durations for a group
-  function sumDurations(matches: any[]) {
-    let totalGame = 0;
-    let totalReal = 0;
-    for (const match of matches) {
-      const durationSec = parseDuration(match.duration);
-      totalGame += durationSec;
-      totalReal += Math.round(durationSec / 1.7);
-    }
-    return { totalGame, totalReal };
-  }
-
-  // Helper to count wins/losses/uncategorized by diplomacy type
-  function countByDiplomacy(matches: any[]) {
-    const byDiplo: Record<
-      string,
-      { matches: number; wins: number; losses: number; uncategorized: number }
-    > = {};
-    for (const match of matches) {
-      const diplo = match.diplomacy?.type || 'Unknown';
-      if (!byDiplo[diplo]) byDiplo[diplo] = { matches: 0, wins: 0, losses: 0, uncategorized: 0 };
-      byDiplo[diplo].matches++;
-      let found = false;
-      for (const team of match.teams || []) {
-        for (const player of team) {
-          if (player && player.user_id === PROFILE_ID) {
-            if (typeof player.winner === 'boolean') {
-              if (player.winner) byDiplo[diplo].wins++;
-              else byDiplo[diplo].losses++;
-              found = true;
-            }
-          }
-        }
-      }
-      if (!found) byDiplo[diplo].uncategorized++;
-    }
-    return byDiplo;
-  }
-
   return (
     <Box w={layout?.matchList.width} maxW={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
       <Accordion
@@ -374,7 +288,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange }: MatchLi
       >
         {matchGroups.map((group) => {
           const { totalGame, totalReal } = sumDurations(group.matches);
-          const byDiplo = countByDiplomacy(group.matches);
+          const byDiplo = countByDiplomacy(group.matches, PROFILE_ID.toString());
           return (
             <AccordionItem key={group.date}>
               <h2>

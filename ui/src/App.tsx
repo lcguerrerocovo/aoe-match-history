@@ -8,19 +8,7 @@ import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
-
-function toISODateString(dateStr: string): string {
-  // Handles 'YYYY-MM-DD HH:mm UTC' and similar
-  if (dateStr.includes('UTC')) {
-    // If missing seconds, add ':00'
-    let iso = dateStr.replace(' ', 'T').replace(' UTC', 'Z');
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(iso)) {
-      iso = iso.replace('Z', ':00Z');
-    }
-    return iso;
-  }
-  return dateStr;
-}
+import { toISODateString } from './utils/dateUtils';
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();

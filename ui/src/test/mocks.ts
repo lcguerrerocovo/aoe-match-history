@@ -1,4 +1,4 @@
-import type { Map, SortDirection } from '../types/match';
+import type { Map } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 
 // Mock data for FilterBar
