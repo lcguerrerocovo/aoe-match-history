@@ -280,7 +280,7 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
         alignItems={layout?.matchCard.alignItems}
         justifyContent={layout?.matchCard.justifyContent}
         width="100%"
-        mt={2}
+        mt={{ base: 1, md: 2 }}
         data-testid="match-card-content"
       >
         <MapCard match={match} />
