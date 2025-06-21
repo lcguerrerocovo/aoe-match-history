@@ -5,9 +5,14 @@ import { createMultiStyleConfigHelpers } from '@chakra-ui/react';
 const { definePartsStyle: defineCardPartsStyle, defineMultiStyleConfig: defineCardMultiStyleConfig } = createMultiStyleConfigHelpers(cardAnatomy.keys);
 
 const profileHeaderAnatomy = anatomy('profileHeader').parts(
-  'container', 'avatar', 'name', 'id', 'statsTable', 'tableHeader', 'tableCell'
+  'container', 'avatar', 'name', 'id', 'statsTable'
 );
 const { definePartsStyle: defineProfileHeaderPartsStyle, defineMultiStyleConfig: defineProfileHeaderMultiStyleConfig } = createMultiStyleConfigHelpers(profileHeaderAnatomy.keys);
+
+const playerStatsAnatomy = anatomy('playerStats').parts(
+  'container', 'statsTable'
+);
+const { definePartsStyle: definePlayerStatsPartsStyle, defineMultiStyleConfig: definePlayerStatsMultiStyleConfig } = createMultiStyleConfigHelpers(playerStatsAnatomy.keys);
 
 const colors = {
   brand: {
@@ -27,6 +32,11 @@ const colors = {
     stone: '#E6E3D8',        // Light stone for subtle surfaces
     stoneLight: '#F2F0EA',   // Extra-light stone for zebra stripes
     fadedBlue: '#D1DFF7',    // Gentle faded blue
+    
+    // Dark background optimized colors
+    brightGold: '#FFD700',   // Bolder gold for dark backgrounds
+    brightGreen: '#4AE374', // Bright green for dark background wins
+    brightRed: '#FF6B6B',   // Bright red for dark background losses
   },
 };
 
@@ -211,6 +221,51 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
         color: 'brand.win',
       }
     },
+    }),
+});
+
+const playerStatsTheme = definePlayerStatsMultiStyleConfig({
+  baseStyle: definePlayerStatsPartsStyle({
+    container: {
+      bg: 'brand.steel',
+      borderRadius: 'lg',
+      padding: '0.5rem',
+      marginTop: '0.25rem',
+    },
+    statsTable: {
+      th: {
+        color: 'white',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        fontSize: '2xs',
+        fontWeight: 'bold',
+      },
+      td: {
+        color: 'brand.parchment',
+        fontSize: 'xs',
+        whiteSpace: 'nowrap',
+        textOverflow: 'ellipsis',
+        overflow: 'hidden',
+      },
+      '.rank': {
+        color: 'brand.brightGold',
+        fontWeight: '500',
+      },
+      '.percentile': {
+        color: 'white',
+        fontSize: 'xs',
+        fontWeight: 'bold',
+      },
+      '.win': {
+        color: 'brand.brightGreen',
+      },
+      '.loss': {
+        color: 'brand.brightRed',
+      },
+      '.streak': {
+        color: 'brand.brightGreen',
+      }
+    },
   }),
 });
 
@@ -269,6 +324,7 @@ const theme = extendTheme({
     },
     Card: cardTheme,
     ProfileHeader: profileHeaderTheme,
+    PlayerStats: playerStatsTheme,
     Input: {
       variants: {
         filled: {
