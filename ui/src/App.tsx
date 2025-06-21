@@ -16,7 +16,7 @@ function App() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string } | null>(null);
+  const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string, country?: string, clanlist_name?: string } | null>(null);
   const [stats, setStats] = useState<PersonalStats | null>(null);
   const layout = useLayoutConfig();
 
@@ -50,7 +50,9 @@ function App() {
       setProfile({ 
         id: String(profileId),
         name: String(name),
-        avatarUrl 
+        avatarUrl,
+        country: playerInfo?.country,
+        clanlist_name: playerInfo?.clanlist_name
       });
       setStats(statsData);
       setOpenDates([]); // Reset accordion state when profile changes

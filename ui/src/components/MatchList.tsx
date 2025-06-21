@@ -153,7 +153,11 @@ function TeamCard({ match }: { match: any }) {
                     🏆
                   </Box>
                 )}
-                <VStack spacing={layout?.teamCard.teamVStackSpacing} align={layout?.teamCard.teamVStackAlign} width={layout?.teamCard.teamVStackWidth}>
+                <VStack
+                  spacing={layout?.teamCard.teamVStackSpacing}
+                  align={layout?.teamCard.teamVStackAlign}
+                  width={layout?.teamCard.teamVStackWidth}
+                >
                   {team.map((p, rowIndex) => (
                     <Box
                       key={p.name}

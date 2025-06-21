@@ -83,9 +83,9 @@ const sharedValues = {
     },
     filterBar: {
       width: '100%',
-      padding: '1rem',
-      marginBottom: '1rem',
-      gap: '1rem',
+      padding: '0.5rem',
+      marginBottom: '0.5rem',
+      gap: '0.5rem',
       selectWidth: '120px',
       inputWidth: '200px',
     },

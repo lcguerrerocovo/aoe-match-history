@@ -22,6 +22,7 @@ const colors = {
     black: '#1C1C1C',        // Rich charcoal for high legibility
     parchment: '#F8F3E6',    // Elegant parchment backdrop
     steel: '#5A6478',        // Cool steel grey for outlines
+    lightSteel: '#A9B4C2',   // Lighter steel for backgrounds
     heraldic: '#243773',     // Royal heraldic blue
     
     // Thematic status colors from user feedback
@@ -133,7 +134,7 @@ const cardTheme = defineCardMultiStyleConfig({
     }),
     loser: defineCardPartsStyle({
       container: {
-        bg: 'white',
+        bg: 'brand.stoneLight',
         borderColor: 'brand.stone',
         borderWidth: '1px',
         borderRadius: 'md',

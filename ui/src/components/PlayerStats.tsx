@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Text, VStack, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/leaderboardUtils';

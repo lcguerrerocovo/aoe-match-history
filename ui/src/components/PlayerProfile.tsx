@@ -1,9 +1,10 @@
 import { Box, Text, VStack, HStack, Icon, Avatar, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
 import { FaUser, FaFlag } from 'react-icons/fa';
+import ReactCountryFlag from 'react-country-flag';
 
 interface PlayerProfileProps {
   profileId: string;
-  profile: { id: string; name: string; avatarUrl?: string } | null;
+  profile: { id: string; name: string; avatarUrl?: string, country?: string, clanlist_name?: string } | null;
   isLoading: boolean;
 }
 
@@ -33,10 +34,19 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
       </Box>
       <VStack spacing={theme.spacing.xs}>
         <Text sx={styles.name} textAlign="center" noOfLines={2}>{playerName}</Text>
-        <HStack spacing={theme.spacing.sm} align="center">
-          <Icon as={FaFlag} w={3} h={3} color="brand.steel" />
+        <VStack spacing={1} align="center">
+          <HStack spacing={theme.spacing.sm} align="center">
+            {profile?.country ? (
+              <ReactCountryFlag countryCode={profile.country} svg style={{ width: '1em', height: '1em' }} />
+            ) : (
+              <Icon as={FaFlag} w={3} h={3} color="brand.steel" />
+            )}
+            {profile?.clanlist_name && (
+              <Text fontSize="xs" color="brand.steel">Clan: {profile.clanlist_name}</Text>
+            )}
+          </HStack>
           <Text sx={styles.id}>ID: {profileId}</Text>
-        </HStack>
+        </VStack>
       </VStack>
     </VStack>
   );
