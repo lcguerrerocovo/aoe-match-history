@@ -39,7 +39,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         {isLargeScreen && <Divider orientation="vertical" height="150px" />}
 
         <Box minW={{ md: '420px', lg: '450px'}}>
-            <PlayerStats stats={stats} />
+            <PlayerStats stats={stats} variant="modern" />
         </Box>
       </Flex>
     </Box>

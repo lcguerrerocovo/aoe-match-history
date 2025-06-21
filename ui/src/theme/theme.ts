@@ -24,7 +24,15 @@ const colors = {
     steel: '#5A6478',        // Cool steel grey for outlines
     lightSteel: '#A9B4C2',   // Lighter steel for backgrounds
     heraldic: '#243773',     // Royal heraldic blue
+    slateBlue: '#4A5B7B',    // Muted blue for modern theme
+    slateBorder: '#64728A',  // Border for slate blue theme
     
+    // High-contrast colors for light backgrounds
+    darkWin: '#226844',      // Darker green for wins on light backgrounds
+    darkLoss: '#A52D2D',     // Darker red for losses on light backgrounds
+    tableBorderOnLight: '#8894A2', // Table border for light steel bg
+    modernTableBorder: '#4A5D9E', // Lighter blue for modern theme table
+
     // Thematic status colors from user feedback
     win: '#3AA76D',          // Bright victory green
     loss: '#D64545',         // Clear defeat red
@@ -227,12 +235,12 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
 const playerStatsTheme = definePlayerStatsMultiStyleConfig({
   baseStyle: definePlayerStatsPartsStyle({
     container: {
-      bg: 'brand.steel',
+      bg: 'brand.slateBlue',
+      borderColor: 'brand.slateBorder',
       borderRadius: 'lg',
       padding: '1rem',
       boxShadow: 'md',
       borderWidth: '1px',
-      borderColor: 'gray.200',
     },
     statsTable: {
       th: {
@@ -243,7 +251,8 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
         fontWeight: 'bold',
       },
       td: {
-        color: 'brand.parchment',
+        color: 'white',
+        borderColor: 'brand.slateBorder',
         fontSize: 'xs',
         whiteSpace: 'nowrap',
         textOverflow: 'ellipsis',
@@ -251,7 +260,7 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
       },
       '.rank': {
         color: 'brand.brightGold',
-        fontWeight: '500',
+        fontWeight: '700',
       },
       '.percentile': {
         color: 'white',
@@ -267,7 +276,7 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
       },
       '.streak': {
         color: 'brand.brightGreen',
-      }
+      },
     },
   }),
 });
