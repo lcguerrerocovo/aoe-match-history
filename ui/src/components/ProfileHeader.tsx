@@ -5,7 +5,7 @@ import { getLeaderboardName } from '../utils/leaderboardUtils';
 
 interface ProfileHeaderProps {
   profileId: string;
-  profile: { id: 'string'; name: string; avatarUrl?: string } | null;
+  profile: { id: string; name: string; avatarUrl?: string } | null;
   stats: PersonalStats | null;
   isLoading: boolean;
 }

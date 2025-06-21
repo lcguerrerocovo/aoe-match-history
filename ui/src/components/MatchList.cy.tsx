@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { MatchCard } from './MatchList';
 import theme from '../theme/theme';
 import { mockMatch } from '../test/mocks';
+import { layoutConfig } from '../theme/breakpoints';
 
 const BASE_URL = 'http://localhost';
 
@@ -30,5 +31,74 @@ describe('MatchCard Responsive Layout', () => {
     // Test the iPad Pro view
     cy.viewport(1024, 1366);
     cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
+  });
+
+  it('should NOT have horizontal overflow on iPad Pro (1024px width)', () => {
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Test iPad Pro viewport specifically
+    cy.viewport(1024, 1366);
+
+    // Wait for layout to settle
+    cy.wait(100);
+
+    // Check that the match card content doesn't exceed viewport width
+    cy.get('[data-testid="match-card-content"]').then($el => {
+      const element = $el[0];
+      const rect = element.getBoundingClientRect();
+      
+      // Element should not extend beyond the viewport width
+      expect(rect.right).to.be.lessThan(1024);
+      
+      // Element should not cause horizontal scrolling
+      expect(rect.width).to.be.lessThan(1024);
+    });
+
+    // Verify no horizontal scrollbar on document
+    cy.window().then(win => {
+      expect(win.document.documentElement.scrollWidth).to.be.lessThan(1025);
+    });
+  });
+
+  it('should contain all match elements within accordion bounds on iPad', () => {
+    // Create a mock match group for accordion testing
+    const mockMatchGroup = {
+      date: '2025-01-01',
+      matches: [mockMatch, mockMatch] // Multiple matches to test layout
+    };
+
+    // Get the actual lg breakpoint values
+    const lgConfig = layoutConfig.lg;
+    const accordionWidth = parseInt(lgConfig.matchList.accordionWidth);
+    const matchWidth = parseInt(lgConfig.matchList.matchWidth);
+
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <div style={{ width: `${accordionWidth}px`, border: '1px solid red' }}>
+            {mockMatchGroup.matches.map((match, index) => (
+              <div key={index} style={{ width: `${matchWidth}px`, margin: '0 auto' }}>
+                <MatchCard match={match} BASE_URL={BASE_URL} />
+              </div>
+            ))}
+          </div>
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    cy.viewport(1024, 1366);
+
+    // Each match card should fit within the configured match width + small tolerance
+    cy.get('[data-testid="match-card-content"]').each($el => {
+      const rect = $el[0].getBoundingClientRect();
+      // Should not exceed the configured match width + 10px tolerance
+      expect(rect.width).to.be.lessThan(matchWidth + 10);
+    });
   });
 }); 

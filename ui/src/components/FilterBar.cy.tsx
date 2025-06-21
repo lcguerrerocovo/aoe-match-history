@@ -37,6 +37,49 @@ describe('FilterBar Responsive Layout', () => {
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
   });
 
+  it('should NOT overflow horizontally on iPad Pro (1024px width)', () => {
+    const props = {
+      ...mockFilterBarProps,
+      onMapChange: cy.stub().as('onMapChange'),
+      onSortChange: cy.stub().as('onSortChange')
+    };
+
+    mount(
+      <ChakraProvider theme={theme}>
+        <FilterBar {...props} />
+      </ChakraProvider>
+    );
+
+    // Test iPad Pro viewport specifically
+    cy.viewport(1024, 1366);
+
+    // Wait for layout to settle
+    cy.wait(100);
+
+    // Check that FilterBar doesn't exceed viewport width
+    cy.get('div').first().then($el => {
+      const element = $el[0];
+      const rect = element.getBoundingClientRect();
+      
+      // Element should not extend beyond the viewport width (allow exact fit)
+      expect(rect.right).to.be.at.most(1024);
+      expect(rect.width).to.be.at.most(1024);
+    });
+
+    // Verify no horizontal scrollbar
+    cy.window().then(win => {
+      expect(win.document.documentElement.scrollWidth).to.be.at.most(1024);
+    });
+
+    // All filter elements should be contained
+    cy.get('input[placeholder="Search matches..."]').should('be.visible');
+    cy.get('select').should('have.length', 2);
+    cy.get('select').each($select => {
+      const rect = $select[0].getBoundingClientRect();
+      expect(rect.right).to.be.at.most(1024);
+    });
+  });
+
   it('should handle map selection correctly', () => {
     const props = {
       ...mockFilterBarProps,
