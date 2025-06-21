@@ -1,4 +1,4 @@
-import { Box, Container, VStack } from '@chakra-ui/react';
+import { Box, VStack } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
@@ -100,22 +100,35 @@ function App() {
   };
 
   return (
-    <Box maxWidth={layout?.container.maxWidth} overflowX="hidden">
-      {profileId && <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />}
-      <Container 
-        maxW={layout?.container.maxWidth} 
-        py={layout?.container.padding} 
+    <Box py={{ md: 8 }}>
+      <VStack 
+        spacing={4} 
         mx="auto" 
-        ml={layout?.container.marginLeft}
+        px={{ base: 2, lg: 4 }} 
+        py={{ base: 4, lg: 6 }} 
+        w="100%"
+        maxW={{ md: '90%', xl: '1100px' }}
+        bg={{ base: 'transparent', md: 'brand.parchment' }}
+        borderRadius={{ md: 'xl' }}
+        boxShadow={{ md: 'xl' }}
+        borderWidth={{ base: '3px', md: '4px' }}
+        borderColor="brand.gold"
       >
+        {profileId && 
+          <Box w="100%">
+            <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
+          </Box>
+        }
         <VStack 
           align="stretch"
           p={layout?.mainContent.padding}
+          w={layout.matchList.width}
+          mx="auto"
         >
           <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
           <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} />
         </VStack>
-      </Container>
+      </VStack>
     </Box>
   );
 }

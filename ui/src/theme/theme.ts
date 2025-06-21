@@ -155,37 +155,10 @@ const cardTheme = defineCardMultiStyleConfig({
 const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
   baseStyle: defineProfileHeaderPartsStyle({
     container: {
-      bg: 'brand.parchment',
-      borderWidth: '2px',
-      borderRadius: 'lg',
-      boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
       width: '100%',
       height: 'auto',
-      padding: '0.75rem',
-      marginBottom: '0.5rem',
-      borderRight: 'none',
-      borderBottom: '1px solid',
-      borderColor: 'brand.steel',
+      padding: { base: '0.75rem', md: '1.5rem', lg: '2rem' },
       position: 'relative',
-      top: 'auto',
-      left: 'auto',
-      zIndex: 'auto',
-      '@media (min-width: 768px)': {
-        width: '300px',
-        height: '100vh',
-        padding: '1.5rem',
-        marginBottom: '0.5rem',
-        borderRight: '1px solid',
-        borderBottom: 'none',
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        zIndex: '1',
-      },
-      '@media (min-width: 1280px)': {
-        width: '320px',
-        padding: '2rem',
-      }
     },
     avatar: {
       bg: 'white',
@@ -248,28 +221,6 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
       }
     },
     }),
-  variants: {
-    inline: defineProfileHeaderPartsStyle({
-      container: {
-        bg: 'brand.parchment',
-        borderWidth: '2px',
-        borderRadius: 'lg',
-        boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
-        width: '100%',
-        height: 'auto',
-        padding: '0.75rem',
-        marginBottom: '0.5rem',
-        borderColor: 'brand.steel',
-        position: 'relative',
-        '@media (min-width: 768px)': {
-          padding: '1.5rem',
-        },
-        '@media (min-width: 1280px)': {
-          padding: '2rem',
-        }
-      },
-    }),
-  },
 });
 
 const playerStatsTheme = definePlayerStatsMultiStyleConfig({
@@ -277,8 +228,10 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
     container: {
       bg: 'brand.steel',
       borderRadius: 'lg',
-      padding: '0.5rem',
-      marginTop: '0.25rem',
+      padding: '1rem',
+      boxShadow: 'md',
+      borderWidth: '1px',
+      borderColor: 'gray.200',
     },
     statsTable: {
       th: {
@@ -324,7 +277,7 @@ const theme = extendTheme({
   styles: {
     global: {
       body: {
-        bg: 'brand.parchment',
+        bg: { base: 'brand.parchment', md: 'brand.midnightBlue' },
         color: 'brand.black',
         fontFamily: "'Lora', serif",
         fontSize: '15px',

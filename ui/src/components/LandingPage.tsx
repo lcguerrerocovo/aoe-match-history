@@ -10,34 +10,42 @@ export function LandingPage() {
   return (
     <Box
       minH="100vh"
-      bg="brand.parchment"
       display="flex"
       alignItems="center"
       justifyContent="center"
-      position="relative"
-      overflow="hidden"
+      py={{ md: 8 }}
     >
-      {/* Background pattern */}
-      <Box
-        position="absolute"
-        top="0"
-        left="0"
-        right="0"
-        bottom="0"
-        opacity="0.05"
-        backgroundImage="url('/pattern.png')"
-        backgroundRepeat="repeat"
-        backgroundSize="200px"
-        zIndex="0"
-      />
-      
       <VStack 
         spacing={theme.spacing.responsive.landingSpacing} 
         align="center" 
-        zIndex="1" 
         textAlign="center" 
         p={theme.spacing.responsive.landingPadding}
+        w="100%"
+        minH={{ base: '100vh', md: 'auto' }}
+        justifyContent="center"
+        maxW={{ md: '90%', xl: '1100px' }}
+        bg="brand.parchment"
+        borderRadius={{ base: 0, md: 'xl' }}
+        boxShadow={{ md: 'xl' }}
+        borderWidth={{ base: '3px', md: '4px' }}
+        borderColor="brand.gold"
+        position="relative"
+        overflow="hidden"
       >
+        {/* Background pattern */}
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          opacity="0.05"
+          backgroundImage="url('/pattern.png')"
+          backgroundRepeat="repeat"
+          backgroundSize="200px"
+          zIndex="0"
+        />
+        
         {/* Logo */}
         <Box
           position="relative"
