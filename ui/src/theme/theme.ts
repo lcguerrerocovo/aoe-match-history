@@ -1,8 +1,13 @@
 import { extendTheme } from '@chakra-ui/react';
-import { cardAnatomy } from '@chakra-ui/anatomy';
+import { cardAnatomy, anatomy } from '@chakra-ui/anatomy';
 import { createMultiStyleConfigHelpers } from '@chakra-ui/react';
 
-const { definePartsStyle, defineMultiStyleConfig } = createMultiStyleConfigHelpers(cardAnatomy.keys);
+const { definePartsStyle: defineCardPartsStyle, defineMultiStyleConfig: defineCardMultiStyleConfig } = createMultiStyleConfigHelpers(cardAnatomy.keys);
+
+const profileHeaderAnatomy = anatomy('profileHeader').parts(
+  'container', 'avatar', 'name', 'id', 'statsTable', 'tableHeader', 'tableCell'
+);
+const { definePartsStyle: defineProfileHeaderPartsStyle, defineMultiStyleConfig: defineProfileHeaderMultiStyleConfig } = createMultiStyleConfigHelpers(profileHeaderAnatomy.keys);
 
 const colors = {
   brand: {
@@ -11,73 +16,157 @@ const colors = {
     bronze: '#CD7F32',       // Classic bronze
     black: '#1A202C',         // Chakra's gray.800 for a softer black
     parchment: '#FAF3E0',     // A warm, parchment-like background (toned down)
+    steel: '#4A5568',         // Dark steel for borders and accents
+    heraldic: '#2D3748',      // Deep heraldic blue
+    
+    // Thematic status colors from user feedback
+    win: '#228B22',          // ForestGreen for wins/positive streaks
+    loss: '#B22222',         // Firebrick red for losses
+    same: '#2b6cb0',         // A rich blue for rank/same status
   },
 };
 
-// 1. Recreate the reusable style objects from breakpoints.ts
-const matchCardStyles = {
-  base: {
-    padding: '1rem',
-    marginBottom: '1rem',
-    flexDirection: 'column',
-    gap: '1rem',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-  },
-  lg: {
-    padding: '1rem',
-    marginBottom: '0.5rem',
-    flexDirection: 'row',
-    gap: '1rem',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  desktop: {
-    padding: '1.5rem',
-    marginBottom: '1rem',
-    flexDirection: 'row',
-    gap: '2rem',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-};
-
-const cardTheme = defineMultiStyleConfig({
+const cardTheme = defineCardMultiStyleConfig({
   variants: {
-    match: definePartsStyle({
+    match: defineCardPartsStyle({
       container: {
-        // Base visual style
         backgroundColor: 'white',
-        borderWidth: '1px',
-        borderColor: 'gray.200',
+        borderWidth: '2px',
+        borderColor: 'brand.steel',
         borderRadius: 'lg',
-        width: '100%',
-        display: 'flex',
-        // This should always be a column to keep the summary on top.
-        flexDirection: 'column',
-        // Responsive padding and margin are correct for the outer card
-        padding: {
-          base: matchCardStyles.base.padding,
-          md: matchCardStyles.lg.padding,
-          xl: matchCardStyles.desktop.padding,
-        },
-        marginBottom: {
-          base: matchCardStyles.base.marginBottom,
-          md: matchCardStyles.lg.marginBottom,
-          xl: matchCardStyles.desktop.marginBottom,
+        boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        _hover: {
+          boxShadow: '0 8px 12px rgba(0, 51, 102, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)',
+          transform: 'translateY(-2px)',
+          transition: 'all 0.2s ease-in-out',
         },
       },
     }),
-    summary: definePartsStyle({
+    summary: defineCardPartsStyle({
       container: {
-        backgroundColor: 'white',
+        backgroundColor: 'brand.parchment',
         borderWidth: '1px',
-        borderColor: 'gray.200',
+        borderColor: 'brand.gold',
         borderRadius: 'md',
-        bg: 'gray.50',
+        position: 'relative',
+        _before: {
+          content: '""',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          height: '2px',
+          background: 'linear-gradient(90deg, brand.gold, brand.bronze, brand.gold)',
+          borderRadius: 'md md 0 0',
+        },
       },
+    }),
+    filter: defineCardPartsStyle({
+      container: {
+        bg: 'white',
+        borderWidth: '2px',
+        borderColor: 'brand.steel',
+        borderRadius: 'lg',
+        boxShadow: '0 2px 4px rgba(0, 51, 102, 0.1)',
+      }
     }),
   },
+});
+
+const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
+  baseStyle: defineProfileHeaderPartsStyle({
+    container: {
+      bg: 'white',
+      borderWidth: '2px',
+      borderRadius: 'lg',
+      boxShadow: '0 4px 6px rgba(0, 51, 102, 0.1)',
+      width: '100%',
+      height: 'auto',
+      padding: '1rem',
+      marginBottom: '1rem',
+      borderRight: 'none',
+      borderBottom: '1px solid',
+      borderColor: 'brand.steel',
+      position: 'relative',
+      top: 'auto',
+      left: 'auto',
+      zIndex: 'auto',
+      '@media (min-width: 768px)': {
+        width: '300px',
+        height: '100vh',
+        padding: '1.5rem',
+        marginBottom: '0.5rem',
+        borderRight: '1px solid',
+        borderBottom: 'none',
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        zIndex: '1',
+      },
+      '@media (min-width: 1280px)': {
+        width: '320px',
+        padding: '2rem',
+      }
+    },
+    avatar: {
+      bg: 'brand.parchment',
+      border: '2px solid',
+      borderColor: 'brand.gold',
+      width: '100px',
+      height: '100px',
+      '@media (min-width: 768px)': {
+        width: '110px',
+        height: '110px',
+      },
+      '@media (min-width: 1280px)': {
+        width: '120px',
+        height: '120px',
+      }
+    },
+    name: {
+      color: 'brand.midnightBlue',
+      fontWeight: 'bold',
+      fontSize: 'lg',
+      '@media (min-width: 768px)': {
+        fontSize: 'xl',
+      },
+    },
+    id: {
+      color: 'brand.steel',
+      fontSize: 'xs',
+    },
+    statsTable: {
+      th: {
+        color: 'brand.midnightBlue',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        fontSize: '2xs',
+      },
+      td: {
+        color: 'brand.black',
+        fontSize: 'xs',
+        whiteSpace: 'nowrap',
+        textOverflow: 'ellipsis',
+        overflow: 'hidden',
+      },
+      '.rank': {
+        color: 'brand.same',
+      },
+      '.percentile': {
+        color: 'brand.steel',
+        fontSize: '2xs',
+      },
+      '.win': {
+        color: 'brand.win',
+      },
+      '.loss': {
+        color: 'brand.loss',
+      },
+      '.streak': {
+        color: 'brand.win',
+      }
+    },
+  }),
 });
 
 const theme = extendTheme({
@@ -87,11 +176,81 @@ const theme = extendTheme({
       body: {
         bg: 'brand.parchment',
         color: 'brand.black',
+        fontFamily: "'Lora', serif",
+      },
+      '*, *::before, &::after': {
+        borderColor: 'brand.steel',
       },
     },
   },
   components: {
     Card: cardTheme,
+    ProfileHeader: profileHeaderTheme,
+    Button: {
+      variants: {
+        solid: {
+          bg: 'brand.midnightBlue',
+          color: 'white',
+          _hover: { bg: 'brand.heraldic' },
+        },
+        outline: {
+          borderColor: 'brand.gold',
+          color: 'brand.midnightBlue',
+          _hover: { bg: 'brand.gold', color: 'brand.black' },
+        },
+      },
+    },
+    Input: {
+      variants: {
+        filled: {
+          field: {
+            bg: 'brand.parchment',
+            borderColor: 'brand.steel',
+            _hover: { borderColor: 'brand.gold' },
+            _focus: {
+              borderColor: 'brand.gold',
+              boxShadow: '0 0 0 1px var(--chakra-colors-brand-gold)',
+            },
+          },
+        },
+      },
+    },
+    Select: {
+      variants: {
+        filled: {
+          field: {
+            bg: 'brand.parchment',
+            borderColor: 'brand.steel',
+            _hover: { borderColor: 'brand.gold' },
+            _focus: {
+              borderColor: 'brand.gold',
+              boxShadow: '0 0 0 1px var(--chakra-colors-brand-gold)',
+            },
+          },
+        },
+      },
+    },
+    Table: {
+      variants: {
+        simple: {
+          th: {
+            borderBottom: '2px solid',
+            borderColor: 'brand.steel',
+            color: 'brand.midnightBlue',
+            fontWeight: 'bold',
+          },
+          td: {
+            borderBottom: '1px solid',
+            borderColor: 'gray.200',
+          },
+        },
+      },
+    },
+    Divider: {
+      baseStyle: {
+        borderColor: 'brand.steel',
+      },
+    },
   },
 });
 

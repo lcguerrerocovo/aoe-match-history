@@ -3,24 +3,25 @@ import theme from './theme';
 
 describe('Chakra Theme Configuration', () => {
   describe('Card Component Theme', () => {
-    it('should correctly configure the static styles for the "match" variant container', () => {
+    it('should correctly configure the "match" variant', () => {
       const cardTheme = theme.components.Card;
       const matchVariant = cardTheme.variants.match;
       const containerStyles = matchVariant.container;
 
-      // This is a valuable test. It confirms that the outer card will always
-      // stack its children vertically, which is the behavior we want.
-      expect(containerStyles.flexDirection).toBe('column');
+      // Verify the specific styles within the 'container' part
       expect(containerStyles.backgroundColor).toBe('white');
+      expect(containerStyles.borderColor).toBe('brand.steel');
       expect(containerStyles.borderRadius).toBe('lg');
     });
 
-    it('should correctly configure the visual styles for the "summary" variant', () => {
+    it('should correctly configure the "summary" variant', () => {
       const cardTheme = theme.components.Card;
       const summaryVariant = cardTheme.variants.summary;
       const containerStyles = summaryVariant.container;
 
-      expect(containerStyles.bg).toBe('gray.50');
+      // Verify the specific styles within the 'container' part
+      expect(containerStyles.backgroundColor).toBe('brand.parchment');
+      expect(containerStyles.borderColor).toBe('brand.gold');
       expect(containerStyles.borderRadius).toBe('md');
     });
   });
