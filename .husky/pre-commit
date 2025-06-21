@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+cd ui && npm run lint && npm run type-check && npm run test:all
