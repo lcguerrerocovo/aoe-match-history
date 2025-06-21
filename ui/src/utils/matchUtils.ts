@@ -18,19 +18,28 @@ export function countByDiplomacy(matches: any[], profileId: string): Record<stri
     if (!byDiplo[diplo]) byDiplo[diplo] = { matches: 0, wins: 0, losses: 0, uncategorized: 0 };
     byDiplo[diplo].matches++;
     let found = false;
-    for (const team of match.teams || []) {
-      for (const player of team) {
-        if (player && player.user_id === profileId) {
+    
+    // Look in the transformed players data
+    if (match.players) {
+      for (const player of match.players) {
+        if (player.user_id.toString() === profileId) {
           if (typeof player.winner === 'boolean') {
-            if (player.winner) byDiplo[diplo].wins++;
-            else byDiplo[diplo].losses++;
+            if (player.winner) {
+              byDiplo[diplo].wins++;
+            } else {
+              byDiplo[diplo].losses++;
+            }
             found = true;
           }
         }
       }
     }
-    if (!found) byDiplo[diplo].uncategorized++;
+    
+    if (!found) {
+      byDiplo[diplo].uncategorized++;
+    }
   }
+  
   return byDiplo;
 }
 
