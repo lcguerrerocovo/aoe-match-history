@@ -184,6 +184,13 @@ function TeamCard({ match }: { match: any }) {
           match.teams.map((team: Player[], idx: number) => {
             const isWinner = match.winning_teams?.includes(idx + 1) || match.winning_team === idx + 1;
             const cardPadding = getPlayerCardPadding(team.length);
+            
+            // Calculate the starting index for this team
+            let teamStartIndex = 0;
+            for (let i = 0; i < idx; i++) {
+              teamStartIndex += match.teams[i].length;
+            }
+            
             return (
               <Card
                 key={idx}
@@ -202,73 +209,76 @@ function TeamCard({ match }: { match: any }) {
                   align={layout?.teamCard.teamVStackAlign}
                   width={layout?.teamCard.teamVStackWidth}
                 >
-                  {Array.isArray(team) && team.map((p: Player) => (
-                    <Box
-                      key={p.user_id}
-                      display="flex"
-                      alignItems="center"
-                      borderWidth="1px"
-                      borderColor="brand.stone"
-                      borderRadius="sm"
-                      p={cardPadding}
-                      bg={Number(p.user_id) % 2 === 0 ? 'white' : 'brand.stoneLight'}
-                      minW={layout?.teamCard.playerBoxMinWidth}
-                      maxW={layout?.teamCard.playerBoxMaxWidth}
-                      flex={layout?.teamCard.playerBoxFlex}
-                      m={0}
-                    >
+                  {Array.isArray(team) && team.map((p: Player, playerIndex: number) => {
+                    const globalPlayerIndex = teamStartIndex + playerIndex;
+                    return (
                       <Box
-                        w={layout?.teamCard.colorBarWidth}
-                        h={layout?.teamCard.colorBarHeight}
-                        bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
-                        borderRadius="sm"
-                        mr={1}
-                        flexShrink={0}
-                      />
-                      <Box
-                        position="relative"
-                        w={layout?.teamCard.civIconSize}
-                        h={layout?.teamCard.civIconSize}
-                        bg="gray.300"
-                        borderRadius="sm"
-                        mr={1}
+                        key={p.user_id}
                         display="flex"
                         alignItems="center"
-                        justifyContent="center"
-                        flexShrink={0}
+                        borderWidth="1px"
+                        borderColor="brand.stone"
+                        borderRadius="sm"
+                        p={cardPadding}
+                        bg={globalPlayerIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
+                        minW={layout?.teamCard.playerBoxMinWidth}
+                        maxW={layout?.teamCard.playerBoxMaxWidth}
+                        flex={layout?.teamCard.playerBoxFlex}
+                        m={0}
                       >
-                        <Text
-                          position="absolute"
-                          top={0}
-                          left="50%"
-                          transform="translateX(-50%)"
-                          fontSize={layout?.teamCard.civFontSize}
-                          fontWeight="bold"
-                          color="gray.700"
-                          zIndex={1}
+                        <Box
+                          w={layout?.teamCard.colorBarWidth}
+                          h={layout?.teamCard.colorBarHeight}
+                          bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
+                          borderRadius="sm"
+                          mr={1}
+                          flexShrink={0}
+                        />
+                        <Box
+                          position="relative"
+                          w={layout?.teamCard.civIconSize}
+                          h={layout?.teamCard.civIconSize}
+                          bg="gray.300"
+                          borderRadius="sm"
+                          mr={1}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          flexShrink={0}
                         >
-                          {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
-                        </Text>
+                          <Text
+                            position="absolute"
+                            top={0}
+                            left="50%"
+                            transform="translateX(-50%)"
+                            fontSize={layout?.teamCard.civFontSize}
+                            fontWeight="bold"
+                            color="gray.700"
+                            zIndex={1}
+                          >
+                            {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
+                          </Text>
+                        </Box>
+                        <RouterLink 
+                          to={`/profile_id/${p.user_id.toString()}`}
+                          style={{
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
+                            display: 'inline-block',
+                            cursor: 'pointer',
+                            color: 'blue.500',
+                            textDecoration: 'none',
+                            fontSize: layout?.teamCard.playerNameFontSize
+                          }}
+                        >
+                          {p.name}
+                        </RouterLink>
+                        <PlayerRating player={p} />
                       </Box>
-                      <RouterLink 
-                        to={`/profile_id/${p.user_id.toString()}`}
-                        style={{
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
-                          display: 'inline-block',
-                          cursor: 'pointer',
-                          color: 'blue.500',
-                          textDecoration: 'none',
-                          fontSize: layout?.teamCard.playerNameFontSize
-                        }}
-                      >
-                        {p.name}
-                      </RouterLink>
-                      <PlayerRating player={p} />
-                    </Box>
-                  ))}
+                    );
+                  })}
                 </VStack>
               </Card>
             );
