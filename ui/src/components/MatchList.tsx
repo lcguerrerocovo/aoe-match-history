@@ -353,7 +353,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                       <HStack spacing={2} wrap="wrap" justify="flex-end">
                         {Object.entries(byDiplo).map(([diplo, rec]) => (
                           <Card key={diplo} variant="recordBubble">
-                            <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '70px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                            <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                               {diplo}
                             </Text>
                             <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>

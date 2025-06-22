@@ -154,7 +154,6 @@ function parsePlayerMetadata(playerMetadata: string) {
   playerMetadata = playerMetadata.replace(/-+/g, '-');
   const playerMetadataArr = playerMetadata.split('-');
 
-  console.log("playerMetadataArr", playerMetadataArr);
   return {
       unknown1: playerMetadataArr[1],
       civId: playerMetadataArr[2],
@@ -182,11 +181,8 @@ export function decodeSlotInfo(str: string) {
         throw new Error("Could not parse player data json:");
     }
 
-    // console.log('playersData', playersData);
-
     try {
         playersData.forEach(pd => pd.metaData = pd.metaData?.length > 0 ? parsePlayerMetadata(Base64.decode(Base64.decode(pd.metaData))) : null);
-        // console.log('playersData', playersData);
         return playersData;
     } catch (e) {
         throw new Error(`Could not decode player metadata: ${playersData.map(pd => pd.metaData)}`);
