@@ -1,4 +1,4 @@
-import { parseDuration } from './durationUtils';
+import { parseDuration } from './timeUtils';
 import type { Match, MatchGroup } from '../types/match';
 
 export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
@@ -199,9 +199,11 @@ export function calculateSessionDuration(matches: any[]): number {
     return 0;
   }
 
-  const sessionStartTime = new Date(matches[matches.length - 1].start_time).getTime();
-  const lastMatch = matches[0];
-  const lastMatchEndTime = new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration) / 1.7) * 1000);
+  const firstMatch = matches[matches.length - 1]; // Oldest match
+  const lastMatch = matches[0]; // Newest match
 
-  return Math.round((lastMatchEndTime - sessionStartTime) / 1000);
+  const firstMatchStart = new Date(firstMatch.start_time);
+  const lastMatchEnd = new Date(new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration) / 1.7) * 1000));
+
+  return Math.floor((lastMatchEnd.getTime() - firstMatchStart.getTime()) / 1000);
 } 

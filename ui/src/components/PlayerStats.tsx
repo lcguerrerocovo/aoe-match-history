@@ -1,8 +1,8 @@
 import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Icon, HStack } from '@chakra-ui/react';
 import { FaCrown } from 'react-icons/fa';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
-import { getLeaderboardName } from '../utils/leaderboardUtils';
-import { getTier } from '../utils/tierUtils';
+import { getLeaderboardName } from '../utils/mappingUtils';
+import { getTier } from '../utils/gameUtils';
 import { StatsTable } from './StatsTable';
 
 interface PlayerStatsProps {

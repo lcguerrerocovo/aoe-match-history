@@ -4,7 +4,7 @@ import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
-import { parseDuration } from '../utils/durationUtils';
+import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionStart, calculateSessionDuration } from '../utils/matchUtils';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
