@@ -12,7 +12,7 @@ describe('slotInfoDecoder', () => {
     });
 
     it('should handle empty string input', () => {
-      expect(() => decodeSlotInfo('')).toThrow();
+      expect(() => decodeSlotInfo('',)).toThrow();
     });
 
     it('should handle malformed input', () => {

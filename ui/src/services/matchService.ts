@@ -9,29 +9,37 @@ const DEFAULT_PROFILE_ID = '4764337';
 let civMap: Record<string, string> | null = null;
 let mapMap: Record<string, string> | null = null;
 
-const GAME_MODES: { [key: number]: string } = {
-  1602: 'Quick Match',
-  1520: 'RM',
-  1607: 'RM',
-  1599: 'RM',
-  1507: 'RM',
-  1598: 'Custom',
-  1590: 'Lobby',
-} as const;
+export function matchTypeIdToLeaderboardId(matchTypeId: number) {
+  switch (matchTypeId) {
+      case 0: return "Unranked";
+      case 2: return "DM 1v1";
+      case 3:
+      case 4:
+      case 5: return "DM Team";
+      case 6: return "RM 1v1";
+      case 7:
+      case 8:
+      case 9: return "RM Team";
+      case 10: return "Battle Royale";
+      case 11: return "Quick Match EW";
+      case 12: return "Quick Match EW Team";
+      case 13: return "Quick Match EW Team";
+      case 14: return "Quick Match EW Team";
+      case 18: return "Quick Match RM";
+      case 19: return "Quick Match RM Team";
+      case 20: return "Quick Match RM Team";
+      case 21: return "Quick Match RM Team";
+      case 25: return "Quick Match BR FFA";
+      case 26: return "EW 1v1";
+      case 27:
+      case 28:
+      case 29: return "EW Team";
+  }
+  return null;
+}
 
-const getGameMode = (mode: number): string => GAME_MODES[mode] ?? 'UNKNOWN';
-
-const getGameType = (gameMode: number, teams: any[][], description: string, options: any): string => {
-  const maxPlayersPerTeam = Math.max(...teams.map(team => team.length));
-  const numTeams = teams.length;
-  
-  let mode = 'RM';
-  if (options['11'] === 'n') mode = 'EW';
-  else if (description !== 'AUTOMATCH') mode = getGameMode(gameMode);
-  
-  if (maxPlayersPerTeam > 1) return `${mode} Team`;
-  if (numTeams > 2) return `${mode} FFA`;
-  return `${mode} 1v1`;
+const getGameType = (gameMode: number): string | null => {
+  return matchTypeIdToLeaderboardId(gameMode);
 };
 
 interface RlMappings {
@@ -139,43 +147,29 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       ])
     );
 
-    // Find winning teams from resulttype
-    const winningTeamIds = match.matchhistoryreportresults
-      .filter((r: any) => r.resulttype === 1)
-      .map((r: any) => r.teamid);
-    // Add 1 to convert from 0-based to 1-based team numbers
-    const winningTeams = winningTeamIds.map((id: number) => id + 1);
-    // For backward compatibility, keep the first winning team as the primary one
-    const winningTeam = winningTeams.length > 0 ? winningTeams[0] : undefined;
-
     // Decode slotinfo for diplomacy info
     const slotInfo = decodeSlotInfo(match.slotinfo);
-
-    // Log warning for multiple winning teams (this is important for debugging)
-    if (winningTeams.length > 1) {
-      console.warn(`Match ${match.id} has ${winningTeams.length} winning teams:`, winningTeams);
-    }
 
     const players: Player[] = match.matchhistoryreportresults.map((result: any) => {
       const profileId = parseInt(result.profile_id);
       const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
-      
-      // Use colorId from decoded slotinfo if available, otherwise fallback to stationID
-      let colorId = 0;
-      if (playerSlot?.colorId !== undefined) {
-        colorId = playerSlot.colorId;
-      } else {
-        // Fallback to stationID if no decoded metadata
-        const stationId = playerSlot?.stationID || 0;
-        colorId = stationId > 0 ? stationId - 1 : 0;
-      }
+     
+      let teamId = playerSlot?.metaData?.teamId ? playerSlot?.metaData?.teamId : result.teamid + 1
+      teamId = parseInt(teamId);
+
+      // figure out proper mapping for civ id from slot info before switching to this
+      // const civId = playerSlot?.metaData?.civId ?? result.civilization_id;
+      const civId = result.civilization_id;
+
+      const colorId = playerSlot?.metaData?.colorId ?? 0;
       
       const ratingInfo = ratingMap.get(result.profile_id);
 
       return {
         name: profileMap.get(result.profile_id.toString()) || result.profile_id.toString(),
-        civ: civMap[result.civilization_id] || result.civilization_id || 0,
-        number: result.teamid + 1,
+        civ: civMap[civId] || civId || 0,
+        number: teamId,
+        team_id: result.teamid,
         color_id: colorId,
         user_id: result.profile_id,
         winner: result.resulttype === 1,
@@ -184,21 +178,36 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       };
     });
 
+    const allSameTeam = players.length > 0 && players.every(p => p.number === players[0].number);
+
     // Group players by team
     const teams: Player[][] = players.reduce((acc: Player[][], player) => {
-      const teamIndex = player.number - 1; // player.number is teamid + 1
-      if (!acc[teamIndex]) {
-        acc[teamIndex] = [];
+      // player.number is 1-based, so subtract 1 for a 0-based index.
+      const key = allSameTeam ? player.color_id : (player.number + 1);
+
+      const teamIndex = key;
+      if (teamIndex >= 0) {
+        if (!acc[teamIndex]) {
+          acc[teamIndex] = [];
+        }
+        acc[teamIndex].push(player);
       }
-      acc[teamIndex].push(player);
       return acc;
     }, []);
 
-    // Ensure we have all teams (even empty ones)
-    const maxTeamId = Math.max(...match.matchhistoryreportresults.map((r: any) => r.teamid));
-    for (let i = 0; i <= maxTeamId; i++) {
-      if (!teams[i]) teams[i] = [];
-    }
+    // Filter out empty teams that can result from non-sequential team numbers
+    const finalTeams = teams.filter(team => team && team.length > 0);
+
+    // Now, derive the winning teams from the final, cleaned teams array.
+    const winningTeams = finalTeams
+      .map((team, index) => {
+        // A team is a winner if any player in it is a winner.
+        // The new team number is the sequential, 1-based index of the finalTeams array.
+        return team.some(player => player.winner) ? index + 1 : null;
+      })
+      .filter((teamNumber): teamNumber is number => teamNumber !== null);
+
+    const winningTeam = winningTeams.length > 0 ? winningTeams[0] : undefined;
 
     // Decode options to get map ID and resolve map name
     const options = decodeOptions(match.options);
@@ -208,14 +217,14 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
     const matchObject = {
       match_id: match.id.toString(),
       start_time: new Date(match.startgametime * 1000).toISOString(),
-      description: match.description === "AUTOMATCH" ? getGameType(match.gamemod_id, teams, match.description, options) : match.description,
+      description: match.description === "AUTOMATCH" ? getGameType(match.matchtype_id) : match.description,
       diplomacy: {
-        type: getGameType(match.gamemod_id, teams, match.description, options) || 'Unknown',
+        type: getGameType(match.matchtype_id) || 'Unknown',
         team_size: match.maxplayers.toString(),
       },
       map: mapName,
       duration: match.completiontime - match.startgametime,
-      teams: teams,
+      teams: finalTeams,
       players: players,
       winning_team: winningTeam,
       winning_teams: winningTeams
