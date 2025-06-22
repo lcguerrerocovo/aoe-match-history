@@ -161,6 +161,13 @@ function TeamCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
   const is1v1 = match.diplomacy?.type === '1v1';
 
+  const getPlayerCardPadding = (numPlayers: number) => {
+    if (numPlayers <= 1) return 2; // 1v1 gets most padding
+    if (numPlayers === 2) return 1.5;
+    if (numPlayers === 3) return 1;
+    return 0.5; // 4+ players get least padding
+  };
+
   return (
     <Box width={layout?.teamCard.width}>
       <Box
@@ -171,8 +178,9 @@ function TeamCard({ match }: { match: any }) {
         justifyContent="center"
       >
         {Array.isArray(match.teams) &&
-          match.teams.map((team: any[], idx: number) => {
+          match.teams.map((team: Player[], idx: number) => {
             const isWinner = match.winning_team === idx + 1;
+            const cardPadding = getPlayerCardPadding(team.length);
             return (
               <Card
                 key={idx}
@@ -199,7 +207,7 @@ function TeamCard({ match }: { match: any }) {
                       borderWidth="1px"
                       borderColor="brand.stone"
                       borderRadius="sm"
-                      p={0.5}
+                      p={cardPadding}
                       bg={rowIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
                       minW={layout?.teamCard.playerBoxMinWidth}
                       maxW={layout?.teamCard.playerBoxMaxWidth}
