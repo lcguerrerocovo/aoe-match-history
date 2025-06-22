@@ -1,6 +1,8 @@
-import { Box, Text, VStack, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
+import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Icon, HStack } from '@chakra-ui/react';
+import { FaCrown } from 'react-icons/fa';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/leaderboardUtils';
+import { getTier } from '../utils/tierUtils';
 import { StatsTable } from './StatsTable';
 
 interface PlayerStatsProps {
@@ -32,16 +34,52 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
     {
       header: 'Rank',
       isNumeric: true,
-      render: (stat: LeaderboardStats) => (
-        <Text className="rank">{stat.rank === -1 ? '' : stat.rank}</Text>
-      )
+      render: (stat: LeaderboardStats) => {
+        const tier = getTier(stat.rating, stat.rank);
+
+        const textProps = (() => {
+          if (!tier) return { color: 'white' };
+          if (tier.gradient) {
+            return {
+              bgGradient: tier.name === 'Gold' ? 'linear(to-b, brand.brightGold, brand.gold)' :
+                         tier.name === 'Silver' ? 'linear(to-b, white, #A0A0A0)' :
+                         'linear(to-b, brand.brightBronze, brand.bronze)',
+              bgClip: 'text' as const,
+            };
+          }
+          return { color: tier.color };
+        })();
+
+        return (
+          <Text fontWeight="bold" {...textProps}>
+            {stat.rank === -1 ? '' : stat.rank}
+          </Text>
+        );
+      }
     },
     {
       header: 'Top %',
       isNumeric: true,
       render: (stat: LeaderboardStats) => {
         const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
-        return <Text className="percentile" fontWeight="900">{stat.rank === -1 ? '' : percentile}</Text>;
+        const tier = getTier(stat.rating, stat.rank);
+
+        return (
+          <HStack spacing={1.5} justify="flex-end">
+            <Text className="percentile" fontWeight="900">{stat.rank === -1 ? '' : percentile}</Text>
+            {tier && tier.showCrown && stat.rank !== -1 && (
+              <Tooltip label={tier.explainer} fontSize="xs">
+                <Box as="span" data-testid="tier-crown">
+                  <Icon
+                    as={FaCrown}
+                    color={tier.name === 'Gold' ? 'brand.brightGold' : tier.name === 'Silver' ? 'brand.brightSilver' : 'brand.brightBronze'}
+                    boxSize="11px"
+                  />
+                </Box>
+              </Tooltip>
+            )}
+          </HStack>
+        );
       }
     },
     {

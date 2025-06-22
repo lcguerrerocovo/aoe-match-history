@@ -30,8 +30,10 @@ function PlayerRating({ player }: { player: Player }) {
   if (displayMode === 'full') {
     return (
       <HStack spacing={2} ml="auto">
-        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono">{rating}</Text>
-        <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
+        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
+          {rating}
+        </Text>
+        <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="3ch" textAlign="right">
           {changeText}
         </Text>
       </HStack>
@@ -40,7 +42,7 @@ function PlayerRating({ player }: { player: Player }) {
 
   return (
     <HStack spacing={1} ml="auto">
-      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono">
+      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
         {rating}
       </Text>
       <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
@@ -107,7 +109,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 
   return (
-    <Card variant="summary" w="100%" mb={1} p={1} fontSize="sm">
+    <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
           <Text fontWeight="bold">#{match.match_id}</Text>
@@ -124,10 +126,11 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
         <Divider />
         <Box
           display="flex"
-          flexDirection={layout?.matchCard.flexDirection}
-          gap={layout?.matchCard.gap}
-          alignItems={layout?.matchCard.alignItems}
-          justifyContent={layout?.matchCard.justifyContent}
+          flexDirection={layout?.matchSummaryCard.flexDirection}
+          gap={layout?.matchSummaryCard.gap}
+          alignItems={layout?.matchSummaryCard.alignItems}
+          justifyContent={layout?.matchSummaryCard.justifyContent}
+          w={layout?.matchSummaryCard.w}
         >
           <HStack spacing={1}>
             <CalendarIcon boxSize={3} />
@@ -139,14 +142,14 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
             <HStack spacing={1}>
               <TimeIcon boxSize={3} color="blue.400" />
               <Text as="span" color="gray.600">
-                Game: {formatDuration(durationSec)}
+                {formatDuration(durationSec)}
               </Text>
             </HStack>
             <HStack spacing={1}>
               <TimeIcon boxSize={3} color="orange.400" />
               <Tooltip label="Real time (1.7x game time)" fontSize="xs">
                 <Text as="span" color="gray.600">
-                  Real: {formatDuration(realTimeSec)}
+                  {formatDuration(realTimeSec)}
                 </Text>
               </Tooltip>
             </HStack>
@@ -332,39 +335,46 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     </Box>
                     
                     {/* Match Stats Row */}
-                    <HStack spacing={2} wrap="wrap">
-                      <Box bg="brand.parchment" color="brand.black" px={3} py={1} borderRadius="full" fontSize="sm" fontWeight="bold">
+                    <HStack justify="space-between" align="center" role="group">
+                      <Card variant="matchesCountBubble">
                         <Text as="span">Matches: </Text>
                         <Text as="span">{group.matches.length}</Text>
-                      </Box>
-                      {Object.entries(byDiplo).map(([diplo, rec]) => (
-                        <Box
-                          key={diplo}
-                          bg="brand.stone"
-                          color="brand.black"
-                          px={3}
-                          py={1}
-                          borderRadius="full"
-                          fontSize="0.8125rem"
-                          fontWeight="semibold"
-                        >
-                          <Text as="span" fontWeight="bold" mr={2}>{diplo}</Text>
-                          <Text as="span" color="brand.win" mr={1}>{rec.wins}W</Text>
-                          <Text as="span" color="brand.loss">{rec.losses}L</Text>
-                          {rec.uncategorized > 0 && (
-                            <Text as="span" color="gray.500" ml={1}>{rec.uncategorized}?</Text>
-                          )}
-                          {rec.eloChange !== 0 && (
-                            <Text as="span" color={rec.eloChange > 0 ? 'brand.win' : 'brand.loss'} ml={2}>
-                              ({rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange})
+                      </Card>
+                      <HStack spacing={2} wrap="wrap" justify="flex-end">
+                        {Object.entries(byDiplo).map(([diplo, rec]) => (
+                          <Card key={diplo} variant="recordBubble">
+                            <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '70px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                              {diplo}
                             </Text>
-                          )}
-                        </Box>
-                      ))}
+                            <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>
+                            <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
+                            <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
+                            {rec.uncategorized > 0 && (
+                              <Text as="span" color="gray.500" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
+                            )}
+                            {rec.eloChange !== 0 && (
+                              <>
+                                <Text as="span" color="gray.300" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                <Text
+                                  as="span"
+                                  display="inline-block"
+                                  minWidth={{ base: '30px', md: '35px' }}
+                                  textAlign="right"
+                                  fontFamily="mono"
+                                  color={rec.eloChange > 0 ? 'brand.brightGreen' : 'brand.brightRed'}
+                                  verticalAlign="middle"
+                                >
+                                  {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}
+                                </Text>
+                              </>
+                            )}
+                          </Card>
+                        ))}
+                      </HStack>
                     </HStack>
 
                     {/* Time Stats Row */}
-                    <HStack spacing={4} fontSize="sm" color="brand.steel">
+                    <HStack justify="space-between" fontSize="sm" color="brand.steel" role="group">
                       <HStack spacing={1}>
                         <TimeIcon color="brand.bronze" />
                         <Text>{sessionDurationLabel}</Text>

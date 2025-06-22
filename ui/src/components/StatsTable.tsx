@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, type BoxProps } from '@chakra-ui/react';
 import type { LeaderboardStats } from '../types/stats';
 
 interface ColumnConfig {
@@ -7,6 +7,7 @@ interface ColumnConfig {
   isNumeric?: boolean;
   textAlign?: 'left' | 'center' | 'right';
   render: (stat: LeaderboardStats) => React.ReactNode;
+  cellSx?: BoxProps['sx'];
 }
 
 interface StatsTableProps {
@@ -39,6 +40,7 @@ export function StatsTable({ data, columns }: StatsTableProps) {
                   key={index}
                   isNumeric={column.isNumeric}
                   textAlign={column.textAlign}
+                  sx={column.cellSx}
                 >
                   {column.render(stat)}
                 </Td>

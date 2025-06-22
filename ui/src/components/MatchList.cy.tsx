@@ -3,9 +3,10 @@
 import { mount } from '@cypress/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
-import { MatchCard } from './MatchList';
+import { MatchCard, MatchList } from './MatchList';
 import theme from '../theme/theme';
-import { mockMatch } from '../test/mocks';
+import { mockMatch, mockMatchGroup } from '../test/mocks';
+import type { MatchGroup } from '../types/match';
 
 const BASE_URL = 'http://localhost';
 
@@ -82,6 +83,64 @@ describe('MatchCard Responsive Layout', () => {
       const rect = $el[0].getBoundingClientRect();
       expect(rect.right).to.be.at.most(1024);
       expect(rect.width).to.be.at.most(1024);
+    });
+  });
+});
+
+describe('Session Header Alignment', () => {
+  const mockMatchGroups: MatchGroup[] = [mockMatchGroup];
+
+  it('should align content correctly on desktop', () => {
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchList 
+            matchGroups={mockMatchGroups} 
+            openDates={['2024-01-01']} 
+            onOpenDatesChange={() => {}} 
+            profileId="123" 
+          />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    cy.viewport(1200, 800);
+
+    // First verify the component is rendering
+    cy.contains('Matches:').should('exist');
+    
+    // Check that the match stats row uses space-between alignment
+    cy.get('h2').first().within(() => {
+      // Look for any element with role="group"
+      cy.get('[role="group"]').should('exist');
+      cy.get('[role="group"]').first().should('have.css', 'justify-content', 'space-between');
+    });
+  });
+
+  it('should handle mobile layout correctly', () => {
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchList 
+            matchGroups={mockMatchGroups} 
+            openDates={['2024-01-01']} 
+            onOpenDatesChange={() => {}} 
+            profileId="123" 
+          />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    cy.viewport(400, 600);
+
+    // First verify the component is rendering
+    cy.contains('Matches:').should('exist');
+    
+    // On mobile, the layout should still use space-between but wrap properly
+    cy.get('h2').first().within(() => {
+      // Look for any element with role="group"
+      cy.get('[role="group"]').should('exist');
+      cy.get('[role="group"]').first().should('have.css', 'justify-content', 'space-between');
     });
   });
 }); 

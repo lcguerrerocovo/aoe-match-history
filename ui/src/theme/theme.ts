@@ -44,8 +44,10 @@ const colors = {
     
     // Dark background optimized colors
     brightGold: '#FFD700',   // Bolder gold for dark backgrounds
+    brightSilver: '#D0D0D0', // Bright silver for dark backgrounds
+    brightBronze: '#CD7F32', // Vibrant bronze for dark backgrounds
     brightGreen: '#4AE374', // Bright green for dark background wins
-    brightRed: '#FF6B6B',   // Bright red for dark background losses
+    brightRed: '#FF8282',   // Bright red for dark background losses
     contrastRed: '#FF6B94', // High contrast pinkish-red for very dark backgrounds
   },
 };
@@ -153,9 +155,45 @@ const cardTheme = defineCardMultiStyleConfig({
       container: {
         bg: 'white',
         borderWidth: '1px',
-        borderColor: 'brand.steel',
+        borderColor: 'brand.lightSteel',
         borderRadius: 'lg',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      }
+    }),
+    recordBubble: defineCardPartsStyle({
+      container: {
+        bg: 'brand.slateBlue',
+        color: 'white',
+        borderColor: 'brand.slateBorder',
+        borderWidth: '1px',
+        borderRadius: 'lg',
+        boxShadow: 'md',
+        px: { base: 2, md: 3 },
+        py: 1,
+        fontSize: '0.8125rem',
+        fontWeight: 'semibold',
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
+      body: {
+        padding: 0,
+      }
+    }),
+    matchesCountBubble: defineCardPartsStyle({
+      container: {
+        bg: 'brand.lightSteel',
+        color: 'brand.midnightBlue',
+        borderRadius: 'lg',
+        px: 3,
+        py: 1,
+        fontSize: '0.8125rem',
+        fontWeight: 'bold',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 1,
+      },
+      body: {
+        padding: 0,
       }
     }),
   },
@@ -271,7 +309,7 @@ const playerStatsTheme = definePlayerStatsMultiStyleConfig({
         color: 'brand.brightGreen',
       },
       '.loss': {
-        color: 'brand.contrastRed',
+        color: 'brand.brightRed',
         fontWeight: 'bold',
       },
       '.streak': {
@@ -390,7 +428,8 @@ const theme = extendTheme({
       variants: {
         filled: {
           container: {
-            border: 'none',
+            borderWidth: '1px',
+            borderColor: 'brand.lightSteel',
             boxShadow: '0 2px 4px rgba(0, 51, 102, 0.1)',
             borderRadius: 'lg',
             overflow: 'hidden',

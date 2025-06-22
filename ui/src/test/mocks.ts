@@ -110,4 +110,71 @@ export const mockMatch = {
     [{ name: 'Player B', civ: 'Franks', color_id: 1, user_id: '2' }],
   ],
   winning_team: 1,
+};
+
+// Mock data for MatchList component testing
+export const mockMatchGroup = {
+  date: '2024-01-01',
+  matches: [
+    {
+      description: '1v1',
+      match_id: '12345',
+      start_time: new Date().toISOString(),
+      diplomacy: {
+        type: '1v1',
+        team_size: '1',
+      },
+      map: 'Arabia',
+      options: 'Standard',
+      duration: 1500, // 25 minutes in seconds
+      teams: [
+        [
+          {
+            name: 'Player A',
+            civ: 'Britons',
+            number: 1,
+            color_id: 0,
+            user_id: '1',
+            winner: true,
+            rating: 1500,
+            rating_change: 25,
+          },
+        ],
+        [
+          {
+            name: 'Player B',
+            civ: 'Franks',
+            number: 2,
+            color_id: 1,
+            user_id: '2',
+            winner: false,
+            rating: 1480,
+            rating_change: -25,
+          },
+        ],
+      ] as any, // Type assertion to bypass type checking
+      players: [
+        {
+          name: 'Player A',
+          civ: 'Britons',
+          number: 1,
+          color_id: 0,
+          user_id: '1',
+          winner: true,
+          rating: 1500,
+          rating_change: 25,
+        },
+        {
+          name: 'Player B',
+          civ: 'Franks',
+          number: 2,
+          color_id: 1,
+          user_id: '2',
+          winner: false,
+          rating: 1480,
+          rating_change: -25,
+        },
+      ],
+    },
+  ],
 }; 

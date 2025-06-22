@@ -23,6 +23,13 @@ const sharedValues = {
       alignItems: 'flex-start' as const,
       justifyContent: 'flex-start',
     },
+    matchSummaryCard: {
+      flexDirection: 'row' as const,
+      gap: 2,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between',
+      w: '100%',
+    },
     teamCard: {
       width: '100%',
       flexDirection: 'column' as const,
@@ -121,6 +128,13 @@ const sharedValues = {
       alignItems: 'center' as const,
       justifyContent: 'space-between',
     },
+    matchSummaryCard: {
+      flexDirection: 'row' as const,
+      gap: 4,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between',
+      w: '100%',
+    },
     teamCard: {
       width: '100%',
       flexDirection: 'row' as const,
@@ -216,6 +230,13 @@ const sharedValues = {
       gap: '1rem',
       alignItems: 'center' as const,
       justifyContent: 'space-between',
+    },
+    matchSummaryCard: {
+      flexDirection: 'row' as const,
+      gap: 4,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between',
+      w: '100%',
     },
     teamCard: {
       width: '100%',
@@ -314,6 +335,13 @@ export interface LayoutConfig {
     gap: string;
     alignItems: ResponsiveValue<'flex-start' | 'center'>;
     justifyContent: string;
+  };
+  matchSummaryCard: {
+    flexDirection: ResponsiveValue<'row' | 'column'>;
+    gap: ResponsiveValue<string | number>;
+    alignItems: ResponsiveValue<'flex-start' | 'center'>;
+    justifyContent: string;
+    w: string;
   };
   teamCard: {
     width: string;
