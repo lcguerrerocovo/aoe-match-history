@@ -21,7 +21,8 @@ export const mockProfile = {
   avatarUrl: undefined as string | undefined
 };
 
-export const mockStats: PersonalStats = {
+// Renamed from mockStats
+export const mockPersonalStats: PersonalStats = {
   result: { code: 200, message: 'OK' },
   statGroups: [
     {
@@ -91,10 +92,55 @@ export const mockStats: PersonalStats = {
   ]
 };
 
+export const mockSteamProfile = {
+  steamid: "76561197960265728",
+  personaname: "Valve",
+  avatarfull: "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+};
+
+export const mockMatchHistory = {
+  profiles: [
+    { profile_id: 4764337, name: '/steam/76561198144754504', alias: 'dev' },
+    { profile_id: 11766674, name: '/steam/76561199079934519', alias: '[phiz]brans$s' }
+  ],
+  matchHistoryStats: [
+    {
+      id: 260228303,
+      mapname: 'Forts',
+      matchtype_id: 29, // EW Team
+      options: 'AAAAAQAAAAAAAAAAAAAAAgAAAAIAAACQBwAAAAAA',
+      slotinfo: 'eyJQbGF5ZXJEYXRhIjpbeyJQcm9maWxlSW5mbyI6eyJpZCI6NDc2NDMzNywibmFtZSI6Ii9zdGVhbS83NjU2MTE5ODE0NDc1NDUwNCIsImFsaWFzIjoiZGV2In0sIm1ldGFEYXRhIjoiYkY3MHBpWDR4Q2s9In0seyJQcm9maWxlSW5mbyI6eyJpZCI6MTE3NjY2NzQsIm5hbWUiOiIvc3RlYW0vNzY1NjExOTkwNzk5MzQ1MTkiLCJhbGlhcyI6IltwaGl6XWJyYW5zJHMifSwibWV0YURhdGEiOiJiRjcwUGluM3hGND0ifV19',
+      matchhistoryreportresults: [
+        { profile_id: 4764337, civilization_id: 10, resulttype: 1 },
+        { profile_id: 11766674, civilization_id: 12, resulttype: 2 }
+      ],
+      matchhistorymember: [
+        { profile_id: 4764337, oldrating: 1000, newrating: 1010 },
+        { profile_id: 11766674, oldrating: 1000, newrating: 990 }
+      ]
+    },
+    {
+      id: 260228304,
+      mapname: 'Arena',
+      matchtype_id: 6, // RM 1v1
+      options: 'AAAAAQAAAAAAAAAAAAAAAgAAAAIAAACQBwAAAAAA',
+      slotinfo: 'eyJQbGF5ZXJEYXRhIjpbeyJQcm9maWxlSW5mbyI6eyJpZCI6NDc2NDMzNywibmFtZSI6Ii9zdGVhbS83NjU2MTE5ODE0NDc1NDUwNCIsImFsaWFzIjoiZGV2In0sIm1ldGFEYXRhIjoiYkY3MHBpWDR4Q2s9In0seyJQcm9maWxlSW5mbyI6eyJpZCI6MTE3NjY2NzQsIm5hbWUiOiIvc3RlYW0vNzY1NjExOTkwNzk5MzQ1MTkiLCJhbGlhcyI6IltwaGl6XWJyYW5zJHMifSwibWV0YURhdGEiOiJiRjcwUGluM3hGND0ifV19',
+      matchhistoryreportresults: [
+        { profile_id: 4764337, civilization_id: 10, resulttype: 1 },
+        { profile_id: 11766674, civilization_id: 12, resulttype: 2 }
+      ],
+      matchhistorymember: [
+        { profile_id: 4764337, oldrating: 1010, newrating: 1020 },
+        { profile_id: 11766674, oldrating: 990, newrating: 980 }
+      ]
+    }
+  ]
+};
+
 export const mockProfileHeaderProps = {
   profileId: '12345',
   profile: mockProfile,
-  stats: mockStats,
+  stats: mockPersonalStats,
   isLoading: false
 };
 
