@@ -277,3 +277,4 @@ If automated deployment fails, you can deploy manually:
 - [age lan server](https://github.com/luskaner/ageLANServer/tree/d52e38b647f1226255dd74b4ab3f6d7ee08720d1)
 - [libre match thread](https://discord.com/channels/952812514272489503/1023626327342993511)
 - [aoe companion](https://github.com/denniske/aoe2companion)
+- [slot metadata parsing](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/advertisement/advertisement-players.ts#L24)

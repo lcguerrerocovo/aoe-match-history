@@ -29,6 +29,10 @@ yarn-error.log*
 .npm
 .yarn-integrity
 
+# Cypress
+ui/cypress/screenshots/*
+ui/cypress/videos/*
+
 # Build
 ui/dist/
 ui/build/

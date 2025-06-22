@@ -139,19 +139,37 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       ])
     );
 
-    // Find winning team from resulttype
-    const winningTeamId = match.matchhistoryreportresults.find((r: any) => r.resulttype === 1)?.teamid;
+    // Find winning teams from resulttype
+    const winningTeamIds = match.matchhistoryreportresults
+      .filter((r: any) => r.resulttype === 1)
+      .map((r: any) => r.teamid);
     // Add 1 to convert from 0-based to 1-based team numbers
-    const winningTeam = winningTeamId !== undefined ? winningTeamId + 1 : undefined;
+    const winningTeams = winningTeamIds.map((id: number) => id + 1);
+    // For backward compatibility, keep the first winning team as the primary one
+    const winningTeam = winningTeams.length > 0 ? winningTeams[0] : undefined;
 
     // Decode slotinfo for diplomacy info
     const slotInfo = decodeSlotInfo(match.slotinfo);
 
+    // Log warning for multiple winning teams (this is important for debugging)
+    if (winningTeams.length > 1) {
+      console.warn(`Match ${match.id} has ${winningTeams.length} winning teams:`, winningTeams);
+    }
+
     const players: Player[] = match.matchhistoryreportresults.map((result: any) => {
       const profileId = parseInt(result.profile_id);
       const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
-      const stationId = playerSlot?.stationID || 0;
-      const colorId = stationId > 0 ? stationId - 1 : 0;
+      
+      // Use colorId from decoded slotinfo if available, otherwise fallback to stationID
+      let colorId = 0;
+      if (playerSlot?.colorId !== undefined) {
+        colorId = playerSlot.colorId;
+      } else {
+        // Fallback to stationID if no decoded metadata
+        const stationId = playerSlot?.stationID || 0;
+        colorId = stationId > 0 ? stationId - 1 : 0;
+      }
+      
       const ratingInfo = ratingMap.get(result.profile_id);
 
       return {
@@ -199,7 +217,8 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
       duration: match.completiontime - match.startgametime,
       teams: teams,
       players: players,
-      winning_team: winningTeam
+      winning_team: winningTeam,
+      winning_teams: winningTeams
     };
 
     return matchObject;

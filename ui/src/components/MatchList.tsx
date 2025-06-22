@@ -182,7 +182,7 @@ function TeamCard({ match }: { match: any }) {
       >
         {Array.isArray(match.teams) &&
           match.teams.map((team: Player[], idx: number) => {
-            const isWinner = match.winning_team === idx + 1;
+            const isWinner = match.winning_teams?.includes(idx + 1) || match.winning_team === idx + 1;
             const cardPadding = getPlayerCardPadding(team.length);
             return (
               <Card
@@ -202,16 +202,16 @@ function TeamCard({ match }: { match: any }) {
                   align={layout?.teamCard.teamVStackAlign}
                   width={layout?.teamCard.teamVStackWidth}
                 >
-                  {team.map((p, rowIndex) => (
+                  {Array.isArray(team) && team.map((p: Player) => (
                     <Box
-                      key={p.name}
+                      key={p.user_id}
                       display="flex"
                       alignItems="center"
                       borderWidth="1px"
                       borderColor="brand.stone"
                       borderRadius="sm"
                       p={cardPadding}
-                      bg={rowIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
+                      bg={Number(p.user_id) % 2 === 0 ? 'white' : 'brand.stoneLight'}
                       minW={layout?.teamCard.playerBoxMinWidth}
                       maxW={layout?.teamCard.playerBoxMaxWidth}
                       flex={layout?.teamCard.playerBoxFlex}

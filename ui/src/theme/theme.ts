@@ -191,6 +191,7 @@ const cardTheme = defineCardMultiStyleConfig({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 1,
+        boxShadow: 'sm',
       },
       body: {
         padding: 0,

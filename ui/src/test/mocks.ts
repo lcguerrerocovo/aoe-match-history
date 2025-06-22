@@ -1,4 +1,4 @@
-import type { Map } from '../types/match';
+import type { Map, Match } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 
 // Mock data for FilterBar
@@ -99,17 +99,72 @@ export const mockProfileHeaderProps = {
 };
 
 // Mock data for MatchList
-export const mockMatch = {
-  match_id: '12345',
-  description: '1v1',
-  start_time: new Date().toISOString(),
-  duration: '00:25:00',
+export const mockMatch: Match = {
+  match_id: '123',
+  start_time: '2023-01-01T00:00:00.000Z',
+  description: 'RM 1v1',
+  diplomacy: { type: 'RM 1v1', team_size: '2' },
   map: 'Arabia',
+  options: '',
+  duration: 1800,
   teams: [
-    [{ name: 'Player A', civ: 'Britons', color_id: 0, user_id: '1' }],
-    [{ name: 'Player B', civ: 'Franks', color_id: 1, user_id: '2' }],
+    {
+      number: 1,
+      players: [
+        {
+          name: 'Player1',
+          civ: 'Britons',
+          number: 1,
+          color_id: 0,
+          user_id: '1',
+          winner: true,
+          rating: 1200,
+          rating_change: 15,
+        },
+      ],
+      won: true,
+    },
+    {
+      number: 2,
+      players: [
+        {
+          name: 'Player2',
+          civ: 'Franks',
+          number: 2,
+          color_id: 1,
+          user_id: '2',
+          winner: false,
+          rating: 1185,
+          rating_change: -15,
+        },
+      ],
+      won: false,
+    },
+  ],
+  players: [
+    {
+      name: 'Player1',
+      civ: 'Britons',
+      number: 1,
+      color_id: 0,
+      user_id: '1',
+      winner: true,
+      rating: 1200,
+      rating_change: 15,
+    },
+    {
+      name: 'Player2',
+      civ: 'Franks',
+      number: 2,
+      color_id: 1,
+      user_id: '2',
+      winner: false,
+      rating: 1185,
+      rating_change: -15,
+    },
   ],
   winning_team: 1,
+  winning_teams: [1],
 };
 
 // Mock data for MatchList component testing
