@@ -260,3 +260,22 @@ This UI was refactored with these principles:
 - **Maintainable**: One config file controls all layout behavior
 - **Type-safe**: TypeScript interfaces prevent configuration errors
 - **Medieval elegance**: Cohesive design system throughout
+
+## Responsive Design & Theming
+- All responsive logic is centralized in [`src/theme/breakpoints.ts`](src/theme/breakpoints.ts) and accessed via the `useLayoutConfig()` hook.
+- All theme, color, and spacing values are defined in [`src/theme/theme.ts`](src/theme/theme.ts). Use theme tokens—never hardcode values in components.
+- Do not use inline responsive styles or hardcoded theme values in components.
+
+## Asset Management
+- Static assets (civ icons, maps, logos) are served from a Google Cloud Storage bucket and referenced via the asset manager utility.
+- In development, assets are served locally via Vite middleware; in production, they are served from the CDN URL (`https://aoe2.site/assets`).
+
+## Testing
+- Cypress component tests are in `src/components/*.cy.tsx`.
+- Tests cover responsive layouts, team card wrapping, and visual correctness.
+- To run Cypress tests:
+  ```sh
+  npm run cypress:open
+  # or
+  npm run cypress:run
+  ```

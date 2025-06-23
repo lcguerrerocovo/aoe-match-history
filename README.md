@@ -86,6 +86,12 @@ See the **[UI README](ui/README.md)** for detailed frontend development guidelin
    VITE_API_URL=http://localhost:5001/aoe2-site/us-east1/aoe2-api-proxy
    ```
 
+## Frontend (UI) Guidelines
+
+- All responsive and theming logic is centralized in the UI package. See `ui/README.md` for details.
+- Static assets are managed and served from Google Cloud Storage, with CDN caching in production.
+- Automated tests (unit and component) are run via Jest and Cypress.
+
 ## Production
 
 ### Infrastructure
@@ -266,7 +272,26 @@ If automated deployment fails, you can deploy manually:
 - If site deployment fails, verify GCS bucket permissions
 - For local testing issues, ensure all prerequisites are installed
 
+## Cache Management
 
+### Long-lived Files
+Some files like `rl_api_mappings.json` have long cache times (24 hours) for performance. If you update these files and need immediate cache refresh:
+
+```bash
+# Purge Cloudflare cache for specific file
+export API_TOKEN=your_cloudflare_api_token
+export ZONE_ID=your_zone_id
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "files": [
+      "https://aoe2.site/data/rl_api_mappings.json"
+    ]
+  }'
+```
+
+Alternatively, use the Cloudflare Dashboard: **Caching** → **Configuration** → **Purge Cache** → **Custom Purge**.
 
 ## Data/API References
 - [RelicLink API](https://app.swaggerhub.com/apis/simonsan/RelicLinkCommunityAPI_OA3/0.1#/)
