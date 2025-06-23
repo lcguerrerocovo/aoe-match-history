@@ -7,12 +7,16 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "functions-framework --target=proxy"
+    "start": "functions-framework --target=proxy",
+    "dev": "functions-framework --target=proxy --port=8080"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^7.1.0",
+    "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "16.5.0",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "steam-user": "^4.28.0"
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^3.3.0"

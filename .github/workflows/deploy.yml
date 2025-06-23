@@ -159,6 +159,12 @@ jobs:
           gcloud services enable cloudresourcemanager.googleapis.com
           gcloud services enable cloudfunctions.googleapis.com
           gcloud services enable cloudbuild.googleapis.com
+          gcloud services enable firestore.googleapis.com
+      
+      - name: Create Firestore Database
+        run: |
+          # Create Firestore database if it doesn't exist
+          gcloud firestore databases create --location=us-central1 --quiet || echo "Database already exists"
       
       - name: Deploy Cloud Function
         run: |
@@ -178,5 +184,6 @@ jobs:
             --timeout=30s \
             --min-instances=0 \
             --max-instances=10 \
-            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }}" \
+            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }}" \
+            --service-account="aoe2-api-proxy@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug 
