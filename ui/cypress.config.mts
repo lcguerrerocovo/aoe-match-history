@@ -5,6 +5,11 @@ export default defineConfig({
     devServer: {
       framework: 'react',
       bundler: 'vite',
+      viteConfig: {
+        define: {
+          'process.env.NODE_ENV': '"test"'
+        }
+      }
     },
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: false

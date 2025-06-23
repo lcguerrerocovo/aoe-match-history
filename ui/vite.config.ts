@@ -96,7 +96,7 @@ export default defineConfig({
     fs: {
       allow: ['..', '../site', '../data']
     },
-    proxy: {
+    proxy: process.env.NODE_ENV === 'test' ? {} : {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
