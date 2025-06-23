@@ -185,5 +185,5 @@ jobs:
             --min-instances=0 \
             --max-instances=10 \
             --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }}" \
-            --service-account="aoe2-api-proxy@aoe2-site.iam.gserviceaccount.com" \
+            --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug 
