@@ -1,5 +1,11 @@
 const SteamUser = require('steam-user');
 const axios = require('axios');
+const pino = require('pino');
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  prettyPrint: process.env.NODE_ENV === 'development'
+});
 
 const APP_ID = 813780; // AoE 2 AppID
 const GAME_TITLE = "age2";
@@ -30,34 +36,56 @@ class RelicAuthClient {
         this.sessionId = null;
         this.lastAuthTime = null;
         this.authExpiry = 30 * 60 * 1000; // 30 minutes in milliseconds
+        this.log = logger.child({ module: 'RelicAuth' });
     }
 
-    async authenticate(steamUsername, steamPassword) {
+    async authenticate(steamUsername, steamPassword, existingTicket = null, existingSteamData = null) {
+        const authStartTime = Date.now();
         try {
-            console.log('Logging into Steam...');
+            if (existingTicket && existingSteamData) {
+                this.log.info('Attempting re-authentication with existing ticket...');
+                
+                const relicStartTime = Date.now();
+                const sessionId = await this._relicPlatformLogin(existingSteamData, existingTicket);
+                const relicEndTime = Date.now();
+                this.log.debug({ duration: relicEndTime - relicStartTime }, 'Relic platform login with existing ticket completed');
+                
+                this.sessionId = sessionId;
+                this.lastAuthTime = Date.now();
+                
+                const totalAuthTime = Date.now() - authStartTime;
+                this.log.info({ totalAuthTime }, 'Total re-authentication completed');
+                
+                return { sessionId, steamId64: existingSteamData.steamId64, steamUserName: existingSteamData.steamUserName, base64Ticket: existingTicket };
+            }
             
-            // Steam login
+            this.log.info('Starting full authentication process...');
+            
+            const steamStartTime = Date.now();
             const steamData = await this._steamLogin(steamUsername, steamPassword);
+            const steamEndTime = Date.now();
+            this.log.debug({ duration: steamEndTime - steamStartTime }, 'Steam login completed');
             
-            // Get encrypted app ticket
+            const ticketStartTime = Date.now();
             const base64Ticket = await this._getEncryptedAppTicket();
+            const ticketEndTime = Date.now();
+            this.log.debug({ duration: ticketEndTime - ticketStartTime }, 'Getting encrypted app ticket completed');
             
-            // Relic platform login
+            const relicStartTime = Date.now();
             const sessionId = await this._relicPlatformLogin(steamData, base64Ticket);
+            const relicEndTime = Date.now();
+            this.log.debug({ duration: relicEndTime - relicStartTime }, 'Relic platform login completed');
             
             this.sessionId = sessionId;
             this.lastAuthTime = Date.now();
             
-            return {
-                sessionId,
-                steamId64: steamData.steamId64,
-                steamUserName: steamData.steamUserName
-            };
+            const totalAuthTime = Date.now() - authStartTime;
+            this.log.info({ totalAuthTime }, 'Total authentication completed');
+            
+            return { sessionId, steamId64: steamData.steamId64, steamUserName: steamData.steamUserName, base64Ticket };
         } catch (error) {
-            console.error('Authentication failed:', error);
+            this.log.error({ error: error.message, duration: Date.now() - authStartTime }, 'Authentication failed');
             throw error;
-        } finally {
-            this.client.logOff();
         }
     }
 
@@ -68,40 +96,26 @@ class RelicAuthClient {
                 password: password
             });
 
-            this.client.once('loggedOn', () => {
-                console.log('Successfully logged into Steam.');
-                
-                if (!this.client.steamID) {
-                    reject(new Error("SteamID not available after login."));
-                    return;
-                }
-
+            this.client.on('loggedOn', () => {
+                this.log.info('Successfully logged into Steam.');
                 const steamId64 = this.client.steamID.getSteamID64();
-                let steamUserName = username;
-                
-                if (this.client.accountInfo && this.client.accountInfo.accountName) {
-                    steamUserName = this.client.accountInfo.accountName;
-                } else if (this.client.user && this.client.user.name) {
-                    steamUserName = this.client.user.name;
-                }
-
-                console.log(`Logged in as: ${steamUserName} (SteamID64: ${steamId64})`);
+                const steamUserName = this.client.accountInfo?.name || username;
                 resolve({ steamId64, steamUserName });
             });
 
-            this.client.once('webSession', () => {
-                console.log('Web session established.');
+            this.client.on('webSession', () => {
+                this.log.info('Web session established.');
             });
 
-            this.client.once('steamGuard', (domain, callback) => {
-                console.log(`Steam Guard code needed from ${domain || 'email/mobile app'}`);
-                // For now, we'll need to handle this differently in a serverless context
-                reject(new Error("Steam Guard required - not supported in serverless environment"));
+            this.client.on('steamGuard', (domain, callback, lastCodeWrong) => {
+                this.log.info({ domain }, 'Steam Guard code needed');
+                // For now, we'll just reject - in a real implementation you'd need to handle 2FA
+                reject(new Error('Steam Guard required but not implemented'));
             });
 
-            this.client.once('error', (err) => {
-                console.error('Steam login error:', err.message);
-                reject(new Error(`Steam login failed: ${err.message}`));
+            this.client.on('error', (err) => {
+                this.log.error({ error: err.message }, 'Steam login error');
+                reject(err);
             });
         });
     }
@@ -110,11 +124,12 @@ class RelicAuthClient {
         return new Promise((resolve, reject) => {
             this.client.getEncryptedAppTicket(APP_ID, Buffer.from("RLINK"), (err, ticket) => {
                 if (err) {
+                    this.log.error({ error: err.message }, 'Failed to get encrypted app ticket');
                     reject(err);
                     return;
                 }
                 const base64Ticket = ticket.toString('base64');
-                console.log('Generated Encrypted App Ticket');
+                this.log.info('Generated Encrypted App Ticket');
                 resolve(base64Ticket);
             });
         });
@@ -141,17 +156,15 @@ class RelicAuthClient {
                     'Pragma': 'no-cache',
                     'Cache-Control': 'no-store',
                 },
+                timeout: 30000
             }
         );
 
-        const responseData = response.data;
-
-        if (response.status === 200 && responseData[0] === 0) {
-            const sessionId = responseData[1];
-            console.log('Relic Link Platform Login successful');
-            return sessionId;
+        if (response.status === 200 && response.data && response.data[0] === 0) {
+            this.log.info('Relic Link Platform Login successful');
+            return response.data[1]; // sessionId is typically in index 1
         } else {
-            throw new Error(`Relic login failed: ${JSON.stringify(responseData)}`);
+            throw new Error(`Relic login failed: ${response.data ? response.data[0] : response.status}`);
         }
     }
 

@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const functions = require('@google-cloud/functions-framework');
 const cors = require('cors')({ 
   origin: [
     /^http:\/\/localhost:\d+$/,
@@ -11,15 +11,54 @@ const fetch = require('node-fetch');
 const RelicAuthClient = require('./relicAuth');
 const RelicPlayerService = require('./relicPlayerService');
 const SessionManager = require('./sessionManager');
+const pino = require('pino');
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
 const RELIC_AUTH_STEAM_PASS = process.env.RELIC_AUTH_STEAM_PASS;
 
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  prettyPrint: process.env.NODE_ENV === 'development'
+});
+
+const log = logger.child({ module: 'Proxy' });
+
 // Global instances
 let authClient = null;
 let playerService = null;
 let sessionManager = null;
+
+async function ensureAuthenticated() {
+    const sessionManager = new SessionManager();
+    const session = await sessionManager.getSession();
+    
+    if (!session) {
+        log.info('No valid session found, authenticating...');
+        
+        const authClient = new RelicAuthClient();
+        
+        if (!RELIC_AUTH_STEAM_USER || !RELIC_AUTH_STEAM_PASS) {
+            throw new Error('Steam credentials not configured');
+        }
+        
+        try {
+            const authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
+            await sessionManager.saveSession(authResult);
+            log.info('Re-authentication with existing ticket successful');
+            return authResult;
+        } catch (error) {
+            log.warn({ error: error.message }, 'Re-authentication with existing ticket failed, doing full authentication');
+            
+            const authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
+            await sessionManager.saveSession(authResult);
+            log.info('Session saved and ready for use');
+            return authResult;
+        }
+    }
+    
+    return session;
+}
 
 async function getAuthenticatedPlayerService() {
   if (!sessionManager) {
@@ -32,13 +71,31 @@ async function getAuthenticatedPlayerService() {
       throw new Error('RELIC_AUTH_STEAM_USER and RELIC_AUTH_STEAM_PASS environment variables are required for player search');
     }
     
-    console.log('No valid session found, authenticating...');
+    // Try to get the last session data for ticket reuse
+    const lastSession = await sessionManager.getSession();
+    
+    log.info('No valid session found, authenticating...');
     authClient = new RelicAuthClient();
-    const authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
+    
+    let authResult;
+    if (lastSession && lastSession.base64Ticket) {
+      // Try re-authentication with existing ticket first
+      try {
+        const steamData = { steamId64: lastSession.steamId64, steamUserName: lastSession.steamUserName };
+        authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS, lastSession.base64Ticket, steamData);
+        log.info('Re-authentication with existing ticket successful');
+      } catch (error) {
+        log.warn({ error: error.message }, 'Re-authentication with existing ticket failed, doing full authentication');
+        authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
+      }
+    } else {
+      // No existing ticket, do full authentication
+      authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
+    }
     
     // Save the session to Firestore
     await sessionManager.saveSession(authResult);
-    console.log('Session saved and ready for use');
+    log.info('Session saved and ready for use');
   }
 
   if (!playerService) {
@@ -115,44 +172,30 @@ async function handlePersonalStats(profileId) {
 }
 
 async function handlePlayerSearch(name) {
-  try {
-    const service = await getAuthenticatedPlayerService();
-    const result = await service.findProfiles(name);
-    
-    // If we got an auth failure, retry once with re-authentication
-    if (!result.success && (result.authFailure || result.status === 401)) {
-      console.log('Auth failure detected, retrying with re-authentication...');
-      
-      // Clear the failed session
-      await sessionManager.clearSession();
-      
-      // Re-authenticate and retry
-      authClient = new RelicAuthClient();
-      const authResult = await authClient.authenticate(RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS);
-      await sessionManager.saveSession(authResult);
-      
-      // Retry the call
-      const retryResult = await service.findProfiles(name);
-      return { 
-        data: retryResult,
-        headers: {
-          'Cache-Control': 'public, max-age=604800', // 1 week for player search results
-          'Vary': 'Accept-Encoding'
+    try {
+        const playerService = await getAuthenticatedPlayerService();
+        const result = await playerService.findProfiles(name);
+        
+        if (!result.success) {
+            if (result.authFailure) {
+                log.warn('Auth failure detected, retrying with re-authentication...');
+                await ensureAuthenticated();
+                return await playerService.findProfiles(name);
+            }
+            throw new Error(result.error);
         }
-      };
+        
+        return {
+            data: result.data,
+            headers: {
+                'Cache-Control': 'public, max-age=604800', // 1 week for player search results
+                'Vary': 'Accept-Encoding'
+            }
+        };
+    } catch (error) {
+        log.error({ error: error.message }, 'Player search error');
+        throw error;
     }
-    
-    return { 
-      data: result,
-      headers: {
-        'Cache-Control': 'public, max-age=604800', // 1 week for player search results
-        'Vary': 'Accept-Encoding'
-      }
-    };
-  } catch (error) {
-    console.error('Player search error:', error);
-    throw new Error(`Player search failed: ${error.message}`);
-  }
 }
 
 const routes = [

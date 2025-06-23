@@ -1,10 +1,7 @@
-# Responsive & Theme
-- Only use ui/src/theme/breakpoints.ts + useLayoutConfig() for breakpoints.
-- Only use values from ui/src/theme/theme.ts for color/spacing.
-- Never inline responsive styles or hard-code theme values.
-
-# Docs
-- Update existing sections; keep flow; avoid duplicates.
-
-# Code
-- Extend/modify existing functions/modules; uphold single-responsibility; avoid duplication.
+Only use ui/src/theme/breakpoints.ts + useLayoutConfig() for breakpoints
+Only use values from ui/src/theme/theme.ts for color/spacing
+Never inline responsive styles or hard-code theme values
+Docs: Update existing sections; keep flow; avoid duplicates
+Extend/modify existing functions/modules; uphold single-responsibility; avoid duplication
+Keep API signatures; test incrementally; avoid breakage
+Prefer established libs; check existing solutions before custom code

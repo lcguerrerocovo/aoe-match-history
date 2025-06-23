@@ -1,10 +1,17 @@
 const {Firestore} = require('@google-cloud/firestore');
+const pino = require('pino');
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  prettyPrint: process.env.NODE_ENV === 'development'
+});
 
 class SessionManager {
     constructor() {
         this.db = new Firestore();
         this.collection = 'relic_sessions';
         this.docId = 'current_session';
+        this.log = logger.child({ module: 'SessionManager' });
     }
 
     async getSession() {
@@ -12,6 +19,7 @@ class SessionManager {
             const doc = await this.db.collection(this.collection).doc(this.docId).get();
             
             if (!doc.exists) {
+                this.log.debug('No session found in Firestore');
                 return null;
             }
 
@@ -20,20 +28,25 @@ class SessionManager {
 
             // Check if session is expired
             if (data.expiry && data.expiry < now) {
-                console.log('Session expired, removing from Firestore');
+                this.log.info('Session expired, removing from Firestore');
                 await this.clearSession();
                 return null;
             }
+
+            const minutesUntilExpiry = Math.round((data.expiry - now) / 1000 / 60);
+            this.log.debug({ minutesUntilExpiry }, 'Retrieved valid session');
 
             return {
                 sessionId: data.sessionId,
                 steamId64: data.steamId64,
                 steamUserName: data.steamUserName,
+                base64Ticket: data.base64Ticket,
                 expiry: data.expiry,
-                callNumber: data.callNumber || 0
+                callNumber: data.callNumber || 0,
+                lastCallTime: data.lastCallTime || null
             };
         } catch (error) {
-            console.error('Error getting session from Firestore:', error);
+            this.log.error({ error: error.message }, 'Error getting session from Firestore');
             return null;
         }
     }
@@ -44,18 +57,31 @@ class SessionManager {
                 sessionId: sessionData.sessionId,
                 steamId64: sessionData.steamId64,
                 steamUserName: sessionData.steamUserName,
-                expiry: Date.now() + (30 * 60 * 1000), // 30 minutes
-                callNumber: 1, // Start at 1 for new sessions
-                createdAt: Date.now()
+                base64Ticket: sessionData.base64Ticket,
+                expiry: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+                callNumber: 0, // Start at 0, first API call will be 1
+                createdAt: Date.now(),
+                lastCallTime: Date.now()
             };
 
             await this.db.collection(this.collection).doc(this.docId).set(session);
-            console.log('Session saved to Firestore with call number starting at 1');
+            this.log.info('Session saved to Firestore with call number starting at 0');
             
             return session;
         } catch (error) {
-            console.error('Error saving session to Firestore:', error);
+            this.log.error({ error: error.message }, 'Error saving session to Firestore');
             throw error;
+        }
+    }
+
+    async updateLastCallTime(newTime) {
+        try {
+            await this.db.collection(this.collection).doc(this.docId).update({
+                lastCallTime: newTime
+            });
+            this.log.debug({ lastCallTime: newTime }, 'Updated lastCallTime');
+        } catch (error) {
+            this.log.error({ error: error.message }, 'Error updating lastCallTime in Firestore');
         }
     }
 
@@ -69,9 +95,10 @@ class SessionManager {
             const doc = await this.db.collection(this.collection).doc(this.docId).get();
             const data = doc.data();
             
+            this.log.debug({ callNumber: data.callNumber }, 'Incremented call number');
             return data.callNumber;
         } catch (error) {
-            console.error('Error incrementing call number:', error);
+            this.log.error({ error: error.message }, 'Error incrementing call number');
             // Fallback: get current session and manually increment
             const session = await this.getSession();
             if (session) {
@@ -88,9 +115,9 @@ class SessionManager {
     async clearSession() {
         try {
             await this.db.collection(this.collection).doc(this.docId).delete();
-            console.log('Session cleared from Firestore');
+            this.log.info('Session cleared from Firestore');
         } catch (error) {
-            console.error('Error clearing session from Firestore:', error);
+            this.log.error({ error: error.message }, 'Error clearing session from Firestore');
         }
     }
 
@@ -101,7 +128,7 @@ class SessionManager {
 
     // Method to handle auth failures - clear session so next call will re-authenticate
     async handleAuthFailure() {
-        console.log('Auth failure detected, clearing session for re-authentication');
+        this.log.warn('Auth failure detected, clearing session for re-authentication');
         await this.clearSession();
     }
 }
