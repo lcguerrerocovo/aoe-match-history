@@ -1,8 +1,27 @@
-import { Box, VStack, Text, Image, Button, useTheme } from '@chakra-ui/react';
+import { Box, VStack, Text, useTheme, Card, Input } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { assetManager } from '../utils/assetManager';
+import { FaGlobe } from 'react-icons/fa';
 
 const DEFAULT_PROFILE_ID = '4764337';
+
+// PlayerSearchBar component from TopBar
+const PlayerSearchBar = () => (
+  <Card variant="filter" p={0} w={{ base: '100%', sm: '300px', md: '400px' }}>
+    <Input
+      placeholder="Search players..."
+      width="100%"
+      variant="filled"
+      fontSize={{ base: 'md', md: 'lg' }}
+      borderRadius="lg"
+      borderWidth={0}
+      _placeholder={{ color: 'brand.steel' }}
+      bg="white"
+      color="brand.midnightBlue"
+      boxShadow="none"
+      h="50px"
+    />
+  </Card>
+);
 
 export function LandingPage() {
   const theme = useTheme();
@@ -16,15 +35,18 @@ export function LandingPage() {
       py={{ md: 8 }}
     >
       <VStack 
-        spacing={theme.spacing.responsive.landingSpacing} 
+        spacing={{ base: '1.5rem', md: theme.spacing.responsive.landingSpacing }} 
         align="center" 
         textAlign="center" 
-        p={theme.spacing.responsive.landingPadding}
+        p={{ base: '1rem', md: theme.spacing.responsive.landingPadding }}
         w="100%"
         minH={{ base: '100vh', md: 'auto' }}
         justifyContent="center"
         maxW={{ md: '90%', xl: '1100px' }}
-        bg="brand.parchment"
+        bg={{
+          base: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
+          md: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)"
+        }}
         borderRadius={{ base: 0, md: 'xl' }}
         boxShadow={{ md: 'xl' }}
         borderWidth={{ base: '3px', md: '4px' }}
@@ -32,6 +54,19 @@ export function LandingPage() {
         position="relative"
         overflow="hidden"
       >
+        {/* Gloss highlight */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          height="8px"
+          bgGradient="linear(to-r, rgba(255,255,255,0.7), rgba(255,255,255,0.1))"
+          borderTopRadius="md"
+          pointerEvents="none"
+          zIndex={1}
+        />
+        
         {/* Background pattern */}
         <Box
           position="absolute"
@@ -46,7 +81,7 @@ export function LandingPage() {
           zIndex="0"
         />
         
-        {/* Logo */}
+        {/* Logo - same as TopBar */}
         <Box
           position="relative"
           cursor="pointer"
@@ -55,60 +90,35 @@ export function LandingPage() {
             transform: 'scale(1.05)',
             filter: 'drop-shadow(0 10px 20px rgba(212,175,55,0.4))'
           }}
+          zIndex={2}
         >
           <RouterLink to={`/profile_id/${DEFAULT_PROFILE_ID}`}>
-            <Image
-              src={assetManager.getLogo()}
-              alt="Age of Empires II Match History"
-              maxW="400px"
-              w="100%"
-              h="auto"
-              filter="drop-shadow(0 4px 8px rgba(0,0,0,0.1))"
-            />
+            <Text
+              fontWeight="bold"
+              color="brand.midnightBlue"
+              fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
+              letterSpacing="wide"
+              textShadow="0 1px 0 #fff, 0 2px 4px rgba(0,0,0,0.04)"
+              display="flex"
+              alignItems="center"
+              gap={1}
+            >
+              aoe2
+              <Box as="span" display="inline-flex" alignItems="center">
+                <FaGlobe size={24} color="inherit" style={{ verticalAlign: 'middle' }} />
+              </Box>
+              site
+            </Text>
           </RouterLink>
         </Box>
 
-        {/* Site Branding */}
-        <Text
-          fontSize={{ base: 'lg', md: 'xl' }}
-          fontWeight="bold"
-          color="brand.bronze"
-          fontFamily="'Cinzel', serif"
-          letterSpacing="wider"
-          textShadow="1px 1px 2px rgba(0,0,0,0.1)"
-        >
-          aoe2.site
-        </Text>
-
-        {/* Call to Action */}
-        <Button
-          as={RouterLink}
-          to={`/profile_id/${DEFAULT_PROFILE_ID}`}
-          size="lg"
-          bg="brand.gold"
-          color="brand.midnightBlue"
-          _hover={{
-            bg: 'brand.bronze',
-            transform: 'translateY(-2px)',
-            boxShadow: '0 8px 16px rgba(212,175,55,0.3)'
-          }}
-          _active={{
-            transform: 'translateY(0)',
-          }}
-          borderRadius="full"
-          px={theme.spacing.xl}
-          py={theme.spacing.lg}
-          fontSize="lg"
-          fontWeight="bold"
-          transition="all 0.2s ease"
-          border="2px solid"
-          borderColor="brand.midnightBlue"
-        >
-          View My Matches
-        </Button>
+        {/* Player Search Component */}
+        <Box position="relative" zIndex={2}>
+          <PlayerSearchBar />
+        </Box>
 
         {/* Description */}
-        <VStack spacing={theme.spacing.xl} maxW="600px" align="stretch">
+        <VStack spacing={{ base: '1rem', md: theme.spacing.xl }} maxW="600px" align="stretch" position="relative" zIndex={2}>
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"

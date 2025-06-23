@@ -9,6 +9,7 @@ import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
 import { groupMatchesBySession } from './utils/matchUtils';
+import TopBar from './components/TopBar';
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -87,37 +88,40 @@ function App() {
   };
 
   return (
-    <Box py={{ md: 8 }}>
-      <VStack 
-        spacing={4} 
-        mx="auto" 
-        px={{ base: 2, lg: 4 }} 
-        py={{ base: 4, lg: 6 }} 
-        w="100%"
-        maxW={{ md: '90%', xl: '1100px' }}
-        bg={{ base: 'transparent', md: 'brand.parchment' }}
-        borderRadius={{ md: 'xl' }}
-        boxShadow={{ md: 'xl' }}
-        borderWidth={{ base: '3px', md: '4px' }}
-        borderColor="brand.gold"
-        data-testid="floating-box-container"
-      >
-        {profileId && 
-          <Box w="100%">
-            <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
-          </Box>
-        }
+    <>
+      <TopBar />
+      <Box py={{ md: 8 }}>
         <VStack 
-          align="stretch"
-          p={layout?.mainContent.padding}
-          w={layout.matchList.width}
-          mx="auto"
+          spacing={4} 
+          mx="auto" 
+          px={{ base: 2, lg: 4 }} 
+          py={{ base: 4, lg: 6 }} 
+          w="100%"
+          maxW={{ md: '90%', xl: '1100px' }}
+          bg={{ base: 'transparent', md: 'brand.parchment' }}
+          borderRadius={{ md: 'xl' }}
+          boxShadow={{ md: 'xl' }}
+          borderWidth={{ base: '3px', md: '4px' }}
+          borderColor="brand.gold"
+          data-testid="floating-box-container"
         >
-          <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-          {profileId && <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} profileId={profileId} />}
+          {profileId && 
+            <Box w="100%">
+              <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
+            </Box>
+          }
+          <VStack 
+            align="stretch"
+            p={layout?.mainContent.padding}
+            w={layout.matchList.width}
+            mx="auto"
+          >
+            <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
+            {profileId && <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} profileId={profileId} />}
+          </VStack>
         </VStack>
-      </VStack>
-    </Box>
+      </Box>
+    </>
   );
 }
 export default App;
