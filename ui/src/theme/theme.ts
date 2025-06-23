@@ -117,11 +117,6 @@ const cardTheme = defineCardMultiStyleConfig({
           md: matchCardStyles.lg.marginBottom,
           xl: matchCardStyles.desktop.marginBottom,
         },
-        _hover: {
-          boxShadow: '0 4px 6px rgba(0,0,0,0.08)',
-          transform: 'translateY(-2px)',
-          transition: 'all 0.2s ease-in-out',
-        },
       }
     }),
     summary: defineCardPartsStyle({

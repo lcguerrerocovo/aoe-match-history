@@ -50,6 +50,9 @@ const sharedValues = {
       playerNameMaxWidthTeam: '130px',
       ratingFontSize: '12px',
       ratingMinWidth: '22px',
+      wrapTeams: false,
+      teamsPerRow: 1,
+      teamMaxWidth: '100%',
     },
     mapCard: {
       minWidth: '80px',
@@ -155,6 +158,9 @@ const sharedValues = {
       playerNameMaxWidthTeam: '130px',
       ratingFontSize: '12px',
       ratingMinWidth: '22px',
+      wrapTeams: true,
+      teamsPerRow: 2,
+      teamMaxWidth: '50%',
     },
     mapCard: {
       minWidth: '80px',
@@ -258,6 +264,9 @@ const sharedValues = {
       playerNameMaxWidthTeam: '100px',
       ratingFontSize: '10px',
       ratingMinWidth: '18px',
+      wrapTeams: true,
+      teamsPerRow: 2,
+      teamMaxWidth: '50%',
     },
     mapCard: {
       minWidth: '70px',
@@ -363,6 +372,9 @@ export interface LayoutConfig {
     playerNameMaxWidthTeam?: string;
     ratingFontSize?: string;
     ratingMinWidth?: string;
+    wrapTeams: boolean;
+    teamsPerRow: number;
+    teamMaxWidth: string;
   };
   mapCard: {
     minWidth: string;

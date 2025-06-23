@@ -10,6 +10,246 @@ import type { MatchGroup } from '../types/match';
 
 const BASE_URL = 'http://localhost';
 
+// Helper function to create a match with multiple teams for testing team wrapping
+const createMultiTeamMatch = (numTeams: number) => ({
+  ...mockMatch,
+  match_id: `multi-${numTeams}`,
+  description: `${numTeams}v${numTeams}`,
+  diplomacy: { type: `${numTeams}v${numTeams}`, team_size: numTeams.toString() },
+  teams: Array.from({ length: numTeams }, (_, i) => [
+    {
+      name: `Player ${i + 1}`,
+      civ: ['Britons', 'Franks', 'Goths', 'Huns', 'Mayans', 'Mongols'][i % 6],
+      number: i + 1,
+      color_id: i,
+      user_id: (i + 1).toString(),
+      winner: i === 0, // First team wins
+      rating: 1200 + i * 10,
+      rating_change: i === 0 ? 15 : -5,
+    },
+  ]),
+  players: Array.from({ length: numTeams }, (_, i) => ({
+    name: `Player ${i + 1}`,
+    civ: ['Britons', 'Franks', 'Goths', 'Huns', 'Mayans', 'Mongols'][i % 6],
+    number: i + 1,
+    color_id: i,
+    user_id: (i + 1).toString(),
+    winner: i === 0,
+    rating: 1200 + i * 10,
+    rating_change: i === 0 ? 15 : -5,
+  })),
+  winning_team: 1,
+  winning_teams: [1],
+});
+
+describe('Team Layout Responsive Behavior', () => {
+  it('should display teams sequentially on mobile (no wrapping)', () => {
+    const multiTeamMatch = createMultiTeamMatch(4);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Mobile viewport
+    cy.viewport(400, 600);
+
+    // Should have teams in a single column (no wrapping)
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // Find the team cards container
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+      
+      // Should have exactly 4 team cards
+      cy.get('[data-testid="team-card"]').should('have.length', 4);
+      
+      // Each team card should take full width
+      cy.get('[data-testid="team-card"]').each(($card) => {
+        cy.wrap($card).should('have.css', 'max-width', '100%');
+      });
+    });
+  });
+
+  it('should wrap teams into rows of 2 on desktop', () => {
+    const multiTeamMatch = createMultiTeamMatch(4);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Desktop viewport
+    cy.viewport(1200, 800);
+
+    // Should have teams wrapped in rows
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // Find the team cards container
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+      
+      // Should have 2 rows (4 teams / 2 per row)
+      cy.get('[data-testid="team-row"]').should('have.length', 2);
+      
+      // Each row should have 2 teams
+      cy.get('[data-testid="team-row"]').each(($row) => {
+        cy.wrap($row).find('[data-testid="team-card"]').should('have.length', 2);
+      });
+      
+      // Each team card should have max-width of 50%
+      cy.get('[data-testid="team-card"]').each(($card) => {
+        cy.wrap($card).should('have.css', 'max-width', '50%');
+      });
+    });
+  });
+
+  it('should handle odd number of teams correctly', () => {
+    const multiTeamMatch = createMultiTeamMatch(3);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Desktop viewport
+    cy.viewport(1200, 800);
+
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // Should have 2 rows (3 teams: first row with 2, second row with 1)
+      cy.get('[data-testid="team-row"]').should('have.length', 2);
+      
+      // First row should have 2 teams
+      cy.get('[data-testid="team-row"]').first().find('[data-testid="team-card"]').should('have.length', 2);
+      
+      // Second row should have 1 team
+      cy.get('[data-testid="team-row"]').last().find('[data-testid="team-card"]').should('have.length', 1);
+    });
+  });
+
+  it('should maintain proper spacing between team rows', () => {
+    const multiTeamMatch = createMultiTeamMatch(4);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Desktop viewport
+    cy.viewport(1200, 800);
+
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // Check that rows have proper gap
+      cy.get('[data-testid="team-row"]').first().should('have.css', 'gap');
+      
+      // Check that teams within rows have proper gap
+      cy.get('[data-testid="team-row"]').first().within(() => {
+        cy.get('[data-testid="team-card"]').first().should('have.css', 'margin-right');
+      });
+    });
+  });
+
+  it('should display winner trophy correctly in wrapped layout', () => {
+    const multiTeamMatch = createMultiTeamMatch(4);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Desktop viewport
+    cy.viewport(1200, 800);
+
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // Should have exactly one winner trophy (first team wins)
+      cy.get('[data-testid="team-card"]').should('have.length', 4);
+      
+      // Should have exactly one trophy
+      cy.get('div').contains('🏆').should('exist');
+      cy.get('div').contains('🏆').should('have.length', 1);
+      
+      // Trophy should be positioned correctly
+      cy.get('div').contains('🏆').should('have.css', 'position', 'absolute');
+      
+      // Trophy should be in the first team card
+      cy.get('[data-testid="team-card"]').first().should('contain', '🏆');
+      
+      // Other team cards should not have trophies
+      cy.get('[data-testid="team-card"]').not(':first').each(($card) => {
+        cy.wrap($card).should('not.contain', '🏆');
+      });
+    });
+  });
+
+  it('should handle 1v1 matches correctly (no wrapping needed)', () => {
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Desktop viewport
+    cy.viewport(1200, 800);
+
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      // For 1v1, should still use the wrapping logic but with only 2 teams
+      cy.get('[data-testid="team-row"]').should('have.length', 1);
+      cy.get('[data-testid="team-card"]').should('have.length', 2);
+    });
+  });
+
+  it('should be responsive between mobile and desktop breakpoints', () => {
+    const multiTeamMatch = createMultiTeamMatch(4);
+    
+    mount(
+      <BrowserRouter>
+        <ChakraProvider theme={theme}>
+          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+        </ChakraProvider>
+      </BrowserRouter>
+    );
+
+    // Test mobile breakpoint
+    cy.viewport(400, 600);
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+    });
+
+    // Test tablet breakpoint (should behave like mobile)
+    cy.viewport(768, 1024);
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+    });
+
+    // Test desktop breakpoint
+    cy.viewport(1200, 800);
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+      cy.get('[data-testid="team-row"]').should('exist');
+    });
+
+    // Test large desktop breakpoint
+    cy.viewport(1600, 900);
+    cy.get('[data-testid="match-card-content"]').within(() => {
+      cy.get('div').first().should('have.css', 'flex-direction', 'column');
+      cy.get('[data-testid="team-row"]').should('exist');
+    });
+  });
+});
+
 describe('MatchCard Responsive Layout', () => {
   it('should stack vertically on mobile and horizontally on desktop', () => {
     mount(

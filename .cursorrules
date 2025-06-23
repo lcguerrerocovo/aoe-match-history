@@ -1,0 +1,4 @@
+# Responsive and Theme Rules
+- All responsive logic must use ui/src/theme/breakpoints.ts and useLayoutConfig().
+- All theme, color, and spacing values must use ui/src/theme/theme.ts.
+- Never use inline responsive styles or hardcoded theme values in components.

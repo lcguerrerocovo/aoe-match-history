@@ -172,142 +172,182 @@ function TeamCard({ match }: { match: any }) {
     return 0.5; // 4+ players get least padding
   };
 
+  // Helper function to chunk teams into rows based on layout config
+  const chunkTeamsIntoRows = (teams: Player[][]) => {
+    if (!layout?.teamCard.wrapTeams || !layout?.teamCard.teamsPerRow) {
+      return [teams]; // Return single row if wrapping is disabled
+    }
+    
+    const rows = [];
+    for (let i = 0; i < teams.length; i += layout.teamCard.teamsPerRow) {
+      rows.push(teams.slice(i, i + layout.teamCard.teamsPerRow));
+    }
+    return rows;
+  };
+
+  const teamRows = Array.isArray(match.teams) ? chunkTeamsIntoRows(match.teams) : [];
+
+  const renderTeam = (team: Player[], globalTeamIndex: number) => {
+    const isWinner = match.winning_teams?.includes(globalTeamIndex + 1) || match.winning_team === globalTeamIndex + 1;
+    const cardPadding = getPlayerCardPadding(team.length);
+    
+    // Calculate the starting index for this team
+    let teamStartIndex = 0;
+    for (let i = 0; i < globalTeamIndex; i++) {
+      teamStartIndex += match.teams[i].length;
+    }
+    
+    return (
+      <Card
+        key={globalTeamIndex}
+        data-testid="team-card"
+        variant={isWinner ? 'winner' : 'loser'}
+        flex="1"
+        minW="0"
+        maxW={layout?.teamCard.teamMaxWidth}
+        position="relative"
+      >
+        {isWinner && (
+          <Box position="absolute" top="-12px" right="-10px" zIndex={1} fontSize="xl">
+            🏆
+          </Box>
+        )}
+        <VStack
+          spacing={layout?.teamCard.teamVStackSpacing}
+          align={layout?.teamCard.teamVStackAlign}
+          width={layout?.teamCard.teamVStackWidth}
+        >
+          {Array.isArray(team) && team.map((p: Player, playerIndex: number) => {
+            const globalPlayerIndex = teamStartIndex + playerIndex;
+            return (
+              <Box
+                key={p.user_id}
+                display="flex"
+                alignItems="center"
+                borderWidth="1px"
+                borderColor="brand.stone"
+                borderRadius="sm"
+                p={cardPadding}
+                bg={globalPlayerIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
+                minW={layout?.teamCard.playerBoxMinWidth}
+                maxW={layout?.teamCard.playerBoxMaxWidth}
+                flex={layout?.teamCard.playerBoxFlex}
+                m={0}
+              >
+                <Box
+                  w={layout?.teamCard.colorBarWidth}
+                  h={layout?.teamCard.colorBarHeight}
+                  bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
+                  borderRadius="sm"
+                  mr={1}
+                  flexShrink={0}
+                />
+                <Box
+                  position="relative"
+                  w={layout?.teamCard.civIconSize}
+                  h={layout?.teamCard.civIconSize}
+                  borderRadius="sm"
+                  mr={1}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  flexShrink={0}
+                  overflow="hidden"
+                >
+                  <img
+                    src={assetManager.getCivIcon(String(p.civ || 'unknown'))}
+                    alt={String(p.civ || 'Unknown')}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '4px'
+                    }}
+                    onError={(e) => {
+                      // Fallback to text if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
+                      if (textElement) {
+                        textElement.style.display = 'block';
+                      }
+                    }}
+                  />
+                  <Text
+                    className="civ-fallback"
+                    position="absolute"
+                    top={0}
+                    left="50%"
+                    transform="translateX(-50%)"
+                    fontSize={layout?.teamCard.civFontSize}
+                    fontWeight="bold"
+                    color="gray.700"
+                    zIndex={1}
+                    display="none"
+                    bg="gray.300"
+                    px={1}
+                    borderRadius="sm"
+                  >
+                    {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
+                  </Text>
+                </Box>
+                <RouterLink 
+                  to={`/profile_id/${p.user_id.toString()}`}
+                  style={{
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                    color: 'blue.500',
+                    textDecoration: 'none',
+                    fontSize: layout?.teamCard.playerNameFontSize
+                  }}
+                >
+                  {p.name}
+                </RouterLink>
+                <PlayerRating player={p} />
+              </Box>
+            );
+          })}
+        </VStack>
+      </Card>
+    );
+  };
+
   return (
     <Box width={layout?.teamCard.width}>
       <Box
         display="flex"
-        flexDirection={layout?.teamCard.flexDirection}
+        flexDirection={layout?.teamCard.wrapTeams ? 'column' : layout?.teamCard.flexDirection}
         gap={layout?.teamCard.gap}
         width="100%"
         justifyContent="center"
       >
-        {Array.isArray(match.teams) &&
-          match.teams.map((team: Player[], idx: number) => {
-            const isWinner = match.winning_teams?.includes(idx + 1) || match.winning_team === idx + 1;
-            const cardPadding = getPlayerCardPadding(team.length);
-            
-            // Calculate the starting index for this team
-            let teamStartIndex = 0;
-            for (let i = 0; i < idx; i++) {
-              teamStartIndex += match.teams[i].length;
-            }
-            
-            return (
-              <Card
-                key={idx}
-                variant={isWinner ? 'winner' : 'loser'}
-                flex="1"
-                minW="0"
-                position="relative"
-              >
-                {isWinner && (
-                  <Box position="absolute" top="-12px" right="-10px" zIndex={1} fontSize="xl">
-                    🏆
-                  </Box>
-                )}
-                <VStack
-                  spacing={layout?.teamCard.teamVStackSpacing}
-                  align={layout?.teamCard.teamVStackAlign}
-                  width={layout?.teamCard.teamVStackWidth}
-                >
-                  {Array.isArray(team) && team.map((p: Player, playerIndex: number) => {
-                    const globalPlayerIndex = teamStartIndex + playerIndex;
-                    return (
-                      <Box
-                        key={p.user_id}
-                        display="flex"
-                        alignItems="center"
-                        borderWidth="1px"
-                        borderColor="brand.stone"
-                        borderRadius="sm"
-                        p={cardPadding}
-                        bg={globalPlayerIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
-                        minW={layout?.teamCard.playerBoxMinWidth}
-                        maxW={layout?.teamCard.playerBoxMaxWidth}
-                        flex={layout?.teamCard.playerBoxFlex}
-                        m={0}
-                      >
-                        <Box
-                          w={layout?.teamCard.colorBarWidth}
-                          h={layout?.teamCard.colorBarHeight}
-                          bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
-                          borderRadius="sm"
-                          mr={1}
-                          flexShrink={0}
-                        />
-                        <Box
-                          position="relative"
-                          w={layout?.teamCard.civIconSize}
-                          h={layout?.teamCard.civIconSize}
-                          borderRadius="sm"
-                          mr={1}
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          flexShrink={0}
-                          overflow="hidden"
-                        >
-                          <img
-                            src={assetManager.getCivIcon(String(p.civ || 'unknown'))}
-                            alt={String(p.civ || 'Unknown')}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              borderRadius: '4px'
-                            }}
-                            onError={(e) => {
-                              // Fallback to text if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
-                              if (textElement) {
-                                textElement.style.display = 'block';
-                              }
-                            }}
-                          />
-                          <Text
-                            className="civ-fallback"
-                            position="absolute"
-                            top={0}
-                            left="50%"
-                            transform="translateX(-50%)"
-                            fontSize={layout?.teamCard.civFontSize}
-                            fontWeight="bold"
-                            color="gray.700"
-                            zIndex={1}
-                            display="none"
-                            bg="gray.300"
-                            px={1}
-                            borderRadius="sm"
-                          >
-                            {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
-                          </Text>
-                        </Box>
-                        <RouterLink 
-                          to={`/profile_id/${p.user_id.toString()}`}
-                          style={{
-                            textOverflow: 'ellipsis',
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
-                            display: 'inline-block',
-                            cursor: 'pointer',
-                            color: 'blue.500',
-                            textDecoration: 'none',
-                            fontSize: layout?.teamCard.playerNameFontSize
-                          }}
-                        >
-                          {p.name}
-                        </RouterLink>
-                        <PlayerRating player={p} />
-                      </Box>
-                    );
-                  })}
-                </VStack>
-              </Card>
-            );
-          })}
+        {layout?.teamCard.wrapTeams ? (
+          // Wrapped layout: teams in rows
+          teamRows.map((row, rowIndex) => (
+            <Box
+              key={rowIndex}
+              data-testid="team-row"
+              display="flex"
+              flexDirection="row"
+              gap={layout?.teamCard.gap}
+              width="100%"
+              justifyContent="center"
+            >
+              {row.map((team: Player[], teamIndex: number) => {
+                const globalTeamIndex = rowIndex * (layout?.teamCard.teamsPerRow || 2) + teamIndex;
+                return renderTeam(team, globalTeamIndex);
+              })}
+            </Box>
+          ))
+        ) : (
+          // Sequential layout: all teams in one row/column
+          Array.isArray(match.teams) &&
+            match.teams.map((team: Player[], idx: number) => renderTeam(team, idx))
+        )}
       </Box>
     </Box>
   );
