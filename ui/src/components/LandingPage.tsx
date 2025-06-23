@@ -1,6 +1,6 @@
 import { Box, VStack, Text, Image, Button, useTheme } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import logoImage from '../assets/logo/logo.png';
+import { assetManager } from '../utils/assetManager';
 
 const DEFAULT_PROFILE_ID = '4764337';
 
@@ -58,7 +58,7 @@ export function LandingPage() {
         >
           <RouterLink to={`/profile_id/${DEFAULT_PROFILE_ID}`}>
             <Image
-              src={logoImage}
+              src={assetManager.getLogo()}
               alt="Age of Empires II Match History"
               maxW="400px"
               w="100%"

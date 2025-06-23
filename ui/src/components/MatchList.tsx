@@ -6,6 +6,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionStart, calculateSessionDuration } from '../utils/matchUtils';
+import { assetManager } from '../utils/assetManager';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
@@ -55,7 +56,7 @@ function PlayerRating({ player }: { player: Player }) {
 function MapCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
   const mapName = match.map || '';
-  const imageUrl = `https://storage.googleapis.com/aoe2.site/assets/maps/${mapName}.png`;
+  const imageUrl = assetManager.getMapImage(mapName);
 
   return (
     <Box

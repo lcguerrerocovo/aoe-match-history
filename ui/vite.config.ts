@@ -62,6 +62,34 @@ export default defineConfig({
           }
         })
       }
+    },
+    {
+      name: 'serve-assets-directory',
+      configureServer(server) {
+        server.middlewares.use('/src/assets', (req, res) => {
+          const assetsDir = resolve(__dirname, './src/assets')
+          const filePath = resolve(assetsDir, req.url?.slice(1) || '')
+          
+          if (fs.existsSync(filePath)) {
+            const ext = filePath.split('.').pop()
+            const mimeTypes: Record<string, string> = {
+              'png': 'image/png',
+              'jpg': 'image/jpeg',
+              'jpeg': 'image/jpeg',
+              'gif': 'image/gif',
+              'svg': 'image/svg+xml',
+              'webp': 'image/webp'
+            }
+            
+            res.setHeader('Content-Type', mimeTypes[ext || ''] || 'application/octet-stream')
+            res.setHeader('Cache-Control', 'public, max-age=3600') // 1 hour cache for assets
+            res.end(fs.readFileSync(filePath))
+          } else {
+            res.statusCode = 404
+            res.end('Asset not found')
+          }
+        })
+      }
     }
   ],
   server: {
