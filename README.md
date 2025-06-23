@@ -11,6 +11,12 @@ This project automatically fetches and processes your **Age of Empires II: Defin
   - Downloads and processes rec files automatically
   - Updates site with new matches in real-time
 
+- **Player Search**
+  - Search for players by name using Relic API
+  - Automatic Steam authentication and session management
+  - Persistent session storage with Firestore
+  - Optimized caching for performance
+
 - **Modern UI with Medieval Design**
   - Responsive design optimized for mobile, tablet, and desktop
   - Medieval-themed color palette and typography
@@ -59,6 +65,7 @@ This project automatically fetches and processes your **Age of Empires II: Defin
 - Docker
 - Google Cloud SDK
 - GitHub CLI (for local action testing)
+- Firebase CLI (for local development)
 
 ### Local Development
 
@@ -67,6 +74,7 @@ This project automatically fetches and processes your **Age of Empires II: Defin
 cd ui
 npm install
 npm run dev        # Start development server
+npm run dev:all    # Start all services (UI + proxy + Firestore emulator)
 npm run test       # Run tests
 npm run cy:open    # Open Cypress for testing
 ```
@@ -86,6 +94,25 @@ See the **[UI README](ui/README.md)** for detailed frontend development guidelin
    VITE_API_URL=http://localhost:5001/aoe2-site/us-east1/aoe2-api-proxy
    ```
 
+#### Player Search API (Local Development)
+1. Create a `.env` file in `functions/proxy/`:
+   ```
+   STEAM_API_KEY=your_steam_api_key
+   RELIC_AUTH_STEAM_USER=your_steam_username
+   RELIC_AUTH_STEAM_PASS=your_steam_password
+   ```
+
+2. Start the API services:
+   ```bash
+   cd ui
+   npm run dev:api  # Starts proxy + Firestore emulator
+   ```
+
+3. Test the API:
+   ```bash
+   curl "http://localhost:8080/api/player-search?name=playerName"
+   ```
+
 ## Frontend (UI) Guidelines
 
 - All responsive and theming logic is centralized in the UI package. See `ui/README.md` for details.
@@ -102,6 +129,7 @@ See the **[UI README](ui/README.md)** for detailed frontend development guidelin
 - Cloud Storage
 - Cloud Scheduler
 - Cloud Run (API Proxy)
+- Firestore (for session management)
 
 #### API Proxy Setup
 The project uses a Cloud Run service as a proxy to external APIs (RelicLink, Steam) with Cloudflare DNS for caching and SSL termination.
@@ -153,6 +181,7 @@ The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
 - `roles/run.invoker` - Invoke Cloud Run jobs
 - `roles/iam.serviceAccountUser` - Act as the service account
 - `roles/cloudscheduler.admin` - Manage Cloud Scheduler jobs
+- `roles/datastore.user` - Access Firestore for session management
 
 Grant roles:
 ```bash
@@ -168,6 +197,10 @@ gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/cloudscheduler.admin"
 
+gcloud projects add-iam-policy-binding aoe2-site \
+  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+  --role="roles/datastore.user"
+
 gcloud artifacts repositories add-iam-policy-binding aoe2-repo \
   --location=us-east1 \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
@@ -181,6 +214,7 @@ The project uses GitHub Actions for automated deployment:
    - Triggered on push to master
    - Builds the React app
    - Uploads the built files to GCS bucket
+   - Deploys Cloud Function with Firestore support
 
 2. **Backend Deployment** (`.github/workflows/cloud-run.yml`):
    - Triggered on push to master
@@ -266,6 +300,13 @@ If automated deployment fails, you can deploy manually:
 - Check logs in Cloud Console
 - Monitor GCS bucket for new matches
 
+## API Endpoints
+
+- `GET /api/steam/avatar/{steamId}` - Get Steam avatar
+- `GET /api/match-history/{profileId}` - Get match history
+- `GET /api/personal-stats/{profileId}` - Get personal stats
+- `GET /api/player-search?name={playerName}` - Search for players (new)
+
 ## Troubleshooting
 - If GitHub Actions fail, check the service account permissions
 - If Cloud Run job fails, check the logs in Cloud Console
@@ -304,3 +345,4 @@ Alternatively, use the Cloudflare Dashboard: **Caching** â†’ **Configuration** â
 - [aoe companion](https://github.com/denniske/aoe2companion)
 - [slot metadata parsing](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/advertisement/advertisement-players.ts#L24)
 - [leaderboard mapping](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/match.ts#L8)
+- [auth flow][https://github.com/librematch/librematch-steam_auth/blob/main/poc_steam_proxy/__init__.py]
