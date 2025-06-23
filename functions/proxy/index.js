@@ -19,7 +19,14 @@ const RELIC_AUTH_STEAM_PASS = process.env.RELIC_AUTH_STEAM_PASS;
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  prettyPrint: process.env.NODE_ENV === 'development'
+  transport: process.env.NODE_ENV === 'development' ? {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname'
+    }
+  } : undefined
 });
 
 const log = logger.child({ module: 'Proxy' });

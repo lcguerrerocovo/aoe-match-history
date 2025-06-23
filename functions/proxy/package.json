@@ -24,7 +24,8 @@
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "pino-pretty": "13.0.0"
   },
   "jest": {
     "testEnvironment": "node",

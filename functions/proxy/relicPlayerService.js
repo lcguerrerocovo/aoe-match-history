@@ -4,7 +4,14 @@ const pino = require('pino');
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  prettyPrint: process.env.NODE_ENV === 'development'
+  transport: process.env.NODE_ENV === 'development' ? {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname'
+    }
+  } : undefined
 });
 
 const RELIC_API_HOST = "https://aoe-api.worldsedgelink.com/";
