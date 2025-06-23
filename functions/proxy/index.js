@@ -113,25 +113,52 @@ async function getAuthenticatedPlayerService() {
 }
 
 async function handleSteamAvatar(steamId) {
+  log.debug({ steamId }, 'handleSteamAvatar called');
   if (!STEAM_API_KEY) {
+    log.error('STEAM_API_KEY environment variable is not set');
     throw new Error('STEAM_API_KEY environment variable is not set');
   }
   const targetUrl = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${STEAM_API_KEY}&steamids=${steamId}`;
-  const response = await fetch(targetUrl, {
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'aoe2-site'
+  log.debug({ targetUrl }, 'Fetching Steam avatar');
+  try {
+    const response = await fetch(targetUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'aoe2-site'
+      }
+    });
+    if (!response.ok) {
+      log.warn({ status: response.status, statusText: response.statusText }, 'Steam API returned error for avatar');
+      return {
+        data: { avatarUrl: null },
+        headers: {
+          'Cache-Control': 'public, max-age=600', // cache fallback for 10 min
+          'Vary': 'Accept-Encoding'
+        }
+      };
     }
-  });
-  const data = await response.json();
-  const avatarUrl = data.response?.players?.[0]?.avatarfull;
-  return { 
-    data: { avatarUrl },
-    headers: {
-      'Cache-Control': 'public, max-age=86400', // 24 hours for Steam avatars
-      'Vary': 'Accept-Encoding'
-    }
-  };
+    const data = await response.json();
+    log.debug({ data }, 'Steam API response for avatar');
+    const avatarUrl = data.response?.players?.[0]?.avatarfull;
+    log.debug({ avatarUrl }, 'Extracted avatarUrl');
+    return { 
+      data: { avatarUrl },
+      headers: {
+        'Cache-Control': 'public, max-age=86400', // 24 hours for Steam avatars
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    log.error({ error: error.message, stack: error.stack }, 'Error in handleSteamAvatar');
+    // Eat the error and return null avatar
+    return {
+      data: { avatarUrl: null },
+      headers: {
+        'Cache-Control': 'public, max-age=600', // cache fallback for 10 min
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  }
 }
 
 async function handleMatchHistory(profileId) {

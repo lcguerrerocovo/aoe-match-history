@@ -1,35 +1,23 @@
-import { Box, VStack, Text, useTheme, Card, Input } from '@chakra-ui/react';
+import { Box, VStack, Text, useTheme } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaGlobe } from 'react-icons/fa';
-
-const DEFAULT_PROFILE_ID = '4764337';
-
-// PlayerSearchBar component from TopBar
-const PlayerSearchBar = () => (
-  <Card variant="filter" p={0} w={{ base: '100%', sm: '300px', md: '400px' }}>
-    <Input
-      placeholder="Search players..."
-      width="100%"
-      variant="filled"
-      fontSize={{ base: 'md', md: 'lg' }}
-      borderRadius="lg"
-      borderWidth={0}
-      _placeholder={{ color: 'brand.steel' }}
-      bg="white"
-      color="brand.midnightBlue"
-      boxShadow="none"
-      h="50px"
-    />
-  </Card>
-);
+import { PlayerSearch } from './PlayerSearch';
+import type { PlayerSearchResult } from './PlayerSearch';
+import { useNavigate } from 'react-router-dom';
 
 export function LandingPage() {
   const theme = useTheme();
-  
+  const navigate = useNavigate();
+
+  function handlePlayerSelect(player: PlayerSearchResult) {
+    navigate(`/profile_id/${player.id}`);
+  }
+
   return (
     <Box
       minH="100vh"
       display="flex"
+      flexDirection="column"
       alignItems="center"
       justifyContent="center"
       py={{ md: 8 }}
@@ -66,7 +54,6 @@ export function LandingPage() {
           pointerEvents="none"
           zIndex={1}
         />
-        
         {/* Background pattern */}
         <Box
           position="absolute"
@@ -80,19 +67,15 @@ export function LandingPage() {
           backgroundSize="200px"
           zIndex="0"
         />
-        
-        {/* Logo - same as TopBar */}
+        {/* Logo - simplified without problematic positioning */}
         <Box
-          position="relative"
           cursor="pointer"
           transition="all 0.3s ease"
           _hover={{
-            transform: 'scale(1.05)',
-            filter: 'drop-shadow(0 10px 20px rgba(212,175,55,0.4))'
+            filter: 'drop-shadow(0 10px 20px rgba(212,175,55,0.4)) brightness(1.05)'
           }}
-          zIndex={2}
         >
-          <RouterLink to={`/profile_id/${DEFAULT_PROFILE_ID}`}>
+          <RouterLink to="#">
             <Text
               fontWeight="bold"
               color="brand.midnightBlue"
@@ -111,14 +94,12 @@ export function LandingPage() {
             </Text>
           </RouterLink>
         </Box>
-
-        {/* Player Search Component */}
-        <Box position="relative" zIndex={2}>
-          <PlayerSearchBar />
+        {/* Player Search Component - moved outside all stacking contexts */}
+        <Box w="100%" maxW="400px">
+          <PlayerSearch onSelect={handlePlayerSelect} context="landing" />
         </Box>
-
         {/* Description */}
-        <VStack spacing={{ base: '1rem', md: theme.spacing.xl }} maxW="600px" align="stretch" position="relative" zIndex={2}>
+        <VStack spacing={{ base: '1rem', md: theme.spacing.xl }} maxW="600px" align="stretch">
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"
@@ -128,10 +109,8 @@ export function LandingPage() {
           >
             Your complete Age of Empires II match history at a glance
           </Text>
-
           {/* Separator */}
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
-
           <Box
             p={theme.spacing.md}
             bg="white"

@@ -1,29 +1,21 @@
-import { Box, Flex, Text, useTheme, Card, Input } from "@chakra-ui/react";
+import { Box, Flex, Text, useTheme } from "@chakra-ui/react";
 import { useLayoutConfig } from "../theme/breakpoints";
 import { FaGlobe } from 'react-icons/fa';
-
-// PlayerSearchBar uses Chakra Input with variant='filled' for consistency
-const PlayerSearchBar = () => (
-  <Card variant="filter" p={0} w={{ base: '100%', sm: '220px' }}>
-    <Input
-      placeholder="Search players..."
-      width="100%"
-      variant="filled"
-      fontSize={{ base: 'md', md: 'md' }}
-      borderRadius="lg"
-      borderWidth={0}
-      _placeholder={{ color: 'brand.steel' }}
-      bg="white"
-      color="brand.midnightBlue"
-      boxShadow="none"
-    />
-  </Card>
-);
+import { PlayerSearch } from './PlayerSearch';
+import type { PlayerSearchResult } from './PlayerSearch';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useRef } from 'react';
 
 const TopBar = () => {
   const theme = useTheme();
   const layout = useLayoutConfig();
   const contentMaxWidth = layout?.matchList?.width || '100%';
+  const navigate = useNavigate();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  function handlePlayerSelect(player: PlayerSearchResult) {
+    navigate(`/profile_id/${player.id}`);
+  }
 
   return (
     <Box
@@ -74,6 +66,10 @@ const TopBar = () => {
           display="flex"
           alignItems="center"
           gap={0.5}
+          as={RouterLink}
+          to="/"
+          cursor="pointer"
+          _hover={{ textDecoration: 'none', filter: 'brightness(1.15)' }}
         >
           aoe2
           <Box as="span" display="inline-flex" alignItems="center">
@@ -82,7 +78,9 @@ const TopBar = () => {
           </Box>
           site
         </Text>
-        <PlayerSearchBar />
+        <Box w={{ base: '100%', sm: '220px' }} ref={searchContainerRef}>
+          <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" />
+        </Box>
       </Flex>
     </Box>
   );

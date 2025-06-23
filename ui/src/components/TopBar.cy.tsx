@@ -1,11 +1,16 @@
 import React from 'react';
 import { mount } from '@cypress/react';
 import { ChakraProvider } from '@chakra-ui/react';
+import { MemoryRouter } from 'react-router-dom';
 import theme from '../theme/theme';
 import TopBar from './TopBar';
 
 const mountWithChakra = (children: React.ReactNode) => {
-  mount(<ChakraProvider theme={theme}>{children}</ChakraProvider>);
+  mount(
+    <MemoryRouter>
+      <ChakraProvider theme={theme}>{children}</ChakraProvider>
+    </MemoryRouter>
+  );
 };
 
 describe('TopBar responsiveness', () => {
