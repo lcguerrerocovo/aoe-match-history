@@ -102,18 +102,11 @@ site/
 
 venv/*
 
-# React / Vite
-ui/.env
-ui/.env.local
-ui/.env.development.local
-ui/.env.test.local
-ui/.env.production.local
-
 # TypeScript
 *.tsbuildinfo
 
-# Assets
-ui/src/assets/maps/
+# Assets - Excluded from version control, managed via GCS/CloudFront
+ui/src/assets/
 
 # Functions
 functions/proxy/.env
