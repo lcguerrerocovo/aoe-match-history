@@ -239,15 +239,35 @@ function TeamCard({ match }: { match: any }) {
                           position="relative"
                           w={layout?.teamCard.civIconSize}
                           h={layout?.teamCard.civIconSize}
-                          bg="gray.300"
                           borderRadius="sm"
                           mr={1}
                           display="flex"
                           alignItems="center"
                           justifyContent="center"
                           flexShrink={0}
+                          overflow="hidden"
                         >
+                          <img
+                            src={assetManager.getCivIcon(String(p.civ || 'unknown'))}
+                            alt={String(p.civ || 'Unknown')}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              borderRadius: '4px'
+                            }}
+                            onError={(e) => {
+                              // Fallback to text if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
+                              if (textElement) {
+                                textElement.style.display = 'block';
+                              }
+                            }}
+                          />
                           <Text
+                            className="civ-fallback"
                             position="absolute"
                             top={0}
                             left="50%"
@@ -256,6 +276,10 @@ function TeamCard({ match }: { match: any }) {
                             fontWeight="bold"
                             color="gray.700"
                             zIndex={1}
+                            display="none"
+                            bg="gray.300"
+                            px={1}
+                            borderRadius="sm"
                           >
                             {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
                           </Text>

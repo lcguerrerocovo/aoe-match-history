@@ -48,6 +48,17 @@ class AssetManager {
    * Get civilization icon URL
    */
   getCivIcon(civName: string): string {
+    // Handle special cases first
+    const specialCases: Record<string, string> = {
+      'Lac Viet': 'lacviet.png',
+      'Aztec': 'aztecs.png',
+    };
+    
+    if (specialCases[civName]) {
+      return this.buildAssetUrl(`civ_icons/${specialCases[civName]}`);
+    }
+    
+    // Default normalization
     const normalizedName = civName.toLowerCase().replace(/\s+/g, '_');
     return this.buildAssetUrl(`civ_icons/${normalizedName}.png`);
   }
