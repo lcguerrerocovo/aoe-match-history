@@ -7,6 +7,7 @@ import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionStart, calculateSessionDuration } from '../utils/matchUtils';
 import { assetManager } from '../utils/assetManager';
+import { useState } from 'react';
 
 const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
 
@@ -56,7 +57,15 @@ function PlayerRating({ player }: { player: Player }) {
 function MapCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
   const mapName = match.map || '';
-  const imageUrl = assetManager.getMapImage(mapName);
+  const [imageError, setImageError] = useState(false);
+  
+  const imageUrl = imageError 
+    ? assetManager.getGenericMapImage() 
+    : assetManager.getMapImage(mapName);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   return (
     <Box
@@ -92,6 +101,7 @@ function MapCard({ match }: { match: any }) {
             src={imageUrl}
             alt={mapName}
             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+            onError={handleImageError}
           />
         </Box>
       </Box>

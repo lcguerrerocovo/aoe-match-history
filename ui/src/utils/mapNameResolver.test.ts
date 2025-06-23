@@ -34,6 +34,14 @@ describe('mapNameResolver', () => {
       expect(patterns[1]).toBe('rm_black_forest.png');
       expect(patterns[2]).toBe('black-forest.png');
     });
+
+    it('should handle space-separated map names', () => {
+      const result = resolveMapFilename('my map');
+      expect(result).toContain('rm_my_map.png');
+      expect(result).toContain('rm_my-map.png');
+      expect(result).toContain('my_map.png');
+      expect(result).toContain('my-map.png');
+    });
   });
 
   describe('getMostLikelyMapFilename', () => {

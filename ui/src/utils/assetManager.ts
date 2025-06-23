@@ -45,6 +45,13 @@ class AssetManager {
   }
 
   /**
+   * Get generic map image URL for fallback
+   */
+  getGenericMapImage(): string {
+    return this.buildAssetUrl('maps/cm_generic.png');
+  }
+
+  /**
    * Get civilization icon URL
    */
   getCivIcon(civName: string): string {

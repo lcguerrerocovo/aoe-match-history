@@ -107,6 +107,18 @@ describe('assetManager', () => {
         expect(url).toContain(`maps/${expected}`);
       });
     });
+
+    it('should return resolved filename for all map names', () => {
+      const url = assetManager.getMapImage('UnknownMapName');
+      expect(url).toContain('maps/rm_unknown_map_name.png');
+    });
+  });
+
+  describe('getGenericMapImage', () => {
+    it('should return generic map image URL', () => {
+      const url = assetManager.getGenericMapImage();
+      expect(url).toContain('maps/cm_generic.png');
+    });
   });
 
   describe('environment handling', () => {

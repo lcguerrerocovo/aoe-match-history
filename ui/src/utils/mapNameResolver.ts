@@ -16,6 +16,24 @@ export interface MapNameMapping {
 export function resolveMapFilename(apiName: string): string[] {
   const patterns: string[] = [];
   
+  // Handle space-separated names (like "my map")
+  if (apiName.includes(' ')) {
+    const nameLower = apiName.toLowerCase();
+    const nameUnderscore = apiName.replace(/\s+/g, '_').toLowerCase();
+    const nameHyphen = apiName.replace(/\s+/g, '-').toLowerCase();
+    
+    patterns.push(
+      `rm_${nameUnderscore}.png`,
+      `rm_${nameHyphen}.png`,
+      `rm_${nameLower}.png`,
+      `${nameUnderscore}.png`,
+      `${nameHyphen}.png`,
+      `${nameLower}.png`
+    );
+    
+    return patterns;
+  }
+  
   // Convert camelCase to different formats
   const nameLower = apiName.toLowerCase();
   const nameUnderscore = apiName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
