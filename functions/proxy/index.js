@@ -180,7 +180,14 @@ async function handlePlayerSearch(name) {
             if (result.authFailure) {
                 log.warn('Auth failure detected, retrying with re-authentication...');
                 await ensureAuthenticated();
-                return await playerService.findProfiles(name);
+                const retryResult = await playerService.findProfiles(name);
+                return {
+                    data: retryResult.data,
+                    headers: {
+                        'Cache-Control': 'public, max-age=604800', // 1 week for player search results
+                        'Vary': 'Accept-Encoding'
+                    }
+                };
             }
             throw new Error(result.error);
         }
@@ -253,4 +260,10 @@ exports.proxy = async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch from API', details: error.message });
     }
   });
-}; 
+};
+
+// Test-only: allow resetting/injecting playerService for tests
+if (process.env.NODE_ENV === 'test') {
+  exports.__setPlayerService = (svc) => { playerService = svc; };
+  exports.__resetPlayerService = () => { playerService = null; };
+} 
