@@ -345,4 +345,5 @@ Alternatively, use the Cloudflare Dashboard: **Caching** â†’ **Configuration** â
 - [aoe companion](https://github.com/denniske/aoe2companion)
 - [slot metadata parsing](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/advertisement/advertisement-players.ts#L24)
 - [leaderboard mapping](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/match.ts#L8)
-- [auth flow][https://github.com/librematch/librematch-steam_auth/blob/main/poc_steam_proxy/__init__.py]
+- [auth flow](https://github.com/librematch/librematch-steam_auth/blob/main/poc_steam_proxy/__init__.py)
+- [steam api](https://steamwebapi.azurewebsites.net/)

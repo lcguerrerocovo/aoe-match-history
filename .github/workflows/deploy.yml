@@ -53,6 +53,10 @@ jobs:
             xvfb \
             && apt-get clean && rm -rf /var/lib/apt/lists/*
       
+      - name: Install Proxy Function dependencies
+        working-directory: functions/proxy
+        run: npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
+      
       - name: Lint UI
         working-directory: ui
         run: npm run lint
