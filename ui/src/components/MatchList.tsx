@@ -391,110 +391,133 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
   const sessionDurationLabel = useBreakpointValue({ base: 'Session:', md: 'Session Duration:' });
   const timePlayedLabel = useBreakpointValue({ base: 'Played:', md: 'Time Played:' });
 
+  // Detect if we're in search mode (single group with "Search Results" in the name)
+  const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
+
+  // Render matches for a group
+  const renderMatches = (matches: any[]) => (
+    <VStack spacing={layout?.matchList.groupGap} align="stretch" width="100%" mx="auto">
+      {matches.map((match: any) => (
+        <Box
+          key={match.match_id}
+          minH={layout?.matchList.groupMinHeight}
+          width={layout?.matchList.matchWidth}
+          mx="auto"
+          display="flex"
+          flexDirection="column"
+        >
+          <MatchCard match={match} BASE_URL={BASE_URL} />
+        </Box>
+      ))}
+    </VStack>
+  );
+
   return (
     <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
-      <Accordion
-        allowMultiple
-        index={matchGroups
-          .map((group, index) => (openDates.includes(group.date) ? index : -1))
-          .filter((index) => index !== -1)}
-        onChange={(indexes: number[]) => onOpenDatesChange(indexes.map((i) => matchGroups[i].date))}
-        w={layout?.matchList.accordionWidth}
-        mx="auto"
-        variant="filled"
-      >
-        {matchGroups.map((group) => {
-          const { totalReal } = sumDurations(group.matches);
-          const sessionDuration = calculateSessionDuration(group.matches);
-          const byDiplo = countByDiplomacy(group.matches, profileId);
-          return (
-            <AccordionItem key={group.date}>
-              <h2>
-                <AccordionButton>
-                  <VStack flex="1" align="stretch" spacing={2}>
-                    {/* Date Header */}
-                    <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
-                      <Text fontWeight="bold" fontSize="md" letterSpacing="wide" color="brand.black">
-                        {formatSessionStart(group.date)}
-                      </Text>
-                    </Box>
-                    
-                    {/* Match Stats Row */}
-                    <HStack justify="space-between" align="center" role="group">
-                      <Card variant="matchesCountBubble">
-                        <Text as="span">Matches: </Text>
-                        <Text as="span">{group.matches.length}</Text>
-                      </Card>
-                      <HStack spacing={2} wrap="wrap" justify="flex-end">
-                        {Object.entries(byDiplo).map(([diplo, rec]) => (
-                          <Card key={diplo} variant="recordBubble">
-                            <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                              {diplo}
-                            </Text>
-                            <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>
-                            <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
-                            <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
-                            {rec.uncategorized > 0 && (
-                              <Text as="span" color="gray.500" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
-                            )}
-                            {rec.eloChange !== 0 && (
-                              <>
-                                <Text as="span" color="gray.300" ml={2} mr={2} verticalAlign="middle">|</Text>
-                                <Text
-                                  as="span"
-                                  display="inline-block"
-                                  minWidth={{ base: '30px', md: '35px' }}
-                                  textAlign="right"
-                                  fontFamily="mono"
-                                  color={rec.eloChange > 0 ? 'brand.brightGreen' : 'brand.brightRed'}
-                                  verticalAlign="middle"
-                                >
-                                  {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}
-                                </Text>
-                              </>
-                            )}
-                          </Card>
-                        ))}
+      {isSearchMode ? (
+        // Search mode: render matches with same background as accordion
+        <Box
+          bg="white"
+          borderRadius="md"
+          borderWidth="1px"
+          borderColor="gray.200"
+          p={4}
+          boxShadow="sm"
+        >
+          {renderMatches(matchGroups[0].matches)}
+        </Box>
+      ) : (
+        // Normal mode: render with accordion
+        <Accordion
+          allowMultiple
+          index={matchGroups
+            .map((group, index) => (openDates.includes(group.date) ? index : -1))
+            .filter((index) => index !== -1)}
+          onChange={(indexes: number[]) => onOpenDatesChange(indexes.map((i) => matchGroups[i].date))}
+          w={layout?.matchList.accordionWidth}
+          mx="auto"
+          variant="filled"
+        >
+          {matchGroups.map((group) => {
+            const { totalReal } = sumDurations(group.matches);
+            const sessionDuration = calculateSessionDuration(group.matches);
+            const byDiplo = countByDiplomacy(group.matches, profileId);
+            return (
+              <AccordionItem key={group.date}>
+                <h2>
+                  <AccordionButton>
+                    <VStack flex="1" align="stretch" spacing={2}>
+                      {/* Date Header */}
+                      <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
+                        <Text fontWeight="bold" fontSize="md" letterSpacing="wide" color="brand.black">
+                          {formatSessionStart(group.date)}
+                        </Text>
+                      </Box>
+                      
+                      {/* Match Stats Row */}
+                      <HStack justify="space-between" align="center" role="group">
+                        <Card variant="matchesCountBubble">
+                          <Text as="span">Matches: </Text>
+                          <Text as="span">{group.matches.length}</Text>
+                        </Card>
+                        <HStack spacing={2} wrap="wrap" justify="flex-end">
+                          {Object.entries(byDiplo).map(([diplo, rec]) => (
+                            <Card key={diplo} variant="recordBubble">
+                              <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                                {diplo}
+                              </Text>
+                              <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>
+                              <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
+                              <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
+                              {rec.uncategorized > 0 && (
+                                <Text as="span" color="gray.500" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
+                              )}
+                              {rec.eloChange !== 0 && (
+                                <>
+                                  <Text as="span" color="gray.300" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                  <Text
+                                    as="span"
+                                    display="inline-block"
+                                    minWidth={{ base: '30px', md: '35px' }}
+                                    textAlign="right"
+                                    fontFamily="mono"
+                                    color={rec.eloChange > 0 ? 'brand.brightGreen' : 'brand.brightRed'}
+                                    verticalAlign="middle"
+                                  >
+                                    {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}
+                                  </Text>
+                                </>
+                              )}
+                            </Card>
+                          ))}
+                        </HStack>
                       </HStack>
-                    </HStack>
 
-                    {/* Time Stats Row */}
-                    <HStack justify="space-between" fontSize="sm" color="brand.steel" role="group">
-                      <HStack spacing={1}>
-                        <TimeIcon color="brand.bronze" />
-                        <Text>{sessionDurationLabel}</Text>
-                        <Text fontWeight="bold">{formatDuration(sessionDuration)}</Text>
+                      {/* Time Stats Row */}
+                      <HStack justify="space-between" fontSize="sm" color="brand.steel" role="group">
+                        <HStack spacing={1}>
+                          <TimeIcon color="brand.bronze" />
+                          <Text>{sessionDurationLabel}</Text>
+                          <Text fontWeight="bold">{formatDuration(sessionDuration)}</Text>
+                        </HStack>
+                        <HStack spacing={1}>
+                          <TimeIcon color="brand.bronze" />
+                          <Text>{timePlayedLabel}</Text>
+                          <Text fontWeight="bold">{formatDuration(totalReal)}</Text>
+                        </HStack>
                       </HStack>
-                      <HStack spacing={1}>
-                        <TimeIcon color="brand.bronze" />
-                        <Text>{timePlayedLabel}</Text>
-                        <Text fontWeight="bold">{formatDuration(totalReal)}</Text>
-                      </HStack>
-                    </HStack>
-                  </VStack>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb={4}>
-                <VStack spacing={layout?.matchList.groupGap} align="stretch" width="100%" mx="auto">
-                  {group.matches.map((match) => (
-                    <Box
-                      key={match.match_id}
-                      minH={layout?.matchList.groupMinHeight}
-                      width={layout?.matchList.matchWidth}
-                      mx="auto"
-                      display="flex"
-                      flexDirection="column"
-                    >
-                      <MatchCard match={match} BASE_URL={BASE_URL} />
-                    </Box>
-                  ))}
-                </VStack>
-              </AccordionPanel>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                    </VStack>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>
+                  {renderMatches(group.matches)}
+                </AccordionPanel>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      )}
     </Box>
   );
 }

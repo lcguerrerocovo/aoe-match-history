@@ -206,4 +206,61 @@ export function calculateSessionDuration(matches: any[]): number {
   const lastMatchEnd = new Date(new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration) / 1.7) * 1000));
 
   return Math.floor((lastMatchEnd.getTime() - firstMatchStart.getTime()) / 1000);
+}
+
+export function searchMatches(matches: Match[], searchTerm: string): Match[] {
+  if (!searchTerm.trim()) {
+    return matches;
+  }
+
+  const term = searchTerm.toLowerCase().trim();
+  
+  return matches.filter(match => {
+    // Search in map name
+    if (match.map?.toLowerCase().includes(term)) {
+      return true;
+    }
+    
+    // Search in match description/game type
+    if (match.description?.toLowerCase().includes(term)) {
+      return true;
+    }
+    
+    // Search in diplomacy type
+    if (match.diplomacy?.type?.toLowerCase().includes(term)) {
+      return true;
+    }
+    
+    // Search in match ID
+    if (match.match_id?.toLowerCase().includes(term)) {
+      return true;
+    }
+    
+    // Search in player names
+    if (match.players?.some(player => 
+      player.name?.toLowerCase().includes(term)
+    )) {
+      return true;
+    }
+    
+    // Search in civilizations
+    if (match.players?.some(player => 
+      typeof player.civ === 'string' && player.civ.toLowerCase().includes(term)
+    )) {
+      return true;
+    }
+    
+    return false;
+  });
+}
+
+export function createFlatMatchGroup(matches: Match[]): MatchGroup[] {
+  if (!matches.length) {
+    return [];
+  }
+  
+  return [{
+    date: `Search Results (${matches.length})`,
+    matches: matches
+  }];
 } 

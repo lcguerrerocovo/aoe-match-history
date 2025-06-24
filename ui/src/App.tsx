@@ -8,7 +8,7 @@ import type { Match, MatchGroup, Map, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
-import { groupMatchesBySession } from './utils/matchUtils';
+import { groupMatchesBySession, searchMatches, createFlatMatchGroup } from './utils/matchUtils';
 import TopBar from './components/TopBar';
 
 function App() {
@@ -19,13 +19,17 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string, country?: string, clanlist_name?: string } | null>(null);
   const [stats, setStats] = useState<PersonalStats | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMap, setSelectedMap] = useState('');
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
   const layout = useLayoutConfig();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [profileId]);
 
-  const updateMatches = useCallback(async (filterFn?: (matches: Match[]) => Match[]) => {
+  const updateMatches = useCallback(async () => {
     if (!profileId) return;
     setIsLoading(true);
     try {
@@ -33,9 +37,9 @@ function App() {
         getMatches(profileId),
         getPersonalStats(profileId)
       ]);
-      const filtered = filterFn ? filterFn(data.matches) : data.matches;
-      setMaps(getMapsWithCounts(filtered));
-      setMatchGroups(groupMatchesBySession(filtered));
+      
+      // Store all matches for filtering
+      setAllMatches(data.matches);
       
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
@@ -62,6 +66,32 @@ function App() {
     }
   }, [profileId]);
 
+  // Effect to filter matches when search term, selected map, or all matches change
+  useEffect(() => {
+    let filtered = allMatches;
+    
+    // Apply map filter
+    if (selectedMap) {
+      filtered = filtered.filter(match => match.map === selectedMap);
+    }
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = searchMatches(filtered, searchTerm);
+      // When searching, create flat groups (no date accordion)
+      setMatchGroups(createFlatMatchGroup(filtered));
+    } else {
+      // When not searching, group by session
+      setMatchGroups(groupMatchesBySession(filtered));
+    }
+    
+    // Store filtered matches for count
+    setFilteredMatches(filtered);
+    
+    // Update maps with counts based on filtered results
+    setMaps(getMapsWithCounts(filtered));
+  }, [allMatches, searchTerm, selectedMap]);
+
   useEffect(() => {
     updateMatches();
   }, [profileId, updateMatches]);
@@ -78,14 +108,36 @@ function App() {
   };
 
   const handleMapFilter = (map: string) => {
-    updateMatches(map ? (matches) => matches.filter((m) => m.map === map) : undefined);
+    setSelectedMap(map);
+  };
+
+  const handleSearchChange = (search: string) => {
+    setSearchTerm(search);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
   };
 
   const handleSortChange = (direction: SortDirection) => {
-    setMatchGroups([...matchGroups].sort((a, b) =>
-      direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
-    ));
+    if (searchTerm.trim()) {
+      // When searching, sort the matches within the single search results group
+      const sortedMatches = [...filteredMatches].sort((a, b) =>
+        direction === 'desc' 
+          ? new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+          : new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      );
+      setMatchGroups(createFlatMatchGroup(sortedMatches));
+    } else {
+      // When not searching, sort the groups by date
+      setMatchGroups([...matchGroups].sort((a, b) =>
+        direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
+      ));
+    }
   };
+
+  // Get search results count for display
+  const searchResultsCount = searchTerm.trim() ? filteredMatches.length : undefined;
 
   return (
     <>
@@ -116,8 +168,22 @@ function App() {
             w={layout.matchList.width}
             mx="auto"
           >
-            <FilterBar onMapChange={handleMapFilter} onSortChange={handleSortChange} maps={maps} />
-            {profileId && <MatchList matchGroups={matchGroups} openDates={openDates} onOpenDatesChange={setOpenDates} profileId={profileId} />}
+            <FilterBar 
+              onMapChange={handleMapFilter} 
+              onSortChange={handleSortChange} 
+              onSearchChange={handleSearchChange}
+              onClearSearch={handleClearSearch}
+              maps={maps}
+              searchResultsCount={searchResultsCount}
+            />
+            {profileId && (
+              <MatchList 
+                matchGroups={matchGroups} 
+                openDates={openDates} 
+                onOpenDatesChange={setOpenDates} 
+                profileId={profileId}
+              />
+            )}
           </VStack>
         </VStack>
       </Box>

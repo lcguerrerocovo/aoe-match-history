@@ -11,7 +11,10 @@ export const mockMaps: Map[] = [
 export const mockFilterBarProps = {
   onMapChange: () => {},
   onSortChange: () => {},
-  maps: mockMaps
+  onSearchChange: () => {},
+  onClearSearch: () => {},
+  maps: mockMaps,
+  searchResultsCount: undefined
 };
 
 // Mock data for ProfileHeader
