@@ -5,6 +5,7 @@ import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
+import { searchPlayers } from '../services/matchService';
 
 const TopBar = () => {
   const theme = useTheme();
@@ -79,7 +80,7 @@ const TopBar = () => {
           site
         </Text>
         <Box w={{ base: '100%', sm: '220px' }} ref={searchContainerRef}>
-          <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" />
+          <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
         </Box>
       </Flex>
     </Box>

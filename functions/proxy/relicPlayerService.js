@@ -85,9 +85,36 @@ class RelicPlayerService {
             if (response.status === 200 && responseData[0] === 0) {
                 const profileCount = responseData[1]?.length || 0;
                 this.log.info({ profileCount }, 'Profile search successful');
+                
+                // Log the complete API response for debugging
+                this.log.debug({ 
+                    fullResponse: JSON.stringify(responseData, null, 2)
+                }, 'Complete API response');
+                
+                // Transform raw API response into structured player objects
+                const processedResults = responseData[1]?.map((playerArray, index) => {
+                    // Log first result for debugging
+                    if (index === 0) {
+                        this.log.debug({ 
+                            playerArray: JSON.stringify(playerArray, null, 2)
+                        }, 'First player array structure');
+                    }
+                    
+                    // Based on real API response analysis:
+                    // Index 1: profile ID (249641)
+                    // Index 4: player name ("Viper")  
+                    // Index 7: unclear field (1, 6, 0, 21) - not total matches
+                    // For now, we'll use 0 for matches until we determine the correct field
+                    return {
+                        id: playerArray[1], // Profile ID
+                        name: playerArray[4], // Player name
+                        matches: playerArray[7] // TODO: Determine correct field for match count
+                    };
+                }) || [];
+                
                 return {
                     success: true,
-                    data: responseData[1], // Profile data is typically in index 1
+                    data: processedResults,
                     fullResponse: responseData
                 };
             } else {

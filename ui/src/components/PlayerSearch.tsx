@@ -1,14 +1,14 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Box, Card, Input, Spinner, HStack, Text, Portal } from '@chakra-ui/react';
-import ReactCountryFlag from 'react-country-flag';
+// import ReactCountryFlag from 'react-country-flag';
 
 const MOCK_RESULTS = [
-  { id: '4764337', name: '<NT>.tornasol', country: 'SE', matches: 2826 },
-  { id: '742535', name: 'tornasol', country: 'SE', matches: 1000 },
-  { id: '2066416', name: 'xtornasol', country: 'SE', matches: 3000 },
-  { id: '4764337', name: '<NT>.tornasolero', country: 'SE', matches: 1 },
-  { id: '4764335', name: 'tornasoloco', country: 'SE', matches: 2 },
-  { id: '4764336', name: 'xtornasoly', country: 'SE', matches: 3 },
+  { id: '4764337', name: '<NT>.tornasol', matches: 2826 }, // country: 'SE'
+  { id: '742535', name: 'tornasol', matches: 1000 }, // country: 'SE'
+  { id: '2066416', name: 'xtornasol', matches: 3000 }, // country: 'SE'
+  { id: '4764337', name: '<NT>.tornasolero', matches: 1 }, // country: 'SE'
+  { id: '4764335', name: 'tornasoloco', matches: 2 }, // country: 'SE'
+  { id: '4764336', name: 'xtornasoly', matches: 3 }, // country: 'SE'
 ];
 
 function useDebouncedValue(value: string, delay: number) {
@@ -27,7 +27,7 @@ function useDebouncedValue(value: string, delay: number) {
 export type PlayerSearchResult = {
   id: string;
   name: string;
-  country: string;
+  country?: string;
   matches: number;
 };
 
@@ -52,7 +52,7 @@ const useDropdownPosition = (
 ) => {
   const [style, setStyle] = useState<React.CSSProperties>();
 
-  const updatePosition = () => {
+  const updatePosition = useCallback(() => {
     if (!anchorRef.current || !isOpen) return;
 
     const anchor = anchorRef.current.getBoundingClientRect();
@@ -64,7 +64,7 @@ const useDropdownPosition = (
       width: `${anchor.width}px`, 
       zIndex: 1000 
     });
-  };
+  }, [anchorRef, isOpen]);
 
   useLayoutEffect(() => {
     updatePosition();
@@ -242,7 +242,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholde
                 onMouseDown={() => handleSelect(player)}
               >
                 <HStack spacing={size === 'sm' ? 1 : 2} align="center">
-                  <Box
+                  {/* <Box
                     as={ReactCountryFlag}
                     countryCode={player.country}
                     svg
@@ -253,7 +253,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholde
                       border: '1.5px solid #eee',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
                     }}
-                  />
+                  /> */}
                   <Text fontWeight="bold" color="brand.midnightBlue" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
                 </HStack>
                 <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches} Games</Text>

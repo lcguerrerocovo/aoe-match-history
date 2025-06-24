@@ -4,6 +4,7 @@ import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
+import { searchPlayers } from '../services/matchService';
 
 export function LandingPage() {
   const theme = useTheme();
@@ -96,7 +97,7 @@ export function LandingPage() {
         </Box>
         {/* Player Search Component - moved outside all stacking contexts */}
         <Box w="100%" maxW="400px">
-          <PlayerSearch onSelect={handlePlayerSelect} context="landing" />
+          <PlayerSearch onSelect={handlePlayerSelect} context="landing" searchFn={searchPlayers} />
         </Box>
         {/* Description */}
         <VStack spacing={{ base: '1rem', md: theme.spacing.xl }} maxW="600px" align="stretch">

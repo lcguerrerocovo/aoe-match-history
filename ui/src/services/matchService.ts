@@ -5,6 +5,7 @@ import { decodeSlotInfo } from '../utils/slotInfoDecoder';
 import { getGameType } from '../utils/gameUtils';
 import { getCivMap, getMapMap } from '../utils/mappingUtils';
 import { groupPlayersIntoTeams, detectWinningTeams } from '../utils/teamUtils';
+import type { PlayerSearchResult } from '../components/PlayerSearch';
 
 const API_URL = import.meta.env.VITE_AOE_API_URL!;
 const DEFAULT_PROFILE_ID = '4764337';
@@ -158,5 +159,30 @@ export async function getSteamAvatar(steamId: string): Promise<string | undefine
   } catch (error) {
     console.error('Failed to fetch Steam avatar:', error);
     return undefined;
+  }
+}
+
+export async function searchPlayers(query: string): Promise<PlayerSearchResult[]> {
+  try {
+    const response = await fetch(`${API_URL}/player-search?name=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Log the full API response for debugging
+    console.log('Full API response:', JSON.stringify(data, null, 2));
+    
+    // Transform the response to match our PlayerSearchResult format
+    return data.map((player: any) => ({
+      id: player.id?.toString(),
+      name: player.name,
+      matches: player.matches || 0
+    }));
+  } catch (error) {
+    console.error('Player search error:', error);
+    throw error;
   }
 }
