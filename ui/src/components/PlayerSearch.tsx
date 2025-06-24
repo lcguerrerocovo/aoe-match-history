@@ -57,10 +57,11 @@ const useDropdownPosition = (
 
     const anchor = anchorRef.current.getBoundingClientRect();
     
+    // Use absolute positioning with scroll offset instead of fixed
     setStyle({ 
-      position: 'fixed', 
-      left: `${anchor.left}px`, 
-      top: `${anchor.bottom + 4}px`, 
+      position: 'absolute', 
+      left: `${anchor.left + window.scrollX}px`, 
+      top: `${anchor.bottom + window.scrollY + 4}px`, 
       width: `${anchor.width}px`, 
       zIndex: 1000 
     });
@@ -70,11 +71,10 @@ const useDropdownPosition = (
     updatePosition();
     if (!isOpen) return;
 
-    window.addEventListener('scroll', updatePosition, true);
+    // Only listen to resize, not scroll - absolute positioning handles scroll naturally
     window.addEventListener('resize', updatePosition);
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
   }, [isOpen, updatePosition]);
@@ -90,7 +90,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
   return (
     <Portal>
       <Box
-        position="fixed"
+        position="absolute"
         left={dropdownStyle.left}
         top={dropdownStyle.top}
         width={dropdownStyle.width}

@@ -172,9 +172,6 @@ export async function searchPlayers(query: string): Promise<PlayerSearchResult[]
     
     const data = await response.json();
     
-    // Log the full API response for debugging
-    console.log('Full API response:', JSON.stringify(data, null, 2));
-    
     // Transform the response to match our PlayerSearchResult format
     return data.map((player: any) => ({
       id: player.id?.toString(),
