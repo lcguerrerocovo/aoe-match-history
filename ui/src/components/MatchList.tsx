@@ -83,8 +83,8 @@ function MapCard({ match }: { match: any }) {
       <Box
         w={layout?.mapCard.diamondSize}
         h={layout?.mapCard.diamondSize}
-        bg="white"
-        borderRadius="md"
+        bg="transparent"
+        borderRadius="none"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -92,15 +92,15 @@ function MapCard({ match }: { match: any }) {
         fontWeight="bold"
         transform="rotate(45deg)"
         mb={2}
-        overflow="visible"
+        overflow="hidden"
         border="none"
-        boxShadow="0 0 2px rgba(0,0,0,0.04)"
+        boxShadow="none"
       >
-        <Box transform="rotate(-45deg)" w={layout?.mapCard.diamondSize} h={layout?.mapCard.diamondSize} overflow="hidden">
+        <Box transform="rotate(-45deg)" w={layout?.mapCard.diamondSize} h={layout?.mapCard.diamondSize} overflow="hidden" borderRadius="md">
           <img
             src={imageUrl}
             alt={mapName}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0 }}
             onError={handleImageError}
           />
         </Box>

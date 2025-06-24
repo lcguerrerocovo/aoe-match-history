@@ -73,11 +73,11 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
-              bg={searchValue ? 'blue.50' : 'white'}
-              borderColor={searchValue ? 'blue.200' : 'gray.200'}
+              bg={searchValue ? 'brand.stone' : undefined}
+              borderColor={searchValue ? 'brand.steel' : undefined}
               _focus={{
-                borderColor: 'blue.400',
-                bg: 'white'
+                borderColor: 'brand.slateBlue',
+                bg: searchValue ? 'brand.stone' : undefined
               }}
             />
             {searchValue && (
@@ -104,16 +104,16 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
                 left={0}
                 right={0}
                 mt={1}
-                bg="blue.50"
+                bg="brand.stone"
                 borderRadius="md"
                 borderWidth="1px"
-                borderColor="blue.200"
+                borderColor="brand.steel"
                 p={2}
                 fontSize="sm"
                 zIndex={10}
                 boxShadow="md"
               >
-                <Text color="blue.700" textAlign="center">
+                <Text color="brand.midnightBlue" textAlign="center">
                   {searchResultsCount} matches found
                 </Text>
               </Box>
