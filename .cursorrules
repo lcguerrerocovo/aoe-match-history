@@ -5,3 +5,5 @@ Docs: Update existing sections; keep flow; avoid duplicates
 Extend/modify existing functions/modules; uphold single-responsibility; avoid duplication
 Keep API signatures; test incrementally; avoid breakage
 Prefer established libs; check existing solutions before custom code
+Keep Portal for z-index overlays; never drop valid usage
+Know component intent before suggesting removal; ask if unsure
