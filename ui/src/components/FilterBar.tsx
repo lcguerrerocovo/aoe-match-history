@@ -68,7 +68,7 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
               placeholder={getSearchPlaceholder()}
               w="100%"
               variant="filled"
-              fontSize={{ base: 'xs', md: 'sm' }}
+              fontSize={{ base: 'sm', md: 'sm' }}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
@@ -124,7 +124,7 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
             onChange={(e) => onMapChange(e.target.value)}
             w={layout?.filterBar.selectWidth}
             variant="filled"
-            fontSize={{ base: '2xs', md: 'sm' }}
+            fontSize={{ base: 'sm', md: 'sm' }}
           >
             <option key="all-maps" value="">All maps</option>
             {maps.map(({ name, count }) => (
@@ -138,7 +138,7 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
             onChange={(e) => onSortChange(e.target.value as SortDirection)}
             w={layout?.filterBar.selectWidth}
             variant="filled"
-            fontSize={{ base: '2xs', md: 'sm' }}
+            fontSize={{ base: 'sm', md: 'sm' }}
           >
             <option key="sort-desc" value="desc">Recent</option>
             <option key="sort-asc" value="asc">Oldest</option>
