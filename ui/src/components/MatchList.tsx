@@ -130,9 +130,19 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
             color="blue.500"
             fontWeight="semibold"
             isExternal
+            display="none"
           >
             APM Charts <ExternalLinkIcon mx="2px" />
           </Link>
+          <Tooltip label="Coming Soon!" fontSize="xs" placement="top">
+            <Text
+              color="gray.400"
+              fontWeight="semibold"
+              cursor="not-allowed"
+            >
+              APM Charts
+            </Text>
+          </Tooltip>
         </HStack>
         <Divider />
         <Box
