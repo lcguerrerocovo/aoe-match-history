@@ -401,6 +401,22 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
   }'
 ```
 
+to clear cached search queries when search chanes are deployed, run the following:
+
+```bash
+export API_TOKEN=your_cloudflare_api_token
+export ZONE_ID=your_zone_id
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "files": [
+      "https://api.aoe2.site/api/player-search",
+      "https://api.aoe2.site/api/player-search?name=*"
+    ]
+  }'
+```
+
 Alternatively, use the Cloudflare Dashboard: **Caching** → **Configuration** → **Purge Cache** → **Custom Purge**.
 
 ## Data/API References
