@@ -5,7 +5,7 @@ import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
-import { searchPlayers } from '../services/matchService';
+import { searchPlayers } from '../services/playerSearchService';
 
 const TopBar = () => {
   const theme = useTheme();

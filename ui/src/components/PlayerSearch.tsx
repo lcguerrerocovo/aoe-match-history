@@ -1,15 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Box, Card, Input, Spinner, HStack, Text, Portal } from '@chakra-ui/react';
-// import ReactCountryFlag from 'react-country-flag';
-
-const MOCK_RESULTS = [
-  { id: '4764337', name: '<NT>.tornasol', matches: 2826 }, // country: 'SE'
-  { id: '742535', name: 'tornasol', matches: 1000 }, // country: 'SE'
-  { id: '2066416', name: 'xtornasol', matches: 3000 }, // country: 'SE'
-  { id: '4764337', name: '<NT>.tornasolero', matches: 1 }, // country: 'SE'
-  { id: '4764335', name: 'tornasoloco', matches: 2 }, // country: 'SE'
-  { id: '4764336', name: 'xtornasoly', matches: 3 }, // country: 'SE'
-];
+import ReactCountryFlag from 'react-country-flag';
 
 function useDebouncedValue(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -33,8 +24,8 @@ export type PlayerSearchResult = {
 
 interface PlayerSearchProps {
   onSelect: (player: PlayerSearchResult) => void;
+  searchFn: (query: string) => Promise<PlayerSearchResult[]>;
   placeholder?: string;
-  searchFn?: (query: string) => Promise<PlayerSearchResult[]>;
   size?: 'sm' | 'md';
   context?: 'topbar' | 'landing';
 }
@@ -110,7 +101,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
   );
 };
 
-export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholder = 'Search players...', searchFn, size = 'md', context }) => {
+export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, placeholder = 'Search players...', size = 'md', context }) => {
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -145,20 +136,23 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholde
   // Dropdown open if focused, value is not empty, and hasSearched
   const shouldShowDropdown = focused && value.trim() !== '' && hasSearched;
 
-  function doSearch(query: string) {
+  async function doSearch(query: string) {
+    if (!searchFn) {
+      console.warn('PlayerSearch: No searchFn provided');
+      return;
+    }
+
     setLoading(true);
     setHasSearched(true);
-    if (searchFn) {
-      searchFn(query).then((res) => {
-        setResults(res);
-        setLoading(false);
-      });
-    } else {
-      setTimeout(() => {
-        const filtered = MOCK_RESULTS.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
-        setResults(filtered);
-        setLoading(false);
-      }, 700);
+    
+    try {
+      const res = await searchFn(query);
+      setResults(res);
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -222,7 +216,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholde
           results
             .slice()
             .sort((a, b) => b.matches - a.matches)
-            .slice(0, 5)
+            .slice(0, 8)
             .map((player) => (
               <Card
                 key={player.id + player.name}
@@ -242,18 +236,20 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, placeholde
                 onMouseDown={() => handleSelect(player)}
               >
                 <HStack spacing={size === 'sm' ? 1 : 2} align="center">
-                  {/* <Box
-                    as={ReactCountryFlag}
-                    countryCode={player.country}
-                    svg
-                    style={{
-                      width: size === 'sm' ? '1em' : '1.3em',
-                      height: size === 'sm' ? '1em' : '1.3em',
-                      borderRadius: '6px',
-                      border: '1.5px solid #eee',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
-                    }}
-                  /> */}
+                  {player.country && player.country.length === 2 && (
+                    <Box
+                      as={ReactCountryFlag}
+                      countryCode={player.country.toUpperCase()}
+                      svg
+                      style={{
+                        width: size === 'sm' ? '1em' : '1.3em',
+                        height: size === 'sm' ? '1em' : '1.3em',
+                        borderRadius: '6px',
+                        border: '1.5px solid #eee',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
+                      }}
+                    />
+                  )}
                   <Text fontWeight="bold" color="brand.midnightBlue" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
                 </HStack>
                 <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches} Games</Text>

@@ -8,9 +8,32 @@ const mockSessionManager = {
   isSessionValid: jest.fn()
 };
 
+// Mock Firestore
+const mockFirestoreDoc = {
+  data: jest.fn(),
+  id: 'test-doc'
+};
+const mockFirestoreSnapshot = {
+  forEach: jest.fn()
+};
+const mockFirestoreQuery = {
+  where: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  get: jest.fn()
+};
+const mockFirestoreCollection = {
+  where: jest.fn().mockReturnValue(mockFirestoreQuery)
+};
+const mockFirestore = {
+  collection: jest.fn().mockReturnValue(mockFirestoreCollection)
+};
+
 jest.mock('./relicAuth', () => jest.fn(() => mockAuthClient));
 jest.mock('./relicPlayerService', () => jest.fn(() => mockPlayerService));
 jest.mock('./sessionManager', () => jest.fn(() => mockSessionManager));
+jest.mock('@google-cloud/firestore', () => ({
+  Firestore: jest.fn(() => mockFirestore)
+}));
 jest.mock('pino', () => () => ({ child: () => ({ info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() }) }));
 jest.mock('cors', () => () => (req, res, next) => next());
 const mockFetch = jest.fn();
@@ -24,6 +47,13 @@ let proxy;
 beforeEach(() => {
   jest.clearAllMocks();
   jest.resetModules();
+  
+  // Reset Firestore mocks
+  mockFirestoreQuery.where.mockReturnThis();
+  mockFirestoreQuery.limit.mockReturnThis();
+  mockFirestoreCollection.where.mockReturnValue(mockFirestoreQuery);
+  mockFirestore.collection.mockReturnValue(mockFirestoreCollection);
+  
   proxy = require('./index');
   proxy.__resetPlayerService && proxy.__resetPlayerService();
 });
@@ -31,14 +61,24 @@ beforeEach(() => {
 describe('Proxy API', () => {
   describe('proxy function', () => {
     it('should handle player search successfully', async () => {
-      const mockResult = {
-        success: true,
-        data: [{ name: 'testplayer', profileId: '123' }]
-      };
-
-      mockSessionManager.isSessionValid.mockResolvedValue(true);
-      mockPlayerService.findProfiles.mockResolvedValue(mockResult);
-      proxy.__setPlayerService && proxy.__setPlayerService(mockPlayerService);
+      // Mock Firestore response
+      const mockPlayers = [
+        { 
+          profile_id: 123, 
+          name: 'testplayer', 
+          name_no_special: 'testplayer',
+          total_matches: 100,
+          country: 'us'
+        }
+      ];
+      
+      mockFirestoreSnapshot.forEach.mockImplementation((callback) => {
+        mockPlayers.forEach((player) => {
+          const doc = { data: () => player };
+          callback(doc);
+        });
+      });
+      mockFirestoreQuery.get.mockResolvedValue(mockFirestoreSnapshot);
 
       const req = {
         url: '/api/player-search?name=testplayer',
@@ -52,10 +92,17 @@ describe('Proxy API', () => {
 
       await proxy.proxy(req, res);
 
-      expect(mockPlayerService.findProfiles).toHaveBeenCalledWith('testplayer');
+      expect(mockFirestore.collection).toHaveBeenCalledWith('players');
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(expect.any(Array));
-      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=604800');
+      expect(res.json).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({
+          id: '123',
+          name: 'testplayer',
+          matches: 100,
+          country: 'us'
+        })
+      ]));
+      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=1800');
     });
 
     it('should handle missing name parameter', async () => {
@@ -141,38 +188,16 @@ describe('Proxy API', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Route not found' });
     });
 
-    it('should handle authentication failure and retry', async () => {
-      const authFailureResult = {
-        success: false,
-        authFailure: true,
-        error: 'Auth failed'
-      };
-      const successResult = {
-        success: true,
-        data: [{ name: 'testplayer', profileId: '123' }]
-      };
-
-      // Simulate session invalid, then valid after authentication
-      mockSessionManager.isSessionValid
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true);
-      mockSessionManager.getSession
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ sessionId: 'new-session', steamId64: '76561198012345678', steamUserName: 'testuser', base64Ticket: 'new-ticket' });
-      mockAuthClient.authenticate.mockResolvedValue({
-        sessionId: 'new-session',
-        steamId64: '76561198012345678',
-        steamUserName: 'testuser',
-        base64Ticket: 'new-ticket'
+    it('should handle empty player search results', async () => {
+      // Mock empty Firestore response
+      mockFirestoreSnapshot.forEach.mockImplementation(() => {
+        // No players found
       });
-      mockPlayerService.findProfiles
-        .mockResolvedValueOnce(authFailureResult)
-        .mockResolvedValueOnce({ success: true, data: [{ name: 'testplayer', profileId: '123' }] });
-      proxy.__setPlayerService && proxy.__setPlayerService(mockPlayerService);
+      mockFirestoreQuery.get.mockResolvedValue(mockFirestoreSnapshot);
 
       const req = {
-        url: '/api/player-search?name=testplayer',
-        query: { name: 'testplayer' }
+        url: '/api/player-search?name=nonexistentplayer',
+        query: { name: 'nonexistentplayer' }
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -181,10 +206,11 @@ describe('Proxy API', () => {
       };
 
       await proxy.proxy(req, res);
-      expect(mockAuthClient.authenticate).toHaveBeenCalled();
-      expect(mockPlayerService.findProfiles).toHaveBeenCalledTimes(2);
+
+      expect(mockFirestore.collection).toHaveBeenCalledWith('players');
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith([{ name: 'testplayer', profileId: '123' }]);
+      expect(res.json).toHaveBeenCalledWith([]);
+      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=1800');
     });
   });
 }); 

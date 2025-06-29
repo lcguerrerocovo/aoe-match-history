@@ -38,6 +38,7 @@ ui/dist/
 ui/build/
 
 # Data files
+data/collected_players.jsonl
 data/matches/
 seen_matches.json
 

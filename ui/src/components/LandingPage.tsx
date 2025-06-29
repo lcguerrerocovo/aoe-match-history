@@ -4,7 +4,7 @@ import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
-import { searchPlayers } from '../services/matchService';
+import { searchPlayers } from '../services/playerSearchService';
 
 export function LandingPage() {
   const theme = useTheme();

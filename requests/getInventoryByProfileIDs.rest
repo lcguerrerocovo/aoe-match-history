@@ -1,0 +1,3 @@
+GET https://aoe-api.worldsedgelink.com/community/item/getInventoryByProfileIDs?title=age2&profileids=[0]
+Accept: application/json
+User-Agent: aoe2-site

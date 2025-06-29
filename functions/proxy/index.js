@@ -12,6 +12,7 @@ const RelicAuthClient = require('./relicAuth');
 const RelicPlayerService = require('./relicPlayerService');
 const SessionManager = require('./sessionManager');
 const pino = require('pino');
+const { Firestore } = require('@google-cloud/firestore');
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
@@ -205,38 +206,98 @@ async function handlePersonalStats(profileId) {
   };
 }
 
+// Initialize Firestore client
+let firestoreDb = null;
+
+function getFirestoreClient() {
+  if (!firestoreDb) {
+    firestoreDb = new Firestore();
+  }
+  return firestoreDb;
+}
+
+function cleanForSearch(text) {
+  if (!text || typeof text !== 'string') return '';
+  // Remove all non-alphanumeric characters, convert to lowercase (same as upload script)
+  return text.replace(/[^\w]/g, '').toLowerCase();
+}
+
+async function searchFirestore(db, query, limit = 20) {
+  const cleanQuery = cleanForSearch(query);
+  if (!cleanQuery) return [];
+  
+  try {
+    const snapshot = await db.collection('players')
+      .where('name_no_special', '>=', cleanQuery)
+      .where('name_no_special', '<', cleanQuery + '\uf8ff') // Unicode end character for prefix search
+      .limit(limit)
+      .get();
+    
+    const results = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      results.push({
+        id: data.profile_id.toString(),
+        name: data.name,                    // Original alias for display
+        country: data.country || '',
+        matches: data.total_matches || 0,   // Match count from enhanced data
+        lastMatchDate: data.last_match_date, // Can be null
+        profile_id: data.profile_id
+      });
+    });
+    
+    // Sort by match count (most active players first)
+    results.sort((a, b) => b.matches - a.matches);
+    
+    return results;
+  } catch (error) {
+    log.error({ error: error.message, query }, 'Error in Firestore search');
+    return [];
+  }
+}
+
 async function handlePlayerSearch(name) {
-    try {
-        const playerService = await getAuthenticatedPlayerService();
-        const result = await playerService.findProfiles(name);
-        
-        if (!result.success) {
-            if (result.authFailure) {
-                log.warn('Auth failure detected, retrying with re-authentication...');
-                await ensureAuthenticated();
-                const retryResult = await playerService.findProfiles(name);
-                return {
-                    data: retryResult.data,
-                    headers: {
-                        'Cache-Control': 'public, max-age=604800', // 1 week for player search results
-                        'Vary': 'Accept-Encoding'
-                    }
-                };
-            }
-            throw new Error(result.error);
+  try {
+    const cleanName = cleanForSearch(name);
+    
+    // Validate input
+    if (!cleanName) {
+      return {
+        data: [],
+        headers: {
+          'Cache-Control': 'public, max-age=300', // 5 minutes for empty queries
+          'Vary': 'Accept-Encoding'
         }
-        
-        return {
-            data: result.data,
-            headers: {
-                'Cache-Control': 'public, max-age=604800', // 1 week for player search results
-                'Vary': 'Accept-Encoding'
-            }
-        };
-    } catch (error) {
-        log.error({ error: error.message }, 'Player search error');
-        throw error;
+      };
     }
+    
+    // Too short - suggest typing more
+    if (cleanName.length < 2) {
+      return {
+        data: [],
+        headers: {
+          'Cache-Control': 'public, max-age=300',
+          'Vary': 'Accept-Encoding'
+        }
+      };
+    }
+    
+    const db = getFirestoreClient();
+    const results = await searchFirestore(db, cleanName, 20);
+    
+    log.info({ query: name, cleanQuery: cleanName, resultCount: results.length }, 'Player search completed');
+    
+    return {
+      data: results,
+      headers: {
+        'Cache-Control': 'public, max-age=1800', // 30 minutes for search results
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    log.error({ error: error.message, name }, 'Player search error');
+    throw error;
+  }
 }
 
 const routes = [
