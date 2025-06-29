@@ -26,14 +26,12 @@ async function waitForEmulator(port = 8081, maxAttempts = 30) {
 async function startFirestoreWithSeed() {
   console.log('🚀 Starting Firestore emulator with auto-seeding...');
   
-  // Start the Firebase emulator
-  const emulatorProcess = spawn('npx', [
-    'firebase', 'emulators:start', 
-    '--only', 'firestore', 
-    '--project', 'demo-project'
+  // Start the Firebase emulator using the npm script
+  const emulatorProcess = spawn('npm', [
+    'run', 'dev:firestore:only'
   ], {
     stdio: 'inherit',
-    cwd: '../../' // Run from project root
+    cwd: '../../ui' // Run from UI directory
   });
   
   // Handle emulator process events
