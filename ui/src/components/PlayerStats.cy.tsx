@@ -82,7 +82,7 @@ describe('<PlayerStats /> Tiers', () => {
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
-    cy.contains('5000').should('have.css', 'color', 'rgb(212, 175, 55)');
+    cy.contains('5000').should('have.css', 'color', 'rgb(255, 255, 255)');
     cy.get('[data-testid="tier-crown"]').should('not.exist');
   });
 

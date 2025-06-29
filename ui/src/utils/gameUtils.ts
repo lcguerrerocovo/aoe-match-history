@@ -45,7 +45,7 @@ export const getTier = (elo: number, rank: number): Tier => {
   if (rank === -1) {
     return {
       name: 'Unranked',
-      color: 'brand.gold',
+      color: 'white',
       gradient: '',
       showCrown: false,
       explainer: 'Unranked player',
@@ -84,7 +84,7 @@ export const getTier = (elo: number, rank: number): Tier => {
 
   return {
     name: 'Iron',
-    color: 'brand.gold',
+    color: 'white',
     gradient: '',
     showCrown: false,
     explainer: 'Iron: 0-999 Elo',
