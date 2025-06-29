@@ -113,6 +113,75 @@ See the **[UI README](ui/README.md)** for detailed frontend development guidelin
    curl "http://localhost:8080/api/player-search?name=playerName"
    ```
 
+### Player Data Collection & Firestore Ingestion
+
+The project includes scripts for collecting player data from the AoE2 API and uploading it to Firestore for the player search functionality.
+
+#### 1. Collect Player Data
+Use the data collection script to gather player information from the AoE2 API:
+
+```bash
+# Activate Python environment
+source venv/bin/activate
+
+# Collect player data with rate limiting (50 RPS)
+python scripts/collect_player_data.py
+
+# Optional: Resume collection from a specific point
+python scripts/collect_player_data.py --resume-from-id 12345
+```
+
+The script:
+- Processes players in batches of 200 IDs per API request
+- Implements rate limiting (50 requests per second)
+- Uses 25 concurrent workers for improved performance
+- Automatically resumes from interruptions
+- Saves data in JSONL format (`player_data_YYYYMMDD_HHMMSS.jsonl`)
+- Filters out players with 0 matches
+
+#### 2. Upload to Firestore
+After collecting data, upload it to Firestore:
+
+```bash
+# Upload collected data to Firestore
+python scripts/upload_to_firestore.py player_data_20241210_123456.jsonl
+
+# Monitor progress - the script shows detailed worker statistics
+```
+
+The upload script:
+- Uses 8 concurrent workers for efficient uploads
+- Processes data in batches of 500 players
+- Overwrites existing records with updated data
+- Shows real-time progress with worker distribution
+- Typically processes ~1M players efficiently
+
+#### 3. Development Setup Options
+
+**Option A: Local Development with Production Data**
+```bash
+cd ui
+npm run dev:all:prod  # Connect to production Firestore
+```
+
+**Option B: Local Development with Emulator + Test Data**
+```bash
+cd ui
+npm run dev:all       # Uses local emulator with auto-seeded test data
+```
+
+The emulator is automatically seeded with test players for development and testing.
+
+#### Data Structure
+Player records in Firestore include:
+- `profile_id` - Unique player identifier
+- `name` - Display name
+- `name_no_special` - Cleaned name for search (prefix matching)
+- `total_matches` - Total match count
+- `country` - Country code (2-letter ISO)
+- `last_match_date` - Timestamp of last match
+- `clan` - Clan information (if available)
+
 ## Frontend (UI) Guidelines
 
 - All responsive and theming logic is centralized in the UI package. See `ui/README.md` for details.
