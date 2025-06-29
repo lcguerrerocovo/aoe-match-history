@@ -283,7 +283,7 @@ async function handlePlayerSearch(name) {
     }
     
     const db = getFirestoreClient();
-    const results = await searchFirestore(db, cleanName, 20);
+    const results = await searchFirestore(db, cleanName, 100);
     
     log.info({ query: name, cleanQuery: cleanName, resultCount: results.length }, 'Player search completed');
     
