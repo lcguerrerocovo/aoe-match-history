@@ -54,6 +54,15 @@ describe('mapNameResolver', () => {
       const filename = getMostLikelyMapFilename('SomeRandomMap');
       expect(filename).toBe('rm_some_random_map.png');
     });
+
+    it('should return generic map for empty/invalid names', () => {
+      const testCases = ['', '   ', '   \t\n  ', undefined as any, null as any];
+      
+      testCases.forEach(invalidName => {
+        const filename = getMostLikelyMapFilename(invalidName);
+        expect(filename).toBe('cm_generic.png');
+      });
+    });
   });
 
   describe('getAllPossibleMapFilenames', () => {

@@ -127,11 +127,13 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
             fontSize={{ base: 'sm', md: 'sm' }}
           >
             <option key="all-maps" value="">All maps</option>
-            {maps.map(({ name, count }) => (
-              <option key={name} value={name}>
-                {name} ({count})
-              </option>
-            ))}
+            {maps
+              .filter(({ name }) => name && name.trim().length > 0)
+              .map(({ name, count }, index) => (
+                <option key={`${name}-${index}`} value={name}>
+                  {name} ({count || 0})
+                </option>
+              ))}
           </Select>
           <Select
             defaultValue="desc"

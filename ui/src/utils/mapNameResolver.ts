@@ -94,6 +94,11 @@ export function resolveMapFilename(apiName: string): string[] {
  * Get the most likely filename for a map (prioritizes common patterns)
  */
 export function getMostLikelyMapFilename(apiName: string): string {
+  // Safety check: return generic map for empty/invalid names
+  if (!apiName || typeof apiName !== 'string' || apiName.trim().length === 0) {
+    return 'cm_generic.png';
+  }
+  
   const patterns = resolveMapFilename(apiName);
   
   // Prioritize rm_ patterns as they're most common

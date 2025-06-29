@@ -112,6 +112,15 @@ describe('assetManager', () => {
       const url = assetManager.getMapImage('UnknownMapName');
       expect(url).toContain('maps/rm_unknown_map_name.png');
     });
+
+    it('should return generic map for empty/invalid names', () => {
+      const testCases = ['', '   ', null as any, undefined as any];
+      
+      testCases.forEach(invalidName => {
+        const url = assetManager.getMapImage(invalidName);
+        expect(url).toContain('maps/cm_generic.png');
+      });
+    });
   });
 
   describe('getGenericMapImage', () => {
