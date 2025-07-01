@@ -92,6 +92,13 @@ Theme
     └── statsTable            // Statistics display
 ```
 
+## 🌙 Dark/Light Theme System
+
+- **Centralized themes**: Use `createTheme(isDark)` function generates complete light/dark themes
+- **Semantic tokens**: Always use `brand.midnightBlue`, `brand.steel`, `brand.cardBg` - never hardcode `gray.400`, `blue.500`
+- **Component usage**: `<Text color="brand.midnightBlue">` or `theme.colors.brand.zoolanderBlue` for inline styles
+- **Theme compliance**: `npm test` enforces no hardcoded colors (violations fail CI)
+
 ### Responsive Breakpoints
 
 Located in `src/theme/breakpoints.ts`:

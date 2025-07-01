@@ -1,6 +1,7 @@
 Only use ui/src/theme/breakpoints.ts + useLayoutConfig() for breakpoints
 Only use values from ui/src/theme/theme.ts for color/spacing
 Never inline responsive styles or hard-code theme values
+Theming: Use createTheme(isDark), theme.colors.brand.* (never hardcode colors)
 Docs: Update existing sections; keep flow; avoid duplicates
 Extend/modify existing functions/modules; uphold single-responsibility; avoid duplication
 Keep API signatures; test incrementally; avoid breakage
