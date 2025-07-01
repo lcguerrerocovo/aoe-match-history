@@ -62,11 +62,11 @@ export function LandingPage() {
           right={0}
           height="8px"
           bgGradient={`linear(to-r, ${theme.colors.brand.heroGradientStart}, ${theme.colors.brand.heroGradientEnd})`}
-          borderTopRadius="md"
+                    borderTopRadius="md"
           pointerEvents="none"
           zIndex={1}
         />
-        {/* Background pattern */}
+        {/* Background overlay */}
         <Box
           position="absolute"
           top="0"
@@ -74,7 +74,6 @@ export function LandingPage() {
           right="0"
           bottom="0"
           opacity="0.05"
-          backgroundImage="url('/pattern.png')"
           backgroundRepeat="repeat"
           backgroundSize="200px"
           zIndex="0"
