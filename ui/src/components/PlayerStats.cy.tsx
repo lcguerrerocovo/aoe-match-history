@@ -3,7 +3,9 @@ import { mount } from '@cypress/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { PlayerStats } from './PlayerStats';
 import { type PersonalStats, type LeaderboardStats } from '../types/stats';
-import theme from '../theme/theme';
+import { createTheme } from '../theme/theme';
+
+const lightTheme = createTheme(false); // Use light theme for tests
 
 const createMockStats = (leaderboardStats: LeaderboardStats[]): PersonalStats => ({
   result: { code: 200, message: 'OK' },
@@ -45,7 +47,7 @@ describe('<PlayerStats /> Tiers', () => {
   it('should render Gold tier correctly', () => {
     const stats = createMockStats([createMockLeaderboardStat(1700, 100)]);
     mount(
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
@@ -56,18 +58,18 @@ describe('<PlayerStats /> Tiers', () => {
   it('should render Silver tier correctly', () => {
     const stats = createMockStats([createMockLeaderboardStat(1400, 500)]);
     mount(
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
-    cy.contains('500').should('have.css', 'background-image', 'linear-gradient(rgb(255, 255, 255), rgb(160, 160, 160))');
+    cy.contains('500').should('have.css', 'background-image', 'linear-gradient(rgb(208, 208, 208), rgb(90, 100, 120))');
     cy.get('[data-testid="tier-crown"]').should('exist');
   });
 
   it('should render Bronze tier correctly', () => {
     const stats = createMockStats([createMockLeaderboardStat(1100, 1000)]);
     mount(
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
@@ -78,7 +80,7 @@ describe('<PlayerStats /> Tiers', () => {
   it('should render Iron tier correctly (no crown)', () => {
     const stats = createMockStats([createMockLeaderboardStat(800, 5000)]);
     mount(
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
@@ -89,7 +91,7 @@ describe('<PlayerStats /> Tiers', () => {
   it('should not show a crown for unranked players', () => {
     const stats = createMockStats([createMockLeaderboardStat(1700, -1)]);
     mount(
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );

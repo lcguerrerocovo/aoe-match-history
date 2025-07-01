@@ -5,6 +5,7 @@ import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
 import { searchPlayers } from '../services/playerSearchService';
+import { ThemeToggle } from './ThemeToggle';
 
 export function LandingPage() {
   const theme = useTheme();
@@ -22,7 +23,17 @@ export function LandingPage() {
       alignItems="center"
       justifyContent="center"
       py={{ md: 8 }}
+      position="relative"
     >
+      {/* Floating Theme Toggle */}
+      <Box
+        position="absolute"
+        top={{ base: 4, md: 8 }}
+        right={{ base: 4, md: 8 }}
+        zIndex={1000}
+      >
+        <ThemeToggle />
+      </Box>
       <VStack 
         spacing={{ base: '1.5rem', md: theme.spacing.responsive.landingSpacing }} 
         align="center" 
@@ -33,8 +44,8 @@ export function LandingPage() {
         justifyContent="center"
         maxW={{ md: '90%', xl: '1100px' }}
         bg={{
-          base: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
-          md: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)"
+          base: "brand.landingBg",
+          md: "brand.landingBgMd"
         }}
         borderRadius={{ base: 0, md: 'xl' }}
         boxShadow={{ md: 'xl' }}
@@ -50,7 +61,7 @@ export function LandingPage() {
           left={0}
           right={0}
           height="8px"
-          bgGradient="linear(to-r, rgba(255,255,255,0.7), rgba(255,255,255,0.1))"
+          bgGradient={`linear(to-r, ${theme.colors.brand.heroGradientStart}, ${theme.colors.brand.heroGradientEnd})`}
           borderTopRadius="md"
           pointerEvents="none"
           zIndex={1}
@@ -73,7 +84,7 @@ export function LandingPage() {
           cursor="pointer"
           transition="all 0.3s ease"
           _hover={{
-            filter: 'drop-shadow(0 10px 20px rgba(212,175,55,0.4)) brightness(1.05)'
+            filter: `drop-shadow(0 10px 20px ${theme.colors.brand.shadowGold}) brightness(1.05)`
           }}
         >
           <RouterLink to="#">
@@ -82,7 +93,7 @@ export function LandingPage() {
               color="brand.midnightBlue"
               fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
               letterSpacing="wide"
-              textShadow="0 1px 0 #fff, 0 2px 4px rgba(0,0,0,0.04)"
+              textShadow={`0 1px 0 ${theme.colors.brand.textShadowLight}, 0 2px 4px ${theme.colors.brand.textShadowAlpha}`}
               display="flex"
               alignItems="center"
               gap={1}
@@ -114,11 +125,11 @@ export function LandingPage() {
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
           <Box
             p={theme.spacing.md}
-            bg="white"
+            bg="brand.cardBg"
             borderRadius="md"
             borderLeft="4px solid"
             borderColor="brand.gold"
-            boxShadow="0 2px 8px rgba(0,0,0,0.05)"
+            boxShadow={`0 2px 8px ${theme.colors.brand.shadowLight}`}
           >
             <Text
               fontSize={{ base: 'sm', md: 'md' }}

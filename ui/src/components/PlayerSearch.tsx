@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { Box, Card, Input, Spinner, HStack, Text, Portal } from '@chakra-ui/react';
+import { Box, Card, Input, Spinner, HStack, Text, Portal, useTheme } from '@chakra-ui/react';
 import ReactCountryFlag from 'react-country-flag';
 
 function useDebouncedValue(value: string, delay: number) {
@@ -86,7 +86,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
         top={dropdownStyle.top}
         width={dropdownStyle.width}
         zIndex={dropdownStyle.zIndex}
-        bg="white"
+        bg="brand.cardBg"
         borderRadius="lg"
         boxShadow="xl"
         border="1.5px solid"
@@ -102,6 +102,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
 };
 
 export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, placeholder = 'Search players...', size = 'md', context }) => {
+  const theme = useTheme();
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -177,7 +178,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
             borderRadius="lg"
             borderWidth={0}
             _placeholder={{ color: 'brand.steel' }}
-            bg="white"
+            bg="brand.inputBg"
             color="brand.midnightBlue"
             boxShadow="none"
             h={size === 'sm' ? '38px' : '50px'}
@@ -245,8 +246,8 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
                         width: size === 'sm' ? '1em' : '1.3em',
                         height: size === 'sm' ? '1em' : '1.3em',
                         borderRadius: '6px',
-                        border: '1.5px solid #eee',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.07)'
+                        border: `1.5px solid ${theme.colors.brand.borderLight}`,
+                        boxShadow: `0 1px 3px ${theme.colors.brand.shadowMedium}`
                       }}
                     />
                   )}

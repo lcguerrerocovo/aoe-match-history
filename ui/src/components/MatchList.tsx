@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
 import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
@@ -32,7 +32,7 @@ function PlayerRating({ player }: { player: Player }) {
   if (displayMode === 'full') {
     return (
       <HStack spacing={2} ml="auto">
-        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
+        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
           {rating}
         </Text>
         <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="3ch" textAlign="right">
@@ -44,7 +44,7 @@ function PlayerRating({ player }: { player: Player }) {
 
   return (
     <HStack spacing={1} ml="auto">
-      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
+      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
         {rating}
       </Text>
       <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
@@ -107,7 +107,7 @@ function MapCard({ match }: { match: any }) {
       </Box>
       {/* Map name below image */}
       <Box mt={1} textAlign="center" fontSize="xs">
-        <Text as="span">{mapName}</Text>
+        <Text as="span" color="brand.steel">{mapName}</Text>
       </Box>
     </Box>
   );
@@ -123,11 +123,11 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
-          <Text fontWeight="bold">#{match.match_id}</Text>
-          <Text>{match.description}</Text>
+          <Text fontWeight="bold" color="brand.midnightBlue">#{match.match_id}</Text>
+          <Text color="brand.steel">{match.description}</Text>
           <Link
             href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
-            color="blue.500"
+            color="brand.zoolanderBlue"
             fontWeight="semibold"
             isExternal
             display="none"
@@ -136,7 +136,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           </Link>
           <Tooltip label="Coming Soon!" fontSize="xs" placement="top">
             <Text
-              color="gray.400"
+              color="brand.steel"
               fontWeight="semibold"
               cursor="not-allowed"
             >
@@ -154,22 +154,22 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           w={layout?.matchSummaryCard.w}
         >
           <HStack spacing={1}>
-            <CalendarIcon boxSize={3} />
-            <Text as="span" color="gray.600">
+            <CalendarIcon boxSize={3} color="brand.bronze" />
+            <Text as="span" color="brand.steel">
               {formatDateTime(match.start_time)}
             </Text>
           </HStack>
           <HStack spacing={2}>
             <HStack spacing={1}>
-              <TimeIcon boxSize={3} color="blue.400" />
-              <Text as="span" color="gray.600">
+              <TimeIcon boxSize={3} color="brand.zoolanderBlue" />
+              <Text as="span" color="brand.steel">
                 {formatDuration(durationSec)}
               </Text>
             </HStack>
             <HStack spacing={1}>
-              <TimeIcon boxSize={3} color="orange.400" />
+              <TimeIcon boxSize={3} color="brand.bronze" />
               <Tooltip label="Real time (1.7x game time)" fontSize="xs">
-                <Text as="span" color="gray.600">
+                <Text as="span" color="brand.steel">
                   {formatDuration(realTimeSec)}
                 </Text>
               </Tooltip>
@@ -183,6 +183,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 function TeamCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
+  const theme = useTheme();
   const is1v1 = match.diplomacy?.type === '1v1';
 
   const getPlayerCardPadding = (numPlayers: number) => {
@@ -248,7 +249,7 @@ function TeamCard({ match }: { match: any }) {
                 borderColor="brand.stone"
                 borderRadius="sm"
                 p={cardPadding}
-                bg={globalPlayerIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
+                bg={globalPlayerIndex % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight'}
                 minW={layout?.teamCard.playerBoxMinWidth}
                 maxW={layout?.teamCard.playerBoxMaxWidth}
                 flex={layout?.teamCard.playerBoxFlex}
@@ -257,7 +258,7 @@ function TeamCard({ match }: { match: any }) {
                 <Box
                   w={layout?.teamCard.colorBarWidth}
                   h={layout?.teamCard.colorBarHeight}
-                  bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
+                  bg={PLAYER_COLORS[p.color_id] || 'brand.steel'}
                   borderRadius="sm"
                   mr={1}
                   flexShrink={0}
@@ -301,10 +302,10 @@ function TeamCard({ match }: { match: any }) {
                     transform="translateX(-50%)"
                     fontSize={layout?.teamCard.civFontSize}
                     fontWeight="bold"
-                    color="gray.700"
+                    color="brand.bronze"
                     zIndex={1}
                     display="none"
-                    bg="gray.300"
+                    bg="brand.stoneLight"
                     px={1}
                     borderRadius="sm"
                   >
@@ -320,7 +321,7 @@ function TeamCard({ match }: { match: any }) {
                     maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    color: 'blue.500',
+                    color: theme.colors.brand.zoolanderBlue,
                     textDecoration: 'none',
                     fontSize: layout?.teamCard.playerNameFontSize
                   }}
@@ -427,10 +428,10 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
       {isSearchMode ? (
         // Search mode: render matches with same background as accordion
         <Box
-          bg="white"
+          bg="brand.cardBg"
           borderRadius="md"
           borderWidth="1px"
-          borderColor="gray.200"
+          borderColor="brand.heraldic"
           p={4}
           boxShadow="sm"
         >
@@ -476,15 +477,15 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                                 {diplo}
                               </Text>
-                              <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>
+                              <Text as="span" color="brand.stoneLight" mr={2} verticalAlign="middle">|</Text>
                               <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
                               <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
-                                <Text as="span" color="gray.500" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
+                                <Text as="span" color="brand.steel" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
                               )}
                               {rec.eloChange !== 0 && (
                                 <>
-                                  <Text as="span" color="gray.300" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                  <Text as="span" color="brand.stoneLight" ml={2} mr={2} verticalAlign="middle">|</Text>
                                   <Text
                                     as="span"
                                     display="inline-block"

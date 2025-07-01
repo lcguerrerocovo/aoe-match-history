@@ -1,4 +1,4 @@
-import { Box, Flex, Text, useTheme } from "@chakra-ui/react";
+import { Box, Flex, Text, useTheme, HStack } from "@chakra-ui/react";
 import { useLayoutConfig } from "../theme/breakpoints";
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
@@ -6,6 +6,7 @@ import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchPlayers } from '../services/playerSearchService';
+import { ThemeToggle } from './ThemeToggle';
 
 const TopBar = () => {
   const theme = useTheme();
@@ -24,8 +25,8 @@ const TopBar = () => {
       width="100%"
       position="relative"
       bg={{
-        base: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
-        md: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)"
+        base: "brand.topbarBg",
+        md: "brand.topbarBgMd"
       }}
       px={theme.space[4]}
       py={theme.space[2]}
@@ -43,7 +44,7 @@ const TopBar = () => {
         left={0}
         right={0}
         height="8px"
-        bgGradient="linear(to-r, rgba(255,255,255,0.7), rgba(255,255,255,0.1))"
+        bgGradient={`linear(to-r, ${theme.colors.brand.heroGradientStart}, ${theme.colors.brand.heroGradientEnd})`}
         borderTopRadius="md"
         pointerEvents="none"
         zIndex={1}
@@ -63,7 +64,7 @@ const TopBar = () => {
           color="brand.midnightBlue"
           fontSize={{ base: 'xl', md: '2xl' }}
           letterSpacing="wide"
-          textShadow="0 1px 0 #fff, 0 2px 4px rgba(0,0,0,0.04)"
+          textShadow={`0 1px 0 ${theme.colors.brand.textShadowLight}, 0 2px 4px ${theme.colors.brand.textShadowAlpha}`}
           display="flex"
           alignItems="center"
           gap={0.5}
@@ -79,9 +80,12 @@ const TopBar = () => {
           </Box>
           site
         </Text>
-        <Box w={{ base: '100%', sm: '220px' }} ref={searchContainerRef}>
-          <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
-        </Box>
+        <HStack spacing={3}>
+          <Box w={{ base: '100%', sm: '220px' }} ref={searchContainerRef}>
+            <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
+          </Box>
+          <ThemeToggle />
+        </HStack>
       </Flex>
     </Box>
   );

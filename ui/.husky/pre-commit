@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+cd ui
+
+# Run linting
+npm run lint
+
+# Run tests (including theme compliance)
+npm test
+
+# Run type checking
+npm run type-check 

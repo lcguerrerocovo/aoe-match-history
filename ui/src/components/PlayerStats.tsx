@@ -38,11 +38,11 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
         const tier = getTier(stat.rating, stat.rank);
 
         const textProps = (() => {
-          if (!tier) return { color: 'white' };
+          if (!tier) return { color: 'brand.midnightBlue' };
           if (tier.gradient) {
             return {
               bgGradient: tier.name === 'Gold' ? 'linear(to-b, brand.brightGold, brand.gold)' :
-                         tier.name === 'Silver' ? 'linear(to-b, white, #A0A0A0)' :
+                         tier.name === 'Silver' ? 'linear(to-b, brand.brightSilver, brand.steel)' :
                          'linear(to-b, brand.brightBronze, brand.bronze)',
               bgClip: 'text' as const,
             };
