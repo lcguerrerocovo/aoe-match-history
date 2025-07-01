@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
 import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { PLAYER_COLORS } from './playerColors';
@@ -32,7 +32,7 @@ function PlayerRating({ player }: { player: Player }) {
   if (displayMode === 'full') {
     return (
       <HStack spacing={2} ml="auto">
-        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
+        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
           {rating}
         </Text>
         <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="3ch" textAlign="right">
@@ -44,7 +44,7 @@ function PlayerRating({ player }: { player: Player }) {
 
   return (
     <HStack spacing={1} ml="auto">
-      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right">
+      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
         {rating}
       </Text>
       <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">
@@ -107,7 +107,7 @@ function MapCard({ match }: { match: any }) {
       </Box>
       {/* Map name below image */}
       <Box mt={1} textAlign="center" fontSize="xs">
-        <Text as="span">{mapName}</Text>
+        <Text as="span" color="brand.steel">{mapName}</Text>
       </Box>
     </Box>
   );
@@ -123,8 +123,8 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
-          <Text fontWeight="bold">#{match.match_id}</Text>
-          <Text>{match.description}</Text>
+          <Text fontWeight="bold" color="brand.midnightBlue">#{match.match_id}</Text>
+          <Text color="brand.steel">{match.description}</Text>
           <Link
             href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
             color="brand.zoolanderBlue"
@@ -154,7 +154,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           w={layout?.matchSummaryCard.w}
         >
           <HStack spacing={1}>
-            <CalendarIcon boxSize={3} />
+            <CalendarIcon boxSize={3} color="brand.bronze" />
             <Text as="span" color="brand.steel">
               {formatDateTime(match.start_time)}
             </Text>
@@ -183,6 +183,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 function TeamCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
+  const theme = useTheme();
   const is1v1 = match.diplomacy?.type === '1v1';
 
   const getPlayerCardPadding = (numPlayers: number) => {
@@ -248,7 +249,7 @@ function TeamCard({ match }: { match: any }) {
                 borderColor="brand.stone"
                 borderRadius="sm"
                 p={cardPadding}
-                bg={globalPlayerIndex % 2 === 0 ? 'white' : 'brand.stoneLight'}
+                bg={globalPlayerIndex % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight'}
                 minW={layout?.teamCard.playerBoxMinWidth}
                 maxW={layout?.teamCard.playerBoxMaxWidth}
                 flex={layout?.teamCard.playerBoxFlex}
@@ -320,7 +321,7 @@ function TeamCard({ match }: { match: any }) {
                     maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    color: 'brand.zoolanderBlue',
+                    color: theme.colors.brand.zoolanderBlue,
                     textDecoration: 'none',
                     fontSize: layout?.teamCard.playerNameFontSize
                   }}
