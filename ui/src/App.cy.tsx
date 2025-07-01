@@ -1,20 +1,19 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import App from './App';
-import theme from './theme/theme';
+import { CustomThemeProvider } from './theme/ThemeProvider';
 
 describe('App Responsive Layout', () => {
   const renderApp = () => {
     mount(
       <MemoryRouter initialEntries={['/profile_id/12345']}>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <Routes>
             <Route path="/profile_id/:profileId" element={<App />} />
           </Routes>
-        </ChakraProvider>
+        </CustomThemeProvider>
       </MemoryRouter>
     );
   };

@@ -427,7 +427,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
       {isSearchMode ? (
         // Search mode: render matches with same background as accordion
         <Box
-          bg="white"
+          bg="brand.cardBg"
           borderRadius="md"
           borderWidth="1px"
           borderColor="gray.200"

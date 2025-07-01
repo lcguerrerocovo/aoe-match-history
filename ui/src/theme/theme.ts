@@ -14,7 +14,8 @@ const playerStatsAnatomy = anatomy('playerStats').parts(
 );
 const { definePartsStyle: definePlayerStatsPartsStyle, defineMultiStyleConfig: definePlayerStatsMultiStyleConfig } = createMultiStyleConfigHelpers(playerStatsAnatomy.keys);
 
-const colors = {
+// Light theme colors
+const lightColors = {
   brand: {
     midnightBlue: '#19214E', // Deep noble blue
     gold: '#D4AF37',         // Lustrous medieval gold
@@ -49,6 +50,109 @@ const colors = {
     brightGreen: '#4AE374', // Bright green for dark background wins
     brightRed: '#FF8282',   // Bright red for dark background losses
     contrastRed: '#FF6B94', // High contrast pinkish-red for very dark backgrounds
+    
+    // UI component backgrounds
+    topbarBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
+    topbarBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
+    landingBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
+    landingBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
+    
+    // UI element backgrounds
+    cardBg: '#ffffff',
+    inputBg: '#ffffff',
+    
+    // Gradient colors for UI elements
+    heroGradientStart: 'rgba(255,255,255,0.7)',
+    heroGradientEnd: 'rgba(255,255,255,0.1)',
+    
+    // Shadow and border colors
+    shadowLight: 'rgba(0,0,0,0.05)',
+    shadowMedium: 'rgba(0,0,0,0.07)',
+    shadowGold: 'rgba(212,175,55,0.4)',
+    borderLight: '#eee',
+    textShadowLight: '#fff',
+    textShadowAlpha: 'rgba(0,0,0,0.04)',
+    
+    // Animation glow colors
+    sunGlow: 'rgba(255, 215, 0, 0.3)',
+    sunGlowBright: 'rgba(255, 215, 0, 0.6)',
+    sunGlowDim: 'rgba(255, 215, 0, 0.2)',
+    sunColor: '#D4AF37',
+    sunBg: 'rgba(255, 215, 0, 0.1)',
+    sunBorder: 'rgba(212, 175, 55, 0.3)',
+    sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent 70%)',
+    sunRadialGradientBg: 'radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%)',
+  },
+};
+
+// Dark theme colors
+const darkColors = {
+  brand: {
+    // Core background/surface colors
+    midnightBlue: '#F7FAFC',      // Light text on dark bg
+    gold: '#FFD700',              // Brighter gold for dark bg
+    bronze: '#CD7F32',            // Keep bronze vibrant
+    black: '#F7FAFC',             // Light text
+    parchment: '#1A1A1A',         // Dark background
+    steel: '#CBD5E0',             // Lighter steel for dark bg
+    lightSteel: '#2D3748',        // Darker for cards/surfaces
+    heraldic: '#90CDF4',          // Light blue
+    slateBlue: '#2D3748',         // Dark slate for cards
+    slateBorder: '#4A5568',       // Darker border
+    
+    // Status colors (keep vibrant for contrast)
+    darkWin: '#48BB78',           // Brighter green
+    darkLoss: '#F56565',          // Brighter red
+    tableBorderOnLight: '#4A5568',
+    modernTableBorder: '#90CDF4',
+    
+    win: '#48BB78',
+    loss: '#F56565', 
+    same: '#90CDF4',
+    zoolanderBlue: '#90CDF4',
+    stone: '#2D3748',             // Dark stone
+    stoneLight: '#1A202C',        // Darker stone
+    fadedBlue: '#2A4A6B',         // Darker faded blue
+    
+    // Dark optimized colors
+    brightGold: '#FFD700',
+    brightSilver: '#E2E8F0',
+    brightBronze: '#CD7F32', 
+    brightGreen: '#48BB78',
+    brightRed: '#F56565',
+    contrastRed: '#F56565',
+    
+    // UI component backgrounds
+    topbarBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
+    topbarBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
+    landingBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
+    landingBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
+    
+    // UI element backgrounds
+    cardBg: '#2D3748',
+    inputBg: '#2D3748',
+    
+    // Gradient colors for UI elements
+    heroGradientStart: 'rgba(45,55,72,0.9)',
+    heroGradientEnd: 'rgba(45,55,72,0.3)',
+    
+    // Shadow and border colors
+    shadowLight: 'rgba(0,0,0,0.3)',
+    shadowMedium: 'rgba(0,0,0,0.4)',
+    shadowGold: 'rgba(255,215,0,0.4)',
+    borderLight: '#4A5568',
+    textShadowLight: 'rgba(0,0,0,0.8)',
+    textShadowAlpha: 'rgba(255,255,255,0.1)',
+    
+    // Animation glow colors (moon theme)
+    sunGlow: 'rgba(147, 197, 253, 0.3)',
+    sunGlowBright: 'rgba(147, 197, 253, 0.6)',
+    sunGlowDim: 'rgba(147, 197, 253, 0.2)',
+    sunColor: '#93C5FD',
+    sunBg: 'rgba(147, 197, 253, 0.1)',
+    sunBorder: 'rgba(147, 197, 253, 0.3)',
+    sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.1), transparent 70%)',
+    sunRadialGradientBg: 'radial-gradient(circle, rgba(147, 197, 253, 0.05) 0%, transparent 70%)',
   },
 };
 
@@ -92,109 +196,6 @@ const matchCardStyles = {
     marginBottom: '0.75rem',
   },
 };
-
-const cardTheme = defineCardMultiStyleConfig({
-  variants: {
-    match: defineCardPartsStyle({
-      container: {
-        backgroundColor: 'white',
-        borderWidth: '1px',
-        borderColor: 'brand.stone',
-        borderRadius: 'lg',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-
-        // Layout styles
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        padding: {
-          base: matchCardStyles.base.padding,
-          md: matchCardStyles.lg.padding,
-          xl: matchCardStyles.desktop.padding,
-        },
-        marginBottom: {
-          base: matchCardStyles.base.marginBottom,
-          md: matchCardStyles.lg.marginBottom,
-          xl: matchCardStyles.desktop.marginBottom,
-        },
-      }
-    }),
-    summary: defineCardPartsStyle({
-      container: {
-        backgroundColor: 'brand.stone',
-        borderWidth: '1px',
-        borderColor: 'brand.steel',
-        borderRadius: 'md',
-      }
-    }),
-    winner: defineCardPartsStyle({
-      container: {
-        bg: 'brand.parchment',
-        borderColor: 'brand.gold',
-        boxShadow: '0 0 8px rgba(212,175,55,0.6)',
-        borderWidth: '2px',
-        borderRadius: 'md',
-        p: 1,
-      }
-    }),
-    loser: defineCardPartsStyle({
-      container: {
-        bg: 'brand.stoneLight',
-        borderColor: 'brand.stone',
-        borderWidth: '1px',
-        borderRadius: 'md',
-        p: 1,
-      }
-    }),
-    filter: defineCardPartsStyle({
-      container: {
-        bg: 'white',
-        borderWidth: '1px',
-        borderColor: 'brand.lightSteel',
-        borderRadius: 'lg',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      }
-    }),
-    recordBubble: defineCardPartsStyle({
-      container: {
-        bg: 'brand.slateBlue',
-        color: 'white',
-        borderColor: 'brand.slateBorder',
-        borderWidth: '1px',
-        borderRadius: 'lg',
-        boxShadow: 'md',
-        px: { base: 1, md: 3 },
-        py: 1,
-        fontSize: '0.8125rem',
-        fontWeight: 'semibold',
-        flexDirection: 'row',
-        alignItems: 'center',
-      },
-      body: {
-        padding: 0,
-      }
-    }),
-    matchesCountBubble: defineCardPartsStyle({
-      container: {
-        bg: 'brand.lightSteel',
-        color: 'brand.midnightBlue',
-        borderRadius: 'lg',
-        px: { base: 1, md: 3 },
-        minWidth: '80px',
-        py: 1,
-        fontSize: '0.8125rem',
-        fontWeight: 'bold',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 0.5,
-        boxShadow: 'sm',
-      },
-      body: {
-        padding: 0,
-      }
-    }),
-  },
-});
 
 const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
   baseStyle: defineProfileHeaderPartsStyle({
@@ -267,188 +268,321 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
     }),
 });
 
-const playerStatsTheme = definePlayerStatsMultiStyleConfig({
-  baseStyle: definePlayerStatsPartsStyle({
-    container: {
-      bg: 'brand.slateBlue',
-      borderColor: 'brand.slateBorder',
-      borderRadius: 'lg',
-      padding: '1rem',
-      boxShadow: 'md',
-      borderWidth: '1px',
-    },
-    statsTable: {
-      th: {
-        color: 'white',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-        fontSize: '2xs',
-        fontWeight: 'bold',
-      },
-      td: {
-        color: 'white',
-        borderColor: 'brand.slateBorder',
-        fontSize: 'xs',
-        whiteSpace: 'nowrap',
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-      },
-      '.rank': {
-        color: 'brand.brightGold',
-        fontWeight: '700',
-      },
-      '.percentile': {
-        color: 'white',
-        fontSize: 'xs',
-        fontWeight: 'bold',
-      },
-      '.win': {
-        color: 'brand.brightGreen',
-      },
-      '.loss': {
-        color: 'brand.brightRed',
-        fontWeight: 'bold',
-      },
-      '.streak': {
-        color: 'brand.brightGreen',
-      },
-    },
-  }),
-});
-
-const theme = extendTheme({
-  colors,
-  spacing,
-  styles: {
-    global: {
-      body: {
-        bg: { base: 'brand.parchment', md: 'brand.midnightBlue' },
-        color: 'brand.black',
-        fontFamily: "'Lora', serif",
-        fontSize: '15px',
-      },
-      'a, button': {
-        transition: 'color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
-      },
-      '*, *::before, &::after': {
-        borderColor: 'brand.steel',
-      },
-    },
-  },
-  components: {
-    Heading: {
-      baseStyle: {
-        color: 'brand.midnightBlue',
-        fontWeight: 600,
-      },
-    },
-    Link: {
-      baseStyle: {
-        color: 'brand.heraldic',
-        _hover: {
-          color: '#b78b2b', // darkened gold
-        },
-      },
-    },
-    Button: {
-      variants: {
-        solid: {
-          bg: 'brand.midnightBlue',
-          color: 'white',
-          _hover: { bg: 'brand.heraldic' },
-        },
-        outline: {
+// Function to create theme based on dark mode
+export function createTheme(isDark: boolean) {
+  const colors = isDark ? darkColors : lightColors;
+  
+  // Dynamic card theme based on mode
+  const dynamicCardTheme = defineCardMultiStyleConfig({
+    variants: {
+      match: defineCardPartsStyle({
+        container: {
+          backgroundColor: isDark ? 'brand.lightSteel' : 'white',
+          borderWidth: '1px',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
+          borderRadius: 'lg',
+          boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.04)',
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          padding: {
+            base: matchCardStyles.base.padding,
+            md: matchCardStyles.lg.padding,
+            xl: matchCardStyles.desktop.padding,
+          },
+          marginBottom: {
+            base: matchCardStyles.base.marginBottom,
+            md: matchCardStyles.lg.marginBottom,
+            xl: matchCardStyles.desktop.marginBottom,
+          },
+          transition: 'all 0.3s ease',
+        }
+      }),
+      summary: defineCardPartsStyle({
+        container: {
+          backgroundColor: isDark ? 'brand.lightSteel' : 'brand.stone',
+          borderWidth: '1px',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+          borderRadius: 'md',
+          transition: 'all 0.3s ease',
+        }
+      }),
+      winner: defineCardPartsStyle({
+        container: {
+          bg: isDark ? 'brand.stone' : 'brand.parchment',
           borderColor: 'brand.gold',
-          color: 'brand.midnightBlue',
-          _hover: { bg: '#b78b2b', color: 'white' },
+          boxShadow: '0 0 8px rgba(212,175,55,0.6)',
+          borderWidth: '2px',
+          borderRadius: 'md',
+          p: 1,
+          transition: 'all 0.3s ease',
+        }
+      }),
+      loser: defineCardPartsStyle({
+        container: {
+          bg: isDark ? 'brand.stoneLight' : 'brand.stoneLight',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
+          borderWidth: '1px',
+          borderRadius: 'md',
+          p: 1,
+          transition: 'all 0.3s ease',
+        }
+      }),
+      filter: defineCardPartsStyle({
+        container: {
+          bg: isDark ? 'brand.lightSteel' : 'white',
+          borderWidth: '1px',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.lightSteel',
+          borderRadius: 'lg',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
+          transition: 'all 0.3s ease',
+        }
+      }),
+      recordBubble: defineCardPartsStyle({
+        container: {
+          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
+          color: isDark ? 'brand.midnightBlue' : 'white',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          borderWidth: '1px',
+          borderRadius: 'lg',
+          boxShadow: 'md',
+          px: { base: 1, md: 3 },
+          py: 1,
+          fontSize: '0.8125rem',
+          fontWeight: 'semibold',
+          flexDirection: 'row',
+          alignItems: 'center',
+          transition: 'all 0.3s ease',
         },
-      },
-    },
-    Divider: {
-      baseStyle: {
-        borderColor: 'brand.stone',
-        opacity: 0.4,
-      },
-    },
-    Card: cardTheme,
-    ProfileHeader: profileHeaderTheme,
-    PlayerStats: playerStatsTheme,
-    Input: {
-      variants: {
-        filled: {
-          field: {
-            bg: 'brand.parchment',
-            borderColor: 'brand.steel',
-            borderRadius: 'md',
-            _hover: { borderColor: 'brand.gold' },
-            _focus: {
-              borderColor: 'brand.gold',
-              boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
-            },
-          },
+        body: {
+          padding: 0,
+        }
+      }),
+      matchesCountBubble: defineCardPartsStyle({
+        container: {
+          bg: isDark ? 'brand.lightSteel' : 'brand.lightSteel',
+          color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
+          borderRadius: 'lg',
+          px: { base: 1, md: 3 },
+          minWidth: '80px',
+          py: 1,
+          fontSize: '0.8125rem',
+          fontWeight: 'bold',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 0.5,
+          boxShadow: 'sm',
+          transition: 'all 0.3s ease',
         },
-      },
+        body: {
+          padding: 0,
+        }
+      }),
     },
-    Select: {
-      variants: {
-        filled: {
-          field: {
-            bg: 'brand.parchment',
-            borderColor: 'brand.steel',
-            borderRadius: 'md',
-            _hover: { borderColor: 'brand.gold' },
-            _focus: {
-              borderColor: 'brand.gold',
-              boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
-            },
-          },
-        },
-      },
-    },
-    Table: {
-      variants: {
-        simple: {
-          th: {
-            borderBottom: '2px solid',
-            borderColor: 'brand.steel',
-            color: 'brand.midnightBlue',
-            fontWeight: 'bold',
-          },
-          td: {
-            borderBottom: '1px solid',
-            borderColor: 'gray.200',
-          },
-        },
-      },
-    },
-    Accordion: {
-      variants: {
-        filled: {
-          container: {
-            borderWidth: '1px',
-            borderColor: 'brand.lightSteel',
-            boxShadow: '0 2px 4px rgba(0, 51, 102, 0.1)',
-            borderRadius: 'lg',
-            overflow: 'hidden',
-            bg: 'white',
-          },
-          button: {
-            bg: 'white',
-            color: 'brand.black',
-            _hover: {
-              bg: 'gray.50',
-            },
-            borderRadius: 'lg',
-            borderBottomRadius: 'none',
-          },
-          panel: {
-            bg: 'white',
-            padding: 4,
-          },
-        },
-      },
-    },
-  },
-});
+  });
 
+  // Dynamic PlayerStats theme
+  const dynamicPlayerStatsTheme = definePlayerStatsMultiStyleConfig({
+    baseStyle: definePlayerStatsPartsStyle({
+      container: {
+        bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+        borderRadius: 'lg',
+        padding: '1rem',
+        boxShadow: 'md',
+        borderWidth: '1px',
+        transition: 'all 0.3s ease',
+      },
+      statsTable: {
+        th: {
+          color: isDark ? 'brand.steel' : 'white',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+          fontSize: '2xs',
+          fontWeight: 'bold',
+        },
+        td: {
+          color: isDark ? 'brand.midnightBlue' : 'white',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          fontSize: 'xs',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          overflow: 'hidden',
+        },
+        '.rank': {
+          color: isDark ? 'brand.zoolanderBlue' : 'white',
+          fontWeight: '700',
+        },
+        '.percentile': {
+          color: isDark ? 'brand.midnightBlue' : 'white',
+          fontSize: 'xs',
+          fontWeight: 'bold',
+        },
+        '.win': {
+          color: isDark ? 'brand.brightGreen' : 'brand.brightGreen',
+        },
+        '.loss': {
+          color: isDark ? 'brand.brightRed' : 'brand.brightRed',
+          fontWeight: 'bold',
+        },
+        '.streak': {
+          color: isDark ? 'brand.brightGreen' : 'brand.brightGreen',
+        },
+      },
+    }),
+  });
+
+  return extendTheme({
+    colors,
+    spacing,
+    styles: {
+      global: {
+        body: {
+          bg: isDark ? '#0F0F0F' : { base: 'brand.parchment', md: 'brand.midnightBlue' },
+          color: isDark ? 'brand.black' : 'brand.black',
+          fontFamily: "'Lora', serif",
+          fontSize: '15px',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        },
+        'a, button': {
+          transition: 'all 0.2s ease-in-out',
+        },
+        '*, *::before, &::after': {
+          borderColor: isDark ? 'brand.lightSteel' : 'brand.steel',
+        },
+        // Smooth transitions for all elements
+        '*': {
+          transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+        },
+      },
+    },
+    components: {
+      Heading: {
+        baseStyle: {
+          color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
+          fontWeight: 600,
+        },
+      },
+      Link: {
+        baseStyle: {
+          color: isDark ? 'brand.heraldic' : 'brand.heraldic',
+          _hover: {
+            color: isDark ? 'brand.gold' : '#b78b2b',
+          },
+        },
+      },
+      Button: {
+        variants: {
+          solid: {
+            bg: isDark ? 'brand.lightSteel' : 'brand.midnightBlue',
+            color: isDark ? 'brand.midnightBlue' : 'white',
+            _hover: { 
+              bg: isDark ? 'brand.slateBlue' : 'brand.heraldic' 
+            },
+          },
+          outline: {
+            borderColor: 'brand.gold',
+            color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
+            _hover: { 
+              bg: isDark ? 'brand.gold' : '#b78b2b', 
+              color: isDark ? 'brand.black' : 'white' 
+            },
+          },
+        },
+      },
+      Divider: {
+        baseStyle: {
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
+          opacity: 0.4,
+        },
+      },
+      Card: dynamicCardTheme,
+      ProfileHeader: profileHeaderTheme,
+      PlayerStats: dynamicPlayerStatsTheme,
+      Input: {
+        variants: {
+          filled: {
+            field: {
+              bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+              borderRadius: 'md',
+              color: isDark ? 'brand.midnightBlue' : 'brand.black',
+              _hover: { borderColor: 'brand.gold' },
+              _focus: {
+                borderColor: 'brand.gold',
+                boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
+              },
+            },
+          },
+        },
+      },
+      Select: {
+        variants: {
+          filled: {
+            field: {
+              bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+              borderRadius: 'md',
+              color: isDark ? 'brand.midnightBlue' : 'brand.black',
+              _hover: { borderColor: 'brand.gold' },
+              _focus: {
+                borderColor: 'brand.gold',
+                boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
+              },
+            },
+          },
+        },
+      },
+      Table: {
+        variants: {
+          simple: {
+            th: {
+              borderBottom: '2px solid',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+              color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
+              fontWeight: 'bold',
+            },
+            td: {
+              borderBottom: '1px solid',
+              borderColor: isDark ? 'brand.slateBorder' : 'gray.200',
+              color: isDark ? 'brand.midnightBlue' : 'brand.black',
+            },
+          },
+        },
+      },
+      Accordion: {
+        variants: {
+          filled: {
+            container: {
+              borderWidth: '1px',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.lightSteel',
+              boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0, 51, 102, 0.1)',
+              borderRadius: 'lg',
+              overflow: 'hidden',
+              bg: isDark ? 'brand.lightSteel' : 'white',
+              transition: 'all 0.3s ease',
+            },
+            button: {
+              bg: isDark ? 'brand.lightSteel' : 'white',
+              color: isDark ? 'brand.midnightBlue' : 'brand.black',
+              _hover: {
+                bg: isDark ? 'brand.slateBlue' : 'gray.50',
+              },
+              borderRadius: 'lg',
+              borderBottomRadius: 'none',
+            },
+            panel: {
+              bg: isDark ? 'brand.lightSteel' : 'white',
+              color: isDark ? 'brand.midnightBlue' : 'brand.black',
+              padding: 4,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// Export default light theme for backward compatibility
+const theme = createTheme(false);
 export default theme;
