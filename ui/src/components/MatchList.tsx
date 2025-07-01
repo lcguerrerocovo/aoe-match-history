@@ -127,7 +127,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           <Text>{match.description}</Text>
           <Link
             href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
-            color="blue.500"
+            color="brand.zoolanderBlue"
             fontWeight="semibold"
             isExternal
             display="none"
@@ -136,7 +136,7 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           </Link>
           <Tooltip label="Coming Soon!" fontSize="xs" placement="top">
             <Text
-              color="gray.400"
+              color="brand.steel"
               fontWeight="semibold"
               cursor="not-allowed"
             >
@@ -155,21 +155,21 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
         >
           <HStack spacing={1}>
             <CalendarIcon boxSize={3} />
-            <Text as="span" color="gray.600">
+            <Text as="span" color="brand.steel">
               {formatDateTime(match.start_time)}
             </Text>
           </HStack>
           <HStack spacing={2}>
             <HStack spacing={1}>
-              <TimeIcon boxSize={3} color="blue.400" />
-              <Text as="span" color="gray.600">
+              <TimeIcon boxSize={3} color="brand.zoolanderBlue" />
+              <Text as="span" color="brand.steel">
                 {formatDuration(durationSec)}
               </Text>
             </HStack>
             <HStack spacing={1}>
-              <TimeIcon boxSize={3} color="orange.400" />
+              <TimeIcon boxSize={3} color="brand.bronze" />
               <Tooltip label="Real time (1.7x game time)" fontSize="xs">
-                <Text as="span" color="gray.600">
+                <Text as="span" color="brand.steel">
                   {formatDuration(realTimeSec)}
                 </Text>
               </Tooltip>
@@ -257,7 +257,7 @@ function TeamCard({ match }: { match: any }) {
                 <Box
                   w={layout?.teamCard.colorBarWidth}
                   h={layout?.teamCard.colorBarHeight}
-                  bg={PLAYER_COLORS[p.color_id] || 'gray.400'}
+                  bg={PLAYER_COLORS[p.color_id] || 'brand.steel'}
                   borderRadius="sm"
                   mr={1}
                   flexShrink={0}
@@ -301,10 +301,10 @@ function TeamCard({ match }: { match: any }) {
                     transform="translateX(-50%)"
                     fontSize={layout?.teamCard.civFontSize}
                     fontWeight="bold"
-                    color="gray.700"
+                    color="brand.bronze"
                     zIndex={1}
                     display="none"
-                    bg="gray.300"
+                    bg="brand.stoneLight"
                     px={1}
                     borderRadius="sm"
                   >
@@ -320,7 +320,7 @@ function TeamCard({ match }: { match: any }) {
                     maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    color: 'blue.500',
+                    color: 'brand.zoolanderBlue',
                     textDecoration: 'none',
                     fontSize: layout?.teamCard.playerNameFontSize
                   }}
@@ -430,7 +430,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
           bg="brand.cardBg"
           borderRadius="md"
           borderWidth="1px"
-          borderColor="gray.200"
+          borderColor="brand.heraldic"
           p={4}
           boxShadow="sm"
         >
@@ -476,15 +476,15 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                                 {diplo}
                               </Text>
-                              <Text as="span" color="gray.300" mr={2} verticalAlign="middle">|</Text>
+                              <Text as="span" color="brand.stoneLight" mr={2} verticalAlign="middle">|</Text>
                               <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
                               <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
-                                <Text as="span" color="gray.500" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
+                                <Text as="span" color="brand.steel" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
                               )}
                               {rec.eloChange !== 0 && (
                                 <>
-                                  <Text as="span" color="gray.300" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                  <Text as="span" color="brand.stoneLight" ml={2} mr={2} verticalAlign="middle">|</Text>
                                   <Text
                                     as="span"
                                     display="inline-block"

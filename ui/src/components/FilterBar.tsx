@@ -88,9 +88,9 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
                 transform="translateY(-50%)"
                 cursor="pointer"
                 onClick={handleClear}
-                color="gray.500"
+                color="brand.steel"
                 fontSize="lg"
-                _hover={{ color: 'gray.700' }}
+                _hover={{ color: 'brand.bronze' }}
               >
                 ×
               </Box>
