@@ -1,6 +1,6 @@
 import { Box, IconButton, useTheme } from '@chakra-ui/react';
 import { keyframes } from '@emotion/react';
-import { FaMoon, FaSun } from 'react-icons/fa';
+import { FaMoon } from 'react-icons/fa';
 import { useThemeMode } from '../theme/ThemeProvider';
 
 // Smooth rotation animation
@@ -41,7 +41,14 @@ export function ThemeToggle() {
             {isDark ? (
               <FaMoon size={16} />
             ) : (
-              <FaSun size={16} />
+              <Box 
+                width="14px" 
+                height="14px" 
+                borderRadius="full" 
+                bg="brand.gold"
+                border="1px solid rgba(0,0,0,0.15)"
+                boxShadow="0 1px 2px rgba(0,0,0,0.1)"
+              />
             )}
           </Box>
         }
