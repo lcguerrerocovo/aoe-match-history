@@ -10,16 +10,16 @@ const rotateIn = keyframes`
 `;
 
 // Pulsing glow effect - will be dynamically set
-const pulseGlow = (sunGlow: string, sunGlowBright: string, sunGlowDim: string) => keyframes`
-  0% { box-shadow: 0 0 20px ${sunGlow}; }
-  50% { box-shadow: 0 0 30px ${sunGlowBright}, 0 0 40px ${sunGlowDim}; }
-  100% { box-shadow: 0 0 20px ${sunGlow}; }
+const pulseGlow = (sunGlow: string, sunGlowBright: string) => keyframes`
+  0% { box-shadow: 0 0 8px ${sunGlow}; }
+  50% { box-shadow: 0 0 12px ${sunGlowBright}; }
+  100% { box-shadow: 0 0 8px ${sunGlow}; }
 `;
 
-const moonGlow = (moonGlow: string, moonGlowBright: string, moonGlowDim: string) => keyframes`
-  0% { box-shadow: 0 0 15px ${moonGlow}; }
-  50% { box-shadow: 0 0 25px ${moonGlowBright}, 0 0 35px ${moonGlowDim}; }
-  100% { box-shadow: 0 0 15px ${moonGlow}; }
+const moonGlow = (moonGlow: string, moonGlowBright: string) => keyframes`
+  0% { box-shadow: 0 0 6px ${moonGlow}; }
+  50% { box-shadow: 0 0 10px ${moonGlowBright}; }
+  100% { box-shadow: 0 0 6px ${moonGlow}; }
 `;
 
 export function ThemeToggle() {
@@ -61,14 +61,9 @@ export function ThemeToggle() {
             ? theme.colors.brand.sunGlowDim
             : theme.colors.brand.sunGlowDim,
           borderColor: isDark ? theme.colors.brand.sunGlowBright : theme.colors.brand.sunGlowBright,
-          transform: 'scale(1.05)',
           animation: isDark 
-            ? `${moonGlow(theme.colors.brand.sunGlow, theme.colors.brand.sunGlowBright, theme.colors.brand.sunGlowDim)} 2s ease-in-out infinite`
-            : `${pulseGlow(theme.colors.brand.sunGlow, theme.colors.brand.sunGlowBright, theme.colors.brand.sunGlowDim)} 2s ease-in-out infinite`,
-          _before: {
-            opacity: 1,
-            transform: 'scale(1)',
-          }
+            ? `${moonGlow(theme.colors.brand.sunGlow, theme.colors.brand.sunGlowBright)} 3s ease-in-out infinite`
+            : `${pulseGlow(theme.colors.brand.sunGlow, theme.colors.brand.sunGlowBright)} 3s ease-in-out infinite`,
         }}
         _active={{
           transform: 'scale(0.95)',
