@@ -12,9 +12,11 @@ import json
 import re
 import logging
 import asyncio
+import argparse
 from pathlib import Path
 from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import wordninja
 
 # Configuration
 INPUT_FILE = "data/collected_players.jsonl"
@@ -46,6 +48,93 @@ def clean_for_search(text):
         return ""
     # Remove all non-word characters (keeps only alphanumeric), convert to lowercase
     return re.sub(r'[^\w]', '', str(text).lower())
+
+def tokenize_for_search(text):
+    """
+    Tokenize player name for improved search matching
+    - Splits on common separators (dots, underscores, brackets, etc.)
+    - Uses intelligent word segmentation for concatenated words
+    - Handles clan tags like <NT>, [CLAN], etc.
+    - Includes both full name and individual tokens
+    
+    Args:
+        text (str): Player name to tokenize
+        
+    Returns:
+        list: List of search tokens (cleaned and lowercased)
+    """
+    if not text:
+        return []
+    
+    text = str(text).lower()
+    tokens = []
+    
+    # Add the full cleaned name (existing behavior)
+    full_clean = clean_for_search(text)
+    if full_clean:
+        tokens.append(full_clean)
+    
+    # Split on common separators: dots, brackets, underscores, spaces, hyphens
+    # This regex captures: <>, [], (), {}, dots, underscores, hyphens, spaces
+    import re
+    parts = re.split(r'[<>\[\](){}._ -]+', text)
+    
+    # Process each part with word segmentation
+    for part in parts:
+        clean_part = clean_for_search(part)
+        if clean_part and len(clean_part) >= 3:  # Min 3 chars to avoid noise
+            tokens.append(clean_part)
+            
+            # Intelligent word segmentation for longer parts
+            if len(clean_part) >= 6:  # Only segment longer strings
+                word_segments = wordninja.split(clean_part)
+                for segment in word_segments:
+                    segment_clean = clean_for_search(segment)
+                    if segment_clean and len(segment_clean) >= 3:
+                        tokens.append(segment_clean)
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_tokens = []
+    for token in tokens:
+        if token not in seen:
+            seen.add(token)
+            unique_tokens.append(token)
+    
+    return unique_tokens
+
+def display_tokenization_samples(all_players, limit=20):
+    """
+    Display tokenization results for sample players
+    
+    Args:
+        all_players (list): List of all processed players
+        limit (int): Number of samples to show
+    """
+    print("\n" + "="*80)
+    print("TOKENIZATION SAMPLES")
+    print("="*80)
+    
+    # Show a diverse sample
+    sample_players = all_players[:limit] if len(all_players) <= limit else all_players[::len(all_players)//limit][:limit]
+    
+    for i, player in enumerate(sample_players, 1):
+        name = player.get('name', 'Unknown')
+        name_no_special = player.get('name_no_special', '')
+        name_tokens = player.get('name_tokens', [])
+        
+        print(f"\n{i:2d}. Player: '{name}'")
+        print(f"    Full cleaned: '{name_no_special}'")
+        print(f"    Tokens: {name_tokens}")
+        print(f"    Token count: {len(name_tokens)}")
+        
+        # Show which tokens are from word segmentation
+        if len(name_tokens) > 2:  # More than just full + split tokens
+            print(f"    📝 Includes word segmentation")
+    
+    print(f"\n📊 Total players processed: {len(all_players)}")
+    print(f"📊 Average tokens per player: {sum(len(p.get('name_tokens', [])) for p in all_players) / len(all_players):.1f}")
+    print("="*80)
 
 def process_leaderboard_stats(api_response):
     """
@@ -140,14 +229,16 @@ def process_player_data(api_response):
                 filtered_out += 1
                 continue
             
-            # Process name for search (simplified approach)
+            # Process name for search (enhanced with tokenization)
             name_no_special = clean_for_search(display_name)
+            name_tokens = tokenize_for_search(display_name)
             
-            # Build document with simplified structure
+            # Build document with enhanced search structure
             doc = {
                 'profile_id': int(profile_id),
                 'name': str(display_name),                # Use alias for display
-                'name_no_special': name_no_special,       # Single search index
+                'name_no_special': name_no_special,       # Single search index (backward compatible)
+                'name_tokens': name_tokens,               # Array of searchable tokens
                 'total_matches': leaderboard_data['total_matches'],
                 'country': member.get('country', ''),
                 'last_match_date': leaderboard_data['last_match_date'],  # Can be null
@@ -314,15 +405,18 @@ async def process_file_chunk(lines, start_line):
                         skip_reasons['missing_data'] += 1
                         continue
                     
-                    # Add search field if missing (needed for Firestore search)
+                    # Add search fields if missing (needed for Firestore search)
                     if 'name_no_special' not in data:
                         data['name_no_special'] = clean_for_search(display_name)
+                    if 'name_tokens' not in data:
+                        data['name_tokens'] = tokenize_for_search(display_name)
                     
                     # Build optimized document for Firestore
                     firestore_doc = {
                         'profile_id': int(profile_id),
                         'name': str(display_name),  # Use alias for display
                         'name_no_special': data['name_no_special'],
+                        'name_tokens': data['name_tokens'],
                         'total_matches': data.get('total_matches', 0),
                         'country': data.get('country', ''),
                         'last_match_date': data.get('last_match_date')
@@ -356,29 +450,49 @@ async def process_file_chunk(lines, start_line):
 
 async def main():
     """Main async upload process"""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Upload players to Firestore with enhanced tokenization')
+    parser.add_argument('--dry-run', action='store_true', 
+                        help='Show tokenization results without uploading to Firestore')
+    parser.add_argument('--samples', type=int, default=50,
+                        help='Number of tokenization samples to show in dry-run mode (default: 50)')
+    args = parser.parse_args()
+    
     setup_logging()
     
-    logging.info("Starting async Firestore upload with leaderboard data")
+    if args.dry_run:
+        logging.info("🔍 DRY RUN MODE: Testing tokenization without uploading")
+        logging.info(f"Will show {args.samples} tokenization samples")
+    else:
+        logging.info("Starting async Firestore upload with leaderboard data")
+        logging.info(f"Batch size: {BATCH_SIZE}")
+        logging.info(f"Concurrent uploads: {CONCURRENT_UPLOADS}")
+        logging.info(f"Chunk size: {CHUNK_SIZE}")
+    
     logging.info(f"Input file: {INPUT_FILE}")
     logging.info(f"Collection: {COLLECTION_NAME}")
-    logging.info(f"Batch size: {BATCH_SIZE}")
-    logging.info(f"Concurrent uploads: {CONCURRENT_UPLOADS}")
-    logging.info(f"Chunk size: {CHUNK_SIZE}")
     
-    # Initialize Firestore client
-    try:
-        db = firestore.Client()
-        logging.info("Connected to Firestore")
-    except Exception as e:
-        logging.error(f"Failed to connect to Firestore: {e}")
-        return
+    # Initialize Firestore client (only if not dry run)
+    db = None
+    existing_firestore_ids = set()
     
-    # Load existing profile IDs from Firestore
-    existing_firestore_ids = await load_existing_profile_ids_async(db)
+    if not args.dry_run:
+        try:
+            db = firestore.Client()
+            logging.info("Connected to Firestore")
+            # Load existing profile IDs from Firestore
+            existing_firestore_ids = await load_existing_profile_ids_async(db)
+        except Exception as e:
+            logging.error(f"Failed to connect to Firestore: {e}")
+            return
     
-    # Create upload queue with balanced size for better distribution
-    upload_queue = asyncio.Queue(maxsize=50)  # Balanced queue size to encourage competition
-    shutdown_event = asyncio.Event()
+    # Create upload queue with balanced size for better distribution (only if not dry-run)
+    upload_queue = None
+    shutdown_event = None
+    
+    if not args.dry_run:
+        upload_queue = asyncio.Queue(maxsize=50)  # Balanced queue size to encourage competition
+        shutdown_event = asyncio.Event()
     
     # Process file in chunks and collect all players first
     if not Path(INPUT_FILE).exists():
@@ -421,7 +535,13 @@ async def main():
                 total_processed += len(chunk_lines)
                 all_players.extend(players)
         
-        logging.info(f"Phase 1 completed: {total_processed} lines processed, {len(all_players)} players ready for upload")
+        logging.info(f"Phase 1 completed: {total_processed} lines processed, {len(all_players)} players ready")
+        
+        # Handle dry-run mode
+        if args.dry_run:
+            display_tokenization_samples(all_players, args.samples)
+            logging.info("🔍 DRY RUN completed - no data uploaded")
+            return
         
         # Phase 2: Create batches and preload queue
         logging.info("Phase 2: Creating batches and preloading queue...")

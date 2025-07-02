@@ -217,7 +217,6 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
           results
             .slice()
             .sort((a, b) => b.matches - a.matches)
-            .slice(0, 8)
             .map((player) => (
               <Card
                 key={player.id + player.name}

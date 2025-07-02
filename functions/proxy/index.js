@@ -222,34 +222,68 @@ function cleanForSearch(text) {
   return text.replace(/[^\w]/g, '').toLowerCase();
 }
 
+
+
 async function searchFirestore(db, query, limit = 20) {
   const cleanQuery = cleanForSearch(query);
   if (!cleanQuery) return [];
   
   try {
-    const snapshot = await db.collection('players')
+    const resultMap = new Map(); // Use Map to deduplicate by profile_id
+    
+    // 1. Prefix search on name_no_special (handles full names like "nttornasol")
+    const prefixSnapshot = await db.collection('players')
       .where('name_no_special', '>=', cleanQuery)
-      .where('name_no_special', '<', cleanQuery + '\uf8ff') // Unicode end character for prefix search
+      .where('name_no_special', '<', cleanQuery + '\uf8ff')
       .limit(limit)
       .get();
     
-    const results = [];
-    snapshot.forEach(doc => {
+    prefixSnapshot.forEach(doc => {
       const data = doc.data();
-      results.push({
+      resultMap.set(data.profile_id, {
         id: data.profile_id.toString(),
-        name: data.name,                    // Original alias for display
+        name: data.name,
         country: data.country || '',
-        matches: data.total_matches || 0,   // Match count from enhanced data
-        lastMatchDate: data.last_match_date, // Can be null
+        matches: data.total_matches || 0,
+        lastMatchDate: data.last_match_date,
         profile_id: data.profile_id
       });
     });
     
-    // Sort by match count (most active players first)
+    // 2. Token search - search for user query as a token (handles "tornasol" finding "<NT>.tornasol")
+    if (cleanQuery.length >= 3) { // Only search meaningful tokens (3+ chars to avoid noise)
+      try {
+        const tokenSnapshot = await db.collection('players')
+          .where('name_tokens', 'array-contains', cleanQuery)
+          .limit(limit)
+          .get();
+        
+        tokenSnapshot.forEach(doc => {
+          const data = doc.data();
+          // Add to results if not already present
+          if (!resultMap.has(data.profile_id)) {
+            resultMap.set(data.profile_id, {
+              id: data.profile_id.toString(),
+              name: data.name,
+              country: data.country || '',
+              matches: data.total_matches || 0,
+              lastMatchDate: data.last_match_date,
+              profile_id: data.profile_id
+            });
+          }
+        });
+      } catch (tokenError) {
+        // Log but don't fail entire search if token search fails
+        log.warn({ error: tokenError.message, token: cleanQuery }, 'Token search failed');
+      }
+    }
+    
+    // Convert Map to array and sort by match count
+    const results = Array.from(resultMap.values());
     results.sort((a, b) => b.matches - a.matches);
     
-    return results;
+    return results.slice(0, limit);
+    
   } catch (error) {
     log.error({ error: error.message, query }, 'Error in Firestore search');
     return [];
