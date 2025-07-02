@@ -1,4 +1,4 @@
-import type { Match, Player } from '../types/match';
+import type { Player } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 import { decodeOptions } from '../utils/optionsDecoder';
 import { decodeSlotInfo } from '../utils/slotInfoDecoder';
@@ -120,19 +120,7 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   return { ...profileInfo, matches: sortedMatches };
 }
 
-export async function getMatch(id: string): Promise<Match> {
-  const response = await fetch(`/data/matches/${id}.json`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch match');
-  }
-  const match = await response.json();
-  // Add APM chart links
-  match.apmCharts = match.players.map((player: any) => ({
-    player: typeof player === 'string' ? player : player.name,
-    url: `/site/matches/${id}/${(typeof player === 'string' ? player : player.name).replace('/', '_')}/${id}_${(typeof player === 'string' ? player : player.name).replace('/', '_')}.html`,
-  }));
-  return match;
-}
+
 
 export async function getPersonalStats(profileId: string): Promise<PersonalStats> {
   const response = await fetch(`${API_URL}/personal-stats/${profileId}`);
