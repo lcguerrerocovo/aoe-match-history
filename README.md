@@ -177,10 +177,19 @@ Player records in Firestore include:
 - `profile_id` - Unique player identifier
 - `name` - Display name
 - `name_no_special` - Cleaned name for search (prefix matching)
+- `name_tokens` - Array of searchable tokens for partial name matching
 - `total_matches` - Total match count
 - `country` - Country code (2-letter ISO)
 - `last_match_date` - Timestamp of last match
 - `clan` - Clan information (if available)
+
+### Firestore Index Management
+
+Player search uses composite indexes defined in `firestore.indexes.json`:
+- **Prefix Search**: `name_no_special` + `total_matches` (for "gl" → "GL.TheViper")  
+- **Token Search**: `name_tokens` + `total_matches` (for "viper" → "GL.TheViper")
+
+**Deploy Changes**: `firebase deploy --only firestore:indexes` (5-15 min build time)
 
 ## Frontend (UI) Guidelines
 
@@ -404,10 +413,10 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
 to clear cached search queries when search chanes are deployed, run the following:
 
 ```bash
-export API_TOKEN=your_cloudflare_api_token
-export ZONE_ID=your_zone_id
-curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
-  -H "Authorization: Bearer $API_TOKEN" \
+export CF_API_TOKEN=your_cloudflare_api_token
+export CF_ZONE_ID=your_zone_id
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+  -H "Authorization: Bearer $CF_API_TOKEN" \
   -H "Content-Type: application/json" \
   --data '{
     "files": [

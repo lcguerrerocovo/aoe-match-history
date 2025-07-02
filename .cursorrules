@@ -8,3 +8,5 @@ Keep API signatures; test incrementally; avoid breakage
 Prefer established libs; check existing solutions before custom code
 Keep Portal for z-index overlays; never drop valid usage
 Know component intent before suggesting removal; ask if unsure
+Build/deploy: GitHub Actions (.github/workflows/)
+Firestore indexes: Manual (firebase deploy --only firestore:indexes)

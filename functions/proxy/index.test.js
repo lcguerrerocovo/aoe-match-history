@@ -18,6 +18,7 @@ const mockFirestoreSnapshot = {
 };
 const mockFirestoreQuery = {
   where: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
   limit: jest.fn().mockReturnThis(),
   get: jest.fn()
 };
@@ -50,6 +51,7 @@ beforeEach(() => {
   
   // Reset Firestore mocks
   mockFirestoreQuery.where.mockReturnThis();
+  mockFirestoreQuery.orderBy.mockReturnThis();
   mockFirestoreQuery.limit.mockReturnThis();
   mockFirestoreCollection.where.mockReturnValue(mockFirestoreQuery);
   mockFirestore.collection.mockReturnValue(mockFirestoreCollection);

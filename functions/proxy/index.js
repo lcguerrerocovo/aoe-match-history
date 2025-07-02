@@ -232,9 +232,16 @@ async function searchFirestore(db, query, limit = 20) {
     const resultMap = new Map(); // Use Map to deduplicate by profile_id
     
     // 1. Prefix search on name_no_special (handles full names like "nttornasol")
+    log.info({ 
+      query: `collection('players').where('name_no_special', '>=', '${cleanQuery}').where('name_no_special', '<', '${cleanQuery}\uf8ff').orderBy('name_no_special').orderBy('total_matches', 'desc').limit(${limit})`,
+      operation: 'prefix_search'
+    }, 'Firestore query');
+    
     const prefixSnapshot = await db.collection('players')
       .where('name_no_special', '>=', cleanQuery)
       .where('name_no_special', '<', cleanQuery + '\uf8ff')
+      .orderBy('name_no_special')
+      .orderBy('total_matches', 'desc')
       .limit(limit)
       .get();
     
@@ -253,8 +260,14 @@ async function searchFirestore(db, query, limit = 20) {
     // 2. Token search - search for user query as a token (handles "tornasol" finding "<NT>.tornasol")
     if (cleanQuery.length >= 3) { // Only search meaningful tokens (3+ chars to avoid noise)
       try {
+        log.info({ 
+          query: `collection('players').where('name_tokens', 'array-contains', '${cleanQuery}').orderBy('total_matches', 'desc').limit(${limit})`,
+          operation: 'token_search'
+        }, 'Firestore query');
+        
         const tokenSnapshot = await db.collection('players')
           .where('name_tokens', 'array-contains', cleanQuery)
+          .orderBy('total_matches', 'desc')
           .limit(limit)
           .get();
         
@@ -274,7 +287,7 @@ async function searchFirestore(db, query, limit = 20) {
         });
       } catch (tokenError) {
         // Log but don't fail entire search if token search fails
-        log.warn({ error: tokenError.message, token: cleanQuery }, 'Token search failed');
+        log.error({ error: tokenError.message, token: cleanQuery }, 'Token search failed');
       }
     }
     
