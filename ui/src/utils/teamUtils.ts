@@ -19,7 +19,12 @@ export function groupPlayersIntoTeams(players: Player[]): Player[][] {
   }, []);
 
   // Filter out empty teams that can result from non-sequential team numbers
-  return teams.filter(team => team && team.length > 0);
+  const filteredTeams = teams.filter(team => team && team.length > 0);
+  
+  // Sort players within each team by color_id (ascending)
+  return filteredTeams.map(team => 
+    team.sort((a, b) => (a.color_id || 0) - (b.color_id || 0))
+  );
 }
 
 export function detectWinningTeams(teams: Player[][]): { winningTeam?: number; winningTeams: number[] } {
