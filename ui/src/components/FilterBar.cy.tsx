@@ -26,7 +26,7 @@ describe('FilterBar Responsive Layout', () => {
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2); // Map and match type selects
     cy.get('select').first().should('contain', 'All maps');
-    cy.get('select').last().should('contain', 'All match types');
+    cy.get('select').last().should('contain', 'All types');
     cy.get('button[aria-label*="Sort"]').should('be.visible'); // Sort button
 
     // Test desktop view
@@ -155,7 +155,7 @@ describe('FilterBar Responsive Layout', () => {
       </ChakraProvider>
     );
 
-    cy.get('select').last().find('option').should('have.length', 5); // "All match types" + 4 mock match types
+    cy.get('select').last().find('option').should('have.length', 5); // "All types" + 4 mock match types
     cy.get('select').last().find('option').should('contain', 'RM 1v1 (12)');
     cy.get('select').last().find('option').should('contain', 'RM Team (8)');
     cy.get('select').last().find('option').should('contain', 'EW 1v1 (4)');

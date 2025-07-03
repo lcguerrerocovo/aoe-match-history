@@ -84,10 +84,13 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
         p={layout?.filterBar.padding}
         mb={layout?.filterBar.marginBottom}
       >
-        <HStack gap={layout?.filterBar.gap}>
+        <HStack justify="space-between" align="center">
+          {/* Left: Search Box */}
           <Box 
             position="relative" 
-            w={layout?.filterBar.inputWidth}
+            flex="1"
+            maxW={{ base: "300px", md: "220px" }}
+            mr={4}
             onMouseEnter={() => setIsSearchFocused(true)}
             onMouseLeave={() => setIsSearchFocused(false)}
           >
@@ -95,7 +98,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               placeholder={getSearchPlaceholder()}
               w="100%"
               variant="filled"
-              fontSize={{ base: 'sm', md: 'sm' }}
+              fontSize={{ base: 'xs', md: 'sm' }}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
@@ -146,59 +149,63 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               </Box>
             )}
           </Box>
-          <Select
-            value={selectedMap}
-            onChange={(e) => {
-              setSelectedMap(e.target.value);
-              onMapChange(e.target.value);
-            }}
-            w={layout?.filterBar.selectWidth}
-            variant="filled"
-            fontSize={{ base: 'sm', md: 'sm' }}
-          >
-            <option key="all-maps" value="">All maps</option>
-            {maps
-              .filter(({ name }) => name && name.trim().length > 0)
-              .map(({ name, count }, index) => (
-                <option key={`${name}-${index}`} value={name}>
-                  {name} ({count || 0})
-                </option>
-              ))}
-          </Select>
-          <Select
-            value={selectedMatchType}
-            onChange={(e) => {
-              setSelectedMatchType(e.target.value);
-              onMatchTypeChange(e.target.value);
-            }}
-            w={layout?.filterBar.selectWidth}
-            variant="filled"
-            fontSize={{ base: 'sm', md: 'sm' }}
-          >
-            <option key="all-match-types" value="">All match types</option>
-            {matchTypes
-              .filter(({ name }) => name && name.trim().length > 0)
-              .map(({ name, count }, index) => (
-                <option key={`${name}-${index}`} value={name}>
-                  {name} ({count || 0})
-                </option>
-              ))}
-          </Select>
-          <IconButton
-            aria-label={`Sort ${sortDirection === 'desc' ? 'oldest first' : 'newest first'}`}
-            icon={sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
-            onClick={() => {
-              const newDirection = sortDirection === 'desc' ? 'asc' : 'desc';
-              setSortDirection(newDirection);
-              onSortChange(newDirection);
-            }}
-            variant="filled"
-            size="md"
-            bg="brand.inputBg"
-            color="brand.midnightBlue"
-            _hover={{ bg: 'brand.stone' }}
-            borderRadius="md"
-          />
+
+          {/* Right: Filter Controls */}
+          <HStack gap={layout?.filterBar.gap}>
+            <Select
+              value={selectedMap}
+              onChange={(e) => {
+                setSelectedMap(e.target.value);
+                onMapChange(e.target.value);
+              }}
+              w={{ base: '90px', md: layout?.filterBar.selectWidth }}
+              variant="filled"
+              fontSize={{ base: 'xs', md: 'sm' }}
+            >
+              <option key="all-maps" value="">All maps</option>
+              {maps
+                .filter(({ name }) => name && name.trim().length > 0)
+                .map(({ name, count }, index) => (
+                  <option key={`${name}-${index}`} value={name}>
+                    {name} ({count || 0})
+                  </option>
+                ))}
+            </Select>
+            <Select
+              value={selectedMatchType}
+              onChange={(e) => {
+                setSelectedMatchType(e.target.value);
+                onMatchTypeChange(e.target.value);
+              }}
+              w={{ base: '85px', md: layout?.filterBar.selectWidth }}
+              variant="filled"
+              fontSize={{ base: 'xs', md: 'sm' }}
+            >
+              <option key="all-match-types" value="">All types</option>
+              {matchTypes
+                .filter(({ name }) => name && name.trim().length > 0)
+                .map(({ name, count }, index) => (
+                  <option key={`${name}-${index}`} value={name}>
+                    {name} ({count || 0})
+                  </option>
+                ))}
+            </Select>
+            <IconButton
+              aria-label={`Sort ${sortDirection === 'desc' ? 'oldest first' : 'newest first'}`}
+              icon={sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
+              onClick={() => {
+                const newDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+                setSortDirection(newDirection);
+                onSortChange(newDirection);
+              }}
+              variant="filled"
+              size="md"
+              bg="brand.inputBg"
+              color="brand.midnightBlue"
+              _hover={{ bg: 'brand.stone' }}
+              borderRadius="md"
+            />
+          </HStack>
         </HStack>
       </Card>
     </Box>
