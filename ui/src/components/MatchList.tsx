@@ -457,53 +457,71 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <AccordionButton>
                     <VStack flex="1" align="stretch" spacing={2}>
                       {/* Date Header */}
-                      <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
-                        <HStack justify="space-between" align="center" fontSize="sm">
-                          {(() => {
-                            const timingData = formatSessionTimingData(group.date, totalReal);
-                            return (
-                              <>
-                                {/* Left side: Date and Time Range */}
-                                <HStack spacing={{ base: 1, md: 1 }} flex="1" minW="0">
-                                  <HStack spacing={1} flexShrink={0} w={{ base: "110px", md: "110px" }}>
+                      <Box bg="brand.stoneLight" p={2} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
+                        {(() => {
+                          const timingData = formatSessionTimingData(group.date, totalReal);
+                          return (
+                            <>
+                              {/* Mobile: Two-line layout */}
+                              <VStack spacing={1} display={{ base: "flex", md: "none" }} align="stretch">
+                                {/* Line 1: Date and Time Range */}
+                                <HStack spacing={2} justify="flex-start">
+                                  <HStack spacing={1}>
                                     <CalendarIcon boxSize={3} color="brand.bronze" />
-                                    <Text fontWeight="bold" color="brand.black" isTruncated>{timingData.dateDisplay}</Text>
+                                    <Text fontWeight="bold" color="brand.black" fontSize="sm">{timingData.dateDisplay}</Text>
                                   </HStack>
+                                  <Text color="brand.steel" fontSize="xs">|</Text>
                                   {timingData.timeRange && (
-                                    <Text fontWeight="medium" color="brand.black" w={{ base: "120px", md: "140px" }} isTruncated>{timingData.timeRange}</Text>
+                                    <Text fontWeight="semibold" color="brand.black" fontSize="sm">{timingData.timeRange}</Text>
+                                  )}
+                                </HStack>
+                                
+                                {/* Line 2: Session Duration and Time Played */}
+                                <HStack spacing={3} justify="flex-start" fontSize="xs">
+                                  <HStack spacing={1}>
+                                    <TimeIcon boxSize="10px" color="brand.bronze" />
+                                    <Text color="brand.steel">Session:</Text>
+                                    <Text fontWeight="medium" color="brand.steel">{timingData.sessionDuration}</Text>
+                                  </HStack>
+                                  <HStack spacing={1}>
+                                    <GiBroadsword size={10} color="currentColor" />
+                                    <Text color="brand.steel">Played:</Text>
+                                    <Text fontWeight="medium" color="brand.steel">{timingData.timePlayed}</Text>
+                                  </HStack>
+                                </HStack>
+                              </VStack>
+
+                              {/* Desktop: One line with better hierarchy */}
+                              <HStack justify="space-between" align="center" display={{ base: "none", md: "flex" }}>
+                                {/* Left: Date and Time Range as primary info */}
+                                <HStack spacing={3}>
+                                  <HStack spacing={1}>
+                                    <CalendarIcon boxSize={3} color="brand.bronze" />
+                                    <Text fontWeight="bold" color="brand.black" fontSize="md">{timingData.dateDisplay}</Text>
+                                  </HStack>
+                                  <Text color="brand.steel" fontSize="sm">|</Text>
+                                  {timingData.timeRange && (
+                                    <Text fontWeight="semibold" color="brand.black" fontSize="md">{timingData.timeRange}</Text>
                                   )}
                                 </HStack>
 
-                                {/* Right side: Duration and Time Played - Responsive */}
-                                <Box flexShrink={0}>
-                                  {/* Mobile: Vertical stack */}
-                                  <VStack spacing={0} display={{ base: "flex", md: "none" }} align="flex-end">
-                                    <HStack spacing={1}>
-                                      <Text fontWeight="medium" color="brand.steel" fontSize="xs">{timingData.sessionDuration}</Text>
-                                      <TimeIcon boxSize="10px" color="brand.bronze" />
-                                    </HStack>
-                                    <HStack spacing={1}>
-                                      <Text fontWeight="medium" color="brand.steel" fontSize="xs">{timingData.timePlayed}</Text>
-                                      <GiBroadsword size={10} color="currentColor" />
-                                    </HStack>
-                                  </VStack>
-                                  
-                                  {/* Desktop: Horizontal stack */}
-                                  <HStack spacing={4} display={{ base: "none", md: "flex" }} justify="flex-end">
-                                    <HStack spacing={1}>
-                                      <Text fontWeight="medium" color="brand.steel" w="55px" textAlign="right" fontSize="sm">{timingData.sessionDuration}</Text>
-                                      <TimeIcon boxSize={3} color="brand.bronze" />
-                                    </HStack>
-                                    <HStack spacing={1}>
-                                      <Text fontWeight="medium" color="brand.steel" w="55px" textAlign="right" fontSize="sm">{timingData.timePlayed}</Text>
-                                      <GiBroadsword size={12} color="currentColor" />
-                                    </HStack>
+                                {/* Right: Duration info with labels */}
+                                <HStack spacing={4} fontSize="sm">
+                                  <HStack spacing={1}>
+                                    <TimeIcon boxSize={3} color="brand.bronze" />
+                                    <Text color="brand.steel">Session:</Text>
+                                    <Text fontWeight="medium" color="brand.steel">{timingData.sessionDuration}</Text>
                                   </HStack>
-                                </Box>
-                              </>
-                            );
-                          })()}
-                        </HStack>
+                                  <HStack spacing={1}>
+                                    <GiBroadsword size={12} color="currentColor" />
+                                    <Text color="brand.steel">Played:</Text>
+                                    <Text fontWeight="medium" color="brand.steel">{timingData.timePlayed}</Text>
+                                  </HStack>
+                                </HStack>
+                              </HStack>
+                            </>
+                          );
+                        })()}
                       </Box>
                       
                       {/* Match Stats Row */}
