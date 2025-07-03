@@ -21,12 +21,17 @@ function App() {
   const [stats, setStats] = useState<PersonalStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMap, setSelectedMap] = useState('');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
   const layout = useLayoutConfig();
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Clear filtering state when switching players
+    setSearchTerm('');
+    setSelectedMap('');
+    setSortDirection('desc');
   }, [profileId]);
 
   const updateMatches = useCallback(async () => {
@@ -78,10 +83,13 @@ function App() {
     // Apply search filter
     if (searchTerm.trim()) {
       filtered = searchMatches(filtered, searchTerm);
-      // When searching, create flat groups (no date accordion)
+    }
+    
+    // When searching by text OR filtering by map, create flat groups (no date accordion)
+    if (searchTerm.trim() || selectedMap) {
       setMatchGroups(createFlatMatchGroup(filtered));
     } else {
-      // When not searching, group by session
+      // When not filtering at all, group by session
       setMatchGroups(groupMatchesBySession(filtered));
     }
     
@@ -120,6 +128,7 @@ function App() {
   };
 
   const handleSortChange = (direction: SortDirection) => {
+    setSortDirection(direction);
     if (searchTerm.trim()) {
       // When searching, sort the matches within the single search results group
       const sortedMatches = [...filteredMatches].sort((a, b) =>
@@ -175,6 +184,9 @@ function App() {
               onClearSearch={handleClearSearch}
               maps={maps}
               searchResultsCount={searchResultsCount}
+              searchValue={searchTerm}
+              selectedMap={selectedMap}
+              sortDirection={sortDirection}
             />
             {profileId && (
               <MatchList 

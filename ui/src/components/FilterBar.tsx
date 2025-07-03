@@ -10,6 +10,9 @@ interface FilterBarProps {
   onClearSearch?: () => void;
   maps: Map[];
   searchResultsCount?: number;
+  searchValue?: string;
+  selectedMap?: string;
+  sortDirection?: SortDirection;
 }
 
 function useDebouncedValue(value: string, delay: number) {
@@ -25,15 +28,30 @@ function useDebouncedValue(value: string, delay: number) {
   return debounced;
 }
 
-export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSearch, maps, searchResultsCount }: FilterBarProps) => {
+export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSearch, maps, searchResultsCount, searchValue: externalSearchValue = '', selectedMap: externalSelectedMap = '', sortDirection: externalSortDirection = 'desc' }: FilterBarProps) => {
   const layout = useLayoutConfig();
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(externalSearchValue);
+  const [selectedMap, setSelectedMap] = useState(externalSelectedMap);
+  const [sortDirection, setSortDirection] = useState(externalSortDirection);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const debouncedSearch = useDebouncedValue(searchValue, 300);
 
   useEffect(() => {
     onSearchChange(debouncedSearch);
   }, [debouncedSearch, onSearchChange]);
+
+  // Sync external values with internal state
+  useEffect(() => {
+    setSearchValue(externalSearchValue);
+  }, [externalSearchValue]);
+
+  useEffect(() => {
+    setSelectedMap(externalSelectedMap);
+  }, [externalSelectedMap]);
+
+  useEffect(() => {
+    setSortDirection(externalSortDirection);
+  }, [externalSortDirection]);
 
   const handleClear = () => {
     setSearchValue('');
@@ -120,8 +138,11 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
             )}
           </Box>
           <Select
-            defaultValue=""
-            onChange={(e) => onMapChange(e.target.value)}
+            value={selectedMap}
+            onChange={(e) => {
+              setSelectedMap(e.target.value);
+              onMapChange(e.target.value);
+            }}
             w={layout?.filterBar.selectWidth}
             variant="filled"
             fontSize={{ base: 'sm', md: 'sm' }}
@@ -136,8 +157,12 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
               ))}
           </Select>
           <Select
-            defaultValue="desc"
-            onChange={(e) => onSortChange(e.target.value as SortDirection)}
+            value={sortDirection}
+            onChange={(e) => {
+              const direction = e.target.value as SortDirection;
+              setSortDirection(direction);
+              onSortChange(direction);
+            }}
             w={layout?.filterBar.selectWidth}
             variant="filled"
             fontSize={{ base: 'sm', md: 'sm' }}
