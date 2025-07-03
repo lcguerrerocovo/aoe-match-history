@@ -1,11 +1,12 @@
 import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
 import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
+import { GiBroadsword } from 'react-icons/gi';
 import { PLAYER_COLORS } from './playerColors';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
-import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionStart, calculateSessionDuration } from '../utils/matchUtils';
+import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';
 import { assetManager } from '../utils/assetManager';
 import { useState } from 'react';
 
@@ -399,8 +400,6 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
-  const sessionDurationLabel = useBreakpointValue({ base: 'Session:', md: 'Session Duration:' });
-  const timePlayedLabel = useBreakpointValue({ base: 'Played:', md: 'Time Played:' });
 
   // Detect if we're in search mode (single group with "Search Results" in the name)
   const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
@@ -451,7 +450,6 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
         >
           {matchGroups.map((group) => {
             const { totalReal } = sumDurations(group.matches);
-            const sessionDuration = calculateSessionDuration(group.matches);
             const byDiplo = countByDiplomacy(group.matches, profileId);
             return (
               <AccordionItem key={group.date}>
@@ -460,9 +458,52 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     <VStack flex="1" align="stretch" spacing={2}>
                       {/* Date Header */}
                       <Box bg="brand.stoneLight" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
-                        <Text fontWeight="bold" fontSize="md" letterSpacing="wide" color="brand.black">
-                          {formatSessionStart(group.date)}
-                        </Text>
+                        <HStack justify="space-between" align="center" fontSize="sm">
+                          {(() => {
+                            const timingData = formatSessionTimingData(group.date, totalReal);
+                            return (
+                              <>
+                                {/* Left side: Date and Time Range */}
+                                <HStack spacing={{ base: 1, md: 1 }} flex="1" minW="0">
+                                  <HStack spacing={1} flexShrink={0} w={{ base: "110px", md: "110px" }}>
+                                    <CalendarIcon boxSize={3} color="brand.bronze" />
+                                    <Text fontWeight="bold" color="brand.black" isTruncated>{timingData.dateDisplay}</Text>
+                                  </HStack>
+                                  {timingData.timeRange && (
+                                    <Text fontWeight="medium" color="brand.black" w={{ base: "120px", md: "140px" }} isTruncated>{timingData.timeRange}</Text>
+                                  )}
+                                </HStack>
+
+                                {/* Right side: Duration and Time Played - Responsive */}
+                                <Box flexShrink={0}>
+                                  {/* Mobile: Vertical stack */}
+                                  <VStack spacing={0} display={{ base: "flex", md: "none" }} align="flex-end">
+                                    <HStack spacing={1}>
+                                      <Text fontWeight="medium" color="brand.steel" fontSize="xs">{timingData.sessionDuration}</Text>
+                                      <TimeIcon boxSize="10px" color="brand.bronze" />
+                                    </HStack>
+                                    <HStack spacing={1}>
+                                      <Text fontWeight="medium" color="brand.steel" fontSize="xs">{timingData.timePlayed}</Text>
+                                      <GiBroadsword size={10} color="currentColor" />
+                                    </HStack>
+                                  </VStack>
+                                  
+                                  {/* Desktop: Horizontal stack */}
+                                  <HStack spacing={4} display={{ base: "none", md: "flex" }} justify="flex-end">
+                                    <HStack spacing={1}>
+                                      <Text fontWeight="medium" color="brand.steel" w="55px" textAlign="right" fontSize="sm">{timingData.sessionDuration}</Text>
+                                      <TimeIcon boxSize={3} color="brand.bronze" />
+                                    </HStack>
+                                    <HStack spacing={1}>
+                                      <Text fontWeight="medium" color="brand.steel" w="55px" textAlign="right" fontSize="sm">{timingData.timePlayed}</Text>
+                                      <GiBroadsword size={12} color="currentColor" />
+                                    </HStack>
+                                  </HStack>
+                                </Box>
+                              </>
+                            );
+                          })()}
+                        </HStack>
                       </Box>
                       
                       {/* Match Stats Row */}
@@ -504,19 +545,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                         </HStack>
                       </HStack>
 
-                      {/* Time Stats Row */}
-                      <HStack justify="space-between" fontSize="sm" color="brand.steel" role="group">
-                        <HStack spacing={1}>
-                          <TimeIcon color="brand.bronze" />
-                          <Text>{sessionDurationLabel}</Text>
-                          <Text fontWeight="bold">{formatDuration(sessionDuration)}</Text>
-                        </HStack>
-                        <HStack spacing={1}>
-                          <TimeIcon color="brand.bronze" />
-                          <Text>{timePlayedLabel}</Text>
-                          <Text fontWeight="bold">{formatDuration(totalReal)}</Text>
-                        </HStack>
-                      </HStack>
+
                     </VStack>
                     <AccordionIcon />
                   </AccordionButton>
