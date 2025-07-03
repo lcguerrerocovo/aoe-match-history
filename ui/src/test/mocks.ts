@@ -1,4 +1,4 @@
-import type { Map, Match } from '../types/match';
+import type { Map, MatchType, Match } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 
 // Mock data for FilterBar
@@ -8,12 +8,21 @@ export const mockMaps: Map[] = [
   { name: 'Arena', count: 3 }
 ];
 
+export const mockMatchTypes: MatchType[] = [
+  { name: 'RM 1v1', count: 12 },
+  { name: 'RM Team', count: 8 },
+  { name: 'EW 1v1', count: 4 },
+  { name: 'EW Team', count: 2 }
+];
+
 export const mockFilterBarProps = {
   onMapChange: () => {},
+  onMatchTypeChange: () => {},
   onSortChange: () => {},
   onSearchChange: () => {},
   onClearSearch: () => {},
   maps: mockMaps,
+  matchTypes: mockMatchTypes,
   searchResultsCount: undefined
 };
 

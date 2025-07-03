@@ -1,17 +1,21 @@
-import { HStack, Input, Select, Card, Box, Text } from '@chakra-ui/react';
-import type { Map, SortDirection } from '../types/match';
+import { HStack, Input, Select, Card, Box, Text, IconButton } from '@chakra-ui/react';
+import { FaSortAmountDown, FaSortAmountUpAlt } from 'react-icons/fa';
+import type { Map, MatchType, SortDirection } from '../types/match';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { useState, useEffect, useRef } from 'react';
 
 interface FilterBarProps {
   onMapChange: (map: string) => void;
+  onMatchTypeChange: (matchType: string) => void;
   onSortChange: (direction: SortDirection) => void;
   onSearchChange: (search: string) => void;
   onClearSearch?: () => void;
   maps: Map[];
+  matchTypes: MatchType[];
   searchResultsCount?: number;
   searchValue?: string;
   selectedMap?: string;
+  selectedMatchType?: string;
   sortDirection?: SortDirection;
 }
 
@@ -28,10 +32,11 @@ function useDebouncedValue(value: string, delay: number) {
   return debounced;
 }
 
-export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSearch, maps, searchResultsCount, searchValue: externalSearchValue = '', selectedMap: externalSelectedMap = '', sortDirection: externalSortDirection = 'desc' }: FilterBarProps) => {
+export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSearchChange, onClearSearch, maps, matchTypes, searchResultsCount, searchValue: externalSearchValue = '', selectedMap: externalSelectedMap = '', selectedMatchType: externalSelectedMatchType = '', sortDirection: externalSortDirection = 'desc' }: FilterBarProps) => {
   const layout = useLayoutConfig();
   const [searchValue, setSearchValue] = useState(externalSearchValue);
   const [selectedMap, setSelectedMap] = useState(externalSelectedMap);
+  const [selectedMatchType, setSelectedMatchType] = useState(externalSelectedMatchType);
   const [sortDirection, setSortDirection] = useState(externalSortDirection);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const debouncedSearch = useDebouncedValue(searchValue, 300);
@@ -48,6 +53,10 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
   useEffect(() => {
     setSelectedMap(externalSelectedMap);
   }, [externalSelectedMap]);
+
+  useEffect(() => {
+    setSelectedMatchType(externalSelectedMatchType);
+  }, [externalSelectedMatchType]);
 
   useEffect(() => {
     setSortDirection(externalSortDirection);
@@ -157,19 +166,39 @@ export const FilterBar = ({ onMapChange, onSortChange, onSearchChange, onClearSe
               ))}
           </Select>
           <Select
-            value={sortDirection}
+            value={selectedMatchType}
             onChange={(e) => {
-              const direction = e.target.value as SortDirection;
-              setSortDirection(direction);
-              onSortChange(direction);
+              setSelectedMatchType(e.target.value);
+              onMatchTypeChange(e.target.value);
             }}
             w={layout?.filterBar.selectWidth}
             variant="filled"
             fontSize={{ base: 'sm', md: 'sm' }}
           >
-            <option key="sort-desc" value="desc">Recent</option>
-            <option key="sort-asc" value="asc">Oldest</option>
+            <option key="all-match-types" value="">All match types</option>
+            {matchTypes
+              .filter(({ name }) => name && name.trim().length > 0)
+              .map(({ name, count }, index) => (
+                <option key={`${name}-${index}`} value={name}>
+                  {name} ({count || 0})
+                </option>
+              ))}
           </Select>
+          <IconButton
+            aria-label={`Sort ${sortDirection === 'desc' ? 'oldest first' : 'newest first'}`}
+            icon={sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
+            onClick={() => {
+              const newDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+              setSortDirection(newDirection);
+              onSortChange(newDirection);
+            }}
+            variant="filled"
+            size="md"
+            bg="brand.inputBg"
+            color="brand.midnightBlue"
+            _hover={{ bg: 'brand.stone' }}
+            borderRadius="md"
+          />
         </HStack>
       </Card>
     </Box>

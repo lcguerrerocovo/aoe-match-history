@@ -44,3 +44,8 @@ export interface Map {
   name: string;
   count: number;
 }
+
+export interface MatchType {
+  name: string;
+  count: number;
+}
