@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
 import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { GiBroadsword } from 'react-icons/gi';
@@ -400,6 +400,7 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
+  const theme = useTheme();
 
   // Detect if we're in search mode (single group with "Search Results" in the name)
   const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
@@ -457,7 +458,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <AccordionButton>
                     <VStack flex="1" align="stretch" spacing={2}>
                       {/* Date Header */}
-                      <Box bg="brand.stoneLight" p={2} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic">
+                      <Box bg="brand.topbarBg" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic" boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)">
                         {(() => {
                           const timingData = formatSessionTimingData(group.date, totalReal);
                           return (
@@ -468,11 +469,11 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack spacing={2} justify="flex-start">
                                   <HStack spacing={1}>
                                     <CalendarIcon boxSize={3} color="brand.bronze" />
-                                    <Text fontWeight="bold" color="brand.black" fontSize="sm">{timingData.dateDisplay}</Text>
+                                    <Text fontWeight="bold" color="brand.midnightBlue" fontSize="sm">{timingData.dateDisplay}</Text>
                                   </HStack>
                                   <Text color="brand.steel" fontSize="xs">|</Text>
                                   {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.black" fontSize="sm">{timingData.timeRange}</Text>
+                                    <Text fontWeight="semibold" color="brand.midnightBlue" fontSize="sm">{timingData.timeRange}</Text>
                                   )}
                                 </HStack>
                                 
@@ -497,11 +498,11 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack spacing={3}>
                                   <HStack spacing={1}>
                                     <CalendarIcon boxSize={3} color="brand.bronze" />
-                                    <Text fontWeight="bold" color="brand.black" fontSize="md">{timingData.dateDisplay}</Text>
+                                    <Text fontWeight="bold" color="brand.midnightBlue" fontSize="md">{timingData.dateDisplay}</Text>
                                   </HStack>
                                   <Text color="brand.steel" fontSize="sm">|</Text>
                                   {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.black" fontSize="md">{timingData.timeRange}</Text>
+                                    <Text fontWeight="semibold" color="brand.midnightBlue" fontSize="md">{timingData.timeRange}</Text>
                                   )}
                                 </HStack>
 
@@ -565,7 +566,31 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
 
 
                     </VStack>
-                    <AccordionIcon />
+                    <Box
+                      w="22px"
+                      h="22px"
+                      bg={`linear-gradient(135deg, ${theme.colors.brand.bronze} 0%, ${theme.colors.brand.bronzeMedium} 30%, ${theme.colors.brand.bronzeDark} 70%, ${theme.colors.brand.bronzeDarkest} 100%)`}
+                      borderRadius="full"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      color="brand.brightGold"
+                      fontSize="xl"
+                      fontWeight="bold"
+                      border="1px solid"
+                      borderColor="brand.bronze"
+                      boxShadow="inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)"
+                      transition="all 0.2s ease"
+                      position="relative"
+                      right="-8px"
+                      _hover={{ 
+                        bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
+                        color: "brand.brightGold",
+                        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                      }}
+                    >
+                      {openDates.includes(group.date) ? "−" : "+"}
+                    </Box>
                   </AccordionButton>
                 </h2>
                 <AccordionPanel pb={4}>

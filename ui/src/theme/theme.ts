@@ -20,6 +20,9 @@ const lightColors = {
     midnightBlue: '#19214E', // Deep noble blue
     gold: '#D4AF37',         // Lustrous medieval gold
     bronze: '#B37A3E',       // Authentic bronze accent
+    bronzeMedium: '#8B5A2B',    // Medium bronze for gradients
+    bronzeDark: '#6B4423',      // Dark bronze for gradients
+    bronzeDarkest: '#5A3A20',   // Darkest bronze for gradients
     black: '#1C1C1C',        // Rich charcoal for high legibility
     parchment: '#F8F3E6',    // Elegant parchment backdrop
     steel: '#5A6478',        // Cool steel grey for outlines
@@ -92,6 +95,9 @@ const darkColors = {
     midnightBlue: '#F7FAFC',      // Light text on dark bg
     gold: '#FFD700',              // Brighter gold for dark bg
     bronze: '#CD7F32',            // Keep bronze vibrant
+    bronzeMedium: '#8B5A2B',      // Medium bronze for gradients
+    bronzeDark: '#6B4423',        // Dark bronze for gradients
+    bronzeDarkest: '#5A3A20',     // Darkest bronze for gradients
     black: '#F7FAFC',             // Light text
     parchment: '#1A1A1A',         // Dark background
     steel: '#CBD5E0',             // Lighter steel for dark bg
@@ -360,8 +366,10 @@ export function createTheme(isDark: boolean) {
       }),
       matchesCountBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'brand.lightSteel',
-          color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
+          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
+          color: isDark ? 'brand.midnightBlue' : 'white',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          borderWidth: '1px',
           borderRadius: 'lg',
           px: { base: 1, md: 3 },
           minWidth: '80px',
@@ -371,7 +379,7 @@ export function createTheme(isDark: boolean) {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 0.5,
-          boxShadow: 'sm',
+          boxShadow: 'md',
           transition: 'all 0.3s ease',
         },
         body: {
