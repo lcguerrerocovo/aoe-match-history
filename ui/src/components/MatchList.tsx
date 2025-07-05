@@ -593,7 +593,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     <Box
                       w="22px"
                       h="22px"
-                      bg={`linear-gradient(135deg, ${theme.colors.brand.bronze} 0%, ${theme.colors.brand.bronzeMedium} 30%, ${theme.colors.brand.bronzeDark} 70%, ${theme.colors.brand.bronzeDarkest} 100%)`}
+                      bg={`linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`}
                       borderRadius="full"
                       display="flex"
                       alignItems="center"

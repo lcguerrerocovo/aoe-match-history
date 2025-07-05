@@ -19,6 +19,7 @@ const lightColors = {
   brand: {
     midnightBlue: '#19214E', // Deep noble blue
     gold: '#D4AF37',         // Lustrous medieval gold
+    bronzeLight: '#C8A26B',   // Lighter bronze accent
     bronze: '#B37A3E',       // Authentic bronze accent
     bronzeMedium: '#8B5A2B',    // Medium bronze for gradients
     bronzeDark: '#6B4423',      // Dark bronze for gradients
@@ -97,6 +98,7 @@ const darkColors = {
     // Core background/surface colors
     midnightBlue: '#F7FAFC',      // Light text on dark bg
     gold: '#FFD700',              // Brighter gold for dark bg
+    bronzeLight: '#CFA46B',      // Lighter bronze accent (dark mode)
     bronze: '#CD7F32',            // Keep bronze vibrant
     bronzeMedium: '#8B5A2B',      // Medium bronze for gradients
     bronzeDark: '#6B4423',        // Dark bronze for gradients
@@ -333,9 +335,10 @@ export function createTheme(isDark: boolean) {
       loser: defineCardPartsStyle({
         container: {
           bg: isDark ? 'brand.stoneLight' : 'brand.stoneLight',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
           borderWidth: '1px',
           borderRadius: 'md',
+          boxShadow: isDark ? '0 0 4px rgba(0,0,0,0.4)' : '0 0 6px rgba(0,0,0,0.06)',
           p: 1,
           transition: 'all 0.3s ease',
         }

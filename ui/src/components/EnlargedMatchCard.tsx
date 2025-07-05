@@ -62,7 +62,16 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   const isReplayLoading = replayAvailable === null;
 
   return (
-    <HStack spacing={{ base: 2, md: 3 }} align="start" position="relative" w="full">
+    <HStack
+      spacing={{ base: 2, md: 3 }}
+      align="start"
+      position="relative"
+      w="full"
+      borderWidth="1px"
+      borderColor="brand.lightSteel"
+      borderRadius="md"
+      p={2}
+    >
       {/* Avatar with name below */}
       <VStack spacing={1} align="center" minW="60px">
         <Box position="relative">
@@ -97,7 +106,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
                     ? 'brand.steel'
                     : isReplayDisabled 
                       ? 'brand.steel'
-                      : `linear-gradient(135deg, ${theme.colors.brand.bronze} 0%, ${theme.colors.brand.bronzeMedium} 30%, ${theme.colors.brand.bronzeDark} 70%, ${theme.colors.brand.bronzeDarkest} 100%)`
+                      : `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
                 }
                 borderRadius="full"
                 display="flex"
@@ -182,7 +191,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               {player.color_id || '?'}
             </Text>
           </Box>
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.steel" fontWeight="medium">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" fontWeight="medium">
             Player {player.color_id || '?'}
           </Text>
         </HStack>
@@ -195,8 +204,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
             borderRadius="sm"
             overflow="hidden"
             bg="brand.stoneLight"
-            border="1px solid"
-            borderColor="brand.steel"
+            borderWidth={0}
           >
             <img
               src={assetManager.getCivIcon(String(player.civ || 'unknown'))}
@@ -230,7 +238,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
             </Box>
           </Box>
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.steel" noOfLines={1}>
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" noOfLines={1}>
             {player.civ}
           </Text>
         </HStack>
@@ -370,7 +378,7 @@ function MatchDetails({ match }: { match: any }) {
 export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
 
   return (
-    <Card variant="match" w="100%" p={6} data-testid="enlarged-match-card">
+    <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.sessionCardBorder" borderWidth="1px" data-testid="enlarged-match-card">
       <VStack spacing={6} align="stretch">
         {/* Match Details */}
         <MatchDetails match={match} />
