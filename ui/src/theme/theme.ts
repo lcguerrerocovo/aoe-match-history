@@ -89,6 +89,8 @@ const lightColors = {
     // Session group card colors
     sessionCardBg: '#f4f4f6',
     sessionCardBorder: '#e0e0e6',
+    // Parchment surface with subtle gradient
+    parchmentSurface: 'radial-gradient(circle at 50% 45%, rgba(255,255,255,0.6) 0%, rgba(0,0,0,0.08) 100%), #F8F3E6',
   },
 };
 
@@ -167,6 +169,8 @@ const darkColors = {
     // Session group card colors (dark mode)
     sessionCardBg: '#2D3748',
     sessionCardBorder: '#4A5568',
+    // Parchment surface equivalent for dark mode (subtle vignette)
+    parchmentSurface: 'radial-gradient(circle at 50% 45%, rgba(45,55,72,0.4) 0%, rgba(0,0,0,0.2) 100%), #1A1A1A',
   },
 };
 

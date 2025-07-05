@@ -184,7 +184,7 @@ function App() {
           py={{ base: 4, lg: 6 }} 
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
-          bg={{ base: 'transparent', md: 'brand.parchment' }}
+          bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ md: 'xl' }}
           boxShadow={{ md: 'xl' }}
           borderWidth={{ base: '3px', md: '4px' }}
