@@ -74,6 +74,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
             color="brand.parchment"
             border="2px solid"
             borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
+            data-testid="player-avatar"
           />
           <Tooltip 
             label={
@@ -116,6 +117,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
                 opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
                 cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
                 pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+                data-testid="download-button"
                 _hover={
                   isReplayLoading || isReplayDisabled 
                     ? {}
@@ -148,6 +150,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
           textOverflow="ellipsis"
           whiteSpace="nowrap"
           title={player.name}
+          data-testid="player-name"
         >
           {player.name}
         </Link>
@@ -168,6 +171,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
             alignItems="center"
             justifyContent="center"
             boxShadow="sm"
+            data-testid="color-indicator"
           >
             <Text
               fontSize={{ base: "3xs", md: "2xs" }}
@@ -233,7 +237,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
         
         {/* Rating and change */}
         {player.rating && (
-          <Text fontSize={{ base: "xs", md: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold">
+          <Text fontSize={{ base: "xs", md: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
             {player.rating}
             {player.rating_change && (
               <Text as="span" color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
@@ -294,6 +298,7 @@ function MatchDetails({ match }: { match: any }) {
       borderRadius="md"
       border="1px solid"
       borderColor="brand.steel"
+      data-testid="match-details"
     >
       <VStack spacing={3} align="stretch">
         {/* Title Row */}
@@ -313,6 +318,7 @@ function MatchDetails({ match }: { match: any }) {
           justify="space-between" 
           spacing={{ base: 2, md: 6 }} 
           wrap={{ base: "wrap", md: "nowrap" }}
+          data-testid="details-row"
         >
           {/* Date & Time */}
           <VStack align="start" spacing={1} flex={{ base: "1", md: "auto" }} minW={{ base: "100px", md: "auto" }}>
@@ -323,7 +329,7 @@ function MatchDetails({ match }: { match: any }) {
                 <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDateTime(match.start_time)}
             </Text>
           </VStack>
@@ -337,7 +343,7 @@ function MatchDetails({ match }: { match: any }) {
                 <Box as="span" display={{ base: "none", md: "inline" }}>Game Duration</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(durationSec)}
             </Text>
           </VStack>
@@ -351,7 +357,7 @@ function MatchDetails({ match }: { match: any }) {
                 <Box as="span" display={{ base: "none", md: "inline" }}>Real Time</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(realTimeSec)}
             </Text>
           </VStack>
@@ -364,7 +370,7 @@ function MatchDetails({ match }: { match: any }) {
 export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
 
   return (
-    <Card variant="match" w="100%" p={6}>
+    <Card variant="match" w="100%" p={6} data-testid="enlarged-match-card">
       <VStack spacing={6} align="stretch">
         {/* Match Details */}
         <MatchDetails match={match} />
@@ -375,6 +381,7 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
           gap={8}
           align="stretch"
           justify="space-between"
+          data-testid="match-card-content"
         >
           {/* Left: Map */}
           <Box flex="0 0 auto" alignSelf="center">
@@ -394,9 +401,10 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                       variant={isWinner ? 'winner' : 'loser'}
                       p={4}
                       position="relative"
+                      data-testid="team-card"
                     >
                       {isWinner && (
-                        <Box position="absolute" top="-16px" right="-12px" zIndex={1} fontSize="3xl">
+                        <Box position="absolute" top="-16px" right="-12px" zIndex={1} fontSize="3xl" data-testid="trophy-box">
                           🏆
                         </Box>
                       )}
