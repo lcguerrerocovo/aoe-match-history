@@ -99,3 +99,17 @@ export async function searchPlayers(query: string): Promise<PlayerSearchResult[]
     throw error;
   }
 }
+
+export async function checkReplayAvailability(gameId: string, profileId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/check-replay/${gameId}/${profileId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.available;
+  } catch (error) {
+    console.error('Failed to check replay availability:', error);
+    return true; // Default to available on error
+  }
+}

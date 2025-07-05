@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Link, Divider, Tooltip, Card, Avatar, Flex, Icon, useTheme, Wrap, WrapItem } from '@chakra-ui/react';
 import { TimeIcon, CalendarIcon, DownloadIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
@@ -5,25 +6,28 @@ import { formatDateTime } from '../utils/matchUtils';
 import { formatDuration, parseDuration } from '../utils/timeUtils';
 import { assetManager } from '../utils/assetManager';
 import { PLAYER_COLORS } from './playerColors';
-import { useState, useEffect } from 'react';
-import { getSteamAvatar, extractSteamId } from '../services/matchService';
+import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
 
 interface EnlargedMatchCardProps {
   match: any;
 }
 
-function PlayerAvatar({ player }: { player: any }) {
+interface PlayerAvatarProps {
+  player: any;
+  matchId: string;
+}
+
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   const theme = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
-  
+  const [replayAvailable, setReplayAvailable] = useState<boolean | null>(null); // null = loading, true/false = result
+
   useEffect(() => {
     const loadAvatar = async () => {
       try {
         const steamId = extractSteamId(player.original_name || player.name);
-        console.log('Extracting Steam ID for:', player.original_name || player.name, 'Result:', steamId); // Debug log
         if (steamId) {
           const avatar = await getSteamAvatar(steamId);
-          console.log('Got avatar for', steamId, ':', avatar); // Debug log
           setAvatarUrl(avatar);
         }
       } catch (error) {
@@ -34,74 +38,101 @@ function PlayerAvatar({ player }: { player: any }) {
     loadAvatar();
   }, [player.original_name, player.name]);
 
-  const replayUrl = `https://aoe.ms/replay/?gameId=${player.match_id}&profileId=${player.user_id}`;
-  const isReplayDisabled = player.replay_available === false;
+  useEffect(() => {
+    const checkReplay = async () => {
+      try {
+        // Add a small stagger delay based on player index to avoid rate limiting
+        // This spreads out the requests over time instead of all at once
+        const delay = (player.color_id || 0) * 200; // 200ms between each request
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        const available = await checkReplayAvailability(matchId, player.user_id.toString());
+        setReplayAvailable(available);
+      } catch (error) {
+        console.error('Failed to check replay availability:', error);
+        setReplayAvailable(true); // Default to available on error
+      }
+    };
+    
+    checkReplay();
+  }, [matchId, player.user_id, player.color_id]);
+
+  const replayUrl = `https://aoe.ms/replay/?gameId=${matchId}&profileId=${player.user_id}`;
+  const isReplayDisabled = replayAvailable === false;
+  const isReplayLoading = replayAvailable === null;
 
   return (
-    <VStack spacing={2} align="center" position="relative">
-      <Box position="relative">
-        <Avatar
-          src={avatarUrl}
-          name={player.name}
-          size="lg"
-          bg="brand.steel"
-          color="brand.parchment"
-          border="2px solid"
-          borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
-        />
-        <Tooltip 
-          label={
-            isReplayDisabled
-              ? 'Replay file not available'
-              : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
-          }
-          fontSize="sm"
-        >
-          <Box position="absolute" top="-2" right="-2">
-            <Link
-              href={replayUrl}
-              isExternal
-              w="22px"
-              h="22px"
-              bg={
-                isReplayDisabled 
-                  ? 'brand.steel'
-                  : `linear-gradient(135deg, ${theme.colors.brand.bronze} 0%, ${theme.colors.brand.bronzeMedium} 30%, ${theme.colors.brand.bronzeDark} 70%, ${theme.colors.brand.bronzeDarkest} 100%)`
-              }
-              borderRadius="full"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              color={isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
-              fontSize="xs"
-              fontWeight="bold"
-              border="1px solid"
-              borderColor={isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
-              boxShadow={
-                isReplayDisabled 
-                  ? 'none'
-                  : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
-              }
-              transition="all 0.2s ease"
-              opacity={isReplayDisabled ? 0.5 : 1}
-              cursor={isReplayDisabled ? 'not-allowed' : 'pointer'}
-              pointerEvents={isReplayDisabled ? 'none' : 'auto'}
-              _hover={
-                isReplayDisabled 
-                  ? {}
-                  : { 
-                      bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
-                      color: "brand.brightGold",
-                      boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
-                    }
-              }
-            >
-              <Icon as={DownloadIcon} boxSize={3} />
-            </Link>
-          </Box>
-        </Tooltip>
-      </Box>
-      <VStack spacing={1} align="center">
+    <HStack spacing={3} align="start" position="relative">
+      {/* Avatar with name below */}
+      <VStack spacing={2} align="center">
+        <Box position="relative">
+          <Avatar
+            src={avatarUrl}
+            name={player.name}
+            size="lg"
+            bg="brand.steel"
+            color="brand.parchment"
+            border="2px solid"
+            borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
+          />
+          <Tooltip 
+            label={
+              isReplayLoading
+                ? 'Checking replay availability...'
+                : isReplayDisabled
+                  ? 'Replay file not available'
+                  : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
+            }
+            fontSize="sm"
+          >
+            <Box position="absolute" top="-2" right="-2">
+              <Link
+                href={replayUrl}
+                isExternal
+                w="22px"
+                h="22px"
+                bg={
+                  isReplayLoading
+                    ? 'brand.steel'
+                    : isReplayDisabled 
+                      ? 'brand.steel'
+                      : `linear-gradient(135deg, ${theme.colors.brand.bronze} 0%, ${theme.colors.brand.bronzeMedium} 30%, ${theme.colors.brand.bronzeDark} 70%, ${theme.colors.brand.bronzeDarkest} 100%)`
+                }
+                borderRadius="full"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
+                fontSize="xs"
+                fontWeight="bold"
+                border="1px solid"
+                borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
+                boxShadow={
+                  isReplayLoading || isReplayDisabled 
+                    ? 'none'
+                    : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
+                }
+                transition="all 0.2s ease"
+                opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
+                cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
+                pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+                _hover={
+                  isReplayLoading || isReplayDisabled 
+                    ? {}
+                    : { 
+                        bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
+                        color: "brand.brightGold",
+                        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                      }
+                }
+              >
+                <Icon as={DownloadIcon} boxSize={3} />
+              </Link>
+            </Box>
+          </Tooltip>
+        </Box>
+        
+        {/* Player name below avatar */}
         <Link
           as={RouterLink}
           to={`/profile_id/${player.user_id}`}
@@ -115,22 +146,26 @@ function PlayerAvatar({ player }: { player: any }) {
         >
           {player.name}
         </Link>
+      </VStack>
+
+      {/* Player details to the right */}
+      <VStack spacing={2} align="start" flex="1">
         {/* Player Color Indicator with Index */}
         <HStack spacing={2} align="center">
           <Box
-            w="32px"
-            h="20px"
+            w="24px"
+            h="16px"
             bg={PLAYER_COLORS[player.color_id] || 'brand.steel'}
-            borderRadius="md"
-            border="2px solid"
+            borderRadius="sm"
+            border="1px solid"
             borderColor="brand.steel"
             display="flex"
             alignItems="center"
             justifyContent="center"
-            boxShadow="md"
+            boxShadow="sm"
           >
             <Text
-              fontSize="xs"
+              fontSize="2xs"
               fontWeight="bold"
               color="brand.parchment"
               textShadow="1px 1px 2px rgba(0,0,0,0.8)"
@@ -142,11 +177,12 @@ function PlayerAvatar({ player }: { player: any }) {
             Player {player.color_id || '?'}
           </Text>
         </HStack>
+        
         {/* Civ Icon and Name */}
         <HStack spacing={2} align="center">
           <Box
-            w="28px"
-            h="28px"
+            w="24px"
+            h="24px"
             borderRadius="sm"
             overflow="hidden"
             bg="brand.stoneLight"
@@ -185,10 +221,12 @@ function PlayerAvatar({ player }: { player: any }) {
               {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
             </Box>
           </Box>
-          <Text fontSize="xs" color="brand.steel" textAlign="center">
+          <Text fontSize="xs" color="brand.steel">
             {player.civ}
           </Text>
         </HStack>
+        
+        {/* Rating and change */}
         {player.rating && (
           <Text fontSize="xs" color="brand.steel" fontFamily="mono">
             {player.rating}
@@ -200,7 +238,7 @@ function PlayerAvatar({ player }: { player: any }) {
           </Text>
         )}
       </VStack>
-    </VStack>
+    </HStack>
   );
 }
 
@@ -362,7 +400,7 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                         <Wrap spacing={4} justify="center">
                           {team.map((player: any, playerIndex: number) => (
                             <WrapItem key={playerIndex}>
-                              <PlayerAvatar player={player} />
+                              <PlayerAvatar player={player} matchId={match.match_id} />
                             </WrapItem>
                           ))}
                         </Wrap>

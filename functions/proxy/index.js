@@ -51,19 +51,77 @@ async function loadMappings() {
 }
 
 async function checkReplayAvailability(gameId, profileId) {
-  try {
-    const replayUrl = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
-    const response = await fetch(replayUrl, {
-      method: 'GET',
-      headers: {
-        'Range': 'bytes=0-0'
+  const maxRetries = 2;
+  let retryCount = 0;
+  
+  while (retryCount <= maxRetries) {
+    try {
+      const replayUrl = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
+      
+      // Add delay between requests to avoid rate limiting
+      if (retryCount > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // 1s, 2s delays
       }
-    });
-    return response.ok;
-  } catch (error) {
-    log.debug({ error: error.message, gameId, profileId }, 'Failed to check replay availability');
-    return false;
+      
+      // Use a GET request with a very short timeout - we just want to see if we get a proper response
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 800); // 800ms timeout
+      
+      const response = await fetch(replayUrl, {
+        method: 'GET',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        retryCount++;
+        log.warn({ gameId, profileId, retryCount }, 'Rate limited, retrying...');
+        continue;
+      }
+      
+      // Only mark as unavailable if we get a clear 404/410/405 or "Match not found" response
+      if (response.status === 404 || response.status === 410 || response.status === 405) {
+        return false;
+      }
+      
+      // For successful responses, check if content contains "Match not found"
+      if (response.ok) {
+        try {
+          const responseText = await response.text();
+          if (responseText.includes('Match not found')) {
+            return false;
+          }
+          // If we got here, it's a real file download response
+          return true;
+        } catch (textError) {
+          // If we can't read the text, assume available
+          return true;
+        }
+      }
+      
+      // For any other response, assume available
+      return true;
+      
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        log.debug({ gameId, profileId }, 'Request timeout - assuming available');
+        return true;
+      }
+      
+      retryCount++;
+      log.debug({ error: error.message, gameId, profileId, retryCount }, 'Request failed, retrying...');
+      
+      if (retryCount > maxRetries) {
+        // If all retries failed, assume available (false negative is better than false positive)
+        log.debug({ gameId, profileId }, 'All retries failed - assuming available');
+        return true;
+      }
+    }
   }
+  
+  return true; // Default to available
 }
 
 async function getCivMap() {
@@ -251,7 +309,7 @@ async function processMatch(match, profiles) {
     const displayName = profile?.alias || originalName;
     
     // Check replay availability
-    const replayAvailable = await checkReplayAvailability(match.id, result.profile_id);
+    const replayAvailable = null; // Will be checked asynchronously by the client
     
     return {
       name: displayName, // Display name (alias)
@@ -838,6 +896,19 @@ const routes = [
     handler: handlePersonalStats
   },
   {
+    pattern: /^\/api\/check-replay\/(\d+)\/(\d+)$/,
+    handler: async (gameId, profileId) => {
+      const available = await checkReplayAvailability(gameId, profileId);
+      return {
+        data: { gameId, profileId, available },
+        headers: {
+          'Cache-Control': 'public, max-age=300', // 5 minutes for replay checks
+          'Vary': 'Accept-Encoding'
+        }
+      };
+    }
+  },
+  {
     pattern: /^\/api\/player-search(\?.*)?$/,
     handler: (req, res) => {
       const name = req.query.name;
@@ -866,7 +937,12 @@ exports.proxy = async (req, res) => {
       } else {
         // Handle other routes with path parameters
         const match = req.url.match(route.pattern);
-        response = await route.handler(match[1]);
+        if (req.url.startsWith('/api/check-replay')) {
+          // Check replay has two parameters: gameId and profileId
+          response = await route.handler(match[1], match[2]);
+        } else {
+          response = await route.handler(match[1]);
+        }
       }
       
       // Set headers from handler
