@@ -85,6 +85,9 @@ const lightColors = {
     sunBorder: 'rgba(212, 175, 55, 0.3)',
     sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent 70%)',
     sunRadialGradientBg: 'radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%)',
+    // Session group card colors
+    sessionCardBg: '#f4f4f6',
+    sessionCardBorder: '#e0e0e6',
   },
 };
 
@@ -159,6 +162,9 @@ const darkColors = {
     sunBorder: 'rgba(147, 197, 253, 0.3)',
     sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.1), transparent 70%)',
     sunRadialGradientBg: 'radial-gradient(circle, rgba(147, 197, 253, 0.05) 0%, transparent 70%)',
+    // Session group card colors (dark mode)
+    sessionCardBg: '#2D3748',
+    sessionCardBorder: '#4A5568',
   },
 };
 
@@ -285,7 +291,7 @@ export function createTheme(isDark: boolean) {
         container: {
           backgroundColor: isDark ? 'brand.lightSteel' : 'white',
           borderWidth: '1px',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
           borderRadius: 'lg',
           boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.04)',
           display: 'flex',
@@ -336,9 +342,9 @@ export function createTheme(isDark: boolean) {
       }),
       filter: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'white',
+          bg: 'brand.sessionCardBg',
           borderWidth: '1px',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.lightSteel',
+          borderColor: 'brand.sessionCardBorder',
           borderRadius: 'lg',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'all 0.3s ease',
@@ -511,8 +517,8 @@ export function createTheme(isDark: boolean) {
         variants: {
           filled: {
             field: {
-              bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+              bg: 'brand.inputBg',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
               borderRadius: 'md',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               _hover: { borderColor: 'brand.gold' },
@@ -528,8 +534,8 @@ export function createTheme(isDark: boolean) {
         variants: {
           filled: {
             field: {
-              bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+              bg: 'brand.inputBg',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
               borderRadius: 'md',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               _hover: { borderColor: 'brand.gold' },
@@ -563,15 +569,15 @@ export function createTheme(isDark: boolean) {
           filled: {
             container: {
               borderWidth: '1px',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.lightSteel',
+              borderColor: 'brand.sessionCardBorder',
               boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0, 51, 102, 0.1)',
               borderRadius: 'lg',
               overflow: 'hidden',
-              bg: isDark ? 'brand.lightSteel' : 'white',
+              bg: 'brand.sessionCardBg',
               transition: 'all 0.3s ease',
             },
             button: {
-              bg: isDark ? 'brand.lightSteel' : 'white',
+              bg: 'brand.sessionCardBg',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               _hover: {
                 bg: isDark ? 'brand.slateBlue' : 'gray.50',
@@ -580,7 +586,7 @@ export function createTheme(isDark: boolean) {
               borderBottomRadius: 'none',
             },
             panel: {
-              bg: isDark ? 'brand.lightSteel' : 'white',
+              bg: 'brand.sessionCardBg',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               padding: 4,
             },

@@ -10,7 +10,7 @@ describe('Chakra Theme Configuration', () => {
 
       // Verify the specific styles within the 'container' part
       expect(containerStyles.backgroundColor).toBe('white');
-      expect(containerStyles.borderColor).toBe('brand.stone');
+      expect(containerStyles.borderColor).toBe('brand.sessionCardBorder');
       expect(containerStyles.borderRadius).toBe('lg');
     });
 

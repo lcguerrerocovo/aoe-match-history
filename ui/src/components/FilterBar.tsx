@@ -103,11 +103,12 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
-              bg={searchValue ? 'brand.stone' : undefined}
-              borderColor={searchValue ? 'brand.steel' : undefined}
+              bg={searchValue ? 'brand.stone' : 'brand.inputBg'}
+              borderWidth={0}
               _focus={{
-                borderColor: 'brand.slateBlue',
-                bg: searchValue ? 'brand.stone' : undefined
+                borderColor: 'brand.gold',
+                borderWidth: '1px',
+                bg: searchValue ? 'brand.stone' : 'brand.inputBg'
               }}
             />
             {searchValue && (
@@ -161,6 +162,13 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               w={{ base: '90px', md: layout?.filterBar.selectWidth }}
               variant="filled"
               fontSize={{ base: 'xs', md: 'sm' }}
+              bg="brand.inputBg"
+              borderWidth={0}
+              _focus={{
+                borderColor: 'brand.gold',
+                borderWidth: '1px',
+                bg: 'brand.inputBg'
+              }}
             >
               <option key="all-maps" value="">All maps</option>
               {maps
@@ -180,6 +188,13 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               w={{ base: '85px', md: layout?.filterBar.selectWidth }}
               variant="filled"
               fontSize={{ base: 'xs', md: 'sm' }}
+              bg="brand.inputBg"
+              borderWidth={0}
+              _focus={{
+                borderColor: 'brand.gold',
+                borderWidth: '1px',
+                bg: 'brand.inputBg'
+              }}
             >
               <option key="all-match-types" value="">All types</option>
               {matchTypes

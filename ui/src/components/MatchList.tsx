@@ -470,7 +470,14 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             const { totalReal } = sumDurations(group.matches);
             const byDiplo = countByDiplomacy(group.matches, profileId);
             return (
-              <AccordionItem key={group.date}>
+              <AccordionItem
+                key={group.date}
+                bg="brand.sessionCardBg"
+                borderWidth="1px"
+                borderColor="brand.sessionCardBorder"
+                borderRadius="md"
+                mb={0.5}
+              >
                 <h2>
                   <AccordionButton>
                     <VStack flex="1" align="stretch" spacing={2}>
@@ -554,7 +561,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                                 {diplo}
                               </Text>
-                              <Text as="span" color="brand.stoneLight" mr={2} verticalAlign="middle">|</Text>
+                              <Text as="span" color="brand.steel" mr={2} verticalAlign="middle">|</Text>
                               <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
                               <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
@@ -562,7 +569,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               )}
                               {rec.eloChange !== 0 && (
                                 <>
-                                  <Text as="span" color="brand.stoneLight" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                  <Text as="span" color="brand.steel" ml={2} mr={2} verticalAlign="middle">|</Text>
                                   <Text
                                     as="span"
                                     display="inline-block"
