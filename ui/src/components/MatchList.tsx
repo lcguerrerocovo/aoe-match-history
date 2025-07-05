@@ -474,7 +474,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                 key={group.date}
                 bg="brand.sessionCardBg"
                 borderWidth="1px"
-                borderColor="brand.sessionCardBorder"
+                borderColor="brand.slateBorder"
                 borderRadius="md"
                 mb={0.5}
               >

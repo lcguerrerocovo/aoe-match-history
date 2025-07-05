@@ -89,8 +89,19 @@ const lightColors = {
     // Session group card colors
     sessionCardBg: '#f4f4f6',
     sessionCardBorder: '#e0e0e6',
-    // Parchment surface with subtle gradient
-    parchmentSurface: 'radial-gradient(circle at 50% 45%, rgba(255,255,255,0.6) 0%, rgba(0,0,0,0.08) 100%), #F8F3E6',
+    // Enhanced parchment texture: stronger vignette plus ultra-subtle grain for depth
+    parchmentSurface: `
+      radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%),
+      repeating-linear-gradient(135deg,  rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 6px),
+      repeating-linear-gradient(45deg,   rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 6px),
+      #F8F3E6
+    `,
+    // Alternate parchment without central glow – ideal for small list items
+    parchmentSurfaceItem: `
+      repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 5px),
+      repeating-linear-gradient(45deg,  rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, transparent 2px, transparent 6px),
+      #F8F3E6
+    `,
   },
 };
 
@@ -169,8 +180,19 @@ const darkColors = {
     // Session group card colors (dark mode)
     sessionCardBg: '#2D3748',
     sessionCardBorder: '#4A5568',
-    // Parchment surface equivalent for dark mode (subtle vignette)
-    parchmentSurface: 'radial-gradient(circle at 50% 45%, rgba(45,55,72,0.4) 0%, rgba(0,0,0,0.2) 100%), #1A1A1A',
+    // Textured parchment for dark mode: deeper vignette plus faint cross-hatch grain
+    parchmentSurface: `
+      radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 6px),
+      repeating-linear-gradient(45deg,  rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 6px),
+      #1A1A1A
+    `,
+    // Dark-mode list-item parchment without bright center
+    parchmentSurfaceItem: `
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px),
+      repeating-linear-gradient(45deg,  rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px),
+      #1A1A1A
+    `,
   },
 };
 
@@ -220,7 +242,7 @@ const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
     container: {
       width: '100%',
       height: 'auto',
-      padding: { base: '0.75rem', md: '1.5rem', lg: '2rem' },
+      padding: { base: '0.5rem', md: '1rem', lg: '1.25rem' },
       position: 'relative',
     },
     avatar: {
@@ -297,7 +319,7 @@ export function createTheme(isDark: boolean) {
         container: {
           backgroundColor: isDark ? 'brand.lightSteel' : 'white',
           borderWidth: '1px',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
           borderRadius: 'lg',
           boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.04)',
           display: 'flex',
@@ -351,7 +373,7 @@ export function createTheme(isDark: boolean) {
         container: {
           bg: 'brand.sessionCardBg',
           borderWidth: '1px',
-          borderColor: 'brand.sessionCardBorder',
+          borderColor: 'brand.slateBorder',
           borderRadius: 'lg',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'all 0.3s ease',
@@ -525,7 +547,7 @@ export function createTheme(isDark: boolean) {
           filled: {
             field: {
               bg: 'brand.inputBg',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
               borderRadius: 'md',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               _hover: { borderColor: 'brand.gold' },
@@ -542,7 +564,7 @@ export function createTheme(isDark: boolean) {
           filled: {
             field: {
               bg: 'brand.inputBg',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.sessionCardBorder',
+              borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
               borderRadius: 'md',
               color: isDark ? 'brand.midnightBlue' : 'brand.black',
               _hover: { borderColor: 'brand.gold' },
@@ -576,7 +598,7 @@ export function createTheme(isDark: boolean) {
           filled: {
             container: {
               borderWidth: '1px',
-              borderColor: 'brand.sessionCardBorder',
+              borderColor: 'brand.slateBorder',
               boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0, 51, 102, 0.1)',
               borderRadius: 'lg',
               overflow: 'hidden',

@@ -178,16 +178,17 @@ function App() {
       <TopBar />
       <Box py={{ md: 8 }}>
         <VStack 
-          spacing={4} 
+          spacing={1} 
           mx="auto" 
           px={{ base: 2, lg: 4 }} 
           py={{ base: 4, lg: 6 }} 
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-          borderRadius={{ md: 'xl' }}
+          borderRadius={{ base: '0 0 1rem 1rem', md: 'xl' }}
           boxShadow={{ md: 'xl' }}
           borderWidth={{ base: '3px', md: '4px' }}
+          borderTopWidth={{ base: 0, md: '4px' }}
           borderColor="brand.gold"
           data-testid="floating-box-container"
         >

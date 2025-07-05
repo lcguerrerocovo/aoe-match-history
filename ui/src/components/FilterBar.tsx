@@ -104,7 +104,8 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
               bg={searchValue ? 'brand.stone' : 'brand.inputBg'}
-              borderWidth={0}
+              borderWidth="1px"
+              borderColor="brand.slateBorder"
               _focus={{
                 borderColor: 'brand.gold',
                 borderWidth: '1px',
@@ -163,7 +164,8 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               variant="filled"
               fontSize={{ base: 'xs', md: 'sm' }}
               bg="brand.inputBg"
-              borderWidth={0}
+              borderWidth="1px"
+              borderColor="brand.slateBorder"
               _focus={{
                 borderColor: 'brand.gold',
                 borderWidth: '1px',
@@ -189,7 +191,8 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               variant="filled"
               fontSize={{ base: 'xs', md: 'sm' }}
               bg="brand.inputBg"
-              borderWidth={0}
+              borderWidth="1px"
+              borderColor="brand.slateBorder"
               _focus={{
                 borderColor: 'brand.gold',
                 borderWidth: '1px',
@@ -216,8 +219,10 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               variant="filled"
               size="md"
               bg="brand.inputBg"
+              borderWidth="1px"
+              borderColor="brand.slateBorder"
               color="brand.midnightBlue"
-              _hover={{ bg: 'brand.stone' }}
+              _hover={{ bg: 'brand.stone', borderColor: 'brand.gold' }}
               borderRadius="md"
             />
           </HStack>

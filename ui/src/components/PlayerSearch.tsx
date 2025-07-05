@@ -86,7 +86,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
         top={dropdownStyle.top}
         width={dropdownStyle.width}
         zIndex={dropdownStyle.zIndex}
-        bg="brand.cardBg"
+        bg="brand.parchmentSurface"
         borderRadius="lg"
         boxShadow="xl"
         border="1.5px solid"
@@ -220,18 +220,17 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
             .map((player) => (
               <Card
                 key={player.id + player.name}
-                variant="filter"
                 py={context === 'topbar' ? { base: 2.5, md: 2 } : { base: 3, md: 3 }}
                 px={size === 'sm' ? 1.5 : 2}
                 display="flex"
                 flexDirection="row"
                 alignItems="center"
                 justifyContent="space-between"
-                _hover={{ bg: 'brand.parchment', cursor: 'pointer' }}
-                borderRadius="md"
+                bg="transparent"
+                borderRadius="none"
                 boxShadow="none"
-                borderWidth={0}
-                border="none"
+                transition="background-color 0.2s ease"
+                _hover={{ bg: 'brand.parchment', cursor: 'pointer' }}
                 mb={1}
                 onMouseDown={() => handleSelect(player)}
               >

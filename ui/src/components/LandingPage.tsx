@@ -124,7 +124,7 @@ export function LandingPage() {
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
           <Box
             p={theme.spacing.md}
-            bg="brand.cardBg"
+            bg="brand.parchmentSurface"
             borderRadius="md"
             borderLeft="4px solid"
             borderColor="brand.gold"
@@ -132,7 +132,7 @@ export function LandingPage() {
           >
             <Text
               fontSize={{ base: 'sm', md: 'md' }}
-              color="brand.steel"
+              color="brand.midnightBlue"
               lineHeight="1.6"
             >
               Analyze your ranked ladder performance with detailed match breakdowns, 

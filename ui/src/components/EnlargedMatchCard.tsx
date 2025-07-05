@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, VStack, HStack, Text, Link, Divider, Tooltip, Card, Avatar, Flex, Icon, useTheme, Wrap, WrapItem } from '@chakra-ui/react';
+import { Box, VStack, HStack, Text, Link, Divider, Tooltip, Card, Avatar, Flex, Icon, useTheme, SimpleGrid, useBreakpointValue } from '@chakra-ui/react';
 import { TimeIcon, CalendarIcon, DownloadIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 import { formatDateTime } from '../utils/matchUtils';
@@ -67,13 +67,9 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
       align="start"
       position="relative"
       w="full"
-      borderWidth="1px"
-      borderColor="brand.lightSteel"
-      borderRadius="md"
-      p={2}
     >
       {/* Avatar with name below */}
-      <VStack spacing={1} align="center" minW="60px">
+      <VStack spacing={1} align="center" minW={{ base: '60px', md: '100px' }}>
         <Box position="relative">
           <Avatar
             src={avatarUrl}
@@ -110,12 +106,13 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
                 }
                 borderRadius="full"
                 display="flex"
+                boxSizing="border-box"
                 alignItems="center"
                 justifyContent="center"
                 color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
                 fontSize={{ base: "2xs", md: "xs" }}
                 fontWeight="bold"
-                border="1px solid"
+                borderWidth={{ base: 0, md: '1px' }}
                 borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
                 boxShadow={
                   isReplayLoading || isReplayDisabled 
@@ -166,7 +163,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
       </VStack>
 
       {/* Player details to the right */}
-      <VStack spacing={1} align="start" flex="1" minW={0}>
+      <VStack spacing={1} align="start" flex={{ base: '1 1 100%', md: '1' }} minW={0}>
         {/* Player Color Indicator with Index */}
         <HStack spacing={1} align="center">
           <Box
@@ -376,9 +373,10 @@ function MatchDetails({ match }: { match: any }) {
 }
 
 export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.sessionCardBorder" borderWidth="1px" data-testid="enlarged-match-card">
+    <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px" data-testid="enlarged-match-card">
       <VStack spacing={6} align="stretch">
         {/* Match Details */}
         <MatchDetails match={match} />
@@ -416,20 +414,20 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                           🏆
                         </Box>
                       )}
-                      <VStack spacing={3} align="stretch">
-                        <HStack justify="space-between" align="center">
-                          <Text fontWeight="bold" color="brand.midnightBlue" fontSize="lg">
-                            Team {teamIndex + 1}
-                          </Text>
-                        </HStack>
-                        <Wrap spacing={4} justify="center">
-                          {team.map((player: any, playerIndex: number) => (
-                            <WrapItem key={playerIndex}>
-                              <PlayerAvatar player={player} matchId={match.match_id} />
-                            </WrapItem>
-                          ))}
-                        </Wrap>
-                      </VStack>
+                      <SimpleGrid minChildWidth="140px" spacingX={2} spacingY={0}>
+                        {team.map((player: any, playerIndex: number) => (
+                          <Box
+                            key={playerIndex}
+                            w="full"
+                            bg={isMobile
+                              ? (Math.floor(playerIndex / 2) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')
+                              : ((playerIndex + teamIndex) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')}
+                            p={2}
+                          >
+                            <PlayerAvatar player={player} matchId={match.match_id} />
+                          </Box>
+                        ))}
+                      </SimpleGrid>
                     </Card>
                   );
                 })}
