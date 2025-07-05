@@ -62,14 +62,14 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   const isReplayLoading = replayAvailable === null;
 
   return (
-    <HStack spacing={3} align="start" position="relative">
+    <HStack spacing={{ base: 2, md: 3 }} align="start" position="relative" w="full">
       {/* Avatar with name below */}
-      <VStack spacing={2} align="center">
+      <VStack spacing={1} align="center" minW="60px">
         <Box position="relative">
           <Avatar
             src={avatarUrl}
             name={player.name}
-            size="lg"
+            size={{ base: "md", md: "lg" }}
             bg="brand.steel"
             color="brand.parchment"
             border="2px solid"
@@ -89,8 +89,8 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               <Link
                 href={replayUrl}
                 isExternal
-                w="22px"
-                h="22px"
+                w={{ base: "18px", md: "22px" }}
+                h={{ base: "18px", md: "22px" }}
                 bg={
                   isReplayLoading
                     ? 'brand.steel'
@@ -103,7 +103,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
                 alignItems="center"
                 justifyContent="center"
                 color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
-                fontSize="xs"
+                fontSize={{ base: "2xs", md: "xs" }}
                 fontWeight="bold"
                 border="1px solid"
                 borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
@@ -126,7 +126,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
                       }
                 }
               >
-                <Icon as={DownloadIcon} boxSize={3} />
+                <Icon as={DownloadIcon} boxSize={{ base: 2.5, md: 3 }} />
               </Link>
             </Box>
           </Tooltip>
@@ -136,25 +136,30 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
         <Link
           as={RouterLink}
           to={`/profile_id/${player.user_id}`}
-          fontSize="sm"
+          fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
-          color="brand.gold"
-          _hover={{ color: "brand.brightGold" }}
+          color="brand.midnightBlue"
+          _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
           textDecoration="none"
           textAlign="center"
           noOfLines={1}
+          maxW={{ base: "70px", md: "90px" }}
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+          title={player.name}
         >
           {player.name}
         </Link>
       </VStack>
 
       {/* Player details to the right */}
-      <VStack spacing={2} align="start" flex="1">
+      <VStack spacing={1} align="start" flex="1" minW={0}>
         {/* Player Color Indicator with Index */}
-        <HStack spacing={2} align="center">
+        <HStack spacing={1} align="center">
           <Box
-            w="24px"
-            h="16px"
+            w={{ base: "20px", md: "24px" }}
+            h={{ base: "14px", md: "16px" }}
             bg={PLAYER_COLORS[player.color_id] || 'brand.steel'}
             borderRadius="sm"
             border="1px solid"
@@ -165,7 +170,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
             boxShadow="sm"
           >
             <Text
-              fontSize="2xs"
+              fontSize={{ base: "3xs", md: "2xs" }}
               fontWeight="bold"
               color="brand.parchment"
               textShadow="1px 1px 2px rgba(0,0,0,0.8)"
@@ -173,16 +178,16 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               {player.color_id || '?'}
             </Text>
           </Box>
-          <Text fontSize="xs" color="brand.steel" fontWeight="medium">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.steel" fontWeight="medium">
             Player {player.color_id || '?'}
           </Text>
         </HStack>
         
         {/* Civ Icon and Name */}
-        <HStack spacing={2} align="center">
+        <HStack spacing={1} align="center">
           <Box
-            w="24px"
-            h="24px"
+            w={{ base: "20px", md: "24px" }}
+            h={{ base: "20px", md: "24px" }}
             borderRadius="sm"
             overflow="hidden"
             bg="brand.stoneLight"
@@ -213,7 +218,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               justifyContent="center"
               w="100%"
               h="100%"
-              fontSize="8px"
+              fontSize={{ base: "6px", md: "8px" }}
               fontWeight="bold"
               color="brand.bronze"
               bg="brand.stoneLight"
@@ -221,17 +226,17 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
               {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
             </Box>
           </Box>
-          <Text fontSize="xs" color="brand.steel">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.steel" noOfLines={1}>
             {player.civ}
           </Text>
         </HStack>
         
         {/* Rating and change */}
         {player.rating && (
-          <Text fontSize="xs" color="brand.steel" fontFamily="mono">
+          <Text fontSize={{ base: "xs", md: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold">
             {player.rating}
             {player.rating_change && (
-              <Text as="span" color={player.rating_change > 0 ? 'brand.brightGreen' : 'brand.brightRed'} ml={1}>
+              <Text as="span" color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
                 ({player.rating_change > 0 ? '+' : ''}{player.rating_change})
               </Text>
             )}
@@ -304,42 +309,49 @@ function MatchDetails({ match }: { match: any }) {
         <Divider borderColor="brand.steel" />
         
         {/* Details Grid */}
-        <HStack justify="space-between" spacing={6} wrap="wrap">
+        <HStack 
+          justify="space-between" 
+          spacing={{ base: 2, md: 6 }} 
+          wrap={{ base: "wrap", md: "nowrap" }}
+        >
           {/* Date & Time */}
-          <VStack align="start" spacing={1}>
+          <VStack align="start" spacing={1} flex={{ base: "1", md: "auto" }} minW={{ base: "100px", md: "auto" }}>
             <HStack spacing={2}>
               <CalendarIcon boxSize={4} color="brand.bronze" />
               <Text fontSize="sm" color="brand.steel" fontWeight="semibold">
-                Date & Time
+                <Box as="span" display={{ base: "inline", md: "none" }}>Date</Box>
+                <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize="md" fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
               {formatDateTime(match.start_time)}
             </Text>
           </VStack>
           
           {/* Game Duration */}
-          <VStack align="start" spacing={1}>
+          <VStack align="start" spacing={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
             <HStack spacing={2}>
               <TimeIcon boxSize={4} color="brand.zoolanderBlue" />
               <Text fontSize="sm" color="brand.steel" fontWeight="semibold">
-                Game Duration
+                <Box as="span" display={{ base: "inline", md: "none" }}>Game</Box>
+                <Box as="span" display={{ base: "none", md: "inline" }}>Game Duration</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize="md" fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
               {formatDuration(durationSec)}
             </Text>
           </VStack>
           
           {/* Real Time */}
-          <VStack align="start" spacing={1}>
+          <VStack align="start" spacing={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
             <HStack spacing={2}>
               <TimeIcon boxSize={4} color="brand.bronze" />
               <Text fontSize="sm" color="brand.steel" fontWeight="semibold">
-                Real Time
+                <Box as="span" display={{ base: "inline", md: "none" }}>Real</Box>
+                <Box as="span" display={{ base: "none", md: "inline" }}>Real Time</Box>
               </Text>
             </HStack>
-            <Text color="brand.midnightBlue" fontSize="md" fontWeight="medium">
+            <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium">
               {formatDuration(realTimeSec)}
             </Text>
           </VStack>
@@ -370,12 +382,9 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
           </Box>
           
           {/* Right: Teams and Players */}
-          <VStack flex="1" spacing={6} align="stretch">
+          <VStack flex="1" align="stretch" spacing={4}>
             {match.teams && match.teams.length > 0 && (
               <VStack spacing={4} align="stretch">
-                <Text fontSize="lg" fontWeight="semibold" color="brand.midnightBlue" textAlign="center">
-                  Teams & Players
-                </Text>
                 {match.teams.map((team: any[], teamIndex: number) => {
                   const isWinner = match.winning_teams?.includes(teamIndex + 1) || match.winning_team === teamIndex + 1;
                   

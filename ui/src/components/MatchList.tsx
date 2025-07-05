@@ -124,7 +124,16 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
-          <Text fontWeight="bold" color="brand.midnightBlue">#{match.match_id}</Text>
+          <Link
+            as={RouterLink}
+            to={`/match/${match.match_id}`}
+            fontWeight="bold"
+            color="brand.midnightBlue"
+            _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+            textDecoration="none"
+          >
+            #{match.match_id}
+          </Link>
           <Link 
             as={RouterLink}
             to={`/match/${match.match_id}`}
@@ -192,7 +201,6 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
 
 function TeamCard({ match }: { match: any }) {
   const layout = useLayoutConfig();
-  const theme = useTheme();
   const is1v1 = match.diplomacy?.type === '1v1';
 
   const getPlayerCardPadding = (numPlayers: number) => {
@@ -321,22 +329,23 @@ function TeamCard({ match }: { match: any }) {
                     {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
                   </Text>
                 </Box>
-                <RouterLink 
+                <Link
+                  as={RouterLink}
                   to={`/profile_id/${p.user_id.toString()}`}
-                  style={{
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    maxWidth: is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam,
-                    display: 'inline-block',
-                    cursor: 'pointer',
-                    color: theme.colors.brand.zoolanderBlue,
-                    textDecoration: 'none',
-                    fontSize: layout?.teamCard.playerNameFontSize
-                  }}
+                  color="brand.midnightBlue"
+                  fontWeight="semibold"
+                  _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+                  textDecoration="none"
+                  fontSize={layout?.teamCard.playerNameFontSize}
+                  textOverflow="ellipsis"
+                  overflow="hidden"
+                  whiteSpace="nowrap"
+                  maxWidth={is1v1 ? layout?.teamCard.playerNameMaxWidth1v1 : layout?.teamCard.playerNameMaxWidthTeam}
+                  display="inline-block"
+                  cursor="pointer"
                 >
                   {p.name}
-                </RouterLink>
+                </Link>
                 <PlayerRating player={p} />
               </Box>
             );
