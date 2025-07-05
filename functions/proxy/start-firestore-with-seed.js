@@ -10,8 +10,10 @@ async function waitForEmulator(port = 8081, maxAttempts = 30) {
       process.env.FIRESTORE_EMULATOR_HOST = `localhost:${port}`;
       const db = new Firestore();
       
-      // Try to perform a simple operation
-      await db.collection('test').limit(1).get();
+      // Try to perform a simple operation (skip if not using emulator)
+      if (process.env.FIRESTORE_EMULATOR_HOST) {
+        await db.collection('test').limit(1).get();
+      }
       console.log('✅ Firestore emulator is ready!');
       return true;
     } catch (error) {

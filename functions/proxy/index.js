@@ -13,6 +13,7 @@ const RelicPlayerService = require('./relicPlayerService');
 const SessionManager = require('./sessionManager');
 const pino = require('pino');
 const { Firestore } = require('@google-cloud/firestore');
+const { inflateSync } = require('zlib');
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
@@ -36,6 +37,264 @@ const log = logger.child({ module: 'Proxy' });
 let authClient = null;
 let playerService = null;
 let sessionManager = null;
+let rlMappings = null;
+let civMap = null;
+let mapMap = null;
+
+// Match processing utilities
+async function loadMappings() {
+  if (!rlMappings) {
+    const response = await fetch('https://aoe2.site/data/rl_api_mappings.json');
+    rlMappings = await response.json();
+  }
+  return rlMappings;
+}
+
+async function checkReplayAvailability(gameId, profileId) {
+  try {
+    const replayUrl = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
+    const response = await fetch(replayUrl, {
+      method: 'GET',
+      headers: {
+        'Range': 'bytes=0-0'
+      }
+    });
+    return response.ok;
+  } catch (error) {
+    log.debug({ error: error.message, gameId, profileId }, 'Failed to check replay availability');
+    return false;
+  }
+}
+
+async function getCivMap() {
+  if (!civMap) {
+    const mappings = await loadMappings();
+    if (!mappings?.civs?.aoe2) return {};
+    civMap = {};
+    for (const [civName, versions] of Object.entries(mappings.civs.aoe2)) {
+      if (typeof versions === 'object' && versions !== null) {
+        const versionNumbers = Object.keys(versions).map(Number);
+        const latestVersion = Math.max(...versionNumbers);
+        const civId = versions[latestVersion.toString()];
+        if (civId !== undefined) {
+          civMap[civId.toString()] = civName;
+        }
+      }
+    }
+  }
+  return civMap;
+}
+
+async function getMapMap() {
+  if (!mapMap) {
+    const mappings = await loadMappings();
+    if (!mappings?.maps?.aoe2) return {};
+    mapMap = {};
+    for (const [mapName, versions] of Object.entries(mappings.maps.aoe2)) {
+      if (typeof versions === 'object' && versions !== null) {
+        const versionNumbers = Object.keys(versions).map(Number);
+        const latestVersion = Math.max(...versionNumbers);
+        const mapId = versions[latestVersion.toString()];
+        if (mapId !== undefined) {
+          mapMap[mapId.toString()] = mapName;
+        }
+      }
+    }
+  }
+  return mapMap;
+}
+
+function getGameType(matchTypeId) {
+  const gameTypes = {
+    0: "Unranked",
+    2: "DM 1v1",
+    3: "DM Team",
+    4: "DM Team",
+    5: "DM Team",
+    6: "RM 1v1",
+    7: "RM Team",
+    8: "RM Team",
+    9: "RM Team",
+    10: "Battle Royale",
+    11: "Quick Match EW",
+    12: "Quick Match EW Team",
+    13: "Quick Match EW Team",
+    14: "Quick Match EW Team",
+    18: "Quick Match RM",
+    19: "Quick Match RM Team",
+    20: "Quick Match RM Team",
+    21: "Quick Match RM Team",
+    25: "Quick Match BR FFA",
+    26: "EW 1v1",
+    27: "EW Team",
+    28: "EW Team",
+    29: "EW Team"
+  };
+  return gameTypes[matchTypeId] || null;
+}
+
+function decodeOptions(encoded) {
+  try {
+    if (!encoded || typeof encoded !== 'string') return {};
+    
+    const blob = Buffer.from(encoded, 'base64');
+    const data = inflateSync(blob);
+    
+    let decodedText = data.toString();
+    if (decodedText.startsWith('"') && decodedText.endsWith('"')) {
+      decodedText = decodedText.slice(1, -1);
+    }
+    
+    const raw = Buffer.from(decodedText, 'base64');
+    const rawText = raw.toString();
+    const pairs = rawText.match(/(\d+):([0-9A-Za-z+/=]+)/g) || [];
+    
+    return pairs.reduce((acc, pair) => {
+      const [key, value] = pair.split(':');
+      acc[key] = value;
+      return acc;
+    }, {});
+  } catch (e) {
+    return {};
+  }
+}
+
+function decodeSlotInfo(str) {
+  try {
+    const decompressed = inflateSync(Buffer.from(str, 'base64')).toString();
+    const playersDataStr = decompressed.substr(decompressed.indexOf(',') + 1);
+    const playersData = JSON.parse(playersDataStr.replace(/[\u0000-\u0019]+/g, ""));
+    
+    return playersData.map(pd => {
+      if (pd.metaData?.length > 0) {
+        const decoded = Buffer.from(Buffer.from(pd.metaData, 'base64').toString(), 'base64').toString();
+        const cleaned = decoded.split('').map(ch => ch.charCodeAt(0) < 32 ? '-' : ch).join('');
+        const parts = cleaned.replace(/-+/g, '-').split('-');
+        
+        pd.metaData = {
+          civId: parts[2],
+          colorId: parts[4] === '4294967295' ? null : parseInt(parts[4]) + 1,
+          teamId: parts[6]
+        };
+      }
+      return pd;
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+function groupPlayersIntoTeams(players) {
+  const allSameTeam = players.length > 0 && players.every(p => p.number === players[0].number);
+  
+  const teams = players.reduce((acc, player) => {
+    const key = allSameTeam ? player.color_id : (player.number + 1);
+    const teamIndex = key;
+    if (teamIndex >= 0) {
+      if (!acc[teamIndex]) acc[teamIndex] = [];
+      acc[teamIndex].push(player);
+    }
+    return acc;
+  }, []);
+  
+  return teams.filter(team => team && team.length > 0)
+    .map(team => team.sort((a, b) => (a.color_id || 0) - (b.color_id || 0)));
+}
+
+function detectWinningTeams(teams) {
+  const winningTeams = teams
+    .map((team, index) => team.some(player => player.winner) ? index + 1 : null)
+    .filter(teamNumber => teamNumber !== null);
+  
+  return { 
+    winningTeam: winningTeams.length > 0 ? winningTeams[0] : undefined,
+    winningTeams 
+  };
+}
+
+async function processMatch(match, profiles) {
+  const civMap = await getCivMap();
+  const mapMap = await getMapMap();
+  
+  // Create profile and rating maps
+  const profileMap = new Map(profiles.map(p => [p.profile_id.toString(), p.alias]));
+  const ratingMap = new Map((match.matchhistorymember || []).map(m => [
+    m.profile_id, 
+    { oldRating: m.oldrating, newRating: m.newrating }
+  ]));
+  
+  // Create save game URL map
+  const saveGameMap = new Map((match.matchurls || []).map(url => [
+    url.profile_id,
+    {
+      url: url.url,
+      size: url.size || 0
+    }
+  ]));
+  
+  // Decode slot info
+  const slotInfo = decodeSlotInfo(match.slotinfo);
+  
+  // Process players with replay availability checking
+  const players = await Promise.all(match.matchhistoryreportresults.map(async (result) => {
+    const profileId = parseInt(result.profile_id);
+    const playerSlot = slotInfo?.find(p => p['profileInfo.id'] === profileId);
+    const teamId = playerSlot?.metaData?.teamId ? parseInt(playerSlot.metaData.teamId) : result.teamid + 1;
+    const civId = result.civilization_id;
+    const colorId = playerSlot?.metaData?.colorId ?? 0;
+    const ratingInfo = ratingMap.get(result.profile_id);
+    const saveGameInfo = saveGameMap.get(result.profile_id);
+    
+    // Find the original name with Steam ID from profiles
+    const profile = profiles.find(p => p.profile_id === result.profile_id);
+    const originalName = profile?.name || result.profile_id.toString(); // This contains "/steam/123456789"
+    const displayName = profile?.alias || originalName;
+    
+    // Check replay availability
+    const replayAvailable = await checkReplayAvailability(match.id, result.profile_id);
+    
+    return {
+      name: displayName, // Display name (alias)
+      original_name: originalName, // Original name with Steam ID
+      civ: civMap[civId.toString()] || civId,
+      number: teamId,
+      color_id: colorId,
+      user_id: result.profile_id,
+      winner: result.resulttype === 1,
+      rating: ratingInfo?.newRating ?? null,
+      rating_change: ratingInfo ? ratingInfo.newRating - ratingInfo.oldRating : null,
+      save_game_url: saveGameInfo?.url || null,
+      save_game_size: saveGameInfo?.size || null,
+      match_id: match.id,
+      replay_available: replayAvailable
+    };
+  }));
+  
+  // Group into teams and detect winners
+  const teams = groupPlayersIntoTeams(players);
+  const { winningTeam, winningTeams } = detectWinningTeams(teams);
+  
+  // Resolve map name
+  const options = decodeOptions(match.options);
+  const mapId = options['10'];
+  const mapName = mapId ? mapMap[mapId] : match.mapname;
+  
+  return {
+    match_id: match.id.toString(),
+    start_time: new Date(match.startgametime * 1000).toISOString(),
+    description: match.description === "AUTOMATCH" ? getGameType(match.matchtype_id) : match.description,
+    diplomacy: {
+      type: getGameType(match.matchtype_id) || 'Unknown',
+      team_size: match.maxplayers.toString(),
+    },
+    map: mapName,
+    duration: match.completiontime - match.startgametime,
+    teams: teams,
+    players: players,
+    winning_team: winningTeam,
+    winning_teams: winningTeams
+  };
+}
 
 async function ensureAuthenticated() {
     const sessionManager = new SessionManager();
@@ -162,7 +421,8 @@ async function handleSteamAvatar(steamId) {
   }
 }
 
-async function handleMatchHistory(profileId) {
+// Pure API call - just fetch and cache raw data
+async function handleRawMatchHistory(profileId) {
   const targetUrl = `https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory/?title=age2&profile_ids=["${profileId}"]`;
   try {
     const response = await fetch(targetUrl, {
@@ -176,10 +436,111 @@ async function handleMatchHistory(profileId) {
       throw new Error(`API responded with status ${response.status}`);
     }
     const data = await response.json();
+    
+    // Save raw individual matches to Firebase with profiles data
+    if (data.matchHistoryStats && data.matchHistoryStats.length > 0) {
+      const db = getFirestoreClient();
+      
+      // Sort matches by start time (most recent first)
+      const sortedMatches = [...data.matchHistoryStats].sort((a, b) => b.startgametime - a.startgametime);
+      
+      // Process matches in background with smart batching
+      setImmediate(async () => {
+        try {
+          log.debug({ profileId, totalMatches: sortedMatches.length }, 'Starting smart async match storage');
+          
+          // Process in smaller batches of 5 matches at a time
+          const BATCH_SIZE = 5;
+          const DELAY_BETWEEN_BATCHES = 100; // 100ms delay between batches
+          
+          for (let i = 0; i < sortedMatches.length; i += BATCH_SIZE) {
+            const batch = db.batch();
+            const currentBatch = sortedMatches.slice(i, i + BATCH_SIZE);
+            
+            currentBatch.forEach(match => {
+              if (match.id) {
+                try {
+                  const matchRef = db.collection('matches').doc(match.id.toString());
+                  const matchData = {
+                    raw: match,
+                    profiles: data.profiles,
+                    updated: new Date().toISOString()
+                  };
+                  
+                  batch.set(matchRef, matchData, { merge: true });
+                } catch (error) {
+                  log.error({ error: error.message, matchId: match.id }, 'Error adding match to batch');
+                }
+              }
+            });
+            
+            // Commit this batch
+            await batch.commit();
+            log.debug({ 
+              profileId, 
+              batchNumber: Math.floor(i / BATCH_SIZE) + 1, 
+              totalBatches: Math.ceil(sortedMatches.length / BATCH_SIZE),
+              matchesInBatch: currentBatch.length 
+            }, 'Batch committed successfully');
+            
+            // Small delay between batches to avoid overwhelming Firebase
+            if (i + BATCH_SIZE < sortedMatches.length) {
+              await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+            }
+          }
+          
+          log.info({ profileId, totalMatches: sortedMatches.length }, 'All matches stored successfully');
+        } catch (error) {
+          log.error({ 
+            error: error.message, 
+            stack: error.stack,
+            profileId 
+          }, 'Failed to save raw matches to Firebase (smart async)');
+        }
+      });
+      
+      log.debug('Smart storage queued for background processing');
+    }
+    
+    // Don't cache the full response - we store individual matches
+    
     return { 
       data,
       headers: {
-        'Cache-Control': 'public, max-age=60', // 1 minute for match history
+        'Cache-Control': 'public, max-age=60', // 1 minute for raw match history
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Transformation route - fetch raw data and process
+async function handleMatchHistory(profileId) {
+  try {
+    // Always fetch fresh raw data and store individual matches
+    log.info({ profileId }, 'Fetching raw match history');
+    const rawResult = await handleRawMatchHistory(profileId);
+    const data = rawResult.data;
+    
+    // Process matches from raw data
+    const processedMatches = await Promise.all(
+      data.matchHistoryStats.map(match => processMatch(match, data.profiles))
+    );
+    
+    // Get profile info
+    const profile = data.profiles.find(p => p.profile_id.toString() === profileId);
+    const processedData = {
+      id: profileId,
+      name: profile?.alias || profileId,
+      matches: processedMatches.sort((a, b) => b.start_time.localeCompare(a.start_time))
+    };
+    
+    return { 
+      data: processedData,
+      headers: {
+        'Cache-Control': 'public, max-age=300', // 5 minutes for processed data
         'Vary': 'Accept-Encoding'
       }
     };
@@ -206,12 +567,118 @@ async function handlePersonalStats(profileId) {
   };
 }
 
+// Raw match - just return cached raw data
+async function handleRawMatch(matchId) {
+  try {
+    const db = getFirestoreClient();
+    const matchRef = db.collection('matches').doc(matchId.toString());
+    const matchDoc = await matchRef.get();
+    
+    if (!matchDoc.exists) {
+      throw new Error('Match not found');
+    }
+    
+    const matchData = matchDoc.data();
+    
+    return { 
+      data: matchData.raw || matchData,
+      headers: {
+        'Cache-Control': 'public, max-age=86400', // 24 hours for raw match data
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Processed match - apply transformation to cached raw data
+async function handleMatch(matchId) {
+  try {
+    log.info({ matchId, docId: matchId.toString() }, 'Attempting to load match');
+    const db = getFirestoreClient();
+    const matchRef = db.collection('matches').doc(matchId.toString());
+    const matchDoc = await matchRef.get();
+    log.info({ matchId, exists: matchDoc.exists }, 'Match document check');
+    
+    let rawMatch, profiles;
+    
+    if (!matchDoc.exists) {
+      // Match not in storage, fetch from external API
+      log.info({ matchId }, 'Match not found in storage, fetching from external API');
+      
+      try {
+        const targetUrl = `https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory/?title=age2&matchHistoryId=${matchId}`;
+        log.info({ targetUrl }, 'Fetching from external API');
+        
+        const response = await fetch(targetUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'aoe2-site'
+          }
+        });
+        
+        log.info({ status: response.status, statusText: response.statusText }, 'External API response');
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log.error({ status: response.status, errorText }, 'External API error');
+          throw new Error(`Failed to fetch match from external API: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        log.info({ dataKeys: Object.keys(data), matchCount: data.matchHistoryStats?.length }, 'External API response data');
+        
+        const match = data.matchHistoryStats?.[0];
+        
+        if (!match) {
+          log.error({ data }, 'No match found in external API response');
+          throw new Error('Match not found in external API');
+        }
+        
+        rawMatch = match;
+        profiles = data.profiles || [];
+        
+        // Store the match for future use
+        await matchRef.set({
+          raw: rawMatch,
+          profiles: profiles,
+          updated: new Date().toISOString()
+        });
+        
+        log.info({ matchId }, 'Match fetched and stored from external API');
+      } catch (error) {
+        log.error({ error: error.message, stack: error.stack }, 'Error fetching match from external API');
+        throw error;
+      }
+    } else {
+      // Use stored data
+      const matchData = matchDoc.data();
+      rawMatch = matchData.raw || matchData;
+      profiles = matchData.profiles || [];
+    }
+    
+    const processedMatch = await processMatch(rawMatch, profiles);
+    
+    return { 
+      data: processedMatch,
+      headers: {
+        'Cache-Control': 'public, max-age=300', // 5 minutes for processed match
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
 // Initialize Firestore client
 let firestoreDb = null;
 
 function getFirestoreClient() {
   if (!firestoreDb) {
     firestoreDb = new Firestore();
+    log.info('Firestore client initialized with default credentials');
   }
   return firestoreDb;
 }
@@ -221,8 +688,6 @@ function cleanForSearch(text) {
   // Remove all non-alphanumeric characters, convert to lowercase (same as upload script)
   return text.replace(/[^\w]/g, '').toLowerCase();
 }
-
-
 
 async function searchFirestore(db, query, limit = 20) {
   const cleanQuery = cleanForSearch(query);
@@ -353,8 +818,20 @@ const routes = [
     handler: handleSteamAvatar
   },
   {
+    pattern: /^\/api\/raw-match-history\/(\d+)$/,
+    handler: handleRawMatchHistory
+  },
+  {
     pattern: /^\/api\/match-history\/(\d+)$/,
     handler: handleMatchHistory
+  },
+  {
+    pattern: /^\/api\/raw-match\/(\d+)$/,
+    handler: handleRawMatch
+  },
+  {
+    pattern: /^\/api\/match\/(\d+)$/,
+    handler: handleMatch
   },
   {
     pattern: /^\/api\/personal-stats\/(\d+)$/,

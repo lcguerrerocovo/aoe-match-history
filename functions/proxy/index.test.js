@@ -36,9 +36,12 @@ jest.mock('@google-cloud/firestore', () => ({
   Firestore: jest.fn(() => mockFirestore)
 }));
 jest.mock('pino', () => () => ({ child: () => ({ info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() }) }));
-jest.mock('cors', () => () => (req, res, next) => next());
+jest.mock('cors', () => () => (req, res, callback) => callback());
 const mockFetch = jest.fn();
 jest.mock('node-fetch', () => mockFetch);
+jest.mock('zlib', () => ({
+  inflateSync: jest.fn(() => Buffer.from('0,[]')) // Return "0,[]" so decodeSlotInfo gets "[]" after comma
+}));
 
 process.env.STEAM_API_KEY = 'test-steam-key';
 process.env.RELIC_AUTH_STEAM_USER = 'testuser';
@@ -154,7 +157,10 @@ describe('Proxy API', () => {
 
     it('should handle match history request', async () => {
       const req = {
-        url: '/api/match-history/123'
+        url: '/api/match-history/123',
+        method: 'GET',
+        headers: {},
+        query: {}
       };
       const res = {
         status: jest.fn().mockReturnThis(),
@@ -162,17 +168,64 @@ describe('Proxy API', () => {
         set: jest.fn()
       };
 
-      const mockMatchData = [{ matchId: '456', players: [] }];
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockMatchData)
-      });
+      const mockMappings = {
+        civs: { aoe2: { 'Britons': { '1': 1 } } },
+        maps: { aoe2: { 'Arabia': { '1': 1 } } }
+      };
+
+      const mockRawData = {
+        profiles: [
+          { profile_id: 123, name: '/steam/76561198012345678', alias: 'testplayer' }
+        ],
+        matchHistoryStats: [
+          {
+            id: 456,
+            startgametime: 1640995200,
+            completiontime: 1640997000,
+            description: 'AUTOMATCH',
+            matchtype_id: 6,
+            mapname: 'Arabia',
+            options: '',
+            slotinfo: '',
+            matchhistoryreportresults: [
+              { profile_id: 123, civilization_id: 1, resulttype: 1, teamid: 0 }
+            ],
+            matchhistorymember: [
+              { profile_id: 123, oldrating: 1000, newrating: 1010 }
+            ],
+            matchurls: [],
+            maxplayers: 2
+          }
+        ]
+      };
+
+      // Mock fetch calls in order: 
+      // 1. Raw match history from external API
+      // 2. Mappings for civs/maps
+      // 3. Replay availability checks
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockRawData)
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockMappings)
+        })
+        // Mock replay availability check
+        .mockResolvedValue({
+          ok: true // Replay available
+        });
 
       await proxy.proxy(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockMatchData);
-      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=60');
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        id: '123',
+        name: 'testplayer',
+        matches: expect.any(Array)
+      }));
+      expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=300');
     });
 
     it('should handle 404 for unknown route', async () => {

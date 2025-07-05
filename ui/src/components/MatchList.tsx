@@ -1,9 +1,9 @@
 import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
+import { Link as RouterLink } from 'react-router-dom';
 import type { MatchGroup, Player } from '../types/match';
 import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { GiBroadsword } from 'react-icons/gi';
 import { PLAYER_COLORS } from './playerColors';
-import { Link as RouterLink } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';
@@ -125,7 +125,15 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
       <VStack spacing={0.5} align="stretch">
         <HStack justify="space-between" spacing={2} wrap="wrap">
           <Text fontWeight="bold" color="brand.midnightBlue">#{match.match_id}</Text>
-          <Text color="brand.steel">{match.description}</Text>
+          <Link 
+            as={RouterLink}
+            to={`/match/${match.match_id}`}
+            color="brand.zoolanderBlue"
+            fontWeight="semibold"
+            _hover={{ color: "brand.gold" }}
+          >
+            {match.description}
+          </Link>
           <Link
             href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
             color="brand.zoolanderBlue"

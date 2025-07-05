@@ -71,29 +71,54 @@ describe('matchService', () => {
   describe('getMatches', () => {
     it('should fetch, process, and return match data', async () => {
       const mockData = {
-        profiles: [
-          { profile_id: 4764337, name: '/steam/76561198144754504', alias: 'dev' },
-          { profile_id: 11766674, name: '/steam/76561199079934519', alias: '[phiz]brans$s' }
-        ],
-        matchHistoryStats: [
+        id: '4764337',
+        name: 'dev',
+        matches: [
           {
-            id: 260228303,
-            mapname: 'Forts',
-            matchtype_id: 29,
-            options: 'AAAAAQAAAAAAAAAAAAAAAgAAAAIAAACQBwAAAAAA',
-            slotinfo: '', // Empty to avoid decompression
-            matchhistoryreportresults: [
-              { profile_id: 4764337, civilization_id: 10, resulttype: 1 },
-              { profile_id: 11766674, civilization_id: 12, resulttype: 2 }
+            match_id: '260228303',
+            start_time: '2022-01-01T00:00:00.000Z',
+            description: 'EW Team',
+            diplomacy: {
+              type: 'EW Team',
+              team_size: '2'
+            },
+            map: 'Forts',
+            duration: 1800,
+            teams: [
+              [
+                {
+                  name: 'dev',
+                  original_name: '/steam/76561198144754504',
+                  civ: 10,
+                  number: 1,
+                  color_id: 0,
+                  user_id: 4764337,
+                  winner: true,
+                  rating: 1010,
+                  rating_change: 10,
+                  match_id: 260228303,
+                  replay_available: true
+                }
+              ],
+              [
+                {
+                  name: '[phiz]brans$s',
+                  original_name: '/steam/76561199079934519',
+                  civ: 12,
+                  number: 2,
+                  color_id: 1,
+                  user_id: 11766674,
+                  winner: false,
+                  rating: 990,
+                  rating_change: -10,
+                  match_id: 260228303,
+                  replay_available: false
+                }
+              ]
             ],
-            matchhistorymember: [
-              { profile_id: 4764337, oldrating: 1000, newrating: 1010 },
-              { profile_id: 11766674, oldrating: 1000, newrating: 990 }
-            ],
-            startgametime: 1640995200,
-            completiontime: 1640997000,
-            maxplayers: 2,
-            description: 'AUTOMATCH'
+            players: [],
+            winning_team: 1,
+            winning_teams: [1]
           }
         ]
       };
