@@ -219,6 +219,61 @@ async function checkReplayAvailability(gameId, profileId) {
   return true; // Default to available
 }
 
+async function checkApmStatus(gameId, profileId, {
+  getFirestoreClient: getFirestoreClientArg,
+  checkReplayAvailability: checkReplayAvailabilityArg
+} = {}) {
+  const getFirestoreClientFn = getFirestoreClientArg || getFirestoreClient;
+  const checkReplayAvailabilityFn = checkReplayAvailabilityArg || checkReplayAvailability;
+  try {
+    // First check if APM data already exists in Firestore
+    const db = getFirestoreClientFn();
+    if (db) {
+      const matchRef = db.collection('matches').doc(String(gameId));
+      const matchDoc = await matchRef.get();
+      if (matchDoc.exists) {
+        const docData = matchDoc.data();
+        // Check for the actual APM data (either nested or direct)
+        const apmData = docData?.apm?.apm || docData?.apm;
+        if (apmData && apmData.players) {
+          // APM data exists - return bronze state (processed)
+          // We don't need to check save game availability since APM is already processed
+          return {
+            hasSaveGame: true, // Not relevant since APM is processed
+            isProcessed: true,
+            state: 'bronzeStatus'
+          };
+        }
+      }
+    }
+    // If no APM data exists, check if save game is available
+    const hasSaveGame = await checkReplayAvailabilityFn(gameId, profileId);
+    if (hasSaveGame) {
+      // Save game exists but not processed - return silver state
+      return {
+        hasSaveGame: true,
+        isProcessed: false,
+        state: 'silverStatus'
+      };
+    } else {
+      // No save game and no processing - return grey state
+      return {
+        hasSaveGame: false,
+        isProcessed: false,
+        state: 'greyStatus'
+      };
+    }
+  } catch (error) {
+    log.error({ error: error.message, gameId, profileId }, 'APM status check error');
+    // On error, assume grey state (no save game, no processing)
+    return {
+      hasSaveGame: false,
+      isProcessed: false,
+      state: 'greyStatus'
+    };
+  }
+}
+
 async function getCivMap() {
   if (!civMap) {
     const mappings = await loadMappings();
@@ -775,14 +830,16 @@ async function handleMatch(matchId) {
     const storedApm = docData ? docData.apm : undefined;
     log.info({ storedApm }, 'Stored APM data');
     if (storedApm) {
-      processedMatch.apm = storedApm;
+      // If storedApm has a nested 'apm' field, use that, otherwise use the whole object
+      processedMatch.apm = storedApm.apm || storedApm;
     }
     
     return { 
       data: processedMatch,
       headers: {
-        'Cache-Control': 'private, max-age=0, must-revalidate',
-        'Vary': 'Accept-Encoding'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     };
   } catch (error) {
@@ -1122,7 +1179,7 @@ async function handleReplayDownload(gameId, profileId) {
 
       log.info({ gameId, profileId, size: buffer.byteLength, apmData }, 'Replay downloaded and APM processed');
       return {
-        data: { size: buffer.byteLength, downloaded: apmSuccess, apm: apmData },
+        data: { downloaded: apmSuccess },
         headers: {
           'Cache-Control': 'private, max-age=0',
           'Vary': 'Accept-Encoding'
@@ -1191,39 +1248,39 @@ function safeJsonParse(str) {
 
 const routes = [
   {
-    pattern: /^\/api\/steam\/avatar\/(\d+)$/,
+    pattern: /^\/api\/steam\/avatar\/(\d+)(\?.*)?$/,
     handler: handleSteamAvatar
   },
   {
-    pattern: /^\/api\/raw-match-history\/(\d+)$/,
+    pattern: /^\/api\/raw-match-history\/(\d+)(\?.*)?$/,
     handler: handleRawMatchHistory
   },
   {
-    pattern: /^\/api\/match-history\/(\d+)$/,
+    pattern: /^\/api\/match-history\/(\d+)(\?.*)?$/,
     handler: handleMatchHistory
   },
   {
-    pattern: /^\/api\/raw-match\/(\d+)$/,
+    pattern: /^\/api\/raw-match\/(\d+)(\?.*)?$/,
     handler: handleRawMatch
   },
   {
-    pattern: /^\/api\/match\/(\d+)$/,
+    pattern: /^\/api\/match\/(\d+)(\?.*)?$/,
     handler: handleMatch
   },
   {
-    pattern: /^\/api\/personal-stats\/(\d+)$/,
+    pattern: /^\/api\/personal-stats\/(\d+)(\?.*)?$/,
     handler: handlePersonalStats
   },
   {
-    pattern: /^\/api\/raw-gamematch-history\/(\d+(?:,\d+)*)$/,
+    pattern: /^\/api\/raw-gamematch-history\/(\d+(?:,\d+)*)(\?.*)?$/,
     handler: handleGameMatchHistory
   },
   {
-    pattern: /^\/api\/gamematch-history\/(\d+(?:,\d+)*)$/,
+    pattern: /^\/api\/gamematch-history\/(\d+(?:,\d+)*)(\?.*)?$/,
     handler: handleProcessedGameMatchHistory
   },
   {
-    pattern: /^\/api\/check-replay\/(\d+)\/(\d+)$/,
+    pattern: /^\/api\/check-replay\/(\d+)\/(\d+)(\?.*)?$/,
     handler: async (gameId, profileId) => {
       const available = await checkReplayAvailability(gameId, profileId);
       return {
@@ -1231,6 +1288,20 @@ const routes = [
         headers: {
           'Cache-Control': 'public, max-age=300', // 5 minutes for replay checks
           'Vary': 'Accept-Encoding'
+        }
+      };
+    }
+  },
+  {
+    pattern: /^\/api\/apm-status\/(\d+)\/(\d+)(\?.*)?$/,
+    handler: async (gameId, profileId) => {
+      const status = await checkApmStatus(gameId, profileId);
+      return {
+        data: { gameId, profileId, ...status },
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       };
     }
@@ -1246,7 +1317,7 @@ const routes = [
     }
   },
   {
-    pattern: /^\/api\/replay-download\/(\d+)\/(\d+)$/,
+    pattern: /^\/api\/replay-download\/(\d+)\/(\d+)(\?.*)?$/,
     handler: (gameId, profileId) => handleReplayDownload(gameId, profileId)
   }
 ];
@@ -1292,4 +1363,11 @@ exports.proxy = async (req, res) => {
 if (process.env.NODE_ENV === 'test') {
   exports.__setPlayerService = (svc) => { playerService = svc; };
   exports.__resetPlayerService = () => { playerService = null; };
-} 
+}
+
+module.exports = {
+  proxy: exports.proxy,
+  checkApmStatus,
+  getFirestoreClient,
+  checkReplayAvailability,
+}; 

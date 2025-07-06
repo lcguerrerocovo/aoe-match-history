@@ -12,7 +12,9 @@ interface MatchData {
 
 // Simple match retrieval - cloud functions return fully processed data
 export async function getMatch(matchId: string): Promise<any> {
-  const response = await fetch(`${API_URL}/match/${matchId}`, {
+  // Add cache-busting parameter to ensure fresh data
+  const timestamp = Date.now();
+  const response = await fetch(`${API_URL}/match/${matchId}?t=${timestamp}`, {
     headers: {
       'Accept': 'application/json',
       'User-Agent': 'aoe2-site'
@@ -142,7 +144,8 @@ export async function downloadReplay(gameId: string, profileId: string): Promise
       console.error('Replay download request failed', response.statusText);
       return false;
     }
-    return false;
+    const data = await response.json();
+    return data.downloaded || false;
   } catch (e) {
     console.error('Replay download request failed', e);
     return false;

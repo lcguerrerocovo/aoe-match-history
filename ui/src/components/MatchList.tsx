@@ -377,25 +377,49 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
   const [processing, setProcessing] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!groupOpen || apmStatus !== null) return;
+    if (!groupOpen) return;
     const run = async () => {
       const status = await checkApmStatus(matchId, profileId);
       setApmStatus(status);
     };
     run();
-  }, [groupOpen, matchId, profileId, apmStatus]);
+  }, [groupOpen, matchId, profileId]);
 
   const handleClick = async () => {
     if (processing || apmStatus?.state !== 'silverStatus') return;
+    setProcessing(true);
     try {
-      setProcessing(true);
       const success = await downloadReplay(matchId, profileId);
       if (success) {
-        // Refresh the status after successful processing
-        const newStatus = await checkApmStatus(matchId, profileId);
-        setApmStatus(newStatus);
+        // Start polling immediately with exponential backoff
+        let attempt = 0;
+        const maxAttempts = 8; // Max ~30 seconds total
+        const poll = async () => {
+          if (attempt >= maxAttempts) {
+            setProcessing(false);
+            return;
+          }
+          
+          const newStatus = await checkApmStatus(matchId, profileId);
+          setApmStatus(newStatus);
+          
+          if (newStatus.state === 'bronzeStatus') {
+            setProcessing(false);
+            return;
+          }
+          
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s (capped at 8s)
+          const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
+          attempt++;
+          setTimeout(poll, delay);
+        };
+        
+        // Start polling after 500ms to allow backend to begin processing
+        setTimeout(poll, 500);
+      } else {
+        setProcessing(false);
       }
-    } finally {
+    } catch {
       setProcessing(false);
     }
   };

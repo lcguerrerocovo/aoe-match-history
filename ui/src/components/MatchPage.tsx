@@ -27,6 +27,11 @@ export function MatchPage() {
 
   // Compute APM availability and color mapping whenever match state changes
   const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players || {}).length);
+  
+  // Debug logging
+  console.log('MatchPage - match data:', match);
+  console.log('MatchPage - hasApm:', hasApm);
+  console.log('MatchPage - apm data:', match?.apm);
 
   const colorMap: Record<string, number> = {};
   if (match?.teams) {
