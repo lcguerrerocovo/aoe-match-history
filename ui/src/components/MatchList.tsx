@@ -109,7 +109,7 @@ function MapCard({ match }: { match: any }) {
 function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profileId: string; groupOpen: boolean }) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
-  const realTimeSec = Math.round(durationSec / 1.7);
+  const realTimeSec = Math.round(durationSec * 1.7);
 
   return (
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>

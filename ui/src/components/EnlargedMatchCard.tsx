@@ -319,7 +319,7 @@ function MapCard({ match }: { match: any }) {
 
 function MatchDetails({ match }: { match: any }) {
   const durationSec = parseDuration(match.duration);
-  const realTimeSec = Math.round(durationSec / 1.7);
+  const realTimeSec = Math.round(durationSec * 1.7);
 
   return (
     <Box

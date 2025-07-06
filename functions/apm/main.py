@@ -197,7 +197,8 @@ def apm_handler():
 
     actions_by_player: dict[str, dict[int, dict[str, int]]] = {}
 
-    FRAME_RATE = 60  # frames per second
+    # AoE2 engine runs at 20 simulation steps ("frames") per real-time second. Use that
+    FRAME_RATE = 20  # frames per second
     FRAMES_PER_MIN = FRAME_RATE * 60
 
     for cmd in commands:
@@ -215,28 +216,23 @@ def apm_handler():
 
         player_key = id_map.get(pid, str(pid))
 
-        # Some actions expose game clock in frames (`ct` or `frame`). When that
-        # is unavailable, fall back to the absolute timestamp (milliseconds
-        # since game start) and convert to minutes to keep bucket semantics the
-        # same.
-        frame = getattr(cmd, "frame", None) or getattr(cmd, "ct", None)
-        if isinstance(frame, int) and frame >= 0:
-            minute = frame // FRAMES_PER_MIN
-        else:
-            ts_val = getattr(cmd, "timestamp", None)
-            if ts_val is None:
-                # If we truly have no temporal info, default to bucket 0
-                minute = 0
+        ts_val = getattr(cmd, "timestamp", None)
+        if ts_val is not None:
+            import datetime as _dt
+            if isinstance(ts_val, _dt.timedelta):
+                minute = int(ts_val.total_seconds() / 60 / 1.7)
+            elif isinstance(ts_val, (int, float)):
+                # Heuristic: if value looks like ms (large), convert; otherwise assume seconds
+                minute = int((ts_val / 1000 if ts_val > 10000 else ts_val) / 60 / 1.7)
             else:
-                import datetime as _dt
-                if isinstance(ts_val, _dt.timedelta):
-                    minute = int(ts_val.total_seconds() // 60)
-                elif isinstance(ts_val, (int, float)):
-                    # Heuristic: if value looks like ms (large), convert; otherwise assume seconds
-                    minute = int((ts_val / 1000 if ts_val > 10000 else ts_val) // 60)
-                else:
-                    # Fallback for unexpected types
-                    minute = 0
+                minute = 0
+        else:
+            # Fallback to simulation frame number
+            frame = getattr(cmd, "frame", None) or getattr(cmd, "ct", None)
+            if isinstance(frame, int) and frame >= 0:
+                minute = int((frame // FRAMES_PER_MIN)/1.7)
+            else:
+                minute = 0
         category = _categorize(cmd)
 
         p = actions_by_player.setdefault(player_key, {})
@@ -256,9 +252,27 @@ def apm_handler():
         for pid, min_map in actions_by_player.items()
     }
 
+    # --- Compute average APM per player over entire game ---
+    # Replay duration is in milliseconds of *game* time.
+    try:
+        game_minutes = max(1, int(getattr(replay, "duration", 0) / 1000 / 60))
+    except Exception:
+        game_minutes = None
+
+    avg_apm_by_player: dict[str, int] = {}
+    if game_minutes:
+        for pid, buckets in actions_by_player.items():
+            total_actions = sum(
+                vals.get("total", 0) for vals in buckets.values()
+            )
+            avg_apm_by_player[pid] = int(round(total_actions / game_minutes))
+
     return jsonify({
         "matchId": match_id,
         "profileId": profile_id,
         "processedAt": int(time.time() * 1000),
-        "players": players_out,
+        "apm": {
+            "players": players_out,
+            "averages": avg_apm_by_player,
+        }
     }) 

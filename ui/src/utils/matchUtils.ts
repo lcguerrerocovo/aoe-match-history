@@ -30,7 +30,7 @@ export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
         const oldestMatchInSession = currentSession[currentSession.length - 1];
         const sessionStart = new Date(oldestMatchInSession.start_time);
         const newestMatchInSession = currentSession[0];
-        const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration) / 1.7) * 1000));
+        const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration)) * 1000));
         const sessionId = `${sessionStart.toISOString()}_${sessionEnd.toISOString()}`;
         sessions.push({ date: sessionId, matches: currentSession });
         
@@ -44,7 +44,7 @@ export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
     const oldestMatchInSession = currentSession[currentSession.length - 1];
     const sessionStart = new Date(oldestMatchInSession.start_time);
     const newestMatchInSession = currentSession[0];
-    const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration) / 1.7) * 1000));
+    const sessionEnd = new Date(new Date(newestMatchInSession.start_time).getTime() + (Math.round(parseDuration(newestMatchInSession.duration)) * 1000));
     const sessionId = `${sessionStart.toISOString()}_${sessionEnd.toISOString()}`;
     sessions.push({ date: sessionId, matches: currentSession });
   }
@@ -58,7 +58,7 @@ export function sumDurations(matches: any[]): { totalGame: number; totalReal: nu
   for (const match of matches) {
     const durationSec = parseDuration(match.duration);
     totalGame += durationSec;
-    totalReal += Math.round(durationSec / 1.7);
+    totalReal += Math.round(durationSec);
   }
   return { totalGame, totalReal };
 }
@@ -266,7 +266,7 @@ export function calculateSessionDuration(matches: any[]): number {
   const lastMatch = matches[0]; // Newest match
 
   const firstMatchStart = new Date(firstMatch.start_time);
-  const lastMatchEnd = new Date(new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration) / 1.7) * 1000));
+  const lastMatchEnd = new Date(new Date(lastMatch.start_time).getTime() + (Math.round(parseDuration(lastMatch.duration)) * 1000));
 
   return Math.floor((lastMatchEnd.getTime() - firstMatchStart.getTime()) / 1000);
 }

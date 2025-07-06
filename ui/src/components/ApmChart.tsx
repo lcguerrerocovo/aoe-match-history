@@ -24,6 +24,7 @@ interface ApmData {
 interface ApmChartProps {
   apm: {
     players: ApmData;
+    averages?: Record<string, number>;
   };
   // Map profileId to player color id for consistent stroke colors
   colorByProfile?: Record<string, number | undefined>;
@@ -75,8 +76,9 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   const playerIds = Object.keys(apm?.players ?? {});
   const visibleIds = activePids ?? playerIds;
 
-  // Average APM per player
+  // Average APM per player (prefer backend-provided)
   const averages = React.useMemo(() => {
+    if (apm?.averages) return apm.averages;
     const avg: Record<string, number> = {};
     Object.entries(apm?.players ?? {}).forEach(([pid, series]) => {
       if (!Array.isArray(series) || !series.length) return;

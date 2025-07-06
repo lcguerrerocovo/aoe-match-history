@@ -64,12 +64,12 @@ describe('matchUtils', () => {
 
     it('should correctly generate the session ID with full start and end times', () => {
         const matches = [
-          mockMatch('2023-01-01T13:00:00Z', 1800), // Newest, real duration 1059s, ends at ~13:17:39
+          mockMatch('2023-01-01T13:00:00Z', 1800), // Newest, real duration 3060s, ends at 13:51:00
           mockMatch('2023-01-01T12:15:00Z', 1500), // Oldest, starts at 12:15
         ];
         const sessions = groupMatchesBySession(matches);
         const expectedStart = new Date('2023-01-01T12:15:00Z').toISOString();
-        const realDuration = Math.round(1800 / 1.7);
+        const realDuration = Math.round(1800);
         const expectedEnd = new Date(new Date('2023-01-01T13:00:00Z').getTime() + realDuration * 1000).toISOString();
         expect(sessions[0].date).toBe(`${expectedStart}_${expectedEnd}`);
       });
@@ -78,12 +78,12 @@ describe('matchUtils', () => {
   describe('calculateSessionDuration', () => {
     it('should calculate the total duration from the start of the first match to the end of the last', () => {
       const matches = [
-        mockMatch('2023-01-01T13:00:00Z', 1800), // Real duration ~1059s. Ends at ~13:17:39
+        mockMatch('2023-01-01T13:00:00Z', 1800), // Game duration 1800s, ends at 13:30:00
         mockMatch('2023-01-01T12:00:00Z', 1500), // Starts at 12:00
       ];
       const duration = calculateSessionDuration(matches);
-      // Real duration = (13:17:39 - 12:00:00) = 4659s
-      expect(duration).toBe(4659);
+      // Duration = (13:30:00 - 12:00:00) = 5400s
+      expect(duration).toBe(5400);
     });
   });
 
