@@ -106,8 +106,13 @@ async function checkReplayAvailability(gameId, profileId) {
       
     } catch (error) {
       if (error.name === 'AbortError') {
-        log.debug({ gameId, profileId }, 'Request timeout - assuming available');
-        return true;
+        retryCount++;
+        log.debug({ gameId, profileId, retryCount }, 'Request timeout, retrying...');
+        if (retryCount <= maxRetries) {
+          continue; // retry loop
+        }
+        // Exhausted retries – treat as unavailable to avoid false positives
+        return false;
       }
       
       retryCount++;
