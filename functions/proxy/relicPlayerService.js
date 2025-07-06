@@ -185,10 +185,10 @@ class RelicPlayerService {
             lastCallTime: String(prevLastCallTime),
             sessionID: session.sessionId,
             profile_ids: profileIdsParam,
-            title: 'age2'
+            title: 'age2',
         };
 
-        this.log.debug({ url: FULL_URL, params }, 'Making getRecentMatchSinglePlayerHistory request');
+        this.log.debug({ url: FULL_URL, params }, 'Making getRecentMatchHistory request');
 
         try {
             const requestStart = Date.now();
@@ -210,22 +210,6 @@ class RelicPlayerService {
             this.log.info({ status: response.status, apiStatus: respData[0], duration }, 'SinglePlayerHistory response');
 
             if (response.status === 200 && respData[0] === 0) {
-                // Decode zlib fields (index 5 and 6) for each match
-                const decodeField = (val) => {
-                    if (typeof val !== 'string') return val;
-                    try {
-                        const buf = Buffer.from(val, 'base64');
-                        const out = inflateSync(buf).toString();
-                        try {
-                            return JSON.parse(out);
-                        } catch {
-                            return out;
-                        }
-                    } catch {
-                        return val;
-                    }
-                };
-
                 const processed = (respData[1] || []).map(matchArr => {
                     if (!Array.isArray(matchArr) || matchArr.length < 7) return matchArr;
                     // Settings use shared decodeOptions
@@ -251,6 +235,9 @@ class RelicPlayerService {
                         end_time: matchArr[9]
                     };
                 });
+
+                this.log.debug({ processedMatches: processed.length }, 'SinglePlayerHistory processed');
+
                 return {
                     success: true,
                     data: processed,

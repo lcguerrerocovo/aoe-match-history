@@ -270,6 +270,17 @@ function detectWinningTeams(teams) {
   };
 }
 
+// Resolve map ID and friendly name from various sources
+function resolveMap(mapMap, { options = null, settings = null, mapId = null, rawName = '' }) {
+  const candidate = options?.['10'] || settings?.['10'] || mapId;
+  const idStr = candidate?.toString?.();
+  const name = idStr && mapMap[idStr] ? mapMap[idStr] : rawName;
+  if (!name && idStr) {
+    log.debug({ mapId: idStr, rawMap: rawName }, 'Map ID unresolved');
+  }
+  return { id: candidate ? parseInt(candidate, 10) : mapId, name };
+}
+
 async function processMatch(match, profiles) {
   const civMap = await getCivMap();
   const mapMap = await getMapMap();
@@ -332,13 +343,13 @@ async function processMatch(match, profiles) {
   const teams = groupPlayersIntoTeams(players);
   const { winningTeam, winningTeams } = detectWinningTeams(teams);
   
-  // Resolve map name
+  // Resolve map using shared helper
   const options = decodeOptions(match.options);
-  const mapId = options['10'];
-  const mapName = mapId ? mapMap[mapId] : match.mapname;
+  const { id: resolvedMapId, name: mapName } = resolveMap(mapMap, { options, rawName: match.mapname });
   
   return {
     match_id: match.id.toString(),
+    map_id: resolvedMapId,
     start_time: new Date(match.startgametime * 1000).toISOString(),
     description: match.description === "AUTOMATCH" ? getGameType(match.matchtype_id) : match.description,
     diplomacy: {
@@ -871,7 +882,7 @@ async function handlePlayerSearch(name) {
 }
 
 // Authenticated single-player recent match history via RelicPlayerService
-async function handleRawAuthSinglePlayerHistory(idsStr) {
+async function handleGameMatchHistory(idsStr) {
   const ids = idsStr.split(',').map(id => id.trim()).filter(Boolean);
   if (ids.length === 0) {
     throw new Error('No profile IDs provided');
@@ -920,28 +931,63 @@ async function handleRawAuthSinglePlayerHistory(idsStr) {
   }
 }
 
+// Helper: batch fetch aliases from Firestore for given profile IDs
+async function fetchAliases(profileIds) {
+  if (!profileIds || profileIds.length === 0) return new Map();
+  const db = getFirestoreClient();
+  const aliasMap = new Map();
+  const chunkSize = 10; // Firestore "in" limit
+  for (let i = 0; i < profileIds.length; i += chunkSize) {
+    const chunk = profileIds.slice(i, i + chunkSize).map(id => parseInt(id, 10));
+    try {
+      const snap = await db.collection('players')
+        .where('profile_id', 'in', chunk)
+        .get();
+      snap.forEach(doc => {
+        const d = doc.data();
+        const alias = d.alias || d.name || d.profile_id.toString();
+        aliasMap.set(d.profile_id.toString(), alias);
+      });
+    } catch (e) {
+      log.warn({ error: e.message, chunk }, 'Failed fetching aliases');
+    }
+  }
+  return aliasMap;
+}
+
 // Processed variant
-async function handleProcessedSinglePlayerHistory(idsStr) {
-  const raw = await handleRawAuthSinglePlayerHistory(idsStr);
+async function handleProcessedGameMatchHistory(idsStr) {
+  const raw = await handleRawGameMatchHistory(idsStr);
 
   // Pre-load civ mapping once for all matches
   const civMap = await getCivMap();
+  const mapMap = await getMapMap();
+
+  // Collect unique profile IDs across all matches
+  const idSet = new Set();
+  (raw.data || []).forEach(m => {
+    (m.players || []).forEach(p => {
+      idSet.add(p["profileInfo.id"].toString());
+    });
+  });
+  const aliasMap = await fetchAliases(Array.from(idSet));
 
   const transformMatch = (m) => {
     // Build Player objects in UI-expected shape
     const rawPlayers = m.players || [];
 
     const players = rawPlayers.map((p) => {
+      const profileIdStr = p["profileInfo.id"].toString();
       const civId = p.metaData?.civId ?? null;
       const colorId = p.metaData?.colorId ?? 0;
       const teamIdRaw = p.metaData?.teamId ?? p.teamID ?? 0;
       const teamNumber = parseInt(teamIdRaw, 10) + 1;
       return {
-        name: p.alias || p["profileInfo.id"].toString(),
+        name: aliasMap.get(profileIdStr) || profileIdStr,
         civ: civMap[civId?.toString?.() ?? ""] || civId, // fallback to id if unknown
         number: teamNumber,
         color_id: colorId,
-        user_id: p["profileInfo.id"].toString(),
+        user_id: profileIdStr,
         winner: false,
         rating: null,
         rating_change: null
@@ -951,12 +997,16 @@ async function handleProcessedSinglePlayerHistory(idsStr) {
     // Group into teams using existing helper
     const teams = groupPlayersIntoTeams(players);
 
+    // Resolve map using shared helper (single-player uses decoded settings)
+    const { id: resolvedMapId, name: mapName } = resolveMap(mapMap, { settings: m.settings, mapId: m.map_id, rawName: m.map_name });
+
     return {
       match_id: m.match_id.toString(),
+      map_id: resolvedMapId,
       start_time: new Date(m.start_time * 1000).toISOString(),
       description: m.name,
       diplomacy: { type: 'Single', team_size: teams.length.toString() },
-      map: m.map_name,
+      map: mapName,
       duration: m.end_time - m.start_time,
       teams,
       players,
@@ -966,12 +1016,17 @@ async function handleProcessedSinglePlayerHistory(idsStr) {
   };
 
   const processed = (raw.data || []).map(transformMatch);
+  processed.sort((a, b) => b.start_time.localeCompare(a.start_time));
+
+  // Derive name when single profile
+  const respName = aliasMap.get(idsStr) || idsStr;
 
   return {
-    data: { id: idsStr, matches: processed },
+    data: { id: idsStr, name: respName, matches: processed },
     headers: raw.headers
   };
 }
+
 
 const routes = [
   {
@@ -999,12 +1054,12 @@ const routes = [
     handler: handlePersonalStats
   },
   {
-    pattern: /^\/api\/raw-singleplayer-history\/(\d+(?:,\d+)*)$/,
-    handler: handleRawAuthSinglePlayerHistory
+    pattern: /^\/api\/raw-gamematch-history\/(\d+(?:,\d+)*)$/,
+    handler: handleGameMatchHistory
   },
   {
-    pattern: /^\/api\/singleplayer-history\/(\d+(?:,\d+)*)$/,
-    handler: handleProcessedSinglePlayerHistory
+    pattern: /^\/api\/gamematch-history\/(\d+(?:,\d+)*)$/,
+    handler: handleProcessedGameMatchHistory
   },
   {
     pattern: /^\/api\/check-replay\/(\d+)\/(\d+)$/,
