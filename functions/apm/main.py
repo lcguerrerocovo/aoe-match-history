@@ -1,13 +1,11 @@
-# Flask entrypoint for Cloud Functions (Python)
+# Cloud Function entrypoint for APM processing
 import time
 import io
+import json
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify
 import requests
 import logging
 from mgz.model import parse_match, serialize  # imported here to avoid cost if not needed
-
-app = Flask(__name__)
 
 # Configure root logger to display info-level logs with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -101,31 +99,44 @@ def _categorize(cmd):
     return key if key in ACTION_TYPE_DESCRIPTIONS else "OTHER"
 
 
-@app.route("/", methods=["POST"])
-def apm_handler():
-    """POST JSON {gameId, profileId}. Downloads replay, extracts APM."""
+def apm_handler(request):
+    """Cloud Function entry point for APM processing."""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Max-Age': '3600'
+        }
+        return ('', 204, headers)
+    
+    # Only allow POST requests
+    if request.method != 'POST':
+        return (json.dumps({"error": "Method not allowed"}), 405, {'Content-Type': 'application/json'})
+    
     try:
         data = request.get_json(force=True)
     except Exception:
-        return jsonify({"error": "Invalid JSON"}), 400
+        return (json.dumps({"error": "Invalid JSON"}), 400, {'Content-Type': 'application/json'})
 
     match_id = str(data.get("gameId"))
     profile_id = str(data.get("profileId"))
     if not match_id or not profile_id:
-        return jsonify({"error": "Missing gameId or profileId"}), 400
+        return (json.dumps({"error": "Missing gameId or profileId"}), 400, {'Content-Type': 'application/json'})
 
-    app.logger.info("APM request received", extra={"gameId": match_id, "profileId": profile_id})
+    logging.info("APM request received", extra={"gameId": match_id, "profileId": profile_id})
 
     url = f"https://aoe.ms/replay/?gameId={match_id}&profileId={profile_id}"
-    app.logger.info("Downloading replay", extra={"url": url})
+    logging.info("Downloading replay", extra={"url": url})
 
     try:
         resp = requests.get(url, timeout=15)
         if resp.status_code != 200:
-            return jsonify({"error": f"Replay fetch status {resp.status_code}"}), 404
+            return (json.dumps({"error": f"Replay fetch status {resp.status_code}"}), 404, {'Content-Type': 'application/json'})
         raw = resp.content
     except Exception as exc:
-        return jsonify({"error": f"Failed to fetch replay: {exc}"}), 502
+        return (json.dumps({"error": f"Failed to fetch replay: {exc}"}), 502, {'Content-Type': 'application/json'})
 
     try:
         # Some AoE2 services wrap the replay in a .zip container. If the payload
@@ -144,7 +155,7 @@ def apm_handler():
                 data_buf.seek(0)
         except Exception as zip_exc:
             # If zip detection fails, fall back to original bytes
-            app.logger.warning("ZIP detection failed", extra={"error": str(zip_exc)})
+            logging.warning("ZIP detection failed", extra={"error": str(zip_exc)})
             data_buf.seek(0)
 
         # Parse replay using mgz.model which is the supported public API
@@ -178,15 +189,15 @@ def apm_handler():
                 match_summary["serialized_snippet"] = str(serialized)[:300]
             except Exception:
                 pass
-            app.logger.debug("Replay summary", extra={"summary": match_summary})
+            logging.debug("Replay summary", extra={"summary": match_summary})
         except Exception as meta_exc:
             # Metadata extraction failure should not block main processing
-            app.logger.warning("Failed to build replay summary", extra={"error": str(meta_exc)})
+            logging.warning("Failed to build replay summary", extra={"error": str(meta_exc)})
     except Exception as exc:
-        return jsonify({"error": f"Failed to parse replay: {exc}"}), 400
+        return (json.dumps({"error": f"Failed to parse replay: {exc}"}), 400, {'Content-Type': 'application/json'})
 
     if not commands:
-        return jsonify({"error": "No commands found"}), 400
+        return (json.dumps({"error": "No commands found"}), 400, {'Content-Type': 'application/json'})
 
     # Map in-game player number → persistent profile_id (if available)
     id_map = {
@@ -265,7 +276,7 @@ def apm_handler():
             )
             avg_apm_by_player[pid] = int(round(total_actions / game_minutes))
 
-    return jsonify({
+    response_data = {
         "matchId": match_id,
         "profileId": profile_id,
         "processedAt": int(time.time() * 1000),
@@ -273,4 +284,21 @@ def apm_handler():
             "players": players_out,
             "averages": avg_apm_by_player,
         }
-    }) 
+    }
+    
+    # Add CORS headers
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+    }
+    
+    return (json.dumps(response_data), 200, headers)
+
+# Cloud Function entry point
+def aoe2_apm_processor(request):
+    return apm_handler(request)
+
+# For local development with functions-framework
+if __name__ == '__main__':
+    import functions_framework
+    functions_framework.start(target="aoe2_apm_processor", port=5001) 

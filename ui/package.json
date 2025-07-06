@@ -13,7 +13,7 @@
     "dev:firestore": "cd ../functions/proxy && node start-firestore-with-seed.js",
     "dev:firestore:only": "npx firebase emulators:start --only firestore --project demo-project",
     "dev:api": "concurrently \"npm run dev:proxy\" \"npm run dev:firestore\"",
-    "dev:apm": "cd ../functions/apm && PYTHONUNBUFFERED=1 FLASK_APP=main.py flask run -p 5001 --debug --no-reload",
+    "dev:apm": "cd ../functions/apm && PYTHONUNBUFFERED=1 python -m functions_framework --target=aoe2_apm_processor --port=5001",
     "build": "tsc -b && vite build --mode production",
     "upload-assets": "node scripts/upload-assets.js",
     "preview": "vite preview",
