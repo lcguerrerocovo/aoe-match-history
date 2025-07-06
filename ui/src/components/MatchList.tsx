@@ -114,7 +114,7 @@ function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profile
   return (
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
       <VStack spacing={0.5} align="stretch">
-        <HStack justify="space-between" spacing={2} wrap="wrap">
+        <HStack justify="space-between" spacing={2} wrap="wrap" align="center" minH="32px" py={1}>
           <Link
             as={RouterLink}
             to={`/match/${match.match_id}`}
@@ -136,7 +136,9 @@ function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profile
           </Link>
           {/* APM button */}
           {profileId && (
-            <APMButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
+            <Box display="flex" alignItems="center" justifyContent="flex-end">
+              <APMButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
+            </Box>
           )}
         </HStack>
         <Divider />
@@ -446,6 +448,10 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
         boxShadow={boxShadow}
         fontSize="2xs"
         fontWeight="bold"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        lineHeight="1"
         cursor={clickable ? 'pointer' : 'not-allowed'}
         {...linkProps}
       >

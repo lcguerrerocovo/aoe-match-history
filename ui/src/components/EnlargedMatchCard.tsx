@@ -10,14 +10,18 @@ import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../serv
 
 interface EnlargedMatchCardProps {
   match: any;
+  activePids?: string[];
+  onToggle?: (pid: string) => void;
 }
 
 interface PlayerAvatarProps {
   player: any;
   matchId: string;
+  active: boolean;
+  onToggle: (pid: string) => void;
 }
 
-const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, onToggle }) => {
   const theme = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [replayAvailable, setReplayAvailable] = useState<boolean | null>(null); // null = loading, true/false = result
@@ -101,7 +105,10 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
           {/* Player Color Indicator with Index */}
           <HStack spacing={0} align="center" w="full">
             <Box
-              w="32px"
+              onClick={() => onToggle(String(player.user_id))}
+              cursor="pointer"
+              opacity={active ? 1 : 0.4}
+              w={{ base: '75px', md: '75px' }}
               h={{ base: "16px", md: "18px" }}
               bg={bgColor}
               borderRadius="sm"
@@ -386,7 +393,7 @@ function MatchDetails({ match }: { match: any }) {
   );
 }
 
-export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
+export function EnlargedMatchCard({ match, activePids, onToggle }: EnlargedMatchCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
@@ -450,7 +457,7 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                             px={1}
                             py={2}
                           >
-                            <PlayerAvatar player={player} matchId={match.match_id} />
+                            <PlayerAvatar player={player} matchId={match.match_id} active={activePids ? activePids.includes(String(player.user_id)) : true} onToggle={onToggle ?? (()=>{})} />
                           </Box>
                         ))}
                       </SimpleGrid>

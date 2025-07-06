@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { Box, useTheme, Text, Flex } from '@chakra-ui/react';
+import { Box, useTheme, Text, Flex, useBreakpointValue } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
 interface ApmPlayerSeries {
@@ -29,9 +29,13 @@ interface ApmChartProps {
   colorByProfile?: Record<string, number | undefined>;
   // Map profileId to display name for legend/tooltip labels
   nameByProfile?: Record<string, string | undefined>;
+  // Currently active (visible) profileIds
+  activePids?: string[];
+  // Toggle callback when legend entry clicked
+  onToggle?: (pid: string) => void;
 }
 
-export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {} }) => {
+export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids, onToggle }) => {
   const theme = useTheme();
 
   const data = useMemo(() => {
@@ -63,7 +67,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return rows;
   }, [apm]);
 
+  const containerH = useBreakpointValue({ base: '500px', md: '400px' });
+  const showAxisLabel = useBreakpointValue({ base: false, md: true });
+
   const playerIds = Object.keys(apm?.players ?? {});
+  const visibleIds = activePids ?? playerIds;
 
   // Average APM per player
   const averages = React.useMemo(() => {
@@ -128,41 +136,37 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   };
 
   return (
-    <Box w="full" h={{ base: '260px', md: '400px' }}>
+    <Box w="full" h={containerH}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 20, bottom: 45, left: 0 }}>
+        <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.brand.steel} />
           <XAxis
             dataKey="minute"
             stroke={theme.colors.brand.midnightBlue}
-            label={{
+            label={showAxisLabel ? {
               value: 'Minute',
               position: 'insideBottom',
-              offset: -10,
+              offset: -5,
               fill: theme.colors.brand.midnightBlue,
               fontWeight: 'bold',
-            }}
+            } : undefined}
           />
           <YAxis
             stroke={theme.colors.brand.midnightBlue}
-            label={{
+            label={showAxisLabel ? {
               value: 'APM',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
               fill: theme.colors.brand.midnightBlue,
               fontWeight: 'bold',
-            }}
+            } : undefined}
           />
           <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
           <Legend
-            wrapperStyle= {{ bottom: 25}}
             verticalAlign="bottom"
             align="center"
-            content={(props) => {
-              const { payload } = props as any;
-              if (!payload) return null;
-
+            content={() => {
               const computeIsLight = (hex: string) => {
                 const cleaned = hex.replace('#', '');
                 if (cleaned.length !== 6) return false;
@@ -173,17 +177,16 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
               };
 
               return (
-                <Flex wrap="wrap" justify="center" align="center" mt={2}>
-                  {payload.map((entry: any) => {
-                    const pid = entry.value as string;
+                <Flex wrap="wrap" justify={{ base: 'flex-start', md: 'center' }} align="center" mt={2}>
+                  {playerIds.map((pid) => {
                     const name = nameByProfile[pid] ?? pid;
                     const avg = averages[pid];
-                    const strokeColor = entry.color as string;
-                    const isLightBg = computeIsLight(strokeColor);
-                    const textColor = isLightBg ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment;
-                    const textShadow = !isLightBg ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none';
+                    const colorId = colorByProfile[pid];
+                    const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
+                    const textColor = computeIsLight(strokeColor) ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment;
+                    const inactive = !visibleIds.includes(pid);
                     return (
-                      <Flex key={pid} align="center" gap={1} mx={2} my={1}>
+                      <Flex key={pid} align="center" gap={1} mx={2} my={1} opacity={inactive ? 0.4 : 1} cursor="pointer" onClick={() => onToggle?.(pid)} w={{ base: '100%', md: 'auto' }}>
                         <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
                         {avg !== undefined && (
                           <Box
@@ -194,13 +197,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                             w="32px"
                             h="18px"
                             boxShadow="sm"
-                            px={2.5}
-                            py={0.5}
                             display="flex"
                             justifyContent="center"
                             alignItems="center"
                           >
-                            <Text fontSize="xs" fontWeight="bold" color={textColor} style={{ textShadow }}>{avg}</Text>
+                            <Text fontSize="xs" fontWeight="bold" color={textColor}>{avg}</Text>
                           </Box>
                         )}
                       </Flex>
@@ -213,6 +214,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           {playerIds.map((pid) => {
             const colorId = colorByProfile[pid];
             const stroke = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
+            if (!visibleIds.includes(pid)) return null;
             return (
               <Line
                 key={pid}

@@ -15,6 +15,12 @@ export function MatchPage() {
   const [error, setError] = useState<string | null>(null);
   const layout = useLayoutConfig();
 
+  const [activePids, setActivePids] = useState<string[]>([]);
+
+  const togglePid = (pid: string) => {
+    setActivePids((prev) => prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid]);
+  };
+
   // Compute APM availability and color mapping whenever match state changes
   const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players || {}).length);
 
@@ -60,6 +66,14 @@ export function MatchPage() {
 
     loadMatch();
   }, [matchId]);
+
+  // Ensure activePids initialized after match load
+  useEffect(() => {
+    if (match?.players) {
+      const ids = match.players.map((p: any) => String(p.user_id));
+      setActivePids(ids);
+    }
+  }, [match]);
 
   if (isLoading) {
     return (
@@ -169,7 +183,7 @@ export function MatchPage() {
             spacing={6}
           >
             {/* Enlarged Match Card */}
-            <EnlargedMatchCard match={match} />
+            <EnlargedMatchCard match={match} activePids={activePids} onToggle={togglePid} />
             
             {/* Additional Details Section */}
             <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
@@ -184,7 +198,7 @@ export function MatchPage() {
                         <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
                           APM Over Time
                         </Text>
-                        <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />
+                        <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
                       </>
                     ) : (
                       <Text color="brand.steel" fontStyle="italic" textAlign="center">
