@@ -1,0 +1,264 @@
+# Flask entrypoint for Cloud Functions (Python)
+import base64
+import json
+import time
+import io
+from datetime import datetime, timezone
+from flask import Flask, request, jsonify
+import requests
+import logging
+from mgz.model import parse_match, serialize  # imported here to avoid cost if not needed
+
+app = Flask(__name__)
+
+# Configure root logger to display info-level logs with timestamps
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+# Comprehensive AoE II action descriptions (truncated for brevity)
+ACTION_TYPE_DESCRIPTIONS = {
+  "ERROR": 'Error or unknown action.',
+  "ORDER": 'Generic order issued to a unit (e.g., patrol, guard, gather, attack-move).',
+  "STOP": 'Orders a unit to halt its current action.',
+  "WORK": 'Villager or unit performs a work action (e.g., gather, build, repair).',
+  "MOVE": 'Orders a unit to move to a location.',
+  "CREATE": 'Creates a new unit.',
+  "ADD_ATTRIBUTE": 'Adds an attribute to a unit or object.',
+  "GIVE_ATTRIBUTE": 'Transfers an attribute (e.g., resource) to a unit or object.',
+  "AI_ORDER": 'Order issued by the AI.',
+  "RESIGN": 'Player resigns from the game.',
+  "SPECTATE": 'Spectator action.',
+  "ADD_WAYPOINT": 'Adds a waypoint for a unit or group.',
+  "STANCE": 'Changes the stance of a unit...',
+  "GUARD": 'Orders a unit to guard another unit or building.',
+  "FOLLOW": 'Orders a unit to follow another unit.',
+  "PATROL": 'Orders a unit to patrol between two points.',
+  "FORMATION": 'Changes formation.',
+  "SAVE": 'Save game action.',
+  "GROUP_MULTI_WAYPOINTS": 'Group movement with multiple waypoints.',
+  "CHAPTER": 'Campaign chapter action.',
+  "DE_ATTACK_MOVE": 'DE attack move command.',
+  "HD_UNKNOWN_34": 'Unknown action type (HD Edition).',
+  "DE_RETREAT": 'DE Retreat command.',
+  "DE_UNKNOWN_37": 'Unknown action type (DE).',
+  "DE_AUTOSCOUT": 'DE Auto-scout.',
+  "DE_UNKNOWN_39": 'Unknown action type (DE).',
+  "DE_UNKNOWN_40": 'Unknown action type (DE).',
+  "DE_TRANSFORM": 'DE Transform.',
+  "RATHA_ABILITY": 'DE Ratha ability.',
+  "DE_107_A": 'Unknown action type (DE).',
+  "DE_MULTI_GATHERPOINT": 'DE multiple gather points.',
+  "AI_COMMAND": 'AI command.',
+  "DE_UNKNOWN_80": 'Unknown action type (DE).',
+  "MAKE": 'Orders a building to produce a unit.',
+  "RESEARCH": 'Initiates research.',
+  "BUILD": 'Orders a villager to construct.',
+  "GAME": 'Game command.',
+  "WALL": 'Orders wall segment.',
+  "DELETE": 'Deletes unit/building.',
+  "ATTACK_GROUND": 'Attack ground.',
+  "TRIBUTE": 'Sends resources.',
+  "DE_UNKNOWN_109": 'Unknown action type (DE).',
+  "REPAIR": 'Repair action.',
+  "UNGARRISON": 'Ungarrison.',
+  "MULTIQUEUE": 'Multi-queue.',
+  "GATE": 'Build gate.',
+  "FLARE": 'Map flare.',
+  "SPECIAL": 'Special order.',
+  "QUEUE": 'Queue unit/tech.',
+  "GATHER_POINT": 'Set rally point.',
+  "SELL": 'Sells resources.',
+  "BUY": 'Buys resources.',
+  "DROP_RELIC": 'Drops relic.',
+  "TOWN_BELL": 'Town bell.',
+  "BACK_TO_WORK": 'Back to work.',
+  "DE_QUEUE": 'DE cancel queue.',
+  "DE_UNKNOWN_130": 'Unknown.',
+  "DE_UNKNOWN_131": 'Unknown.',
+  "DE_UNKNOWN_135": 'Unknown.',
+  "DE_UNKNOWN_136": 'Unknown.',
+  "DE_UNKNOWN_138": 'Unknown.',
+  "DE_107_B": 'Unknown.',
+  "DE_TRIBUTE": 'DE tribute.',
+  "POSTGAME": 'Postgame action.'
+}
+
+
+def _categorize(cmd):
+    # mgz actions may expose an Enum (`type`) or raw string (`action`).
+    raw = (
+        getattr(cmd, "type", None)
+        or getattr(cmd, "action", None)
+        or getattr(cmd, "operation", None)
+    )
+
+    if raw is None:
+        return "OTHER"
+
+    if isinstance(raw, str):
+        key = raw
+    else:
+        # Enum or unknown object – try `.name`, else str()
+        key = getattr(raw, "name", str(raw))
+
+    return key if key in ACTION_TYPE_DESCRIPTIONS else "OTHER"
+
+
+@app.route("/", methods=["POST"])
+def apm_handler():
+    """POST JSON {gameId, profileId}. Downloads replay, extracts APM."""
+    try:
+        data = request.get_json(force=True)
+    except Exception:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    match_id = str(data.get("gameId"))
+    profile_id = str(data.get("profileId"))
+    if not match_id or not profile_id:
+        return jsonify({"error": "Missing gameId or profileId"}), 400
+
+    app.logger.info("APM request received", extra={"gameId": match_id, "profileId": profile_id})
+
+    url = f"https://aoe.ms/replay/?gameId={match_id}&profileId={profile_id}"
+    app.logger.info("Downloading replay", extra={"url": url})
+
+    try:
+        resp = requests.get(url, timeout=15)
+        if resp.status_code != 200:
+            return jsonify({"error": f"Replay fetch status {resp.status_code}"}), 404
+        raw = resp.content
+    except Exception as exc:
+        return jsonify({"error": f"Failed to fetch replay: {exc}"}), 502
+
+    try:
+        # Some AoE2 services wrap the replay in a .zip container. If the payload
+        # is a valid ZIP, extract the first entry before handing it to mgz.
+        data_buf = io.BytesIO(raw)
+        try:
+            import zipfile
+            if zipfile.is_zipfile(data_buf):
+                with zipfile.ZipFile(data_buf) as zf:
+                    # Grab the first file inside (there is usually only one)
+                    first_name = zf.namelist()[0]
+                    raw_record = zf.read(first_name)
+                    data_buf = io.BytesIO(raw_record)
+            else:
+                # Not a zip – reset pointer for reading below
+                data_buf.seek(0)
+        except Exception as zip_exc:
+            # If zip detection fails, fall back to original bytes
+            app.logger.warning("ZIP detection failed", extra={"error": str(zip_exc)})
+            data_buf.seek(0)
+
+        # Parse replay using mgz.model which is the supported public API
+        replay = parse_match(data_buf)
+        # `parse_match` returns a Match object whose `actions` list already contains
+        # normalized command objects. This is the most stable API exposed by the
+        # mgz package and avoids relying on any deprecated helpers such as
+        # `mgz.parse()` which was removed in recent versions.
+        commands = replay.actions
+
+        # Emit a concise summary of the match for debugging/inspection
+        try:
+            match_summary = {
+                "guid": getattr(replay, "guid", None),
+                "dataset": getattr(replay, "dataset", None),
+                "duration_ms": getattr(replay, "duration", None),
+                "map": getattr(replay, "map", {}).get("name") if getattr(replay, "map", None) else None,
+                "players": [
+                    {
+                        "number": p.number,
+                        "name": getattr(p, "name", None),
+                        "civilization": getattr(p, "civilization", None),
+                        "winner": getattr(p, "winner", None),
+                    }
+                    for p in getattr(replay, "players", [])
+                ],
+            }
+            # Additionally include first 300 chars of serialized replay for quick inspection
+            try:
+                serialized = serialize(replay)
+                match_summary["serialized_snippet"] = str(serialized)[:300]
+            except Exception:
+                pass
+            app.logger.debug("Replay summary", extra={"summary": match_summary})
+        except Exception as meta_exc:
+            # Metadata extraction failure should not block main processing
+            app.logger.warning("Failed to build replay summary", extra={"error": str(meta_exc)})
+    except Exception as exc:
+        return jsonify({"error": f"Failed to parse replay: {exc}"}), 400
+
+    if not commands:
+        return jsonify({"error": "No commands found"}), 400
+
+    # Map in-game player number → persistent profile_id (if available)
+    id_map = {
+        p.number: str(getattr(p, "profile_id", p.number)) for p in getattr(replay, "players", [])
+    }
+
+    actions_by_player: dict[str, dict[int, dict[str, int]]] = {}
+
+    FRAME_RATE = 60  # frames per second
+    FRAMES_PER_MIN = FRAME_RATE * 60
+
+    for cmd in commands:
+        player_attr = getattr(cmd, "player", None)
+        if isinstance(player_attr, int):
+            pid = player_attr
+        elif player_attr is None:
+            continue
+        else:
+            pid = getattr(player_attr, "number", None)
+            if pid is None:
+                continue
+        if pid <= 0:
+            continue
+
+        player_key = id_map.get(pid, str(pid))
+
+        # Some actions expose game clock in frames (`ct` or `frame`). When that
+        # is unavailable, fall back to the absolute timestamp (milliseconds
+        # since game start) and convert to minutes to keep bucket semantics the
+        # same.
+        frame = getattr(cmd, "frame", None) or getattr(cmd, "ct", None)
+        if isinstance(frame, int) and frame >= 0:
+            minute = frame // FRAMES_PER_MIN
+        else:
+            ts_val = getattr(cmd, "timestamp", None)
+            if ts_val is None:
+                # If we truly have no temporal info, default to bucket 0
+                minute = 0
+            else:
+                import datetime as _dt
+                if isinstance(ts_val, _dt.timedelta):
+                    minute = int(ts_val.total_seconds() // 60)
+                elif isinstance(ts_val, (int, float)):
+                    # Heuristic: if value looks like ms (large), convert; otherwise assume seconds
+                    minute = int((ts_val / 1000 if ts_val > 10000 else ts_val) // 60)
+                else:
+                    # Fallback for unexpected types
+                    minute = 0
+        category = _categorize(cmd)
+
+        p = actions_by_player.setdefault(player_key, {})
+        bucket = p.setdefault(minute, {})
+        bucket[category] = bucket.get(category, 0) + 1
+
+    # Ensure each minute bucket has a correct 'total' equal to sum of category counts
+    for pid, minutes in actions_by_player.items():
+        for minute, vals in minutes.items():
+            vals["total"] = sum(count for k, count in vals.items() if k != "total")
+
+    # Convert buckets to list form sorted by minute
+    players_out = {
+        pid: [
+            {"minute": int(m), **vals} for m, vals in sorted(min_map.items())
+        ]
+        for pid, min_map in actions_by_player.items()
+    }
+
+    return jsonify({
+        "matchId": match_id,
+        "profileId": profile_id,
+        "processedAt": int(time.time() * 1000),
+        "players": players_out,
+    }) 
