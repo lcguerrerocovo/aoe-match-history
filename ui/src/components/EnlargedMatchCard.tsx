@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, VStack, HStack, Text, Link, Divider, Tooltip, Card, Avatar, Flex, Icon, useTheme, SimpleGrid, useBreakpointValue } from '@chakra-ui/react';
+import { Box, VStack, HStack, Text, Link, Divider, Tooltip, Card, Avatar, Flex, Icon, useTheme, SimpleGrid, useBreakpointValue, useColorMode } from '@chakra-ui/react';
 import { TimeIcon, CalendarIcon, DownloadIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 import { formatDateTime } from '../utils/matchUtils';
@@ -78,7 +78,12 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
     return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
   };
 
-  const numberTextColor = computeIsLight(bgColor) ? 'brand.midnightBlue' : 'brand.parchment';
+  const { colorMode } = useColorMode();
+  const isDark = colorMode === 'dark';
+  const isLightBg = computeIsLight(bgColor);
+  const numberTextColor = isLightBg
+    ? (isDark ? 'brand.parchment' : 'brand.midnightBlue')
+    : (isDark ? 'brand.midnightBlue' : 'brand.parchment');
 
   return (
     <Box position="relative" w="full">

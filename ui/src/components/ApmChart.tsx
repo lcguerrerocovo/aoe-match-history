@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { Box, useTheme, Text, Flex, useBreakpointValue } from '@chakra-ui/react';
+import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
 interface ApmPlayerSeries {
@@ -37,6 +37,8 @@ interface ApmChartProps {
 
 export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids, onToggle }) => {
   const theme = useTheme();
+  const { colorMode } = useColorMode();
+  const isDark = colorMode === 'dark';
 
   const data = useMemo(() => {
     const players = apm?.players ?? {};
@@ -110,8 +112,10 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
           const strokeColor = entry.color as string;
           const isLightBg = computeIsLight(strokeColor);
-          const textColor = isLightBg ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment;
-          const textShadow = !isLightBg ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none';
+          const textColor = isLightBg
+            ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
+            : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
+          const textShadow = !isLightBg && !isDark ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none';
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
@@ -183,7 +187,9 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                     const avg = averages[pid];
                     const colorId = colorByProfile[pid];
                     const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
-                    const textColor = computeIsLight(strokeColor) ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment;
+                    const textColor = computeIsLight(strokeColor)
+                      ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
+                      : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
                     const inactive = !visibleIds.includes(pid);
                     return (
                       <Flex key={pid} align="center" gap={1} mx={2} my={1} opacity={inactive ? 0.4 : 1} cursor="pointer" onClick={() => onToggle?.(pid)} w={{ base: '100%', md: 'auto' }}>

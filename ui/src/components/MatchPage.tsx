@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Spinner, Alert, AlertIcon, Card, Tabs, TabList, Tab, TabPanels, TabPanel } from '@chakra-ui/react';
+import { Box, VStack, Text, Spinner, Alert, AlertIcon, Card, Tabs, TabList, Tab, TabPanels, TabPanel, useColorModeValue } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
@@ -14,6 +14,10 @@ export function MatchPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const layout = useLayoutConfig();
+  const tabText = useColorModeValue('brand.midnightBlue', 'brand.parchment');
+  const tabSelectedText = useColorModeValue('brand.midnightBlue', 'brand.brightGold');
+  const tabSelectedBg = useColorModeValue('brand.stoneLight', 'brand.steel');
+  const tabBorder = useColorModeValue('brand.slateBorder', 'brand.steel');
 
   const [activePids, setActivePids] = useState<string[]>([]);
 
@@ -189,7 +193,20 @@ export function MatchPage() {
             <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
               <Tabs variant="enclosed" colorScheme="brand">
                 <TabList mb={4} justifyContent="flex-start">
-                  <Tab fontWeight="bold" w={{ base: '100px', md: '120px' }}>APM</Tab>
+                  <Tab
+                    fontWeight="bold"
+                    w={{ base: '100px', md: '120px' }}
+                    color={tabText}
+                    _selected={{
+                      color: tabSelectedText,
+                      bg: tabSelectedBg,
+                      border: '1px solid',
+                      borderColor: tabBorder,
+                      borderBottomColor: tabBorder,
+                    }}
+                  >
+                    APM
+                  </Tab>
                 </TabList>
                 <TabPanels>
                   <TabPanel p={0} id="apm">
