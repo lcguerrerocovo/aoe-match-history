@@ -7,7 +7,6 @@ import { formatDuration, parseDuration } from '../utils/timeUtils';
 import { assetManager } from '../utils/assetManager';
 import { PLAYER_COLORS } from './playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
-import { ApmChart } from './ApmChart';
 
 interface EnlargedMatchCardProps {
   match: any;
@@ -71,8 +70,8 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
     const r = parseInt(cleaned.substr(0, 2), 16);
     const g = parseInt(cleaned.substr(2, 2), 16);
     const b = parseInt(cleaned.substr(4, 2), 16);
-    // Perceptive luminance formula
-    return (0.299 * r + 0.587 * g + 0.114 * b) > 150;
+    // Perceptive luminance formula (lower threshold to match APM pill logic)
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
   };
 
   const numberTextColor = computeIsLight(bgColor) ? 'brand.midnightBlue' : 'brand.parchment';
@@ -102,9 +101,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
           {/* Player Color Indicator with Index */}
           <HStack spacing={0} align="center" w="full">
             <Box
-              flex="1"
-              mr={1}
-              maxW={{ base: '80px', md: '100px', lg: '80px' }}
+              w="32px"
               h={{ base: "16px", md: "18px" }}
               bg={bgColor}
               borderRadius="sm"
@@ -392,20 +389,6 @@ function MatchDetails({ match }: { match: any }) {
 export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-  // Build color mapping profileId → color_id to pass into chart
-  const colorMap: Record<string, number> = {};
-  if (match?.teams) {
-    match.teams.forEach((team: any[]) => {
-      team.forEach((p: any) => {
-        if (p?.user_id) {
-          colorMap[String(p.user_id)] = p.color_id;
-        }
-      });
-    });
-  }
-
-  const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players).length);
-
   return (
     <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px" data-testid="enlarged-match-card">
       <VStack spacing={6} align="stretch">
@@ -478,16 +461,6 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
             )}
           </VStack>
         </Flex>
-
-        {/* APM Time Series */}
-        {hasApm && (
-          <Box id="apm">
-            <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2}>
-              APM Over Time
-            </Text>
-            <ApmChart apm={match.apm} colorByProfile={colorMap} />
-          </Box>
-        )}
       </VStack>
     </Card>
   );

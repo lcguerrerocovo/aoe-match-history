@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Spinner, Alert, AlertIcon } from '@chakra-ui/react';
+import { Box, VStack, Text, Spinner, Alert, AlertIcon, Card, Tabs, TabList, Tab, TabPanels, TabPanel } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
@@ -6,6 +6,7 @@ import TopBar from './TopBar';
 import { EnlargedMatchCard } from './EnlargedMatchCard.tsx';
 import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
+import { ApmChart } from './ApmChart';
 
 export function MatchPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -13,6 +14,29 @@ export function MatchPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const layout = useLayoutConfig();
+
+  // Compute APM availability and color mapping whenever match state changes
+  const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players || {}).length);
+
+  const colorMap: Record<string, number> = {};
+  if (match?.teams) {
+    (match.teams as any[]).forEach((team: any[]) => {
+      team.forEach((p: any) => {
+        if (p?.user_id) {
+          colorMap[String(p.user_id)] = p.color_id;
+        }
+      });
+    });
+  }
+
+  const nameMap: Record<string, string> = {};
+  if (match?.players) {
+    (match.players as any[]).forEach((p: any) => {
+      if (p?.user_id) {
+        nameMap[String(p.user_id)] = p.name;
+      }
+    });
+  }
 
   useEffect(() => {
     const loadMatch = async () => {
@@ -147,12 +171,30 @@ export function MatchPage() {
             {/* Enlarged Match Card */}
             <EnlargedMatchCard match={match} />
             
-            {/* Future content will go here */}
-            <Box>
-              <Text color="brand.steel" fontStyle="italic" textAlign="center">
-                Additional match details coming soon...
-              </Text>
-            </Box>
+            {/* Additional Details Section */}
+            <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
+              <Tabs variant="enclosed" colorScheme="brand">
+                <TabList mb={4} justifyContent="flex-start">
+                  <Tab fontWeight="bold" w={{ base: '100px', md: '120px' }}>APM</Tab>
+                </TabList>
+                <TabPanels>
+                  <TabPanel p={0} id="apm">
+                    {hasApm ? (
+                      <>
+                        <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                          APM Over Time
+                        </Text>
+                        <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />
+                      </>
+                    ) : (
+                      <Text color="brand.steel" fontStyle="italic" textAlign="center">
+                        Additional match details coming soon...
+                      </Text>
+                    )}
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+            </Card>
           </VStack>
         </VStack>
       </Box>

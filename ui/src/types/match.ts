@@ -31,6 +31,10 @@ export interface Match {
   players: Player[];
   winning_team?: number;
   winning_teams?: number[];
+  apm?: {
+    players: Record<string, any>;
+    [key: string]: any;
+  };
 }
 
 export type SortDirection = 'asc' | 'desc';
