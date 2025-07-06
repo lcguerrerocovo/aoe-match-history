@@ -44,7 +44,7 @@ function doubleBase64Decode(str) {
   }
 }
 
-module.exports = { decodeOptions, doubleBase64Decode };
+module.exports = { decodeOptions, doubleBase64Decode, decodeSlotInfo, decompressZlib };
 
 // ---------------- SlotInfo decoder -----------------
 function parseColor(color) {

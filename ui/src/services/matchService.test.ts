@@ -3,11 +3,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { mockPersonalStats, mockSteamProfile } from '../test/mocks';
 
-// Mock the slotInfoDecoder to avoid complex decoding
-vi.mock('../utils/slotInfoDecoder', () => ({
-  decodeSlotInfo: vi.fn(() => [])
-}));
-
 // Mock global fetch
 const fetchMock = vi.fn();
 global.fetch = fetchMock;

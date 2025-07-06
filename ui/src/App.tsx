@@ -109,7 +109,7 @@ function App() {
     // Update maps and match types with counts based on filtered results
     setMaps(getMapsWithCounts(filtered));
     setMatchTypes(getMatchTypesWithCounts(filtered));
-  }, [allMatches, searchTerm, selectedMap, selectedMatchType]);
+  }, [allMatches, searchTerm, selectedMap, selectedMatchType, sortDirection]);
 
   useEffect(() => {
     updateMatches();
