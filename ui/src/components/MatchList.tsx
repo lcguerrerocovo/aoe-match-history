@@ -422,18 +422,20 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
           ? 'Download & Process Replay'
           : 'Replay not found';
 
-  const clickable = ready && !processing;
+  const clickable = (ready && !processing) || processed;
 
   const borderColor = silver ? 'brand.brightSilver' : (processed ? 'brand.bronze' : 'brand.steel');
   const boxShadow = silver
     ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
     : (processed ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
 
+  const linkProps = processed ? { to: `/match/${matchId}#apm` } : {} as const;
+
   return (
     <Tooltip label={tooltipLabel} fontSize="xs">
       <Box
-        as="button"
-        onClick={handleClick}
+        as={processed ? RouterLink : 'button'}
+        onClick={processed ? undefined : handleClick}
         bg={bg}
         color={fg}
         w="28px"
@@ -445,12 +447,7 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
         fontSize="2xs"
         fontWeight="bold"
         cursor={clickable ? 'pointer' : 'not-allowed'}
-        _hover={clickable ? { bg: `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 40%, ${theme.colors.brand.brightSilver} 100%)`, boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.8), inset 0 -1px 2px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.3)' } : {}}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        minW="28px"
-        minH="28px"
+        {...linkProps}
       >
         {processing ? <Spinner size="xs" color="brand.steel" /> : 'APM'}
       </Box>

@@ -764,70 +764,24 @@ async function handleMatch(matchId) {
     const matchRef = db.collection('matches').doc(matchId.toString());
     const matchDoc = await matchRef.get();
     log.info({ matchId, exists: matchDoc.exists }, 'Match document check');
-    
-    let rawMatch, profiles;
-    
-    if (!matchDoc.exists) {
-      // Match not in storage, fetch from external API
-      log.info({ matchId }, 'Match not found in storage, fetching from external API');
-      
-      try {
-        const targetUrl = `https://aoe-api.worldsedgelink.com/community/leaderboard/getRecentMatchHistory/?title=age2&matchHistoryId=${matchId}`;
-        log.info({ targetUrl }, 'Fetching from external API');
-        
-        const response = await fetch(targetUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'aoe2-site'
-          }
-        });
-        
-        log.info({ status: response.status, statusText: response.statusText }, 'External API response');
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          log.error({ status: response.status, errorText }, 'External API error');
-          throw new Error(`Failed to fetch match from external API: ${response.status} - ${errorText}`);
-        }
-        
-        const data = await response.json();
-        log.info({ dataKeys: Object.keys(data), matchCount: data.matchHistoryStats?.length }, 'External API response data');
-        
-        const match = data.matchHistoryStats?.[0];
-        
-        if (!match) {
-          log.error({ data }, 'No match found in external API response');
-          throw new Error('Match not found in external API');
-        }
-        
-        rawMatch = match;
-        profiles = data.profiles || [];
-        
-        // Store the match for future use
-        await matchRef.set({
-          raw: rawMatch,
-          profiles: profiles,
-          updated: new Date().toISOString()
-        });
-        
-        log.info({ matchId }, 'Match fetched and stored from external API');
-      } catch (error) {
-        log.error({ error: error.message, stack: error.stack }, 'Error fetching match from external API');
-        throw error;
-      }
-    } else {
-      // Use stored data
-      const matchData = matchDoc.data();
-      rawMatch = matchData.raw || matchData;
-      profiles = matchData.profiles || [];
-    }
+          // Use stored data
+    let docData = matchDoc.data();
+    let rawMatch = docData.raw || docData;
+    let profiles = docData.profiles || [];
     
     const processedMatch = await processMatch(rawMatch, profiles);
+    
+    // Attach APM data if available in Firestore doc
+    const storedApm = docData ? docData.apm : undefined;
+    log.info({ storedApm }, 'Stored APM data');
+    if (storedApm) {
+      processedMatch.apm = storedApm;
+    }
     
     return { 
       data: processedMatch,
       headers: {
-        'Cache-Control': 'public, max-age=300', // 5 minutes for processed match
+        'Cache-Control': 'private, max-age=0, must-revalidate',
         'Vary': 'Accept-Encoding'
       }
     };

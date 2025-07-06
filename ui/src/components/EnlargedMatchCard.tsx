@@ -7,6 +7,7 @@ import { formatDuration, parseDuration } from '../utils/timeUtils';
 import { assetManager } from '../utils/assetManager';
 import { PLAYER_COLORS } from './playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
+import { ApmChart } from './ApmChart';
 
 interface EnlargedMatchCardProps {
   match: any;
@@ -391,6 +392,20 @@ function MatchDetails({ match }: { match: any }) {
 export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
+  // Build color mapping profileId → color_id to pass into chart
+  const colorMap: Record<string, number> = {};
+  if (match?.teams) {
+    match.teams.forEach((team: any[]) => {
+      team.forEach((p: any) => {
+        if (p?.user_id) {
+          colorMap[String(p.user_id)] = p.color_id;
+        }
+      });
+    });
+  }
+
+  const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players).length);
+
   return (
     <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px" data-testid="enlarged-match-card">
       <VStack spacing={6} align="stretch">
@@ -463,6 +478,16 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
             )}
           </VStack>
         </Flex>
+
+        {/* APM Time Series */}
+        {hasApm && (
+          <Box id="apm">
+            <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2}>
+              APM Over Time
+            </Text>
+            <ApmChart apm={match.apm} colorByProfile={colorMap} />
+          </Box>
+        )}
       </VStack>
     </Card>
   );
