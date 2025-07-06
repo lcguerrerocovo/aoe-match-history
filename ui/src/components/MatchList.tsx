@@ -1,23 +1,15 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme, Spinner } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import type { MatchGroup, Player } from '../types/match';
-import { ExternalLinkIcon, TimeIcon, CalendarIcon } from '@chakra-ui/icons';
+import { TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { GiBroadsword } from 'react-icons/gi';
 import { PLAYER_COLORS } from './playerColors';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';
 import { assetManager } from '../utils/assetManager';
-import { useState } from 'react';
-
-const BASE_URL = import.meta.env.PROD ? 'https://aoe2.site' : window.location.origin;
-
-interface MatchListProps {
-  matchGroups: MatchGroup[];
-  openDates: string[];
-  onOpenDatesChange: (dates: string[]) => void;
-  profileId: string;
-}
+import { useState, useEffect } from 'react';
+import { checkReplayAvailability, downloadReplay } from '../services/matchService';
 
 function PlayerRating({ player }: { player: Player }) {
   const { rating, rating_change: ratingChange } = player;
@@ -114,11 +106,10 @@ function MapCard({ match }: { match: any }) {
   );
 }
 
-function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
+function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profileId: string; groupOpen: boolean }) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
   const realTimeSec = Math.round(durationSec / 1.7);
-
 
   return (
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
@@ -143,24 +134,10 @@ function MatchSummaryCard({ match, BASE_URL }: { match: any; BASE_URL: string })
           >
             {match.description}
           </Link>
-          <Link
-            href={`${BASE_URL}/site/matches/${match.match_id}/match.html`}
-            color="brand.zoolanderBlue"
-            fontWeight="semibold"
-            isExternal
-            display="none"
-          >
-            APM Charts <ExternalLinkIcon mx="2px" />
-          </Link>
-          <Tooltip label="Coming Soon!" fontSize="xs" placement="top">
-            <Text
-              color="brand.steel"
-              fontWeight="semibold"
-              cursor="not-allowed"
-            >
-              APM Charts
-            </Text>
-          </Tooltip>
+          {/* APM button */}
+          {profileId && (
+            <APMButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
+          )}
         </HStack>
         <Divider />
         <Box
@@ -392,12 +369,101 @@ function TeamCard({ match }: { match: any }) {
   );
 }
 
-export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string }) {
+function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profileId: string; groupOpen: boolean }) {
+  const theme = useTheme();
+  const [available, setAvailable] = useState<boolean | null>(null);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [processed, setProcessed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!groupOpen || available !== null) return;
+    const run = async () => {
+      const ok = await checkReplayAvailability(matchId, profileId);
+      setAvailable(ok);
+    };
+    run();
+  }, [groupOpen, matchId, profileId, available]);
+
+  const handleClick = async () => {
+    if (processing || available !== true || processed) return;
+    try {
+      setProcessing(true);
+      const success = await downloadReplay(matchId, profileId);
+      if (success) {
+        setProcessed(true);
+      }
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const ready = available === true && !processed;
+  const silver = processing || ready;
+
+  const bg = silver
+    ? `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 50%, ${theme.colors.brand.brightSilver} 100%)`
+    : processed
+      ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
+      : 'brand.steel';
+
+  const fg = processing || !ready && !processed && available !== true
+    ? (processing ? 'brand.steel' : 'brand.stoneLight')
+    : processed
+      ? 'brand.brightGold'
+      : 'brand.steel';
+
+  const tooltipLabel = processing
+    ? 'Processing replay...'
+    : processed
+      ? 'APM Ready'
+      : available === null
+        ? 'Checking replay availability...'
+        : available
+          ? 'Download & Process Replay'
+          : 'Replay not found';
+
+  const clickable = ready && !processing;
+
+  const borderColor = silver ? 'brand.brightSilver' : (processed ? 'brand.bronze' : 'brand.steel');
+  const boxShadow = silver
+    ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
+    : (processed ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
+
+  return (
+    <Tooltip label={tooltipLabel} fontSize="xs">
+      <Box
+        as="button"
+        onClick={handleClick}
+        bg={bg}
+        color={fg}
+        w="28px"
+        h="28px"
+        borderRadius="full"
+        border="1px solid"
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+        fontSize="2xs"
+        fontWeight="bold"
+        cursor={clickable ? 'pointer' : 'not-allowed'}
+        _hover={clickable ? { bg: `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 40%, ${theme.colors.brand.brightSilver} 100%)`, boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.8), inset 0 -1px 2px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.3)' } : {}}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minW="28px"
+        minH="28px"
+      >
+        {processing ? <Spinner size="xs" color="brand.steel" /> : 'APM'}
+      </Box>
+    </Tooltip>
+  );
+}
+
+export function MatchCard({ match, profileId, groupOpen }: { match: any; profileId: string; groupOpen: boolean }) {
   const layout = useLayoutConfig();
 
   return (
     <Card variant="match" role="group">
-      <MatchSummaryCard match={match} BASE_URL={BASE_URL} />
+      <MatchSummaryCard match={match} profileId={profileId} groupOpen={groupOpen} />
       <Box
         display="flex"
         flexDirection={layout?.matchCard.flexDirection}
@@ -415,6 +481,13 @@ export function MatchCard({ match, BASE_URL }: { match: any; BASE_URL: string })
   );
 }
 
+interface MatchListProps {
+  matchGroups: MatchGroup[];
+  openDates: string[];
+  onOpenDatesChange: (dates: string[]) => void;
+  profileId: string;
+}
+
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
   const theme = useTheme();
@@ -423,7 +496,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
   const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
 
   // Render matches for a group
-  const renderMatches = (matches: any[]) => (
+  const renderMatches = (matches: any[], groupOpen: boolean) => (
     <VStack spacing={layout?.matchList.groupGap} align="stretch" width="100%" mx="auto">
       {matches.map((match: any) => (
         <Box
@@ -434,7 +507,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
           display="flex"
           flexDirection="column"
         >
-          <MatchCard match={match} BASE_URL={BASE_URL} />
+          <MatchCard match={match} profileId={profileId} groupOpen={groupOpen} />
         </Box>
       ))}
     </VStack>
@@ -452,7 +525,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
           p={4}
           boxShadow="sm"
         >
-          {renderMatches(matchGroups[0].matches)}
+          {renderMatches(matchGroups[0].matches, true)}
         </Box>
       ) : (
         // Normal mode: render with accordion
@@ -466,9 +539,10 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
           mx="auto"
           variant="filled"
         >
-          {matchGroups.map((group) => {
+          {matchGroups.map((group: MatchGroup, _idx: number) => {
             const { totalReal } = sumDurations(group.matches);
             const byDiplo = countByDiplomacy(group.matches, profileId);
+            const isOpen = openDates.includes(group.date);
             return (
               <AccordionItem
                 key={group.date}
@@ -613,12 +687,12 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                         boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
                       }}
                     >
-                      {openDates.includes(group.date) ? "−" : "+"}
+                      {isOpen ? "−" : "+"}
                     </Box>
                   </AccordionButton>
                 </h2>
                 <AccordionPanel pb={4}>
-                  {renderMatches(group.matches)}
+                  {renderMatches(group.matches, isOpen)}
                 </AccordionPanel>
               </AccordionItem>
             );

@@ -41,6 +41,19 @@ let rlMappings = null;
 let civMap = null;
 let mapMap = null;
 
+// Duration of artificial latency in milliseconds (set via env or default 1500ms)
+const SIMULATE_LATENCY_MS = process.env.SIMULATE_LATENCY_MS ? parseInt(process.env.SIMULATE_LATENCY_MS, 10) : 1500;
+
+// -------------------------------------------------------------
+// Utility: artificial latency injection for UI testing
+// -------------------------------------------------------------
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// When developing locally we sometimes want to slow down specific
+// endpoints so that the frontend can display loading animations.
+// Set SIMULATE_LATENCY_MS env var (in milliseconds) to override,
 // Match processing utilities
 async function loadMappings() {
   if (!rlMappings) {
@@ -63,7 +76,6 @@ async function checkReplayAvailability(gameId, profileId) {
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // 1s, 2s delays
       }
       
-      // Use a GET request with a very short timeout - we just want to see if we get a proper response
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 800); // 800ms timeout
       
@@ -1032,6 +1044,71 @@ async function handleProcessedGameMatchHistory(idsStr) {
   };
 }
 
+async function handleReplayDownload(gameId, profileId) {
+  try {
+    // Inject artificial latency for UI spinner demonstration
+    if (SIMULATE_LATENCY_MS > 0) {
+      await sleep(SIMULATE_LATENCY_MS);
+    }
+
+    const url = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
+
+    // Log outgoing request details
+    log.info({ gameId, profileId, url }, 'Fetching replay file');
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/octet-stream',
+        'User-Agent': 'aoe2-site'
+      }
+    });
+
+    // Log response headers & status
+    const respHeaders = {};
+    response.headers.forEach((v, k) => { respHeaders[k] = v; });
+    log.info({ gameId, profileId, status: response.status, headers: respHeaders }, 'Replay fetch response');
+
+    if (response.ok) {
+      const buffer = await response.arrayBuffer();
+      log.info({ gameId, profileId, size: buffer.byteLength }, 'Replay downloaded successfully');
+      return {
+        data: { size: buffer.byteLength, downloaded: true },
+        headers: {
+          'Cache-Control': 'private, max-age=0',
+          'Vary': 'Accept-Encoding'
+        }
+      };
+    }
+
+    // Read small portion of body for debugging (if text)
+    let bodySnippet = '';
+    try {
+      const text = await response.text();
+      bodySnippet = text.slice(0, 200);
+    } catch (_) {
+      bodySnippet = '<non-text body>';
+    }
+
+    // Gracefully handle non-OK responses – treat as unavailable but not an error
+    log.warn({ gameId, profileId, status: response.status, body: bodySnippet }, 'Replay download returned non-OK status');
+    return {
+      data: { downloaded: false, status: response.status },
+      headers: {
+        'Cache-Control': 'private, max-age=0',
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (error) {
+    log.error({ error: error.message, gameId, profileId }, 'Replay download error');
+    return {
+      data: { downloaded: false, error: error.message },
+      headers: {
+        'Cache-Control': 'private, max-age=0',
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  }
+}
 
 const routes = [
   {
@@ -1088,6 +1165,10 @@ const routes = [
       }
       return handlePlayerSearch(name);
     }
+  },
+  {
+    pattern: /^\/api\/replay-download\/(\d+)\/(\d+)$/,
+    handler: (gameId, profileId) => handleReplayDownload(gameId, profileId)
   }
 ];
 
@@ -1108,8 +1189,8 @@ exports.proxy = async (req, res) => {
       } else {
         // Handle other routes with path parameters
         const match = req.url.match(route.pattern);
-        if (req.url.startsWith('/api/check-replay')) {
-          // Check replay has two parameters: gameId and profileId
+        if (match && match.length >= 3) {
+          // Routes with two captured parameters (e.g., check-replay, replay-download)
           response = await route.handler(match[1], match[2]);
         } else {
           response = await route.handler(match[1]);

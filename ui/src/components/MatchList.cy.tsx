@@ -8,8 +8,6 @@ import theme from '../theme/theme';
 import { mockMatch, mockMatchGroup } from '../test/mocks';
 import type { MatchGroup } from '../types/match';
 
-const BASE_URL = 'http://localhost';
-
 // Helper function to create a match with multiple teams for testing team wrapping
 const createMultiTeamMatch = (numTeams: number) => ({
   ...mockMatch,
@@ -49,7 +47,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -78,7 +76,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -112,7 +110,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -138,7 +136,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -163,7 +161,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -196,7 +194,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -217,7 +215,7 @@ describe('Team Layout Responsive Behavior', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={multiTeamMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -255,7 +253,7 @@ describe('MatchCard Responsive Layout', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -277,7 +275,7 @@ describe('MatchCard Responsive Layout', () => {
     mount(
       <BrowserRouter>
         <ChakraProvider theme={theme}>
-          <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+          <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
         </ChakraProvider>
       </BrowserRouter>
     );
@@ -311,7 +309,7 @@ describe('MatchCard Responsive Layout', () => {
       <BrowserRouter>
         <ChakraProvider theme={theme}>
           <div style={{ width: '100%', border: '1px solid red' }}>
-            <MatchCard match={mockMatch} BASE_URL={BASE_URL} />
+            <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
           </div>
         </ChakraProvider>
       </BrowserRouter>

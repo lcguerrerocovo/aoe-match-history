@@ -113,3 +113,19 @@ export async function checkReplayAvailability(gameId: string, profileId: string)
     return true; // Default to available on error
   }
 }
+
+// Trigger backend replay download (APM chart prep)
+export async function downloadReplay(gameId: string, profileId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/replay-download/${gameId}/${profileId}`);
+    if (!response.ok) {
+      console.error('Replay download request failed', response.statusText);
+      return false;
+    }
+    const data = await response.json();
+    return Boolean(data?.downloaded);
+  } catch (e) {
+    console.error('Replay download request failed', e);
+    return false;
+  }
+}
