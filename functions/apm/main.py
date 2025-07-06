@@ -1,6 +1,4 @@
 # Flask entrypoint for Cloud Functions (Python)
-import base64
-import json
 import time
 import io
 from datetime import datetime, timezone

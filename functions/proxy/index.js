@@ -20,7 +20,7 @@ const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
 const RELIC_AUTH_STEAM_PASS = process.env.RELIC_AUTH_STEAM_PASS;
 
 // Endpoint of Python APM function (HTTP trigger)
-const APM_API_URL = process.env.APM_API_URL || process.env.APM_FN_URL || null;
+const APM_API_URL = process.env.APM_API_URL || process.env.APM_FN_URL || 'https://us-east1-aoe2-site.cloudfunctions.net/aoe2-apm-processor';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',

@@ -137,7 +137,7 @@ jobs:
           # Set ACL for public access
           gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/ gs://aoe2.site/_redirects
 
-  deploy-function:
+  deploy-proxy-function:
     runs-on: ubuntu-latest
     container:
       image: node:20.11.1-slim
@@ -170,7 +170,7 @@ jobs:
           # Create Firestore database if it doesn't exist
           gcloud firestore databases create --location=us-central1 --quiet || echo "Database already exists"
       
-      - name: Deploy Cloud Function
+      - name: Deploy Proxy Cloud Function
         run: |
           cd functions/proxy
           rm -rf node_modules
@@ -186,8 +186,45 @@ jobs:
             --allow-unauthenticated \
             --memory=256MB \
             --timeout=30s \
-            --min-instances=0 \
-            --max-instances=10 \
             --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }}" \
+            --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+            --verbosity=debug
+
+  deploy-apm-function:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11-slim
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Enable APIs
+        run: |
+          gcloud services enable cloudresourcemanager.googleapis.com
+          gcloud services enable cloudfunctions.googleapis.com
+          gcloud services enable cloudbuild.googleapis.com
+      
+      - name: Deploy APM Cloud Function
+        run: |
+          cd functions/apm
+          pip install -r requirements.txt -t .
+          gcloud functions deploy aoe2-apm-processor \
+            --gen2 \
+            --runtime=python311 \
+            --region=us-east1 \
+            --source=. \
+            --entry-point=apm_handler \
+            --trigger-http \
+            --allow-unauthenticated \
+            --memory=256MB \
+            --timeout=30s \
             --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug 
