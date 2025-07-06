@@ -61,194 +61,214 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   const isReplayDisabled = replayAvailable === false;
   const isReplayLoading = replayAvailable === null;
 
+  // Determine background and foreground colors for the player number rectangle
+  const bgColor = PLAYER_COLORS[player.color_id] || theme.colors.brand.steel;
+
+  const computeIsLight = (hex: string) => {
+    const cleaned = hex.replace('#', '');
+    if (cleaned.length !== 6) return false;
+    const r = parseInt(cleaned.substr(0, 2), 16);
+    const g = parseInt(cleaned.substr(2, 2), 16);
+    const b = parseInt(cleaned.substr(4, 2), 16);
+    // Perceptive luminance formula
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 150;
+  };
+
+  const numberTextColor = computeIsLight(bgColor) ? 'brand.midnightBlue' : 'brand.parchment';
+
   return (
-    <HStack
-      spacing={{ base: 2, md: 3 }}
-      align="center"
-      position="relative"
-      w="full"
-    >
-      {/* Avatar & download */}
-      <VStack spacing={1} align="center" minW={{ base: '55px', md: '70px' }}>
+    <Box position="relative" w="full">
+      {/* Top row: avatar and details */}
+      <HStack
+        spacing={{ base: 1, md: 2 }}
+        align="flex-start"
+        w="full"
+      >
+        {/* Avatar */}
         <Avatar
           src={avatarUrl}
           name={player.name}
-          size={{ base: "md", md: "lg" }}
+          size={{ base: "sm", md: "md", lg: "md" }}
           bg="brand.steel"
           color="brand.parchment"
           border="1px solid"
           borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
           data-testid="player-avatar"
         />
-        <Tooltip 
-          label={
-            isReplayLoading
-              ? 'Checking replay availability...'
-              : isReplayDisabled
-                ? 'Replay file not available'
-                : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
-          }
-          fontSize="sm"
-        >
-          <Link
-            href={replayUrl}
-            isExternal
-            mt={1}
-            w={{ base: "18px", md: "22px" }}
-            h={{ base: "18px", md: "22px" }}
-            bg={
-              isReplayLoading
-                ? 'brand.steel'
-                : isReplayDisabled 
-                  ? 'brand.steel'
-                  : `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
-            }
-            borderRadius="full"
-            display="flex"
-            boxSizing="border-box"
-            alignItems="center"
-            justifyContent="center"
-            color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
-            fontSize={{ base: "2xs", md: "xs" }}
-            fontWeight="bold"
-            borderWidth={{ base: 0, md: '1px' }}
-            borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
-            boxShadow={
-              isReplayLoading || isReplayDisabled 
-                ? 'none'
-                : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
-            }
-            transition="all 0.2s ease"
-            opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
-            cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
-            pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
-            data-testid="download-button"
-            _hover={
-              isReplayLoading || isReplayDisabled 
-                ? {}
-                : { 
-                    bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
-                    color: "brand.brightGold",
-                    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
-                  }
-            }
-          >
-            <Icon as={DownloadIcon} boxSize={{ base: 3, md: 4 }} />
-          </Link>
-        </Tooltip>
-      </VStack>
 
-      {/* Player details to the right */}
-      <VStack spacing={0.5} align="start" flex="1" minW={0}>
-        {/* Player name */}
-        <Link
-          as={RouterLink}
-          to={`/profile_id/${player.user_id}`}
-          fontSize={{ base: "xs", md: "sm" }}
-          fontWeight="semibold"
-          color="brand.midnightBlue"
-          _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
-          textDecoration="none"
-          noOfLines={1}
-          maxW="100%"
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-          title={player.name}
-          data-testid="player-name"
-        >
-          {player.name}
-        </Link>
-
-        {/* Player Color Indicator with Index */}
-        <HStack spacing={1} align="center">
-          <Box
-            w={{ base: "16px", md: "18px" }}
-            h={{ base: "10px", md: "12px" }}
-            bg={PLAYER_COLORS[player.color_id] || 'brand.steel'}
-            borderRadius="sm"
-            border="1px solid"
-            borderColor="brand.steel"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            boxShadow="sm"
-            data-testid="color-indicator"
-          >
-            <Text
-              fontSize={{ base: "3xs", md: "2xs" }}
-              fontWeight="bold"
-              color="brand.parchment"
-              textShadow="1px 1px 2px rgba(0,0,0,0.8)"
-            >
-              {player.color_id || '?'}
-            </Text>
-          </Box>
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" fontWeight="medium">
-            Player {player.color_id || '?'}
-          </Text>
-        </HStack>
-        
-        {/* Civ Icon and Name */}
-        <HStack spacing={1} align="center">
-          <Box
-            w={{ base: "18px", md: "20px" }}
-            h={{ base: "18px", md: "20px" }}
-            borderRadius="sm"
-            overflow="hidden"
-            bg="brand.stoneLight"
-            borderWidth={0}
-          >
-            <img
-              src={assetManager.getCivIcon(String(player.civ || 'unknown'))}
-              alt={String(player.civ || 'Unknown')}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
-                if (textElement) {
-                  textElement.style.display = 'flex';
-                }
-              }}
-            />
+        {/* Details column */}
+        <VStack spacing={1} align="start" flex="1" minW={0}>
+          {/* Player Color Indicator with Index */}
+          <HStack spacing={0} align="center" w="full">
             <Box
-              className="civ-fallback"
-              display="none"
+              flex="1"
+              mr={1}
+              maxW={{ base: '80px', md: '100px', lg: '80px' }}
+              h={{ base: "16px", md: "18px" }}
+              bg={bgColor}
+              borderRadius="sm"
+              border="1px solid"
+              borderColor="brand.steel"
+              display="flex"
               alignItems="center"
               justifyContent="center"
-              w="100%"
-              h="100%"
-              fontSize={{ base: "6px", md: "8px" }}
-              fontWeight="bold"
-              color="brand.bronze"
-              bg="brand.stoneLight"
+              boxShadow="sm"
+              data-testid="color-indicator"
             >
-              {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
-            </Box>
-          </Box>
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" noOfLines={1}>
-            {player.civ}
-          </Text>
-        </HStack>
-        
-        {/* Rating and change */}
-        {player.rating && (
-          <Text fontSize={{ base: "xs", md: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
-            {player.rating}
-            {player.rating_change && (
-              <Text as="span" color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
-                ({player.rating_change > 0 ? '+' : ''}{player.rating_change})
+              <Text
+                fontSize={{ base: "2xs", md: "xs" }}
+                fontWeight="bold"
+                color={numberTextColor}
+                textShadow={numberTextColor === 'brand.parchment' ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none'}
+              >
+                {player.color_id || '?'}
               </Text>
-            )}
-          </Text>
-        )}
-      </VStack>
-    </HStack>
+            </Box>
+          </HStack>
+
+          {/* Civ Icon and Name */}
+          <HStack spacing={1} align="center">
+            <Box
+              w={{ base: "18px", md: "20px" }}
+              h={{ base: "18px", md: "20px" }}
+              borderRadius="sm"
+              overflow="hidden"
+              bg="brand.stoneLight"
+              borderWidth={0}
+            >
+              <img
+                src={assetManager.getCivIcon(String(player.civ || 'unknown'))}
+                alt={String(player.civ || 'Unknown')}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
+                  if (textElement) {
+                    textElement.style.display = 'flex';
+                  }
+                }}
+              />
+              <Box
+                className="civ-fallback"
+                display="none"
+                alignItems="center"
+                justifyContent="center"
+                w="100%"
+                h="100%"
+                fontSize={{ base: "6px", md: "8px" }}
+                fontWeight="bold"
+                color="brand.bronze"
+                bg="brand.stoneLight"
+              >
+                {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
+              </Box>
+            </Box>
+            <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" noOfLines={1}>
+              {player.civ}
+            </Text>
+          </HStack>
+
+          {/* Rating and change */}
+          {player.rating && (
+            <Text fontSize={{ base: "2xs", md: "xs", lg: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
+              {player.rating}
+              {player.rating_change && (
+                <Text as="span" fontSize={{ base: '2xs', md: '2xs', lg: 'xs' }} color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
+                  ({player.rating_change > 0 ? '+' : ''}{player.rating_change})
+                </Text>
+              )}
+            </Text>
+          )}
+        </VStack>
+      </HStack>
+
+      {/* Alias row */}
+      <Link
+        as={RouterLink}
+        to={`/profile_id/${player.user_id}`}
+        fontSize={{ base: "xs", md: "sm" }}
+        fontWeight="semibold"
+        color="brand.midnightBlue"
+        _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+        textDecoration="none"
+        noOfLines={1}
+        maxW={{ base: "calc(100% - 16px)", md: "calc(100% - 20px)" }}
+        pr={{ base: 4, md: 5 }}
+        overflow="hidden"
+        textOverflow="ellipsis"
+        whiteSpace="nowrap"
+        title={player.name}
+        mt={1}
+        data-testid="player-name"
+      >
+        {player.name}
+      </Link>
+
+      {/* Download button bottom-right */}
+      <Tooltip 
+        label={
+          isReplayLoading
+            ? 'Checking replay availability...'
+            : isReplayDisabled
+              ? 'Replay file not available'
+              : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
+        }
+        fontSize="sm"
+      >
+        <Link
+          href={replayUrl}
+          isExternal
+          w={{ base: "18px", md: "22px" }}
+          h={{ base: "18px", md: "22px" }}
+          bg={
+            isReplayLoading
+              ? 'brand.steel'
+              : isReplayDisabled 
+                ? 'brand.steel'
+                : `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
+          }
+          borderRadius="full"
+          display="flex"
+          boxSizing="border-box"
+          alignItems="center"
+          justifyContent="center"
+          color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
+          fontSize={{ base: "2xs", md: "xs" }}
+          fontWeight="bold"
+          borderWidth={{ base: 0, md: '1px' }}
+          borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
+          boxShadow={
+            isReplayLoading || isReplayDisabled 
+              ? 'none'
+              : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
+          }
+          transition="all 0.2s ease"
+          opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
+          cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
+          pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+          data-testid="download-button"
+          position="absolute"
+          bottom={-1}
+          right={{ base: -1, lg: 1 }}
+          _hover={
+            isReplayLoading || isReplayDisabled 
+              ? {}
+              : { 
+                  bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
+                  color: "brand.brightGold",
+                  boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                }
+          }
+        >
+          <Icon as={DownloadIcon} boxSize={{ base: 3, md: 4 }} />
+        </Link>
+      </Tooltip>
+    </Box>
   );
 }
 
@@ -410,14 +430,22 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                           🏆
                         </Box>
                       )}
+                      {/* Dynamic column layout based on team size */}
                       <SimpleGrid
-                        spacing={2}
-                        templateColumns={{ base: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' }}
+                        spacing={{ base: 1, md: team.length >= 4 ? 1 : 2, lg: team.length >= 4 ? 1 : 2 }}
+                        templateColumns={{
+                          base: `repeat(${Math.min(team.length, 2)}, minmax(0, 1fr))`,
+                          md: `repeat(${Math.min(team.length, 4)}, minmax(0, 1fr))`,
+                          lg: `repeat(${Math.min(team.length, 4)}, minmax(0, 1fr))`,
+                        }}
+                        justifyItems={team.length <= 2 ? 'center' : 'stretch'}
                       >
                         {team.map((player: any, playerIndex: number) => (
                           <Box
                             key={playerIndex}
-                            w="full"
+                            w={{ base: '145px', md: team.length >=4 ? '150px' : '160px', lg: team.length >=4 ? '150px' : '200px' }}
+                            maxW={{ base: '200px', md: team.length >=4 ? '200px' : '220px', lg: team.length >=4 ? '210px' : '240px' }}
+                            mx={team.length <= 2 ? 'auto' : undefined}
                             bg={isMobile
                               ? (Math.floor(playerIndex / 2) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')
                               : ((playerIndex + teamIndex) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')}

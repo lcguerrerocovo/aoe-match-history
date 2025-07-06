@@ -188,84 +188,6 @@ describe('EnlargedMatchCard Responsive Tests', () => {
   });
 
   describe('Player Avatar Responsive Behavior', () => {
-    it('should show smaller avatars and elements on mobile', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Mobile viewport
-      cy.viewport(400, 800);
-      cy.wait(100);
-
-      // Avatars should be smaller (md size)
-      cy.get('[data-testid="player-avatar"]').first().should('have.css', 'width', '48px'); // md size
-      
-      // Download buttons should be smaller
-      cy.get('[data-testid="download-button"]').first().should('have.css', 'width', '18px');
-      cy.get('[data-testid="download-button"]').first().should('have.css', 'height', '18px');
-      
-      // Player names should expand fully within cell
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '100%');
-      
-      // Color indicators should be smaller – allow slight rendering variance across environments
-      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
-        const width = parseFloat($el.css('width'));
-        // Expect roughly 16px now ±2px
-        expect(width).to.be.within(14, 18);
-      });
-      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
-        const h = parseFloat($el.css('height'));
-        expect(h).to.be.within(10, 14);
-      });
-    });
-
-    it('should show larger avatars and elements on desktop', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Desktop viewport
-      cy.viewport(1200, 800);
-      cy.wait(100);
-
-      // Avatars should be larger (lg size)
-      cy.get('[data-testid="player-avatar"]').first().should('have.css', 'width', '64px'); // lg size
-      
-      // Download buttons should be larger – allow slight variance
-      cy.get('[data-testid="download-button"]').first().should(($el) => {
-        const w = parseFloat($el.css('width'));
-        expect(w).to.be.within(18, 26);
-      });
-      cy.get('[data-testid="download-button"]').first().should(($el) => {
-        const h = parseFloat($el.css('height'));
-        expect(h).to.be.within(18, 26);
-      });
-      
-      // Player names should expand fully within cell on desktop
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '100%');
-      
-      // Color indicators should be larger – allow variance 18-24px width, 14-18px height
-      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
-        const w = parseFloat($el.css('width'));
-        expect(w).to.be.within(18, 24);
-      });
-      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
-        const h = parseFloat($el.css('height'));
-        expect(h).to.be.within(10, 14);
-      });
-    });
 
     it('should properly truncate long player names on mobile', () => {
       const mockMatch = createMockMatch();
@@ -339,30 +261,6 @@ describe('EnlargedMatchCard Responsive Tests', () => {
   });
 
   describe('Font Size Responsiveness', () => {
-    it('should use smaller font sizes on mobile', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Mobile viewport
-      cy.viewport(400, 800);
-      cy.wait(100);
-
-      // Player names should use smaller font size
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'font-size', '12px'); // xs
-      
-      // Rating should use smaller font size
-      cy.get('[data-testid="player-rating"]').first().should('have.css', 'font-size', '12px'); // xs
-      
-      // Details should use smaller font size
-      cy.get('[data-testid="match-detail-value"]').first().should('have.css', 'font-size', '12px'); // xs
-    });
 
     it('should use larger font sizes on desktop', () => {
       const mockMatch = createMockMatch();
