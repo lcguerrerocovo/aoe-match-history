@@ -110,7 +110,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return (
       <Box bg={theme.colors.brand.parchment} border="1px solid" borderColor={theme.colors.brand.slateBorder} p={2} borderRadius="md" fontSize="sm" minW="170px">
         <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>Minute {label}</Text>
-        {payload.map((entry: any) => {
+        {[...new Map(payload.map((entry: any) => [entry.dataKey, entry])).values()].map((entry: any) => {
           const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
           const strokeColor = entry.color as string;
           const isLightBg = computeIsLight(strokeColor);
@@ -145,7 +145,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     <Box w="full" h={containerH}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.brand.steel} />
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            stroke={theme.colors.brand.steel}
+            fill={isDark ? 'transparent' : theme.colors.brand.stoneLight}
+          />
           <XAxis
             dataKey="minute"
             stroke={theme.colors.brand.midnightBlue}
@@ -183,7 +187,14 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
               };
 
               return (
-                <Flex wrap="wrap" justify={{ base: 'flex-start', md: 'center' }} align="center" mt={2}>
+                <Flex
+                  wrap="wrap"
+                  justify={{ base: 'flex-start', md: 'center' }}
+                  align="center"
+                  mt={2}
+                  overflowX="auto"
+                  maxW="100%"
+                >
                   {playerIds.map((pid) => {
                     const name = nameByProfile[pid] ?? pid;
                     const avg = averages[pid];
@@ -194,8 +205,27 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
                     const inactive = !visibleIds.includes(pid);
                     return (
-                      <Flex key={pid} align="center" gap={1} mx={2} my={1} opacity={inactive ? 0.4 : 1} cursor="pointer" onClick={() => onToggle?.(pid)} w={{ base: '100%', md: 'auto' }}>
-                        <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
+                      <Flex
+                        key={pid}
+                        align="center"
+                        gap={1}
+                        mx={2}
+                        my={1}
+                        opacity={inactive ? 0.4 : 1}
+                        cursor="pointer"
+                        onClick={() => onToggle?.(pid)}
+                        minW="0"
+                      >
+                        <Text
+                          color={theme.colors.brand.midnightBlue}
+                          fontSize="xs"
+                          minW="0"
+                          maxW="80px"
+                          isTruncated
+                          whiteSpace="nowrap"
+                        >
+                          {name}
+                        </Text>
                         {avg !== undefined && (
                           <Box
                             bg={strokeColor}
@@ -208,6 +238,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                             display="flex"
                             justifyContent="center"
                             alignItems="center"
+                            flexShrink={0}
+                            ml={1}
                           >
                             <Text fontSize="xs" fontWeight="bold" color={textColor}>{avg}</Text>
                           </Box>
@@ -223,7 +255,45 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             const colorId = colorByProfile[pid];
             const stroke = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
             if (!visibleIds.includes(pid)) return null;
-            return (
+            // Enhanced contrast for yellow, green, cyan, orange
+            let isEnhanced = false;
+            let outlineColor = theme.colors.brand.steel;
+            if (colorId === 4 || stroke.toUpperCase() === '#FFFF00') { // yellow
+              isEnhanced = true;
+              outlineColor = theme.colors.brand.bronzeDark;
+            } else if (colorId === 3 || stroke.toUpperCase() === '#00FF00') { // green
+              isEnhanced = true;
+              outlineColor = theme.colors.brand.darkWin;
+            } else if (colorId === 5 || stroke.toUpperCase() === '#00FFFF') { // cyan
+              isEnhanced = true;
+              outlineColor = theme.colors.brand.slateBorder;
+            } else if (colorId === 8 || stroke.toUpperCase() === '#FFA500') { // orange
+              isEnhanced = true;
+              outlineColor = theme.colors.brand.bronze;
+            }
+            return isEnhanced ? (
+              <React.Fragment key={pid}>
+                <Line
+                  type="monotone"
+                  dataKey={pid}
+                  stroke={outlineColor}
+                  strokeWidth={3}
+                  strokeOpacity={0.8}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+                <Line
+                  type="monotone"
+                  dataKey={pid}
+                  stroke={stroke}
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </React.Fragment>
+            ) : (
               <Line
                 key={pid}
                 type="monotone"
@@ -231,6 +301,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                 stroke={stroke}
                 dot={false}
                 strokeWidth={2}
+                isAnimationActive={false}
               />
             );
           })}

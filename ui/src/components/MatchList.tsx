@@ -9,7 +9,7 @@ import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';
 import { assetManager } from '../utils/assetManager';
 import { useState, useEffect } from 'react';
-import { checkReplayAvailability, downloadReplay } from '../services/matchService';
+import { checkApmStatus, downloadReplay } from '../services/matchService';
 
 function PlayerRating({ player }: { player: Player }) {
   const { rating, rating_change: ratingChange } = player;
@@ -373,71 +373,72 @@ function TeamCard({ match }: { match: any }) {
 
 function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profileId: string; groupOpen: boolean }) {
   const theme = useTheme();
-  const [available, setAvailable] = useState<boolean | null>(null);
+  const [apmStatus, setApmStatus] = useState<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus' } | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
-  const [processed, setProcessed] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!groupOpen || available !== null) return;
+    if (!groupOpen || apmStatus !== null) return;
     const run = async () => {
-      const ok = await checkReplayAvailability(matchId, profileId);
-      setAvailable(ok);
+      const status = await checkApmStatus(matchId, profileId);
+      setApmStatus(status);
     };
     run();
-  }, [groupOpen, matchId, profileId, available]);
+  }, [groupOpen, matchId, profileId, apmStatus]);
 
   const handleClick = async () => {
-    if (processing || available !== true || processed) return;
+    if (processing || apmStatus?.state !== 'silverStatus') return;
     try {
       setProcessing(true);
       const success = await downloadReplay(matchId, profileId);
       if (success) {
-        setProcessed(true);
+        // Refresh the status after successful processing
+        const newStatus = await checkApmStatus(matchId, profileId);
+        setApmStatus(newStatus);
       }
     } finally {
       setProcessing(false);
     }
   };
 
-  const ready = available === true && !processed;
+  const ready = apmStatus?.state === 'silverStatus';
   const silver = processing || ready;
 
   const bg = silver
     ? `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 50%, ${theme.colors.brand.brightSilver} 100%)`
-    : processed
+    : apmStatus?.state === 'bronzeStatus'
       ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
       : 'brand.steel';
 
-  const fg = processing || !ready && !processed && available !== true
+  const fg = processing || (apmStatus?.state === 'greyStatus')
     ? (processing ? 'brand.steel' : 'brand.stoneLight')
-    : processed
+    : apmStatus?.state === 'bronzeStatus'
       ? 'brand.brightGold'
       : 'brand.steel';
 
   const tooltipLabel = processing
     ? 'Processing replay...'
-    : processed
+    : apmStatus?.state === 'bronzeStatus'
       ? 'APM Ready'
-      : available === null
-        ? 'Checking replay availability...'
-        : available
+      : apmStatus === null
+        ? 'Checking APM status...'
+        : apmStatus.state === 'silverStatus'
           ? 'Download & Process Replay'
           : 'Replay not found';
 
-  const clickable = (ready && !processing) || processed;
+  const clickable = (ready && !processing) || apmStatus?.state === 'bronzeStatus';
 
-  const borderColor = silver ? 'brand.brightSilver' : (processed ? 'brand.bronze' : 'brand.steel');
+  const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
   const boxShadow = silver
     ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
-    : (processed ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
+    : (apmStatus?.state === 'bronzeStatus' ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
 
-  const linkProps = processed ? { to: `/match/${matchId}#apm` } : {} as const;
+  const linkProps = apmStatus?.state === 'bronzeStatus' ? { to: `/match/${matchId}#apm` } : {} as const;
 
   return (
     <Tooltip label={tooltipLabel} fontSize="xs">
       <Box
-        as={processed ? RouterLink : 'button'}
-        onClick={processed ? undefined : handleClick}
+        as={apmStatus?.state === 'bronzeStatus' ? RouterLink : 'button'}
+        onClick={apmStatus?.state === 'bronzeStatus' ? undefined : handleClick}
         bg={bg}
         color={fg}
         w="28px"

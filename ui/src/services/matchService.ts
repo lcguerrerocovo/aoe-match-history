@@ -114,6 +114,26 @@ export async function checkReplayAvailability(gameId: string, profileId: string)
   }
 }
 
+// Check APM processing status
+export async function checkApmStatus(gameId: string, profileId: string): Promise<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus' }> {
+  try {
+    const response = await fetch(`${API_URL}/apm-status/${gameId}/${profileId}`);
+    if (!response.ok) {
+      console.error('APM status check failed', response.statusText);
+      return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
+    }
+    const data = await response.json();
+    return {
+      hasSaveGame: data.hasSaveGame || false,
+      isProcessed: data.isProcessed || false,
+      state: data.state || 'greyStatus'
+    };
+  } catch (e) {
+    console.error('APM status check failed', e);
+    return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
+  }
+}
+
 // Trigger backend replay download (APM chart prep)
 export async function downloadReplay(gameId: string, profileId: string): Promise<boolean> {
   try {
@@ -122,8 +142,7 @@ export async function downloadReplay(gameId: string, profileId: string): Promise
       console.error('Replay download request failed', response.statusText);
       return false;
     }
-    const data = await response.json();
-    return Boolean(data?.downloaded);
+    return false;
   } catch (e) {
     console.error('Replay download request failed', e);
     return false;
