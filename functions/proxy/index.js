@@ -870,6 +870,109 @@ async function handlePlayerSearch(name) {
   }
 }
 
+// Authenticated single-player recent match history via RelicPlayerService
+async function handleRawAuthSinglePlayerHistory(idsStr) {
+  const ids = idsStr.split(',').map(id => id.trim()).filter(Boolean);
+  if (ids.length === 0) {
+    throw new Error('No profile IDs provided');
+  }
+
+  const executeRequest = async () => {
+    const svc = await getAuthenticatedPlayerService();
+    return svc.getRecentMatchSinglePlayerHistory(ids);
+  };
+
+  try {
+    // Ensure we have a session and make the primary request
+    await ensureAuthenticated();
+    const result = await executeRequest();
+
+    // If service indicates auth failure, force re-auth and retry once
+    if (!result.success && result.authFailure) {
+      await ensureAuthenticated(true);
+      return await executeRequest();
+    }
+
+    return {
+      data: result.data,
+      headers: {
+        'Cache-Control': 'private, max-age=60',
+        'Vary': 'Accept-Encoding'
+      }
+    };
+  } catch (err) {
+    // Detect 401 (or auth) errors thrown as exceptions, then retry once after re-auth
+    const status = err?.response?.status || err?.status;
+    if (status === 401) {
+      // Force re-auth then retry
+      await ensureAuthenticated(true);
+      const retryResult = await executeRequest();
+      return {
+        data: retryResult.data,
+        headers: {
+          'Cache-Control': 'private, max-age=60',
+          'Vary': 'Accept-Encoding'
+        }
+      };
+    }
+    // Re-throw other errors
+    throw err;
+  }
+}
+
+// Processed variant
+async function handleProcessedSinglePlayerHistory(idsStr) {
+  const raw = await handleRawAuthSinglePlayerHistory(idsStr);
+
+  // Pre-load civ mapping once for all matches
+  const civMap = await getCivMap();
+
+  const transformMatch = (m) => {
+    // Build Player objects in UI-expected shape
+    const rawPlayers = m.players || [];
+
+    const players = rawPlayers.map((p) => {
+      const civId = p.metaData?.civId ?? null;
+      const colorId = p.metaData?.colorId ?? 0;
+      const teamIdRaw = p.metaData?.teamId ?? p.teamID ?? 0;
+      const teamNumber = parseInt(teamIdRaw, 10) + 1;
+      return {
+        name: p.alias || p["profileInfo.id"].toString(),
+        civ: civMap[civId?.toString?.() ?? ""] || civId, // fallback to id if unknown
+        number: teamNumber,
+        color_id: colorId,
+        user_id: p["profileInfo.id"].toString(),
+        winner: false,
+        rating: null,
+        rating_change: null
+      };
+    });
+
+    // Group into teams using existing helper
+    const teams = groupPlayersIntoTeams(players);
+
+    return {
+      match_id: m.match_id.toString(),
+      start_time: new Date(m.start_time * 1000).toISOString(),
+      description: m.name,
+      diplomacy: { type: 'Single', team_size: teams.length.toString() },
+      map: m.map_name,
+      duration: m.end_time - m.start_time,
+      teams,
+      players,
+      winning_team: undefined,
+      winning_teams: []
+    };
+  };
+
+  const processed = (raw.data || []).map(transformMatch);
+
+  return {
+    data: { id: idsStr, matches: processed },
+    headers: raw.headers
+  };
+}
+
 const routes = [
   {
     pattern: /^\/api\/steam\/avatar\/(\d+)$/,
@@ -894,6 +997,14 @@ const routes = [
   {
     pattern: /^\/api\/personal-stats\/(\d+)$/,
     handler: handlePersonalStats
+  },
+  {
+    pattern: /^\/api\/raw-singleplayer-history\/(\d+(?:,\d+)*)$/,
+    handler: handleRawAuthSinglePlayerHistory
+  },
+  {
+    pattern: /^\/api\/singleplayer-history\/(\d+(?:,\d+)*)$/,
+    handler: handleProcessedSinglePlayerHistory
   },
   {
     pattern: /^\/api\/check-replay\/(\d+)\/(\d+)$/,
