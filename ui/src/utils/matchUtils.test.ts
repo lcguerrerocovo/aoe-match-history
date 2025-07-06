@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupMatchesBySession, calculateSessionDuration, formatSessionStart, countByDiplomacy } from './matchUtils';
+import { groupMatchesBySession, calculateSessionDuration, formatSessionStart, countByDiplomacy, sortMatchesByStart } from './matchUtils';
 import type { Match, Player } from '../types/match';
 
 // Mock Data
@@ -127,6 +127,28 @@ describe('matchUtils', () => {
       expect(result['RM Team'].wins).toBe(1);
       expect(result['RM Team'].losses).toBe(0);
       expect(result['RM Team'].eloChange).toBe(10);
+    });
+  });
+
+  describe('sortMatchesByStart', () => {
+    it('should sort matches descending (newest first) by default', () => {
+      const m1 = mockMatch('2023-01-01T10:00:00Z', 1000);
+      const m2 = mockMatch('2023-01-01T12:00:00Z', 1000);
+      const m3 = mockMatch('2023-01-01T11:00:00Z', 1000);
+      const sorted = sortMatchesByStart([m1, m2, m3]);
+      expect(sorted[0]).toBe(m2);
+      expect(sorted[1]).toBe(m3);
+      expect(sorted[2]).toBe(m1);
+    });
+
+    it('should sort matches ascending (oldest first) when direction is "asc"', () => {
+      const m1 = mockMatch('2023-01-01T10:00:00Z', 1000);
+      const m2 = mockMatch('2023-01-01T12:00:00Z', 1000);
+      const m3 = mockMatch('2023-01-01T11:00:00Z', 1000);
+      const sorted = sortMatchesByStart([m1, m2, m3], 'asc');
+      expect(sorted[0]).toBe(m1);
+      expect(sorted[1]).toBe(m3);
+      expect(sorted[2]).toBe(m2);
     });
   });
 }); 

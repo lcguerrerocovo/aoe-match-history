@@ -326,4 +326,21 @@ export function createFlatMatchGroup(matches: Match[]): MatchGroup[] {
     date: `Search Results (${matches.length})`,
     matches: matches
   }];
+}
+
+// Utility: sort matches by start_time ISO string timestamp
+export function sortMatchesByStart(matches: Match[], direction: 'asc' | 'desc' = 'desc'): Match[] {
+  return [...matches].sort((a, b) => {
+    const aTime = new Date(a.start_time).getTime();
+    const bTime = new Date(b.start_time).getTime();
+    return direction === 'desc' ? bTime - aTime : aTime - bTime;
+  });
+}
+
+export function sortMatchGroupsByDate(groups: MatchGroup[], direction: 'asc' | 'desc' = 'desc'): MatchGroup[] {
+  return [...groups].sort((a, b) => {
+    const aTime = new Date(a.date.split('_')[0]).getTime();
+    const bTime = new Date(b.date.split('_')[0]).getTime();
+    return direction === 'desc' ? bTime - aTime : aTime - bTime;
+  });
 } 

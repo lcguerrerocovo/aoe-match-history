@@ -8,7 +8,7 @@ import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/m
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
-import { groupMatchesBySession, searchMatches, createFlatMatchGroup } from './utils/matchUtils';
+import { groupMatchesBySession, searchMatches, createFlatMatchGroup, sortMatchesByStart, sortMatchGroupsByDate } from './utils/matchUtils';
 import TopBar from './components/TopBar';
 
 function App() {
@@ -94,11 +94,13 @@ function App() {
     }
     
     // When searching by text OR filtering by map/match type, create flat groups (no date accordion)
-    if (searchTerm.trim() || selectedMap || selectedMatchType) {
-      setMatchGroups(createFlatMatchGroup(filtered));
+    const isFlat = Boolean(searchTerm.trim() || selectedMap || selectedMatchType);
+    if (isFlat) {
+      const sortedFiltered = sortMatchesByStart(filtered, sortDirection);
+      setMatchGroups(createFlatMatchGroup(sortedFiltered));
     } else {
-      // When not filtering at all, group by session
-      setMatchGroups(groupMatchesBySession(filtered));
+      const sessions = groupMatchesBySession(filtered);
+      setMatchGroups(sortMatchGroupsByDate(sessions, sortDirection));
     }
     
     // Store filtered matches for count
@@ -154,16 +156,15 @@ function App() {
 
   const handleSortChange = (direction: SortDirection) => {
     setSortDirection(direction);
-    if (searchTerm.trim()) {
-      // When searching, sort the matches within the single search results group
-      const sortedMatches = [...filteredMatches].sort((a, b) =>
-        direction === 'desc' 
-          ? new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-          : new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-      );
-      setMatchGroups(createFlatMatchGroup(sortedMatches));
+
+    const isFlat = Boolean(searchTerm.trim() || selectedMap || selectedMatchType);
+
+    if (isFlat) {
+      // In flat mode (searching or filtering), sort matches within the single group
+      const sortedFiltered = sortMatchesByStart(filteredMatches, direction);
+      setMatchGroups(createFlatMatchGroup(sortedFiltered));
     } else {
-      // When not searching, sort the groups by date
+      // Session mode: sort groups by date
       setMatchGroups([...matchGroups].sort((a, b) =>
         direction === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
       ));
