@@ -1,6 +1,8 @@
 const axios = require('axios');
 const SessionManager = require('./sessionManager');
 const pino = require('pino');
+const { inflateSync } = require('zlib');
+const { decodeOptions, doubleBase64Decode, decodeSlotInfo } = require('./decoders');
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -153,6 +155,106 @@ class RelicPlayerService {
                     error: `Unexpected Error: ${error.message}`
                 };
             }
+        }
+    }
+
+    /**
+     * Fetch recent single–player match history for one or more profile IDs via authenticated endpoint.
+     * @param {string[]} profileIds Array of profile IDs as strings.
+     */
+    async getRecentMatchSinglePlayerHistory(profileIds = []) {
+        const startTime = Date.now();
+        const session = await this.sessionManager.getSession();
+        if (!session) {
+            throw new Error('No valid session available');
+        }
+
+        const callNumber = await this.sessionManager.incrementCallNumber();
+        const prevLastCallTime = session.lastCallTime || Date.now();
+        const now = Date.now();
+
+        const ENDPOINT = "game/Leaderboard/getRecentMatchHistory";
+        const FULL_URL = RELIC_API_HOST + ENDPOINT;
+
+        // Ensure profileIds is a JSON array string ["id1","id2"]
+        const profileIdsParam = JSON.stringify(profileIds.map(id => id.toString()));
+
+        const params = {
+            callNum: String(callNumber),
+            connect_id: session.sessionId,
+            lastCallTime: String(prevLastCallTime),
+            sessionID: session.sessionId,
+            profile_ids: profileIdsParam,
+            title: 'age2',
+        };
+
+        this.log.debug({ url: FULL_URL, params }, 'Making getRecentMatchHistory request');
+
+        try {
+            const requestStart = Date.now();
+            const response = await axios.get(FULL_URL, {
+                params,
+                headers: {
+                    'Accept-Encoding': 'identity',
+                    'Accept': '*/*',
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-store',
+                },
+                timeout: 30000,
+            });
+            const duration = Date.now() - requestStart;
+
+            await this.sessionManager.updateLastCallTime(now);
+
+            const respData = response.data;
+            this.log.info({ status: response.status, apiStatus: respData[0], duration }, 'SinglePlayerHistory response');
+
+            if (response.status === 200 && respData[0] === 0) {
+                const processed = (respData[1] || []).map(matchArr => {
+                    if (!Array.isArray(matchArr) || matchArr.length < 7) return matchArr;
+                    // Settings use shared decodeOptions
+                    const decodedSettings = decodeOptions(matchArr[5]);
+
+                    // Players JSON is zlib+base64 – use decodeField then parse after the comma
+                    const decodedPlayers = decodeSlotInfo(matchArr[6]);
+
+                    if (decodedSettings && typeof decodedSettings.metaData === 'string') {
+                        decodedSettings.metaData = doubleBase64Decode(decodedSettings.metaData);
+                    }
+
+                    return {
+                        match_id: matchArr[0],
+                        map_id: matchArr[1],
+                        map_name: matchArr[2],
+                        match_type: matchArr[3],
+                        unknown: matchArr[4],
+                        settings: decodedSettings,
+                        players: decodedPlayers,
+                        name: matchArr[7],
+                        start_time: matchArr[8],
+                        end_time: matchArr[9]
+                    };
+                });
+
+                this.log.debug({ processedMatches: processed.length }, 'SinglePlayerHistory processed');
+
+                return {
+                    success: true,
+                    data: processed,
+                    fullResponse: respData
+                };
+            } else {
+                if (respData[0] !== 0) {
+                    await this.sessionManager.handleAuthFailure();
+                }
+                return { success: false, error: `API Error: ${respData[0]}`, fullResponse: respData, authFailure: respData[0] !== 0 };
+            }
+        } catch (error) {
+            this.log.error({ error: error.message }, 'SinglePlayerHistory request failed');
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
+                await this.sessionManager.handleAuthFailure();
+            }
+            throw error;
         }
     }
 }

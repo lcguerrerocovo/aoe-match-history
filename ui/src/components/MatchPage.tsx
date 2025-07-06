@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import TopBar from './TopBar';
-import { EnlargedMatchCard } from './EnlargedMatchCard';
+import { EnlargedMatchCard } from './EnlargedMatchCard.tsx';
 import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
 
