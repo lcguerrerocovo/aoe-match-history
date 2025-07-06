@@ -86,7 +86,7 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
         top={dropdownStyle.top}
         width={dropdownStyle.width}
         zIndex={dropdownStyle.zIndex}
-        bg="brand.parchmentSurface"
+        bg="brand.stoneLight"
         borderRadius="lg"
         boxShadow="xl"
         border="1.5px solid"
@@ -251,7 +251,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
                   )}
                   <Text fontWeight="bold" color="brand.midnightBlue" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
                 </HStack>
-                <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches} Games</Text>
+                <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches}</Text>
               </Card>
             ))
         ) : (

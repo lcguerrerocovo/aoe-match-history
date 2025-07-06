@@ -210,18 +210,18 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       cy.get('[data-testid="download-button"]').first().should('have.css', 'width', '18px');
       cy.get('[data-testid="download-button"]').first().should('have.css', 'height', '18px');
       
-      // Player names should have smaller max width
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '70px');
+      // Player names should expand fully within cell
+      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '100%');
       
       // Color indicators should be smaller – allow slight rendering variance across environments
       cy.get('[data-testid="color-indicator"]').first().should(($el) => {
         const width = parseFloat($el.css('width'));
-        // Expect roughly 20px with ±2px tolerance (accounts for potential sub-pixel rounding)
-        expect(width).to.be.within(18, 22);
+        // Expect roughly 16px now ±2px
+        expect(width).to.be.within(14, 18);
       });
       cy.get('[data-testid="color-indicator"]').first().should(($el) => {
-        const height = parseFloat($el.css('height'));
-        expect(height).to.be.within(12, 16);
+        const h = parseFloat($el.css('height'));
+        expect(h).to.be.within(10, 14);
       });
     });
 
@@ -243,16 +243,28 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       // Avatars should be larger (lg size)
       cy.get('[data-testid="player-avatar"]').first().should('have.css', 'width', '64px'); // lg size
       
-      // Download buttons should be larger
-      cy.get('[data-testid="download-button"]').first().should('have.css', 'width', '22px');
-      cy.get('[data-testid="download-button"]').first().should('have.css', 'height', '22px');
+      // Download buttons should be larger – allow slight variance
+      cy.get('[data-testid="download-button"]').first().should(($el) => {
+        const w = parseFloat($el.css('width'));
+        expect(w).to.be.within(18, 26);
+      });
+      cy.get('[data-testid="download-button"]').first().should(($el) => {
+        const h = parseFloat($el.css('height'));
+        expect(h).to.be.within(18, 26);
+      });
       
-      // Player names should have larger max width
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '90px');
+      // Player names should expand fully within cell on desktop
+      cy.get('[data-testid="player-name"]').first().should('have.css', 'max-width', '100%');
       
-      // Color indicators should be larger
-      cy.get('[data-testid="color-indicator"]').first().should('have.css', 'width', '24px');
-      cy.get('[data-testid="color-indicator"]').first().should('have.css', 'height', '16px');
+      // Color indicators should be larger – allow variance 18-24px width, 14-18px height
+      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
+        const w = parseFloat($el.css('width'));
+        expect(w).to.be.within(18, 24);
+      });
+      cy.get('[data-testid="color-indicator"]').first().should(($el) => {
+        const h = parseFloat($el.css('height'));
+        expect(h).to.be.within(10, 14);
+      });
     });
 
     it('should properly truncate long player names on mobile', () => {

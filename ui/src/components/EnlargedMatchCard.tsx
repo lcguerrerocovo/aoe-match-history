@@ -64,83 +64,83 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   return (
     <HStack
       spacing={{ base: 2, md: 3 }}
-      align="start"
+      align="center"
       position="relative"
       w="full"
     >
-      {/* Avatar with name below */}
-      <VStack spacing={1} align="center" minW={{ base: '60px', md: '100px' }}>
-        <Box position="relative">
-          <Avatar
-            src={avatarUrl}
-            name={player.name}
-            size={{ base: "md", md: "lg" }}
-            bg="brand.steel"
-            color="brand.parchment"
-            border="2px solid"
-            borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
-            data-testid="player-avatar"
-          />
-          <Tooltip 
-            label={
+      {/* Avatar & download */}
+      <VStack spacing={1} align="center" minW={{ base: '55px', md: '70px' }}>
+        <Avatar
+          src={avatarUrl}
+          name={player.name}
+          size={{ base: "md", md: "lg" }}
+          bg="brand.steel"
+          color="brand.parchment"
+          border="1px solid"
+          borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
+          data-testid="player-avatar"
+        />
+        <Tooltip 
+          label={
+            isReplayLoading
+              ? 'Checking replay availability...'
+              : isReplayDisabled
+                ? 'Replay file not available'
+                : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
+          }
+          fontSize="sm"
+        >
+          <Link
+            href={replayUrl}
+            isExternal
+            mt={1}
+            w={{ base: "18px", md: "22px" }}
+            h={{ base: "18px", md: "22px" }}
+            bg={
               isReplayLoading
-                ? 'Checking replay availability...'
-                : isReplayDisabled
-                  ? 'Replay file not available'
-                  : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
+                ? 'brand.steel'
+                : isReplayDisabled 
+                  ? 'brand.steel'
+                  : `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
             }
-            fontSize="sm"
+            borderRadius="full"
+            display="flex"
+            boxSizing="border-box"
+            alignItems="center"
+            justifyContent="center"
+            color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
+            fontSize={{ base: "2xs", md: "xs" }}
+            fontWeight="bold"
+            borderWidth={{ base: 0, md: '1px' }}
+            borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
+            boxShadow={
+              isReplayLoading || isReplayDisabled 
+                ? 'none'
+                : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
+            }
+            transition="all 0.2s ease"
+            opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
+            cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
+            pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+            data-testid="download-button"
+            _hover={
+              isReplayLoading || isReplayDisabled 
+                ? {}
+                : { 
+                    bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
+                    color: "brand.brightGold",
+                    boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                  }
+            }
           >
-            <Box position="absolute" top="-2" right="-2">
-              <Link
-                href={replayUrl}
-                isExternal
-                w={{ base: "18px", md: "22px" }}
-                h={{ base: "18px", md: "22px" }}
-                bg={
-                  isReplayLoading
-                    ? 'brand.steel'
-                    : isReplayDisabled 
-                      ? 'brand.steel'
-                      : `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
-                }
-                borderRadius="full"
-                display="flex"
-                boxSizing="border-box"
-                alignItems="center"
-                justifyContent="center"
-                color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
-                fontSize={{ base: "2xs", md: "xs" }}
-                fontWeight="bold"
-                borderWidth={{ base: 0, md: '1px' }}
-                borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
-                boxShadow={
-                  isReplayLoading || isReplayDisabled 
-                    ? 'none'
-                    : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
-                }
-                transition="all 0.2s ease"
-                opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
-                cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
-                pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
-                data-testid="download-button"
-                _hover={
-                  isReplayLoading || isReplayDisabled 
-                    ? {}
-                    : { 
-                        bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
-                        color: "brand.brightGold",
-                        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
-                      }
-                }
-              >
-                <Icon as={DownloadIcon} boxSize={{ base: 2.5, md: 3 }} />
-              </Link>
-            </Box>
-          </Tooltip>
-        </Box>
-        
-        {/* Player name below avatar */}
+            <Icon as={DownloadIcon} boxSize={{ base: 3, md: 4 }} />
+          </Link>
+        </Tooltip>
+      </VStack>
+
+      {/* Player details to the right */}
+      <VStack spacing={0.5} align="start" flex="1" minW={0}>
+        {/* Player name */}
         <Link
           as={RouterLink}
           to={`/profile_id/${player.user_id}`}
@@ -149,9 +149,8 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
           color="brand.midnightBlue"
           _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
           textDecoration="none"
-          textAlign="center"
           noOfLines={1}
-          maxW={{ base: "70px", md: "90px" }}
+          maxW="100%"
           overflow="hidden"
           textOverflow="ellipsis"
           whiteSpace="nowrap"
@@ -160,15 +159,12 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
         >
           {player.name}
         </Link>
-      </VStack>
 
-      {/* Player details to the right */}
-      <VStack spacing={1} align="start" flex={{ base: '1 1 100%', md: '1' }} minW={0}>
         {/* Player Color Indicator with Index */}
         <HStack spacing={1} align="center">
           <Box
-            w={{ base: "20px", md: "24px" }}
-            h={{ base: "14px", md: "16px" }}
+            w={{ base: "16px", md: "18px" }}
+            h={{ base: "10px", md: "12px" }}
             bg={PLAYER_COLORS[player.color_id] || 'brand.steel'}
             borderRadius="sm"
             border="1px solid"
@@ -196,8 +192,8 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
         {/* Civ Icon and Name */}
         <HStack spacing={1} align="center">
           <Box
-            w={{ base: "20px", md: "24px" }}
-            h={{ base: "20px", md: "24px" }}
+            w={{ base: "18px", md: "20px" }}
+            h={{ base: "18px", md: "20px" }}
             borderRadius="sm"
             overflow="hidden"
             bg="brand.stoneLight"
@@ -271,8 +267,8 @@ function MapCard({ match }: { match: any }) {
   return (
     <VStack spacing={4} align="center">
       <Box
-        w="200px"
-        h="200px"
+        w={{ base: '160px', md: '180px', lg: '200px' }}
+        h={{ base: '160px', md: '180px', lg: '200px' }}
         bg="transparent"
         borderRadius="md"
         overflow="hidden"
@@ -384,7 +380,7 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
         {/* Main Content */}
         <Flex
           direction={{ base: 'column', lg: 'row' }}
-          gap={8}
+          gap={{ base: 6, lg: 4 }}
           align="stretch"
           justify="space-between"
           data-testid="match-card-content"
@@ -405,7 +401,7 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                     <Card 
                       key={teamIndex} 
                       variant={isWinner ? 'winner' : 'loser'}
-                      p={4}
+                      p={{ base: 1, md: 2 }}
                       position="relative"
                       data-testid="team-card"
                     >
@@ -414,7 +410,10 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                           🏆
                         </Box>
                       )}
-                      <SimpleGrid minChildWidth="140px" spacingX={2} spacingY={0}>
+                      <SimpleGrid
+                        spacing={2}
+                        templateColumns={{ base: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' }}
+                      >
                         {team.map((player: any, playerIndex: number) => (
                           <Box
                             key={playerIndex}
@@ -422,7 +421,8 @@ export function EnlargedMatchCard({ match }: EnlargedMatchCardProps) {
                             bg={isMobile
                               ? (Math.floor(playerIndex / 2) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')
                               : ((playerIndex + teamIndex) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')}
-                            p={2}
+                            px={1}
+                            py={2}
                           >
                             <PlayerAvatar player={player} matchId={match.match_id} />
                           </Box>
