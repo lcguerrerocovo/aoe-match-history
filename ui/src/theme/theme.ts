@@ -31,6 +31,8 @@ const lightColors = {
     heraldic: '#243773',     // Royal heraldic blue
     slateBlue: '#4A5B7B',    // Muted blue for modern theme
     slateBorder: '#64728A',  // Border for slate blue theme
+    white: '#fff', // Pure white for semantic use
+    pureBlack: '#111', // Pure black for semantic use
     
     // High-contrast colors for light backgrounds
     darkWin: '#226844',      // Darker green for wins on light backgrounds
@@ -123,6 +125,8 @@ const darkColors = {
     heraldic: '#90CDF4',          // Light blue
     slateBlue: '#2D3748',         // Dark slate for cards
     slateBorder: '#4A5568',       // Darker border
+    white: '#fff', // Pure white for semantic use
+    pureBlack: '#111', // Pure black for semantic use
     
     // Status colors (keep vibrant for contrast)
     darkWin: '#48BB78',           // Brighter green

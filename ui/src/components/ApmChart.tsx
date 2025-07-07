@@ -93,6 +93,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return avg;
   }, [apm]);
 
+  // Sort playerIds by average APM descending for legend
+  const sortedPlayerIds = React.useMemo(() => {
+    return [...playerIds].sort((a, b) => (averages[b] ?? 0) - (averages[a] ?? 0));
+  }, [playerIds, averages]);
+
   if (!playerIds.length) return null;
 
   // Custom tooltip separates alias (uniform blue) and metric (stroke color)
@@ -107,17 +112,19 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
       return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
     };
 
+    // Sort payload by value (APM at this minute), highest first
+    const sortedPayload = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+
     return (
       <Box bg={theme.colors.brand.parchment} border="1px solid" borderColor={theme.colors.brand.slateBorder} p={2} borderRadius="md" fontSize="sm" minW="170px">
         <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>Minute {label}</Text>
-        {[...new Map(payload.map((entry: any) => [entry.dataKey, entry])).values()].map((entry: any) => {
+        {[...new Map(sortedPayload.map((entry: any) => [entry.dataKey, entry])).values()].map((entry: any) => {
           const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
           const strokeColor = entry.color as string;
           const isLightBg = computeIsLight(strokeColor);
-          const textColor = isLightBg
-            ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
-            : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
-          const textShadow = !isLightBg && !isDark ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none';
+          const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
+          const needsShadow = !isDark && (entry.dataKey === '4' || entry.dataKey === '5' || isLightBg);
+          const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
@@ -200,14 +207,15 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                     gap={1}
                     w="100%"
                   >
-                    {playerIds.map((pid) => {
+                    {sortedPlayerIds.map((pid) => {
                       const name = nameByProfile[pid] ?? pid;
                       const avg = averages[pid];
                       const colorId = colorByProfile[pid];
                       const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
-                      const textColor = computeIsLight(strokeColor)
-                        ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
-                        : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
+                      const isLightBg = computeIsLight(strokeColor);
+                      const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
+                      const needsShadow = !isDark && (colorId === 4 || colorId === 5 || isLightBg);
+                      const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
                       const inactive = !visibleIds.includes(pid);
                       return (
                         <Flex
@@ -246,7 +254,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                               alignItems="center"
                               flexShrink={0}
                             >
-                              <Text fontSize="xs" fontWeight="bold" color={textColor}>{avg}</Text>
+                              <Text fontSize="xs" fontWeight="bold" color={textColor} style={{ textShadow }}>{avg}</Text>
                             </Box>
                           )}
                         </Flex>

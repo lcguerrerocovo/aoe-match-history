@@ -81,9 +81,12 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
   const isLightBg = computeIsLight(bgColor);
-  const numberTextColor = isLightBg
-    ? (isDark ? 'brand.parchment' : 'brand.midnightBlue')
-    : (isDark ? 'brand.midnightBlue' : 'brand.parchment');
+  // In dark mode, always use white for the number text
+  // In light mode, use dark text for light backgrounds, white for dark backgrounds
+  const numberTextColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
+  // Only add text shadow for yellow/cyan in light mode
+  const needsShadow = !isDark && (player.color_id === 4 || player.color_id === 5 || isLightBg);
+  const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
 
   return (
     <Box position="relative" w="full">
@@ -129,7 +132,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
                 fontSize={{ base: "2xs", md: "xs" }}
                 fontWeight="bold"
                 color={numberTextColor}
-                textShadow={numberTextColor === 'brand.parchment' ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none'}
+                style={{ textShadow }}
               >
                 {player.color_id || '?'}
               </Text>
