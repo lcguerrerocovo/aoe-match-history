@@ -187,67 +187,73 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
               };
 
               return (
-                <Flex
-                  wrap="wrap"
-                  justify={{ base: 'flex-start', md: 'center' }}
-                  align="center"
+                <Box
                   mt={2}
-                  overflowX="auto"
-                  maxW="100%"
+                  px={2}
+                  overflow="visible"
+                  minH="40px"
                 >
-                  {playerIds.map((pid) => {
-                    const name = nameByProfile[pid] ?? pid;
-                    const avg = averages[pid];
-                    const colorId = colorByProfile[pid];
-                    const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
-                    const textColor = computeIsLight(strokeColor)
-                      ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
-                      : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
-                    const inactive = !visibleIds.includes(pid);
-                    return (
-                      <Flex
-                        key={pid}
-                        align="center"
-                        gap={1}
-                        mx={2}
-                        my={1}
-                        opacity={inactive ? 0.4 : 1}
-                        cursor="pointer"
-                        onClick={() => onToggle?.(pid)}
-                        minW="0"
-                      >
-                        <Text
-                          color={theme.colors.brand.midnightBlue}
-                          fontSize="xs"
-                          minW="0"
-                          maxW="80px"
-                          isTruncated
-                          whiteSpace="nowrap"
+                  <Flex
+                    wrap="wrap"
+                    justify={{ base: 'flex-start', md: 'center' }}
+                    align="center"
+                    gap={1}
+                    w="100%"
+                  >
+                    {playerIds.map((pid) => {
+                      const name = nameByProfile[pid] ?? pid;
+                      const avg = averages[pid];
+                      const colorId = colorByProfile[pid];
+                      const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
+                      const textColor = computeIsLight(strokeColor)
+                        ? (isDark ? theme.colors.brand.parchment : theme.colors.brand.midnightBlue)
+                        : (isDark ? theme.colors.brand.midnightBlue : theme.colors.brand.parchment);
+                      const inactive = !visibleIds.includes(pid);
+                      return (
+                        <Flex
+                          key={pid}
+                          align="center"
+                          gap={1}
+                          px={1}
+                          py={0.5}
+                          opacity={inactive ? 0.4 : 1}
+                          cursor="pointer"
+                          onClick={() => onToggle?.(pid)}
+                          flexShrink={0}
+                          minW="fit-content"
                         >
-                          {name}
-                        </Text>
-                        {avg !== undefined && (
-                          <Box
-                            bg={strokeColor}
-                            border="1px solid"
-                            borderColor="brand.steel"
-                            borderRadius="sm"
-                            w="32px"
-                            h="18px"
-                            boxShadow="sm"
-                            display="flex"
-                            justifyContent="center"
-                            alignItems="center"
+                          <Text
+                            color={theme.colors.brand.midnightBlue}
+                            fontSize="xs"
+                            maxW="80px"
+                            isTruncated
+                            whiteSpace="nowrap"
                             flexShrink={0}
-                            ml={1}
                           >
-                            <Text fontSize="xs" fontWeight="bold" color={textColor}>{avg}</Text>
-                          </Box>
-                        )}
-                      </Flex>
-                    );
-                  })}
-                </Flex>
+                            {name}
+                          </Text>
+                          {avg !== undefined && avg !== null && (
+                            <Box
+                              bg={strokeColor}
+                              border="1px solid"
+                              borderColor="brand.steel"
+                              borderRadius="sm"
+                              w="32px"
+                              h="18px"
+                              boxShadow="sm"
+                              display="flex"
+                              justifyContent="center"
+                              alignItems="center"
+                              flexShrink={0}
+                            >
+                              <Text fontSize="xs" fontWeight="bold" color={textColor}>{avg}</Text>
+                            </Box>
+                          )}
+                        </Flex>
+                      );
+                    })}
+                  </Flex>
+                </Box>
               );
             }}
           />

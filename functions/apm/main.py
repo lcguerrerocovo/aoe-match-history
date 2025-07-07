@@ -256,16 +256,40 @@ def apm_handler(request):
     # Convert buckets to list form sorted by minute
     players_out = {
         pid: [
-            {"minute": int(m), **vals} for m, vals in sorted(min_map.items())
+            {"minute": int(m), **vals} for m, vals in sorted(minutes.items())
         ]
-        for pid, min_map in actions_by_player.items()
+        for pid, minutes in actions_by_player.items()
     }
 
     # --- Compute average APM per player over entire game ---
-    # Replay duration is in milliseconds of *game* time.
+    # Replay duration can be milliseconds or timedelta
     try:
-        game_minutes = max(1, int(getattr(replay, "duration", 0) / 1000 / 60))
-    except Exception:
+        duration_raw = getattr(replay, "duration", 0)
+        
+        # Handle different duration formats
+        if hasattr(duration_raw, 'total_seconds'):
+            # It's a timedelta object
+            duration_seconds = duration_raw.total_seconds()
+            duration_ms = int(duration_seconds * 1000)
+        elif isinstance(duration_raw, (int, float)):
+            # It's already in milliseconds
+            duration_ms = int(duration_raw)
+        else:
+            duration_ms = 0
+        
+        if duration_ms > 0:
+            game_minutes = max(1, int(duration_ms / 1000 / 60))
+        else:
+            # Fallback: calculate from the highest minute bucket
+            max_minute = 0
+            for pid, buckets in actions_by_player.items():
+                if buckets:
+                    max_minute = max(max_minute, max(buckets.keys()))
+            game_minutes = max(1, max_minute + 1)  # +1 because minutes are 0-indexed
+        
+        logging.info(f"Game duration: {duration_ms}ms ({game_minutes} minutes)")
+    except Exception as e:
+        logging.error(f"Error calculating game minutes: {e}")
         game_minutes = None
 
     avg_apm_by_player: dict[str, int] = {}
@@ -274,7 +298,11 @@ def apm_handler(request):
             total_actions = sum(
                 vals.get("total", 0) for vals in buckets.values()
             )
-            avg_apm_by_player[pid] = int(round(total_actions / game_minutes))
+            avg_apm = int(round(total_actions / game_minutes))
+            avg_apm_by_player[pid] = avg_apm
+            logging.info(f"Player {pid}: {avg_apm} APM ({total_actions} actions)")
+    else:
+        logging.warning("Could not calculate game minutes, skipping averages")
 
     response_data = {
         "matchId": match_id,
