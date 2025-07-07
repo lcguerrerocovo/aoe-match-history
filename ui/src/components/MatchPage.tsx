@@ -7,6 +7,7 @@ import { EnlargedMatchCard } from './EnlargedMatchCard.tsx';
 import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
 import { ApmChart } from './ApmChart';
+import { APMGenerator } from './APMGenerator';
 
 export function MatchPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -223,9 +224,28 @@ export function MatchPage() {
                         <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
                       </>
                     ) : (
-                      <Text color="brand.steel" fontStyle="italic" textAlign="center">
-                        Additional match details coming soon...
-                      </Text>
+                      <APMGenerator 
+                        matchId={matchId!} 
+                        profileId={match.players?.[0]?.user_id?.toString() || ''} 
+                        variant="card"
+                        skipBronzeState={true}
+                        onStatusChange={async (status) => {
+                          // Refresh match data when APM becomes available
+                          if (status?.state === 'bronzeStatus') {
+                            try {
+                              const updatedMatch = await getMatch(matchId!);
+                              setMatch(updatedMatch);
+                            } catch (err) {
+                              console.error('Failed to refresh match data:', err);
+                            }
+                          }
+                        }}
+                      >
+                        <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                          APM Over Time
+                        </Text>
+                        <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
+                      </APMGenerator>
                     )}
                   </TabPanel>
                 </TabPanels>

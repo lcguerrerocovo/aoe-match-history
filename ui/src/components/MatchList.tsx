@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, Link, HStack, Divider, Tooltip, Accordion, AccordionItem, AccordionButton, AccordionPanel, Card, useBreakpointValue, useTheme } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import type { MatchGroup, Player } from '../types/match';
 import { TimeIcon, CalendarIcon } from '@chakra-ui/icons';
@@ -8,8 +8,8 @@ import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';
 import { assetManager } from '../utils/assetManager';
-import { useState, useEffect } from 'react';
-import { checkApmStatus, downloadReplay } from '../services/matchService';
+import { useState } from 'react';
+import { APMGenerator } from './APMGenerator';
 
 function PlayerRating({ player }: { player: Player }) {
   const { rating, rating_change: ratingChange } = player;
@@ -372,124 +372,14 @@ function TeamCard({ match }: { match: any }) {
 }
 
 function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profileId: string; groupOpen: boolean }) {
-  const theme = useTheme();
-  const [apmStatus, setApmStatus] = useState<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus' } | null>(null);
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (!groupOpen) return;
-    setIsLoading(true);
-    const run = async () => {
-      try {
-        const status = await checkApmStatus(matchId, profileId);
-        setApmStatus(status);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    run();
-  }, [groupOpen, matchId, profileId]);
-
-  const handleClick = async () => {
-    if (processing || apmStatus?.state !== 'silverStatus') return;
-    setProcessing(true);
-    try {
-      const success = await downloadReplay(matchId, profileId);
-      if (success) {
-        // Start polling immediately with exponential backoff
-        let attempt = 0;
-        const maxAttempts = 8; // Max ~30 seconds total
-        const poll = async () => {
-          if (attempt >= maxAttempts) {
-            setProcessing(false);
-            return;
-          }
-          
-          const newStatus = await checkApmStatus(matchId, profileId);
-          setApmStatus(newStatus);
-          
-          if (newStatus.state === 'bronzeStatus') {
-            setProcessing(false);
-            return;
-          }
-          
-          // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s (capped at 8s)
-          const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
-          attempt++;
-          setTimeout(poll, delay);
-        };
-        
-        // Start polling after 500ms to allow backend to begin processing
-        setTimeout(poll, 500);
-      } else {
-        setProcessing(false);
-      }
-    } catch {
-      setProcessing(false);
-    }
-  };
-
-  const ready = apmStatus?.state === 'silverStatus';
-  const silver = processing || ready;
-
-  const bg = silver
-    ? `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 50%, ${theme.colors.brand.brightSilver} 100%)`
-    : apmStatus?.state === 'bronzeStatus'
-      ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
-      : 'brand.steel';
-
-  const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
-    ? (processing ? 'brand.steel' : 'brand.stoneLight')
-    : apmStatus?.state === 'bronzeStatus'
-      ? 'brand.brightGold'
-      : 'brand.steel';
-
-  const tooltipLabel = processing
-    ? 'Processing replay...'
-    : isLoading
-      ? 'Checking APM status...'
-      : apmStatus?.state === 'bronzeStatus'
-        ? 'APM Ready'
-        : apmStatus?.state === 'silverStatus'
-          ? 'Download & Process Replay'
-          : 'Replay not found';
-
-  const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
-
-  const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
-  const boxShadow = silver
-    ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
-    : (apmStatus?.state === 'bronzeStatus' ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
-
-  const linkProps = apmStatus?.state === 'bronzeStatus' ? { to: `/match/${matchId}#apm` } : {} as const;
-
+  if (!groupOpen) return null;
+  
   return (
-    <Tooltip label={tooltipLabel} fontSize="xs">
-      <Box
-        as={apmStatus?.state === 'bronzeStatus' ? RouterLink : 'button'}
-        onClick={apmStatus?.state === 'bronzeStatus' ? undefined : handleClick}
-        bg={bg}
-        color={fg}
-        w="28px"
-        h="28px"
-        borderRadius="full"
-        border="1px solid"
-        borderColor={borderColor}
-        boxShadow={boxShadow}
-        fontSize="2xs"
-        fontWeight="bold"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        lineHeight="1"
-        cursor={clickable ? 'pointer' : 'not-allowed'}
-        transition="all 0.2s ease-in-out"
-        {...linkProps}
-      >
-        {processing ? <Spinner size="xs" color="brand.steel" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : 'APM'}
-      </Box>
-    </Tooltip>
+    <APMGenerator 
+      matchId={matchId} 
+      profileId={profileId} 
+      variant="button" 
+    />
   );
 }
 
