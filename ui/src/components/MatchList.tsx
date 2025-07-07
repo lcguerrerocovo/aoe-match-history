@@ -109,7 +109,7 @@ function MapCard({ match }: { match: any }) {
 function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profileId: string; groupOpen: boolean }) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
-  const realTimeSec = Math.round(durationSec * 1.7);
+  const gameTimeSec = Math.round(durationSec * 1.7);
 
   return (
     <Card variant="summary" w="100%" mb={1} p={1} fontSize={{ base: 'xs', md: 'sm' }}>
@@ -159,17 +159,17 @@ function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profile
           <HStack spacing={2}>
             <HStack spacing={1}>
               <TimeIcon boxSize={3} color="brand.zoolanderBlue" />
+              <Tooltip label="Game time (1.7x Real time)" fontSize="xs">
               <Text as="span" color="brand.steel">
-                {formatDuration(durationSec)}
+                {formatDuration(gameTimeSec)}
               </Text>
+              </Tooltip>
             </HStack>
             <HStack spacing={1}>
               <TimeIcon boxSize={3} color="brand.bronze" />
-              <Tooltip label="Real time (1.7x game time)" fontSize="xs">
                 <Text as="span" color="brand.steel">
-                  {formatDuration(realTimeSec)}
+                  {formatDuration(durationSec)}
                 </Text>
-              </Tooltip>
             </HStack>
           </HStack>
         </Box>

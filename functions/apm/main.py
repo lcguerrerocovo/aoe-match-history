@@ -229,17 +229,17 @@ def apm_handler(request):
         if ts_val is not None:
             import datetime as _dt
             if isinstance(ts_val, _dt.timedelta):
-                minute = int(ts_val.total_seconds() / 60 / 1.7)
+                minute = int(ts_val.total_seconds() / 60)
             elif isinstance(ts_val, (int, float)):
                 # Heuristic: if value looks like ms (large), convert; otherwise assume seconds
-                minute = int((ts_val / 1000 if ts_val > 10000 else ts_val) / 60 / 1.7)
+                minute = int((ts_val / 1000 if ts_val > 10000 else ts_val) / 60)
             else:
                 minute = 0
         else:
             # Fallback to simulation frame number
             frame = getattr(cmd, "frame", None) or getattr(cmd, "ct", None)
             if isinstance(frame, int) and frame >= 0:
-                minute = int((frame // FRAMES_PER_MIN)/1.7)
+                minute = int((frame // FRAMES_PER_MIN))
             else:
                 minute = 0
         category = _categorize(cmd)

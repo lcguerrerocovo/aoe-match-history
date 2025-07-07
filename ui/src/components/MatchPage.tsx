@@ -214,7 +214,7 @@ export function MatchPage() {
                     {hasApm ? (
                       <>
                         <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
-                          APM Over Time
+                          APM (Game Time)
                         </Text>
                         <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
                       </>
@@ -237,7 +237,7 @@ export function MatchPage() {
                         }}
                       >
                         <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
-                          APM Over Time
+                          APM (Game Time)
                         </Text>
                         <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
                       </APMGenerator>

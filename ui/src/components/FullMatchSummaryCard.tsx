@@ -322,7 +322,7 @@ function MapCard({ match }: { match: any }) {
 
 function MatchDetails({ match }: { match: any }) {
   const durationSec = parseDuration(match.duration);
-  const realTimeSec = Math.round(durationSec * 1.7);
+  const gameTimeSec = Math.round(durationSec * 1.7);
 
   return (
     <Box
@@ -378,7 +378,7 @@ function MatchDetails({ match }: { match: any }) {
               </Text>
             </HStack>
             <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
-              {formatDuration(durationSec)}
+              {formatDuration(gameTimeSec)}
             </Text>
           </VStack>
           
@@ -392,7 +392,7 @@ function MatchDetails({ match }: { match: any }) {
               </Text>
             </HStack>
             <Text color="brand.midnightBlue" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
-              {formatDuration(realTimeSec)}
+              {formatDuration(durationSec)}
             </Text>
           </VStack>
         </HStack>
