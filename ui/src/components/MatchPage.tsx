@@ -23,7 +23,22 @@ export function MatchPage() {
   const [activePids, setActivePids] = useState<string[]>([]);
 
   const togglePid = (pid: string) => {
-    setActivePids((prev) => prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid]);
+    setActivePids((prev) => {
+      const allPlayerIds = match?.players?.map((p: any) => String(p.user_id)) || [];
+      
+      // If all lines are visible and you click one, show only that one
+      if (prev.length === allPlayerIds.length && prev.includes(pid)) {
+        return [pid];
+      }
+      
+      // If only one is visible and you click it, show all
+      if (prev.length === 1 && prev[0] === pid) {
+        return allPlayerIds;
+      }
+      
+      // Otherwise, toggle as usual
+      return prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid];
+    });
   };
 
   // Compute APM availability and color mapping whenever match state changes
