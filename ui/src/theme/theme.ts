@@ -349,7 +349,7 @@ export function createTheme(isDark: boolean) {
       }),
       winner: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.stone' : 'brand.parchment',
+          bg:  isDark ? 'brand.stoneLight' : 'brand.stoneLight',
           borderColor: 'brand.gold',
           boxShadow: '0 0 8px rgba(212,175,55,0.6)',
           borderWidth: '2px',

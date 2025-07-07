@@ -450,21 +450,37 @@ export function FullMatchSummaryCard({ match, activePids, onToggle }: FullMatchS
                         }}
                         justifyItems={team.length <= 2 ? 'center' : 'stretch'}
                       >
-                        {team.map((player: any, playerIndex: number) => (
-                          <Box
-                            key={playerIndex}
-                            w={{ base: '145px', md: team.length >=4 ? '150px' : '160px', lg: team.length >=4 ? '150px' : '200px' }}
-                            maxW={{ base: '200px', md: team.length >=4 ? '200px' : '220px', lg: team.length >=4 ? '210px' : '240px' }}
-                            mx={team.length <= 2 ? 'auto' : undefined}
-                            bg={isMobile
-                              ? (Math.floor(playerIndex / 2) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')
-                              : ((playerIndex + teamIndex) % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight')}
-                            px={1}
-                            py={2}
-                          >
-                            <PlayerAvatar player={player} matchId={match.match_id} active={activePids ? activePids.includes(String(player.user_id)) : true} onToggle={onToggle ?? (()=>{})} />
-                          </Box>
-                        ))}
+                        {team.map((player: any, playerIndex: number) => {
+                          // Alternating background color logic
+                          const colCount = isMobile ? 2 : 4;
+                          const row = Math.floor(playerIndex / colCount);
+                          const col = playerIndex % colCount;
+                          const isEven = (row + col) % 2 === 0;
+                          const bg = isEven ? 'brand.cardBg' : 'brand.stoneLight';
+                          return (
+                            <Box
+                              key={playerIndex}
+                              w="100%"
+                              h="100%"
+                              bg={bg}
+                              borderRadius="md"
+                              p={0}
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Box
+                                w="100%"
+                                maxW={{ base: '120px', md: '140px' }}
+                                mx="auto"
+                                py={2}
+                                px={1}
+                              >
+                                <PlayerAvatar player={player} matchId={match.match_id} active={activePids ? activePids.includes(String(player.user_id)) : true} onToggle={onToggle ?? (()=>{})} />
+                              </Box>
+                            </Box>
+                          );
+                        })}
                       </SimpleGrid>
                     </Card>
                   );
