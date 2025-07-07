@@ -188,7 +188,7 @@ function App() {
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ base: '0 0 1rem 1rem', md: 'xl' }}
           boxShadow={{ md: 'xl' }}
-          borderWidth={{ base: '3px', md: '4px' }}
+          borderWidth={{ base: 0, md: '4px' }}
           borderTopWidth={{ base: 0, md: '4px' }}
           borderColor="brand.gold"
           data-testid="floating-box-container"

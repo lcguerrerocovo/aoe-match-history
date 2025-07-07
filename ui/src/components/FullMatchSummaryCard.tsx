@@ -267,7 +267,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
           data-testid="download-button"
           position="absolute"
           bottom={-1}
-          right={{ base: -1, lg: 1 }}
+          right={{ base: -3, lg: -5 }}
           _hover={
             isReplayLoading || isReplayDisabled 
               ? {}

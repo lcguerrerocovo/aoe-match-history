@@ -111,6 +111,7 @@ export function MatchPage() {
             borderRadius={{ md: 'xl' }}
             boxShadow={{ md: 'xl' }}
             borderWidth={{ base: '3px', md: '4px' }}
+            borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
             minH="400px"
             justify="center"
@@ -139,6 +140,7 @@ export function MatchPage() {
             borderRadius={{ md: 'xl' }}
             boxShadow={{ md: 'xl' }}
             borderWidth={{ base: '3px', md: '4px' }}
+            borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
           >
             <Alert status="error">
@@ -167,6 +169,7 @@ export function MatchPage() {
             borderRadius={{ md: 'xl' }}
             boxShadow={{ md: 'xl' }}
             borderWidth={{ base: '3px', md: '4px' }}
+            borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
           >
             <Alert status="info">
@@ -193,8 +196,8 @@ export function MatchPage() {
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ md: 'xl' }}
           boxShadow={{ md: 'xl' }}
-          borderWidth={{ base: '3px', md: '4px' }}
-          borderColor="brand.gold"
+          borderWidth={{ base: 0, md: '4px' }}
+          borderColor={{ base: 'transparent', md: 'brand.gold' }}
         >
           <VStack 
             align="stretch"
