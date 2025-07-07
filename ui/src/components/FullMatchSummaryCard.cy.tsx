@@ -3,7 +3,7 @@
 import { mount } from '@cypress/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
-import { EnlargedMatchCard } from './EnlargedMatchCard';
+import { FullMatchSummaryCard } from './FullMatchSummaryCard';
 import { createTheme } from '../theme/theme';
 
 // Mock the services module
@@ -42,7 +42,7 @@ const createMockMatch = (numTeams: number = 2) => ({
 
 const theme = createTheme(false);
 
-describe('EnlargedMatchCard Responsive Tests', () => {
+describe('FullMatchSummaryCard Responsive Tests', () => {
   beforeEach(() => {
     // Reset stubs before each test
     cy.window().then((win) => {
@@ -60,7 +60,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -84,7 +84,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -110,7 +110,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -136,7 +136,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -162,7 +162,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -196,7 +196,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -222,7 +222,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -244,7 +244,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -268,7 +268,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -295,7 +295,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -330,7 +330,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );
@@ -355,7 +355,7 @@ describe('EnlargedMatchCard Responsive Tests', () => {
       mount(
         <BrowserRouter>
           <ChakraProvider theme={theme}>
-            <EnlargedMatchCard match={mockMatch} />
+            <FullMatchSummaryCard match={mockMatch} />
           </ChakraProvider>
         </BrowserRouter>
       );

@@ -8,7 +8,7 @@ import { assetManager } from '../utils/assetManager';
 import { PLAYER_COLORS } from './playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
 
-interface EnlargedMatchCardProps {
+interface FullMatchSummaryCardProps {
   match: any;
   activePids?: string[];
   onToggle?: (pid: string) => void;
@@ -398,7 +398,7 @@ function MatchDetails({ match }: { match: any }) {
   );
 }
 
-export function EnlargedMatchCard({ match, activePids, onToggle }: EnlargedMatchCardProps) {
+export function FullMatchSummaryCard({ match, activePids, onToggle }: FullMatchSummaryCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from '../theme/breakpoints';
 import TopBar from './TopBar';
-import { EnlargedMatchCard } from './EnlargedMatchCard.tsx';
+import { FullMatchSummaryCard } from './FullMatchSummaryCard.tsx';
 import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
 import { ApmChart } from './ApmChart';
@@ -29,11 +29,6 @@ export function MatchPage() {
   // Compute APM availability and color mapping whenever match state changes
   const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players || {}).length);
   
-  // Debug logging
-  console.log('MatchPage - match data:', match);
-  console.log('MatchPage - hasApm:', hasApm);
-  console.log('MatchPage - apm data:', match?.apm);
-
   const colorMap: Record<string, number> = {};
   if (match?.teams) {
     (match.teams as any[]).forEach((team: any[]) => {
@@ -193,7 +188,7 @@ export function MatchPage() {
             spacing={6}
           >
             {/* Enlarged Match Card */}
-            <EnlargedMatchCard match={match} activePids={activePids} onToggle={togglePid} />
+            <FullMatchSummaryCard match={match} activePids={activePids} onToggle={togglePid} />
             
             {/* Additional Details Section */}
             <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
