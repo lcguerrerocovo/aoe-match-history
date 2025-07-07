@@ -375,12 +375,18 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
   const theme = useTheme();
   const [apmStatus, setApmStatus] = useState<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus' } | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!groupOpen) return;
+    setIsLoading(true);
     const run = async () => {
-      const status = await checkApmStatus(matchId, profileId);
-      setApmStatus(status);
+      try {
+        const status = await checkApmStatus(matchId, profileId);
+        setApmStatus(status);
+      } finally {
+        setIsLoading(false);
+      }
     };
     run();
   }, [groupOpen, matchId, profileId]);
@@ -433,7 +439,7 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
       ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
       : 'brand.steel';
 
-  const fg = processing || (apmStatus?.state === 'greyStatus')
+  const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
     ? (processing ? 'brand.steel' : 'brand.stoneLight')
     : apmStatus?.state === 'bronzeStatus'
       ? 'brand.brightGold'
@@ -441,15 +447,15 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
 
   const tooltipLabel = processing
     ? 'Processing replay...'
-    : apmStatus?.state === 'bronzeStatus'
-      ? 'APM Ready'
-      : apmStatus === null
-        ? 'Checking APM status...'
-        : apmStatus.state === 'silverStatus'
+    : isLoading
+      ? 'Checking APM status...'
+      : apmStatus?.state === 'bronzeStatus'
+        ? 'APM Ready'
+        : apmStatus?.state === 'silverStatus'
           ? 'Download & Process Replay'
           : 'Replay not found';
 
-  const clickable = (ready && !processing) || apmStatus?.state === 'bronzeStatus';
+  const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
 
   const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
   const boxShadow = silver
@@ -478,9 +484,10 @@ function APMButton({ matchId, profileId, groupOpen }: { matchId: string; profile
         justifyContent="center"
         lineHeight="1"
         cursor={clickable ? 'pointer' : 'not-allowed'}
+        transition="all 0.2s ease-in-out"
         {...linkProps}
       >
-        {processing ? <Spinner size="xs" color="brand.steel" /> : 'APM'}
+        {processing ? <Spinner size="xs" color="brand.steel" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : 'APM'}
       </Box>
     </Tooltip>
   );
