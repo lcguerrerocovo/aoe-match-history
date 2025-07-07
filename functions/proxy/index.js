@@ -1446,4 +1446,7 @@ module.exports = {
   checkApmStatus,
   getFirestoreClient,
   checkReplayAvailability,
+  handleMatch,
+  handleReplayDownload,
+  routes,
 }; 
