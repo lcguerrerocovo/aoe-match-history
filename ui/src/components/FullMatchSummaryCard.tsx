@@ -86,7 +86,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
   const numberTextColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
   // Only add text shadow for yellow/cyan in light mode
   const needsShadow = !isDark && (player.color_id === 4 || player.color_id === 5 || isLightBg);
-  const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
+  const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
 
   return (
     <Box position="relative" w="full">

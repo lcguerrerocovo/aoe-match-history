@@ -124,7 +124,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           const isLightBg = computeIsLight(strokeColor);
           const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
           const needsShadow = !isDark && (entry.dataKey === '4' || entry.dataKey === '5' || isLightBg);
-          const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
+          const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
@@ -215,7 +215,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       const isLightBg = computeIsLight(strokeColor);
                       const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
                       const needsShadow = !isDark && (colorId === 4 || colorId === 5 || isLightBg);
-                      const textShadow = needsShadow ? '0 1px 4px rgba(0,0,0,0.45)' : 'none';
+                      const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
                       const inactive = !visibleIds.includes(pid);
                       return (
                         <Flex
