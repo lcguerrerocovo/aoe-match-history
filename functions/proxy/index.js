@@ -1140,46 +1140,12 @@ async function handleReplayDownload(gameId, profileId) {
       await sleep(SIMULATE_LATENCY_MS);
     }
 
-    const url = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
-
-    // Log outgoing request details
-    log.info({ gameId, profileId, url }, 'Fetching replay file');
-
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/octet-stream',
-        'User-Agent': 'aoe2-site'
-      }
-    });
-
-    // Log response headers & status
-    const respHeaders = {};
-    response.headers.forEach((v, k) => { respHeaders[k] = v; });
-    log.info({ gameId, profileId, status: response.status, headers: respHeaders }, 'Replay fetch response');
-
-    if (response.ok) {
-      const buffer = await response.arrayBuffer();
-      // Send to external Python APM service if configured
-      const apmData = await invokeExternalAPM(buffer, gameId, profileId);
-
-      const apmSuccess = apmData && !apmData.error;
-
-      // If APM processed, persist into Firestore under matches collection
-      if (apmSuccess) {
-        try {
-          const db = getFirestoreClient();
-          if (db) {
-            const matchRef = db.collection('matches').doc(String(gameId));
-            await matchRef.set({ apm: apmData }, { merge: true });
-          }
-        } catch (persistErr) {
-          log.warn({ err: persistErr.message, gameId }, 'Failed to persist APM data');
-        }
-      }
-
-      log.info({ gameId, profileId, size: buffer.byteLength, apmData }, 'Replay downloaded and APM processed');
+    // Get match data to extract all player IDs
+    const matchData = await handleMatch(gameId);
+    if (!matchData.data || !matchData.data.players) {
+      log.warn({ gameId }, 'No match data or players found for replay download');
       return {
-        data: { downloaded: apmSuccess },
+        data: { downloaded: false, error: 'No match data found' },
         headers: {
           'Cache-Control': 'private, max-age=0',
           'Vary': 'Accept-Encoding'
@@ -1187,19 +1153,80 @@ async function handleReplayDownload(gameId, profileId) {
       };
     }
 
-    // Read small portion of body for debugging (if text)
-    let bodySnippet = '';
-    try {
-      const text = await response.text();
-      bodySnippet = text.slice(0, 200);
-    } catch (_) {
-      bodySnippet = '<non-text body>';
+    // Extract all player IDs
+    const playerIds = matchData.data.players.map(p => p.user_id?.toString()).filter(Boolean);
+    log.info({ gameId, playerIds }, 'Attempting replay download for all players');
+
+    // Try each player until we find one with available replay
+    for (const pid of playerIds) {
+      try {
+        const url = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${pid}`;
+
+        // Log outgoing request details
+        log.info({ gameId, profileId: pid, url }, 'Fetching replay file');
+
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/octet-stream',
+            'User-Agent': 'aoe2-site'
+          }
+        });
+
+        // Log response headers & status
+        const respHeaders = {};
+        response.headers.forEach((v, k) => { respHeaders[k] = v; });
+        log.info({ gameId, profileId: pid, status: response.status, headers: respHeaders }, 'Replay fetch response');
+
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          // Send to external Python APM service if configured
+          const apmData = await invokeExternalAPM(buffer, gameId, pid);
+
+          const apmSuccess = apmData && !apmData.error;
+
+          // If APM processed, persist into Firestore under matches collection
+          if (apmSuccess) {
+            try {
+              const db = getFirestoreClient();
+              if (db) {
+                const matchRef = db.collection('matches').doc(String(gameId));
+                await matchRef.set({ apm: apmData }, { merge: true });
+              }
+            } catch (persistErr) {
+              log.warn({ err: persistErr.message, gameId }, 'Failed to persist APM data');
+            }
+          }
+
+          log.info({ gameId, profileId: pid, size: buffer.byteLength, apmData }, 'Replay downloaded and APM processed');
+          return {
+            data: { downloaded: apmSuccess, profileId: pid },
+            headers: {
+              'Cache-Control': 'private, max-age=0',
+              'Vary': 'Accept-Encoding'
+            }
+          };
+        }
+
+        // Read small portion of body for debugging (if text)
+        let bodySnippet = '';
+        try {
+          const text = await response.text();
+          bodySnippet = text.slice(0, 200);
+        } catch (_) {
+          bodySnippet = '<non-text body>';
+        }
+
+        // Log failed attempt but continue to next player
+        log.warn({ gameId, profileId: pid, status: response.status, body: bodySnippet }, 'Replay download failed for player, trying next');
+      } catch (error) {
+        log.warn({ error: error.message, gameId, profileId: pid }, 'Replay download error for player, trying next');
+      }
     }
 
-    // Gracefully handle non-OK responses – treat as unavailable but not an error
-    log.warn({ gameId, profileId, status: response.status, body: bodySnippet }, 'Replay download returned non-OK status');
+    // If we get here, no player had a successful replay download
+    log.warn({ gameId, playerIds }, 'Replay download failed for all players');
     return {
-      data: { downloaded: false, status: response.status },
+      data: { downloaded: false, error: 'No replay available for any player' },
       headers: {
         'Cache-Control': 'private, max-age=0',
         'Vary': 'Accept-Encoding'
@@ -1298,6 +1325,55 @@ const routes = [
       const status = await checkApmStatus(gameId, profileId);
       return {
         data: { gameId, profileId, ...status },
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      };
+    }
+  },
+  {
+    pattern: /^\/api\/apm-status-match\/(\d+)(\?.*)?$/,
+    handler: async (gameId) => {
+      // Get match data to extract player IDs
+      const matchData = await handleMatch(gameId);
+      if (!matchData.data || !matchData.data.players) {
+        return {
+          data: { gameId, hasSaveGame: false, isProcessed: false, state: 'greyStatus' },
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        };
+      }
+
+      // Extract all player IDs
+      const playerIds = matchData.data.players.map(p => p.user_id?.toString()).filter(Boolean);
+      
+      // Check each player until we find one with available replay
+      for (const profileId of playerIds) {
+        try {
+          const status = await checkApmStatus(gameId, profileId);
+          if (status.state !== 'greyStatus') {
+            return {
+              data: { gameId, profileId, ...status },
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
+            };
+          }
+        } catch (error) {
+          log.warn({ err: error.message, gameId, profileId }, 'Failed to check APM status for player');
+        }
+      }
+      
+      // If no player has a replay, return grey status
+      return {
+        data: { gameId, hasSaveGame: false, isProcessed: false, state: 'greyStatus' },
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',

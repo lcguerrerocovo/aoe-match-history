@@ -136,6 +136,27 @@ export async function checkApmStatus(gameId: string, profileId: string): Promise
   }
 }
 
+// Check APM status for any player in a match
+export async function checkApmStatusForMatch(gameId: string): Promise<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus'; profileId?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/apm-status-match/${gameId}`);
+    if (!response.ok) {
+      console.error('APM status check for match failed', response.statusText);
+      return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
+    }
+    const data = await response.json();
+    return {
+      hasSaveGame: data.hasSaveGame || false,
+      isProcessed: data.isProcessed || false,
+      state: data.state || 'greyStatus',
+      profileId: data.profileId
+    };
+  } catch (e) {
+    console.error('APM status check for match failed', e);
+    return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
+  }
+}
+
 // Trigger backend replay download (APM chart prep)
 export async function downloadReplay(gameId: string, profileId: string): Promise<boolean> {
   try {
@@ -151,3 +172,5 @@ export async function downloadReplay(gameId: string, profileId: string): Promise
     return false;
   }
 }
+
+

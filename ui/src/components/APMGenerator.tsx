@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Text, Spinner, useTheme, Tooltip } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { checkApmStatus, downloadReplay } from '../services/matchService';
+import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
 
 interface APMStatus {
   hasSaveGame: boolean;
@@ -31,12 +31,15 @@ export function APMGenerator({
   const [apmStatus, setApmStatus] = useState<APMStatus | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
+    if (isRefreshing) return; // Skip status check if we're refreshing
+    
     setIsLoading(true);
     const run = async () => {
       try {
-        const status = await checkApmStatus(matchId, profileId);
+        const status = await checkApmStatusForMatch(matchId);
         setApmStatus(status);
         onStatusChange?.(status);
       } finally {
@@ -44,7 +47,12 @@ export function APMGenerator({
       }
     };
     run();
-  }, [matchId, profileId, onStatusChange]);
+  }, [matchId, onStatusChange, isRefreshing]);
+
+  // Reset refreshing state when matchId changes (new match loaded)
+  useEffect(() => {
+    setIsRefreshing(false);
+  }, [matchId]);
 
   const handleClick = async () => {
     if (processing || apmStatus?.state !== 'silverStatus') return;
@@ -62,15 +70,20 @@ export function APMGenerator({
           }
           
           const newStatus = await checkApmStatus(matchId, profileId);
+          
+          if (newStatus.state === 'bronzeStatus' && skipBronzeState) {
+            // For card variant, skip bronze state entirely and trigger refresh immediately
+            setProcessing(false);
+            setIsRefreshing(true);
+            onStatusChange?.(newStatus);
+            return;
+          }
+          
           setApmStatus(newStatus);
           onStatusChange?.(newStatus);
           
           if (newStatus.state === 'bronzeStatus') {
             setProcessing(false);
-            if (skipBronzeState) {
-              // For card variant, skip bronze state and show children immediately
-              return;
-            }
             return;
           }
           
