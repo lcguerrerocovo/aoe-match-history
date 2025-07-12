@@ -295,4 +295,55 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @scripts/meilisearch_config.json
           
-          echo "✅ Meilisearch configuration updated successfully" 
+          echo "✅ Meilisearch configuration updated successfully"
+
+  clear-cloudflare-cache:
+    runs-on: ubuntu-latest
+    needs: [deploy-proxy-function]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history to check what changed
+      
+      - name: Determine what changed
+        id: changes
+        run: |
+          # Get list of changed files since last deployment
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          
+          # Check for proxy function changes
+          if echo "$CHANGED_FILES" | grep -q "^functions/proxy/"; then
+            echo "proxy_changed=true" >> $GITHUB_OUTPUT
+            echo "🔧 Proxy function changed"
+          else
+            echo "proxy_changed=false" >> $GITHUB_OUTPUT
+            echo "🔧 No proxy function changes"
+          fi
+      
+      - name: Clear Cloudflare Cache
+        if: steps.changes.outputs.proxy_changed == 'true'
+        run: |
+          echo "🧹 Clearing Cloudflare cache for updated proxy function..."
+          
+          # Cloudflare API token should be stored in secrets
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "⚠️  CLOUDFLARE_API_TOKEN not set, skipping cache clear"
+            exit 0
+          fi
+          
+          # Zone ID for aoe2.site
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          
+          if [ -z "$ZONE_ID" ]; then
+            echo "⚠️  CLOUDFLARE_ZONE_ID not set, skipping cache clear"
+            exit 0
+          fi
+          
+          # Clear cache for proxy function
+          echo "📝 Clearing cache for proxy function..."
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"files": ["https://us-east1-aoe2-site.cloudfunctions.net/aoe2-api-proxy"]}'
+          
+          echo "✅ Cloudflare cache cleared successfully"

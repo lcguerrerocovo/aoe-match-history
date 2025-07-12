@@ -462,7 +462,6 @@ The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
 - `roles/datastore.user` - Access Firestore for session management
 - `roles/compute.viewer` - View compute instances (for Meilisearch VM detection)
 
-
 Grant roles:
 ```bash
 gcloud projects add-iam-policy-binding aoe2-site \
@@ -485,6 +484,23 @@ gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/storage.admin"
 ```
+
+### Cloudflare Integration
+
+The deployment workflow automatically clears Cloudflare cache for updated endpoints. You'll need to add these secrets to your GitHub repository:
+
+- `CLOUDFLARE_API_TOKEN` - API token with Zone:Zone:Edit and Zone:Cache Purge permissions
+- `CLOUDFLARE_ZONE_ID` - Zone ID for your domain (found in Cloudflare dashboard)
+
+**To get these values:**
+
+1. **API Token**: Go to Cloudflare Dashboard → My Profile → API Tokens → Create Token
+   - Use "Custom token" template
+   - Permissions: Zone:Zone:Edit, Zone:Cache Purge
+   - Zone Resources: Include → Specific zone → aoe2.site
+
+2. **Zone ID**: Go to Cloudflare Dashboard → aoe2.site → Overview → Zone ID (right sidebar)
+
 
 ### Automated Deployment
 The project uses GitHub Actions for automated deployment:
