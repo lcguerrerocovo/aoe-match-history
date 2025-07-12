@@ -460,9 +460,15 @@ The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
 - `roles/run.invoker` - Invoke Cloud Run services
 - `roles/iam.serviceAccountUser` - Act as the service account
 - `roles/datastore.user` - Access Firestore for session management
+- `roles/compute.viewer` - View compute instances (for Meilisearch VM detection)
+
 
 Grant roles:
 ```bash
+gcloud projects add-iam-policy-binding aoe2-site \
+  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+  --role="roles/compute.viewer"
+  
 gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/run.admin"
