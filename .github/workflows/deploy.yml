@@ -277,6 +277,17 @@ jobs:
         run: |
           echo "🔧 Updating Meilisearch configuration via API..."
           
+          # Extract internal IP from environment variable
+          MEILISEARCH_HOST="${{ env.MEILISEARCH_HOST }}"
+          INTERNAL_IP=$(echo "$MEILISEARCH_HOST" | sed 's|http://||' | sed 's|:7700||')
+          
+          if [ -z "$INTERNAL_IP" ]; then
+            echo "❌ No internal IP found, skipping Meilisearch config"
+            exit 0
+          fi
+          
+          echo "📍 Using internal IP: $INTERNAL_IP"
+          
           # Wait for Meilisearch to be healthy
           echo "⏳ Waiting for Meilisearch to be healthy..."
           for i in {1..10}; do
