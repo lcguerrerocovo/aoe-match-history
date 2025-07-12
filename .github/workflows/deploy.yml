@@ -172,16 +172,18 @@ jobs:
           # Create Firestore database if it doesn't exist
           gcloud firestore databases create --location=us-central1 --quiet || echo "Database already exists"
       
-      - name: Get Meilisearch VM Internal IP
+
+      
+      - name: Get Meilisearch VM External IP
         run: |
-          # Get the internal IP of the Meilisearch VM
-          INTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].networkIP)' 2>/dev/null || echo "")
-          if [ -z "$INTERNAL_IP" ]; then
+          # Get the external IP of the Meilisearch VM
+          EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+          if [ -z "$EXTERNAL_IP" ]; then
             echo "⚠️  Meilisearch VM not found. Using fallback configuration."
             echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
           else
-            echo "✅ Found Meilisearch VM at internal IP: $INTERNAL_IP"
-            echo "MEILISEARCH_HOST=http://$INTERNAL_IP:7700" >> $GITHUB_ENV
+            echo "✅ Found Meilisearch VM at external IP: $EXTERNAL_IP"
+            echo "MEILISEARCH_HOST=http://$EXTERNAL_IP:7700" >> $GITHUB_ENV
           fi
       
       - name: Deploy Proxy Cloud Function
