@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently --raw --names UI,PROXY,FS,APM \"npm run dev\" \"npm run dev:proxy\" \"npm run dev:firestore\" \"npm run dev:apm\"",
-    "dev:all:prod": "concurrently --raw --names UI,PROXY,APM \"npm run dev\" \"npm run dev:proxy:prod\" \"npm run dev:apm\"",
+    "dev:all:prod": "concurrently --raw --names TUNNEL,UI,PROXY,APM \"npm run tunnel\" \"npm run dev\" \"npm run dev:proxy:prod\" \"npm run dev:apm\"",
     "dev:test": "concurrently --raw --names UI,PROXY,FS,TEST \"npm run dev\" \"npm run dev:proxy\" \"npm run dev:firestore\" \"npm run test:watch\"",
     "dev:proxy": "cd ../functions/proxy && NODE_ENV=development FIRESTORE_EMULATOR_HOST=localhost:8081 LOG_LEVEL=debug APM_API_URL=http://localhost:5001 npm run dev",
     "dev:proxy:prod": "cd ../functions/proxy && NODE_ENV=development FIRESTORE_EMULATOR_HOST='' LOG_LEVEL=debug APM_API_URL=http://localhost:5001 npm run dev",
@@ -14,6 +14,7 @@
     "dev:firestore:only": "npx firebase emulators:start --only firestore --project demo-project",
     "dev:api": "concurrently \"npm run dev:proxy\" \"npm run dev:firestore\"",
     "dev:apm": "cd ../functions/apm && PYTHONUNBUFFERED=1 python -m functions_framework --target=aoe2_apm_processor --port=5001",
+    "tunnel": "bash ../scripts/tunnel-meilisearch.sh",
     "build": "tsc -b && vite build --mode production",
     "upload-assets": "node scripts/upload-assets.js",
     "preview": "vite preview",

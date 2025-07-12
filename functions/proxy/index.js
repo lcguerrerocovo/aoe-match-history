@@ -19,6 +19,15 @@ const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
 const RELIC_AUTH_STEAM_PASS = process.env.RELIC_AUTH_STEAM_PASS;
 
+// Meilisearch configuration
+const MEILISEARCH_HOST = process.env.MEILISEARCH_HOST
+const MEILISEARCH_API_KEY = process.env.MEILISEARCH_API_KEY
+
+// Ensure MEILISEARCH_HOST has protocol
+const MEILISEARCH_URL = MEILISEARCH_HOST && !MEILISEARCH_HOST.startsWith('http') 
+  ? `http://${MEILISEARCH_HOST}` 
+  : MEILISEARCH_HOST || 'http://localhost:7700'; // fallback for development
+
 // Endpoint of Python APM function (HTTP trigger)
 const APM_API_URL = process.env.APM_API_URL || process.env.APM_FN_URL || 'https://us-east1-aoe2-site.cloudfunctions.net/aoe2-apm-processor';
 
@@ -35,6 +44,16 @@ const logger = pino({
 });
 
 const log = logger.child({ module: 'Proxy' });
+
+// Log environment info
+log.info({ 
+  NODE_ENV: process.env.NODE_ENV, 
+  MEILISEARCH_HOST, 
+  MEILISEARCH_URL,
+  MEILISEARCH_HOST_TYPE: typeof MEILISEARCH_HOST,
+  MEILISEARCH_URL_TYPE: typeof MEILISEARCH_URL,
+  FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST 
+}, 'Environment configuration');
 
 // Global instances
 let authClient = null;
@@ -864,6 +883,53 @@ function cleanForSearch(text) {
   return text.replace(/[^\w]/g, '').toLowerCase();
 }
 
+async function searchMeilisearch(query, limit = 20) {
+  const cleanQuery = cleanForSearch(query);
+  if (!cleanQuery) return [];
+  
+  try {
+    const meilisearchUrl = `${MEILISEARCH_URL.replace(/\/$/, '')}/indexes/players/search`;
+    log.info({ query: cleanQuery, limit, meilisearchUrl }, 'Meilisearch search');
+    
+    const response = await fetch(meilisearchUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MEILISEARCH_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: cleanQuery,
+        limit: limit,
+        sort: ['total_matches:desc', 'last_match_date:desc']
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Meilisearch request failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    // Transform Meilisearch results to match expected format
+    const results = result.hits.map(hit => ({
+      id: hit.profile_id.toString(),
+      name: hit.alias || hit.name,
+      country: hit.country || '',
+      matches: hit.total_matches || 0,
+      lastMatchDate: hit.last_match_date,
+      profile_id: hit.profile_id,
+      clanlist_name: hit.clanlist_name || ''
+    }));
+    
+    log.info({ query: cleanQuery, resultCount: results.length }, 'Meilisearch search completed');
+    return results;
+    
+  } catch (error) {
+    log.error({ error: error.message, query: cleanQuery }, 'Error in Meilisearch search');
+    return [];
+  }
+}
+
 async function searchFirestore(db, query, limit = 20) {
   const cleanQuery = cleanForSearch(query);
   if (!cleanQuery) return [];
@@ -969,9 +1035,8 @@ async function handlePlayerSearch(name) {
       };
     }
     
-    const db = getFirestoreClient();
-    const results = await searchFirestore(db, cleanName, 100);
-    
+    // Use Meilisearch for fast, typo-tolerant search
+    const results = await searchMeilisearch(cleanName, 100);
     log.info({ query: name, cleanQuery: cleanName, resultCount: results.length }, 'Player search completed');
     
     return {

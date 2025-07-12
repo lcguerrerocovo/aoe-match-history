@@ -39,6 +39,7 @@ ui/build/
 
 # Data files
 data/collected_players.jsonl
+data/active_players.jsonl
 data/matches/
 seen_matches.json
 

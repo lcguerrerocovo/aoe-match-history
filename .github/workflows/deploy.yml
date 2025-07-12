@@ -9,6 +9,7 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
+      - 'scripts/meilisearch_config.json'
   pull_request:
     branches: [ master ]
     paths:
@@ -17,6 +18,7 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
+      - 'scripts/meilisearch_config.json'
 
 jobs:
   build-and-deploy:
@@ -170,6 +172,18 @@ jobs:
           # Create Firestore database if it doesn't exist
           gcloud firestore databases create --location=us-central1 --quiet || echo "Database already exists"
       
+      - name: Get Meilisearch VM Internal IP
+        run: |
+          # Get the internal IP of the Meilisearch VM
+          INTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].networkIP)' 2>/dev/null || echo "")
+          if [ -z "$INTERNAL_IP" ]; then
+            echo "⚠️  Meilisearch VM not found. Using fallback configuration."
+            echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
+          else
+            echo "✅ Found Meilisearch VM at internal IP: $INTERNAL_IP"
+            echo "MEILISEARCH_HOST=http://$INTERNAL_IP:7700" >> $GITHUB_ENV
+          fi
+      
       - name: Deploy Proxy Cloud Function
         run: |
           cd functions/proxy
@@ -186,7 +200,7 @@ jobs:
             --allow-unauthenticated \
             --memory=256MB \
             --timeout=30s \
-            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }}" \
+            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }},MEILISEARCH_HOST=${{ env.MEILISEARCH_HOST }},MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }}" \
             --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug
 
@@ -227,4 +241,58 @@ jobs:
             --memory=256MB \
             --timeout=30s \
             --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-            --verbosity=debug 
+            --verbosity=debug
+
+  deploy-meilisearch-config:
+    runs-on: ubuntu-latest
+    needs: [deploy-proxy-function]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Get Meilisearch VM Internal IP
+        run: |
+          # Get the internal IP of the Meilisearch VM
+          INTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].networkIP)' 2>/dev/null || echo "")
+          if [ -z "$INTERNAL_IP" ]; then
+            echo "⚠️  Meilisearch VM not found. Skipping config deployment."
+            echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
+            echo "SKIP_MEILISEARCH_CONFIG=true" >> $GITHUB_ENV
+          else
+            echo "✅ Found Meilisearch VM at internal IP: $INTERNAL_IP"
+            echo "MEILISEARCH_HOST=http://$INTERNAL_IP:7700" >> $GITHUB_ENV
+            echo "SKIP_MEILISEARCH_CONFIG=false" >> $GITHUB_ENV
+          fi
+      
+      - name: Deploy Meilisearch Configuration
+        if: env.SKIP_MEILISEARCH_CONFIG != 'true'
+        run: |
+          echo "🔧 Updating Meilisearch configuration via API..."
+          
+          # Wait for Meilisearch to be healthy
+          echo "⏳ Waiting for Meilisearch to be healthy..."
+          for i in {1..10}; do
+            if curl -f "http://$INTERNAL_IP:7700/health" > /dev/null 2>&1; then
+              echo "✅ Meilisearch is healthy"
+              break
+            fi
+            echo "Waiting for Meilisearch... (attempt $i/10)"
+            sleep 10
+          done
+          
+          # Update index settings via API
+          echo "📝 Updating index settings..."
+          curl -X PATCH "http://$INTERNAL_IP:7700/indexes/players/settings" \
+            -H "Authorization: Bearer ${{ secrets.MEILISEARCH_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @scripts/meilisearch_config.json
+          
+          echo "✅ Meilisearch configuration updated successfully" 

@@ -66,24 +66,24 @@ beforeEach(() => {
 describe('Proxy API', () => {
   describe('proxy function', () => {
     it('should handle player search successfully', async () => {
-      // Mock Firestore response
-      const mockPlayers = [
-        { 
-          profile_id: 123, 
-          name: 'testplayer', 
-          name_no_special: 'testplayer',
-          total_matches: 100,
-          country: 'us'
-        }
-      ];
-      
-      mockFirestoreSnapshot.forEach.mockImplementation((callback) => {
-        mockPlayers.forEach((player) => {
-          const doc = { data: () => player };
-          callback(doc);
-        });
+      // Mock Meilisearch response
+      const mockMeilisearchResponse = {
+        hits: [
+          {
+            profile_id: 123,
+            alias: 'testplayer',
+            name: 'testplayer',
+            total_matches: 100,
+            country: 'us',
+            last_match_date: '2024-01-01T00:00:00Z'
+          }
+        ]
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockMeilisearchResponse)
       });
-      mockFirestoreQuery.get.mockResolvedValue(mockFirestoreSnapshot);
 
       const req = {
         url: '/api/player-search?name=testplayer',
@@ -97,7 +97,16 @@ describe('Proxy API', () => {
 
       await proxy.proxy(req, res);
 
-      expect(mockFirestore.collection).toHaveBeenCalledWith('players');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/indexes/players/search'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json'
+          }),
+          body: expect.stringContaining('testplayer')
+        })
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(expect.arrayContaining([
         expect.objectContaining({
@@ -244,11 +253,13 @@ describe('Proxy API', () => {
     });
 
     it('should handle empty player search results', async () => {
-      // Mock empty Firestore response
-      mockFirestoreSnapshot.forEach.mockImplementation(() => {
-        // No players found
+      // Mock empty Meilisearch response
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({
+          hits: []
+        })
       });
-      mockFirestoreQuery.get.mockResolvedValue(mockFirestoreSnapshot);
 
       const req = {
         url: '/api/player-search?name=nonexistentplayer',
@@ -262,7 +273,16 @@ describe('Proxy API', () => {
 
       await proxy.proxy(req, res);
 
-      expect(mockFirestore.collection).toHaveBeenCalledWith('players');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/indexes/players/search'),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json'
+          }),
+          body: expect.stringContaining('nonexistentplayer')
+        })
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith([]);
       expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=1800');

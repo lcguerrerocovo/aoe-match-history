@@ -97,4 +97,7 @@ export default defineConfig({
       }
     },
   },
+  optimizeDeps: {
+    exclude: ['@meilisearch/instant-meilisearch']
+  },
 }) 
