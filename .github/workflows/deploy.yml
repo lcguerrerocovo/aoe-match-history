@@ -397,7 +397,7 @@ jobs:
               --data '{
                 "type": "CNAME",
                 "name": "api",
-                "content": "us-central1-aoe2-site.cloudfunctions.net",
+                "content": "us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy",
                 "proxied": true
               }'
           else
@@ -410,7 +410,7 @@ jobs:
               --data '{
                 "type": "CNAME",
                 "name": "api",
-                "content": "us-central1-aoe2-site.cloudfunctions.net",
+                "content": "us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy",
                 "proxied": true
               }'
           fi
