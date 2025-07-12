@@ -10,8 +10,6 @@ on:
       - '.github/workflows/deploy.yml'
       - 'functions/**'
       - 'scripts/meilisearch_config.json'
-      - 'scripts/startup.sh'
-      - 'scripts/deploy-vm.sh'
   pull_request:
     branches: [ master ]
     paths:
@@ -21,8 +19,6 @@ on:
       - '.github/workflows/deploy.yml'
       - 'functions/**'
       - 'scripts/meilisearch_config.json'
-      - 'scripts/startup.sh'
-      - 'scripts/deploy-vm.sh'
 
 jobs:
   build-and-deploy:
