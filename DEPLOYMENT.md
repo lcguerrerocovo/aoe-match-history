@@ -88,10 +88,10 @@ sudo docker restart meilisearch
 ### Cloud Function Issues
 ```bash
 # Check function logs
-gcloud functions logs read aoe2-api-proxy --region=us-east1
+gcloud functions logs read aoe2-api-proxy --region=us-central1
 
 # Check environment variables
-gcloud functions describe aoe2-api-proxy --region=us-east1
+gcloud functions describe aoe2-api-proxy --region=us-central1
 ```
 
 ### Local Development Issues

@@ -29,7 +29,7 @@ const MEILISEARCH_URL = MEILISEARCH_HOST && !MEILISEARCH_HOST.startsWith('http')
   : MEILISEARCH_HOST || 'http://localhost:7700'; // fallback for development
 
 // Endpoint of Python APM function (HTTP trigger)
-const APM_API_URL = process.env.APM_API_URL || process.env.APM_FN_URL || 'https://us-east1-aoe2-site.cloudfunctions.net/aoe2-apm-processor';
+const APM_API_URL = process.env.APM_API_URL || process.env.APM_FN_URL || 'https://us-central1-aoe2-site.cloudfunctions.net/aoe2-apm-processor';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',

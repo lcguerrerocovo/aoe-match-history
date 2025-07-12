@@ -90,7 +90,7 @@ jobs:
                 "http://localhost:5173",
                 "https://aoe2-match-history-site.storage.googleapis.com",
                 "https://aoe2.site",
-                "https://us-east1-aoe2-site.cloudfunctions.net"
+                "https://us-central1-aoe2-site.cloudfunctions.net"
               ],
               "method": ["GET"],
               "responseHeader": ["Content-Type"],
@@ -193,7 +193,7 @@ jobs:
           gcloud functions deploy aoe2-api-proxy \
             --gen2 \
             --runtime=nodejs20 \
-            --region=us-east1 \
+            --region=us-central1 \
             --source=. \
             --entry-point=proxy \
             --trigger-http \
@@ -233,7 +233,7 @@ jobs:
           gcloud functions deploy aoe2-apm-processor \
             --gen2 \
             --runtime=python311 \
-            --region=us-east1 \
+            --region=us-central1 \
             --source=. \
             --entry-point=apm_handler \
             --trigger-http \
@@ -344,6 +344,62 @@ jobs:
           curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data '{"files": ["https://us-east1-aoe2-site.cloudfunctions.net/aoe2-api-proxy"]}'
+            --data '{"files": ["https://us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy"]}'
           
           echo "✅ Cloudflare cache cleared successfully"
+      
+      - name: Update Cloudflare DNS
+        run: |
+          echo "🌐 Updating Cloudflare DNS for new region..."
+          
+          # Cloudflare API token should be stored in secrets
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "⚠️  CLOUDFLARE_API_TOKEN not set, skipping DNS update"
+            exit 0
+          fi
+          
+          # Zone ID for aoe2.site
+          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
+          
+          if [ -z "$ZONE_ID" ]; then
+            echo "⚠️  CLOUDFLARE_ZONE_ID not set, skipping DNS update"
+            exit 0
+          fi
+          
+          # Get the current DNS record ID for api.aoe2.site
+          echo "📝 Getting current DNS record..."
+          RECORD_RESPONSE=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?name=api.aoe2.site" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          
+          RECORD_ID=$(echo "$RECORD_RESPONSE" | jq -r '.result[0].id // empty')
+          
+          if [ -z "$RECORD_ID" ] || [ "$RECORD_ID" = "null" ]; then
+            echo "⚠️  No existing DNS record found for api.aoe2.site, creating new one..."
+            
+            # Create new CNAME record
+            curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data '{
+                "type": "CNAME",
+                "name": "api",
+                "content": "us-central1-aoe2-site.cloudfunctions.net",
+                "proxied": true
+              }'
+          else
+            echo "📝 Updating existing DNS record..."
+            
+            # Update existing CNAME record
+            curl -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data '{
+                "type": "CNAME",
+                "name": "api",
+                "content": "us-central1-aoe2-site.cloudfunctions.net",
+                "proxied": true
+              }'
+          fi
+          
+          echo "✅ Cloudflare DNS updated successfully"

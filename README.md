@@ -29,7 +29,7 @@ This project provides a modern React-based website for viewing **Age of Empires 
 
 ### Components
 - **React UI**: Modern responsive interface for browsing match history and player stats
-- **Cloud Function API**: Proxy service for external API calls (RelicLink, Steam)
+  - **Cloud Function API**: Proxy service for external API calls (RelicLink, Steam) - deployed in us-central1 for free tier
 - **Static Hosting**: UI served from Google Cloud Storage with Cloudflare CDN
 - **Meilisearch**: Fast, typo-tolerant search engine for player lookup
 
@@ -412,32 +412,12 @@ Player search uses composite indexes defined in `firestore.indexes.json`:
 - Firestore (session management and player data)
 
 #### API Proxy Setup
-The project uses a Cloud Run service as a proxy to external APIs (RelicLink, Steam) with Cloudflare DNS for caching and SSL termination.
+The project uses Cloud Functions as a proxy to external APIs (RelicLink, Steam) with Cloudflare DNS for caching and SSL termination.
 
-1. **Cloud Run Domain Mapping**
-   ```bash
-   # Set project and region
-   gcloud config set project aoe2-site
-   gcloud config set run/region us-east1
-
-   # Create domain mapping for the API proxy service
-   gcloud beta run domain-mappings create \
-     --service aoe2-api-proxy \
-     --domain api.aoe2.site \
-     --platform managed \
-     --region us-east1
-
-   # Verify mapping and get DNS target
-   gcloud beta run domain-mappings describe \
-     --domain api.aoe2.site \
-     --platform managed \
-     --region us-east1
-   ```
-
-2. **Cloudflare DNS Configuration**
+1. **Cloudflare DNS Configuration**
    - Create a CNAME record in Cloudflare:
      - Name: `api`
-     - Target: `ghs.googlehosted.com`
+     - Target: `us-central1-aoe2-site.cloudfunctions.net`
      - Enable proxy (orange cloud)
    - This setup allows Cloudflare to:
      - Handle SSL termination
