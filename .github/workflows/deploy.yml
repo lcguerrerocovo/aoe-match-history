@@ -260,17 +260,17 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       
-      - name: Get Meilisearch VM Internal IP
+      - name: Get Meilisearch VM External IP
         run: |
-          # Get the internal IP of the Meilisearch VM
-          INTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].networkIP)' 2>/dev/null || echo "")
-          if [ -z "$INTERNAL_IP" ]; then
+          # Get the external IP of the Meilisearch VM
+          EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+          if [ -z "$EXTERNAL_IP" ]; then
             echo "⚠️  Meilisearch VM not found. Skipping config deployment."
             echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
             echo "SKIP_MEILISEARCH_CONFIG=true" >> $GITHUB_ENV
           else
-            echo "✅ Found Meilisearch VM at internal IP: $INTERNAL_IP"
-            echo "MEILISEARCH_HOST=http://$INTERNAL_IP:7700" >> $GITHUB_ENV
+            echo "✅ Found Meilisearch VM at external IP: $EXTERNAL_IP"
+            echo "MEILISEARCH_HOST=http://$EXTERNAL_IP:7700" >> $GITHUB_ENV
             echo "SKIP_MEILISEARCH_CONFIG=false" >> $GITHUB_ENV
           fi
       
@@ -279,21 +279,21 @@ jobs:
         run: |
           echo "🔧 Updating Meilisearch configuration via API..."
           
-          # Extract internal IP from environment variable
+          # Extract external IP from environment variable
           MEILISEARCH_HOST="${{ env.MEILISEARCH_HOST }}"
-          INTERNAL_IP=$(echo "$MEILISEARCH_HOST" | sed 's|http://||' | sed 's|:7700||')
+          EXTERNAL_IP=$(echo "$MEILISEARCH_HOST" | sed 's|http://||' | sed 's|:7700||')
           
-          if [ -z "$INTERNAL_IP" ]; then
-            echo "❌ No internal IP found, skipping Meilisearch config"
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "❌ No external IP found, skipping Meilisearch config"
             exit 0
           fi
           
-          echo "📍 Using internal IP: $INTERNAL_IP"
+          echo "📍 Using external IP: $EXTERNAL_IP"
           
           # Wait for Meilisearch to be healthy
           echo "⏳ Waiting for Meilisearch to be healthy..."
           for i in {1..10}; do
-            if curl -f "http://$INTERNAL_IP:7700/health" > /dev/null 2>&1; then
+            if curl -f "http://$EXTERNAL_IP:7700/health" > /dev/null 2>&1; then
               echo "✅ Meilisearch is healthy"
               break
             fi
@@ -303,7 +303,7 @@ jobs:
           
           # Update index settings via API
           echo "📝 Updating index settings..."
-          curl -X PATCH "http://$INTERNAL_IP:7700/indexes/players/settings" \
+          curl -X PATCH "http://$EXTERNAL_IP:7700/indexes/players/settings" \
             -H "Authorization: Bearer ${{ secrets.MEILISEARCH_API_KEY }}" \
             -H "Content-Type: application/json" \
             --data-binary @scripts/meilisearch_config.json
@@ -397,7 +397,7 @@ jobs:
               --data '{
                 "type": "CNAME",
                 "name": "api",
-                "content": "us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy",
+                "content": "aoe2-api-proxy-w23c4qxc5a-uc.a.run.app",
                 "proxied": true
               }'
           else
@@ -410,7 +410,7 @@ jobs:
               --data '{
                 "type": "CNAME",
                 "name": "api",
-                "content": "us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy",
+                "content": "aoe2-api-proxy-w23c4qxc5a-uc.a.run.app",
                 "proxied": true
               }'
           fi
