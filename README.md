@@ -11,6 +11,7 @@ This project provides a modern React-based website for viewing **Age of Empires 
   - Automatic Steam authentication and session management
   - Persistent session storage with Firestore
   - Optimized caching for performance
+  - **Fast typo-tolerant search with Meilisearch**
 
 - **Match History Viewing**
   - Detailed match statistics and team compositions
@@ -30,6 +31,7 @@ This project provides a modern React-based website for viewing **Age of Empires 
 - **React UI**: Modern responsive interface for browsing match history and player stats
 - **Cloud Function API**: Proxy service for external API calls (RelicLink, Steam)
 - **Static Hosting**: UI served from Google Cloud Storage with Cloudflare CDN
+- **Meilisearch**: Fast, typo-tolerant search engine for player lookup
 
 ### Data Flow
 
@@ -42,6 +44,7 @@ This project provides a modern React-based website for viewing **Age of Empires 
 1. React app is built and deployed to GCS bucket, served via Cloudflare
 2. Cloud Function at `/functions/proxy` handles API calls to external services (RelicLink, Steam)
 3. React app fetches data through the Cloud Function API proxy
+4. **Meilisearch VM provides fast player search functionality**
 
 ## Documentation
 
@@ -53,6 +56,191 @@ This project provides a modern React-based website for viewing **Age of Empires 
 1. Clone the repository
 2. Set up frontend development environment
 3. Configure API proxy for player search functionality
+4. **Deploy Meilisearch search engine**
+
+## Meilisearch Search Engine
+
+The project uses Meilisearch for fast, typo-tolerant player search, replacing the previous Firestore-based search.
+
+### Deployment
+
+#### 1. Deploy the Search VM
+```bash
+# Deploy Meilisearch VM with automatic configuration
+bash scripts/deploy.sh
+
+# Or with custom master key
+MEILI_MASTER_KEY="your-secure-key" bash scripts/deploy.sh
+```
+
+The deployment script:
+- Creates an e2-micro VM in `us-central1-a` (free tier compatible)
+- Installs Docker and Meilisearch automatically
+- Configures the search index using `scripts/meilisearch_config.json`
+- Sets up firewall rules for internal access
+- Provides environment variables for indexing
+
+#### 2. Filter and Index Player Data
+```bash
+# Filter active players (matches > 0, active in last 2 years)
+python scripts/filter_active_players.py data/collected_players.jsonl data/active_players.jsonl
+
+# Index the filtered data
+export MEILI_HTTP_ADDR="http://34.58.214.230:7700"
+export MEILI_MASTER_KEY="a-secure-master-key-change-this"
+python scripts/index_from_jsonl.py data/active_players.jsonl
+```
+
+#### 3. Update Cloud Function
+Update your Cloud Function environment variables:
+```bash
+MEILISEARCH_HOST="http://34.58.214.230:7700"
+MEILISEARCH_API_KEY="a-secure-master-key-change-this"
+```
+
+### Management and Troubleshooting
+
+#### SSH Access
+```bash
+# Connect to the VM
+gcloud compute ssh aoe-search-vm --zone=us-central1-a --project=aoe2-site
+```
+
+#### Health Checks
+```bash
+# Check if Meilisearch is running
+curl http://localhost:7700/health
+
+# Check from external (if firewall allows)
+curl http://<EXTERNAL_IP>:7700/health
+
+# Check Docker container status
+sudo docker ps
+```
+
+#### Logs and Monitoring
+
+**Startup Script Logs** (most important):
+```bash
+# Real-time startup script execution
+sudo journalctl -u google-startup-scripts.service -f
+
+# Recent startup logs
+sudo journalctl -u google-startup-scripts.service --since "1 hour ago"
+```
+
+**Meilisearch Application Logs**:
+```bash
+# Real-time Meilisearch logs
+sudo docker logs meilisearch -f
+
+# Recent Meilisearch logs
+sudo docker logs meilisearch --since "1h"
+```
+
+**System Logs**:
+```bash
+# All system logs
+sudo journalctl -f
+
+# Check startup script status
+sudo systemctl status google-startup-scripts.service
+```
+
+#### Search Testing
+```bash
+# Test search from VM
+curl -X POST 'http://localhost:7700/indexes/players/search' \
+  -H "Authorization: Bearer your-master-key" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"q": "viper"}'
+
+# Test from external (if firewall allows)
+curl -X POST 'http://<EXTERNAL_IP>:7700/indexes/players/search' \
+  -H "Authorization: Bearer your-master-key" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{"q": "viper"}'
+```
+
+#### Firewall Management
+```bash
+# List firewall rules
+gcloud compute firewall-rules list --filter="name~meilisearch"
+
+# Allow external access (for testing)
+gcloud compute firewall-rules create allow-meilisearch-external \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --action=ALLOW \
+  --rules=tcp:7700 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=meilisearch-server \
+  --description="Allow external access to Meilisearch (for testing)"
+
+# Remove external access (for production)
+gcloud compute firewall-rules delete allow-meilisearch-external
+```
+
+#### Container Management
+```bash
+# Restart Meilisearch
+sudo docker restart meilisearch
+
+# View container details
+sudo docker inspect meilisearch
+
+# Check resource usage
+sudo docker stats meilisearch
+```
+
+#### Index Management
+```bash
+# Get index statistics
+curl -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players/stats
+
+# Get index settings
+curl -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players/settings
+
+# Clear and reindex (if needed)
+curl -X DELETE -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players
+```
+
+### Configuration
+
+#### Search Index Settings
+The search index is configured via `scripts/meilisearch_config.json`:
+- **Searchable fields**: `name`, `alias`
+- **Filterable fields**: `country`, `total_matches`, `last_match_date`
+- **Sortable fields**: `total_matches`, `last_match_date`
+- **Ranking rules**: Prioritizes players with more matches and recent activity
+- **Typo tolerance**: Enabled for better search experience
+
+#### Performance Tuning
+For the e2-micro VM:
+- **Memory limit**: 400MB for indexing
+- **Threads**: 2 concurrent indexing threads
+- **Batch size**: 1000 documents per batch
+
+### Backup and Recovery
+```bash
+# Create index dump
+curl -X POST -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/dumps
+
+# List available dumps
+curl -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/dumps
+
+# Restore from dump
+curl -X POST -H "Authorization: Bearer your-master-key" \
+  -H "Content-Type: application/json" \
+  --data-binary '{"dumpUid": "dump_uid_here"}' \
+  http://localhost:7700/dumps/import
+```
 
 ## Development
 
@@ -61,6 +249,39 @@ This project provides a modern React-based website for viewing **Age of Empires 
 - npm
 - Google Cloud SDK (for deployment)
 - Firebase CLI (for local development)
+- **Python 3.8+ (for data processing scripts)**
+
+### Python Environment Setup
+
+The project requires Python dependencies for data processing scripts and Cloud Functions. Set up a Python environment using `pyenv` and `pyenv-virtualenv`:
+
+```bash
+# Install pyenv (if not already installed)
+# On macOS with Homebrew:
+brew install pyenv pyenv-virtualenv
+pyenv install 3.11.7
+pyenv virtualenv 3.11.7 aoe-match-history
+pyenv local aoe-match-history
+
+# Install all dependencies (data processing + Cloud Functions)
+pip install -r requirements.txt
+
+# Verify installations
+python -c "import meilisearch; print('Meilisearch client installed successfully')"
+python -c "import functions_framework; print('Cloud Functions framework installed successfully')"
+```
+
+**Important**: The virtual environment is automatically activated when you're in the project directory. If you need to activate it manually:
+```bash
+pyenv activate aoe-match-history
+```
+
+**Note**: If you don't have `pyenv` installed, you can use the system Python, but `pyenv` is recommended for consistent Python version management across projects.
+
+#### Development vs Production Dependencies
+
+- **Development**: All dependencies installed in root virtual environment (`requirements.txt`)
+- **Production**: Each Cloud Function installs its own dependencies (`pip install -r requirements.txt -t .`)
 
 ### Local Development
 

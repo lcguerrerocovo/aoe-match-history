@@ -1,0 +1,34 @@
+{
+  "uid": "players",
+  "primaryKey": "profile_id",
+  "searchableAttributes": [
+    "alias"
+  ],
+  "filterableAttributes": [
+    "country",
+    "clanlist_name",
+    "total_matches",
+    "last_match_date"
+  ],
+  "sortableAttributes": [
+    "total_matches",
+    "last_match_date"
+  ],
+  "rankingRules": [
+    "exactness",
+    "words",
+    "typo",
+    "proximity",
+    "attribute",
+    "sort",
+    "total_matches:desc",
+    "last_match_date:desc"
+  ],
+  "typoTolerance": {
+    "enabled": true,
+    "minWordSizeForTypos": {
+      "oneTypo": 5,
+      "twoTypos": 9
+    }
+  }
+} 
