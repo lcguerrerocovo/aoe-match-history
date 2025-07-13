@@ -1,0 +1,34 @@
+# Multi-stage build to get Meilisearch binary
+FROM getmeili/meilisearch:v1.7.3 as meilisearch
+
+FROM alpine:3.20
+
+# Install required packages
+RUN apk add --no-cache curl wget python3 py3-requests bash libc6-compat
+
+# Install Google Cloud SDK for GCS access
+RUN wget --quiet https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-455.0.0-linux-x86_64.tar.gz \
+    && tar -xzf google-cloud-cli-455.0.0-linux-x86_64.tar.gz \
+    && ./google-cloud-sdk/install.sh --quiet \
+    && rm google-cloud-cli-455.0.0-linux-x86_64.tar.gz
+
+# Add gcloud to PATH
+ENV PATH="/google-cloud-sdk/bin:${PATH}"
+
+# Copy Meilisearch binary from official image
+COPY --from=meilisearch /bin/meilisearch /usr/local/bin/meilisearch
+RUN chmod +x /usr/local/bin/meilisearch
+
+# Add /usr/local/bin to PATH explicitly
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Copy indexing script
+COPY indexer.py /indexer.py
+
+# Python requests is already installed via py3-requests
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"] 

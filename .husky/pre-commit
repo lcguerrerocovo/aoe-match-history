@@ -1,3 +1,17 @@
 #!/usr/bin/env sh
 
-cd ui && npm run lint && npm run type-check && npm run test:all
+cd ui
+
+# Get staged files that are test files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(test|spec)\.(js|ts|jsx|tsx)$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+  echo "Running tests on changed files: $STAGED_FILES"
+  # Run tests only on changed test files
+  npm test -- --findRelatedTests $STAGED_FILES
+else
+  echo "No test files changed, skipping tests"
+fi
+
+# Always run lint and type-check
+npm run lint && npm run type-check

@@ -1,0 +1,115 @@
+name: Deploy Meilisearch Indexing Job
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'indexing-job/**' ]
+  workflow_dispatch:
+    inputs:
+      run_job:
+        description: 'Run the indexing job after deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: aoe2-site
+  REGION: us-central1
+  IMAGE_NAME: meilisearch-indexer
+  JOB_NAME: meilisearch-indexing-job
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Google Auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Create Artifact Registry repository
+      run: |
+        # Check if repository exists, create if it doesn't
+        if ! gcloud artifacts repositories describe meilisearch --location=$REGION 2>/dev/null; then
+          echo "Creating Artifact Registry repository..."
+          gcloud artifacts repositories create meilisearch \
+            --repository-format=docker \
+            --location=$REGION \
+            --description="Meilisearch indexing job images"
+        else
+          echo "Repository already exists"
+        fi
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker $REGION-docker.pkg.dev
+
+    - name: Build Docker image
+      run: |
+        cd indexing-job
+        docker build -f Dockerfile.indexer -t $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }} .
+        docker tag $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
+
+    - name: Push Docker image
+      run: |
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }}
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
+
+    - name: Deploy Cloud Run Job
+      run: |
+        # Deploy the Cloud Run Job (create if not exists, update if exists)
+        if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
+          echo "Job exists, updating..."
+          gcloud run jobs update ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/meilisearch/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=2Gi \
+            --cpu=2 \
+            --max-retries=3 \
+            --task-timeout=3600 \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        else
+          echo "Job does not exist, creating..."
+          gcloud run jobs create ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/meilisearch/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=2Gi \
+            --cpu=2 \
+            --max-retries=3 \
+            --task-timeout=3600 \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        fi
+
+    - name: Create Cloud Scheduler Job
+      run: |
+        # Create a scheduled job that runs every 6 hours
+        gcloud scheduler jobs create http meilisearch-indexing-scheduler \
+          --schedule="0 */6 * * *" \
+          --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/$JOB_NAME:run" \
+          --http-method=POST \
+          --oauth-service-account-email="$PROJECT_ID@appspot.gserviceaccount.com" \
+          --location=$REGION \
+          --description="Runs Meilisearch indexing job every 6 hours" \
+          || echo "Scheduler job already exists or failed to create"
+
+    - name: Run indexing job
+      if: ${{ github.event.inputs.run_job == 'true' }}
+      run: |
+        echo "Running indexing job..."
+        gcloud run jobs execute $JOB_NAME --region=$REGION --wait
+
+    - name: Job status
+      if: ${{ github.event.inputs.run_job == 'true' }}
+      run: |
+        echo "Job completed. Check logs for details:"
+        echo "gcloud run jobs executions list --job=$JOB_NAME --region=$REGION" 

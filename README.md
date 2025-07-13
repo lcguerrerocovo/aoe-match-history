@@ -463,6 +463,11 @@ gcloud projects add-iam-policy-binding aoe2-site \
 gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/storage.admin"
+
+gcloud run services add-iam-policy-binding aoe2-api-proxy \
+  --region=us-central1 \
+  --member="allUsers" \
+  --role="roles/run.invoker"
 ```
 
 ### Cloudflare Integration
@@ -515,6 +520,21 @@ gsutil web set -m index.html -e index.html gs://aoe2.site
 - If site deployment fails, verify GCS bucket permissions
 - For local testing issues, ensure all prerequisites are installed
 
+## Troubleshooting: Cloud Run Custom Domain Mapping
+
+If your Cloud Run service returns 404s or SSL errors when accessed via a custom domain (e.g., through Cloudflare), ensure that:
+
+- The custom domain is mapped to your Cloud Run service in the **same region** where the service is deployed.
+- The mapping must use the correct region flag. For example, if your service is in `us-central1`:
+
+```sh
+gcloud beta run domain-mappings create --service=aoe2-api-proxy --region=us-central1 --domain=api.aoe2.site
+```
+
+If the mapping points to a different region (e.g., `us-east1`), requests will fail with 404 or SSL errors.
+
+After mapping, Google will provision an SSL certificate for the custom domain. This may take a few minutes to become active.
+
 ## Cache Management
 
 ### Long-lived Files
@@ -565,3 +585,60 @@ Alternatively, use the Cloudflare Dashboard: **Caching** → **Configuration** �
 - [leaderboard mapping](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/match.ts#L8)
 - [auth flow](https://github.com/librematch/librematch-steam_auth/blob/main/poc_steam_proxy/__init__.py)
 - [steam api](https://steamwebapi.azurewebsites.net/)
+
+## Deploying Cloud Run with a Custom Domain Behind Cloudflare
+
+### Step-by-step Setup
+
+1. **Deploy your Cloud Run service**
+   - Deploy as usual to your chosen region (e.g., `us-central1`).
+
+2. **Map your custom domain to Cloud Run**
+   - Use the correct region:
+     ```sh
+     gcloud beta run domain-mappings create --service=YOUR_SERVICE --region=YOUR_REGION --domain=YOUR_CUSTOM_DOMAIN
+     ```
+   - Example:
+     ```sh
+     gcloud beta run domain-mappings create --service=aoe2-api-proxy --region=us-central1 --domain=api.aoe2.site
+     ```
+
+3. **Update DNS in Cloudflare**
+   - Add a CNAME record for your subdomain (e.g., `api`) pointing to `ghs.googlehosted.com.`
+   - Example:
+     | Type  | Name | Content                | Proxy Status |
+     |-------|------|------------------------|--------------|
+     | CNAME | api  | ghs.googlehosted.com.  | Proxied      |
+   - (If certificate provisioning fails, temporarily set Proxy Status to "DNS only" until SSL is ready, then re-enable proxy.)
+
+4. **Wait for SSL certificate provisioning**
+   - Google will automatically provision an SSL certificate for your custom domain. This can take 5–30 minutes.
+   - Check status:
+     ```sh
+     gcloud beta run domain-mappings describe --region=YOUR_REGION --domain=YOUR_CUSTOM_DOMAIN
+     ```
+   - Look for `type: Ready` and `type: CertificateProvisioned` with `status: 'True'`.
+
+5. **Cloudflare SSL/TLS settings**
+   - Set SSL/TLS mode to **Full** (not "Full (strict)", not "Flexible").
+   - Make sure Universal SSL is enabled in Cloudflare.
+
+6. **Purge Cloudflare cache**
+   - After SSL is provisioned and proxy is enabled, purge cache for your domain to clear any stale SSL or routing data.
+
+7. **Test**
+   - Access your API via the custom domain (e.g., `https://api.aoe2.site/`).
+   - If you get a 525 error, repeat the cache purge and double-check SSL settings.
+
+### Troubleshooting
+- If you see `CertificatePending` or 525 errors:
+  - Set Cloudflare proxy to "DNS only" until Google issues the certificate, then re-enable proxy.
+  - Always use CNAME to `ghs.googlehosted.com.` for custom domain mapping.
+  - Purge Cloudflare cache after any SSL or proxy changes.
+- If you mapped the domain to the wrong region, delete and recreate the mapping with the correct region.
+
+### Automation Tips
+- Use `gcloud` commands in deployment scripts for domain mapping and status checks.
+- Use Cloudflare API to automate DNS record creation and cache purging.
+- Add checks in your automation to verify certificate status before enabling proxy.
+- Document all required environment variables (e.g., `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`).
