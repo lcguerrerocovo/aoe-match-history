@@ -9,7 +9,7 @@ MEILI_MASTER_KEY="${MEILI_MASTER_KEY:-a-secure-master-key-change-this}"
 
 # Config file paths
 STARTUP_SCRIPT="./scripts/startup.sh"
-MEILI_CONFIG="./scripts/meilisearch_config.json"
+MEILI_CONFIG="./meilisearch_config.json"
 
 echo "🚀 Deploying Meilisearch VM..."
 echo "   Project: $PROJECT_ID"

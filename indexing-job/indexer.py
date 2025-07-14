@@ -69,7 +69,7 @@ def create_snapshot():
     try:
         logging.info("Creating snapshot...")
         response = requests.post(
-            f"{MEILI_URL}/snapshot",
+            f"{MEILI_URL}/snapshots",
             headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
         )
         

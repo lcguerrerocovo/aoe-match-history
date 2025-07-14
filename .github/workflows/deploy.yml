@@ -9,7 +9,7 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
-      - 'scripts/meilisearch_config.json'
+      - 'meilisearch_config.json'
   pull_request:
     branches: [ master ]
     paths:
@@ -18,7 +18,7 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
-      - 'scripts/meilisearch_config.json'
+      - 'meilisearch_config.json'
 
 jobs:
   build-and-deploy:
@@ -306,7 +306,7 @@ jobs:
           curl -X PATCH "http://$EXTERNAL_IP:7700/indexes/players/settings" \
             -H "Authorization: Bearer ${{ secrets.MEILISEARCH_API_KEY }}" \
             -H "Content-Type: application/json" \
-            --data-binary @scripts/meilisearch_config.json
+            --data-binary @meilisearch_config.json
           
           echo "✅ Meilisearch configuration updated successfully"
 
