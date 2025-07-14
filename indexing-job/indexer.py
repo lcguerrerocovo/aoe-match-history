@@ -1,85 +1,211 @@
-import requests
+#!/usr/bin/env python3
+"""
+Index Player Data to Meilisearch from JSONL file - Cloud Run Version
+
+This script is adapted from the original scripts/index_from_jsonl.py for Cloud Run environment.
+It runs against a local Meilisearch instance and creates a snapshot for hot-swapping.
+"""
+
 import json
+import os
+import logging
+import meilisearch
+from pathlib import Path
+from datetime import datetime, timezone
+import requests
 import time
 
+# --- Configuration ---
+INDEX_NAME = "players"
+BATCH_SIZE = 2500
 MEILI_URL = "http://localhost:7700"
-HEADERS = {"X-Meili-API-Key": "masterKey"}
+MEILI_MASTER_KEY = "masterKey"
 
-def create_index():
-    """Create the players index with appropriate settings"""
+# --- Logging Setup ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def process_player_data(player_data):
+    """Processes a single player record into a clean document for Meilisearch."""
+    
+    profile_id = player_data.get('profile_id')
+    name = player_data.get('name')
+    alias = player_data.get('alias')
+    
+    if not profile_id or not (name or alias):
+        return None
+        
+    return {
+        'profile_id': profile_id,
+        'name': name,
+        'alias': alias,
+        'country': player_data.get('country', ''),
+        'clanlist_name': player_data.get('clanlist_name', ''),
+        'total_matches': player_data.get('total_matches', 0),
+        'last_match_date': player_data.get('last_match_date')
+    }
+
+def wait_for_meilisearch():
+    """Wait for Meilisearch to be ready."""
+    max_attempts = 30
+    for attempt in range(max_attempts):
+        try:
+            response = requests.get(f"{MEILI_URL}/health")
+            if response.status_code == 200:
+                health_data = response.json()
+                if health_data.get('status') == 'available':
+                    logging.info("✅ Meilisearch is ready!")
+                    return True
+        except:
+            pass
+        logging.info(f"Waiting for Meilisearch... (attempt {attempt + 1}/{max_attempts})")
+        time.sleep(2)
+    
+    logging.error("❌ Meilisearch failed to start")
+    return False
+
+def create_snapshot():
+    """Create a snapshot and return the snapshot file path."""
     try:
-        # Delete existing index if it exists
-        requests.delete(f"{MEILI_URL}/indexes/players", headers=HEADERS)
-        time.sleep(1)
-    except:
-        pass  # Index doesn't exist
-    
-    # Create new index
-    response = requests.post(f"{MEILI_URL}/indexes", 
-                           json={"uid": "players"}, 
-                           headers=HEADERS)
-    print(f"Created index: {response.json()}")
-
-def configure_index():
-    """Configure searchable attributes and ranking rules"""
-    # Set searchable attributes
-    searchable_attributes = ["name", "clanlist_name", "country"]
-    response = requests.put(f"{MEILI_URL}/indexes/players/settings/searchable-attributes",
-                          json=searchable_attributes,
-                          headers=HEADERS)
-    print(f"Set searchable attributes: {response.json()}")
-    
-    # Set ranking rules (optional - customize based on your needs)
-    ranking_rules = ["words", "typo", "proximity", "attribute", "sort", "exactness"]
-    response = requests.put(f"{MEILI_URL}/indexes/players/settings/ranking-rules",
-                          json=ranking_rules,
-                          headers=HEADERS)
-    print(f"Set ranking rules: {response.json()}")
-
-def index_players():
-    """Read JSONL file and index players"""
-    players = []
-    
-    print("Reading active_players.jsonl...")
-    with open('/active_players.jsonl', 'r') as f:
-        for line in f:
-            if line.strip():
-                player = json.loads(line)
-                # Ensure we have required fields
-                if 'name' in player and 'user_id' in player:
-                    players.append(player)
-    
-    print(f"Found {len(players)} players to index")
-    
-    if not players:
-        print("No players found in file!")
-        return
-    
-    # Index players in batches
-    batch_size = 1000
-    for i in range(0, len(players), batch_size):
-        batch = players[i:i + batch_size]
-        response = requests.post(f"{MEILI_URL}/indexes/players/documents",
-                               json=batch,
-                               headers=HEADERS)
-        print(f"Indexed batch {i//batch_size + 1}: {response.json()}")
-        time.sleep(0.1)  # Small delay between batches
-    
-    print("Indexing completed!")
+        logging.info("Creating snapshot...")
+        response = requests.post(
+            f"{MEILI_URL}/snapshot",
+            headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
+        )
+        
+        if response.status_code == 200:
+            snapshot_data = response.json()
+            task_uid = snapshot_data.get('taskUid')
+            
+            # Wait for snapshot to complete
+            logging.info(f"Waiting for snapshot task {task_uid} to complete...")
+            for _ in range(60):  # Wait up to 2 minutes
+                task_response = requests.get(
+                    f"{MEILI_URL}/tasks/{task_uid}",
+                    headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
+                )
+                if task_response.status_code == 200:
+                    task_info = task_response.json()
+                    if task_info.get('status') == 'succeeded':
+                        logging.info("✅ Snapshot created successfully!")
+                        return True
+                    elif task_info.get('status') == 'failed':
+                        logging.error(f"❌ Snapshot failed: {task_info}")
+                        return False
+                time.sleep(2)
+            
+            logging.error("❌ Snapshot task timed out")
+            return False
+        else:
+            logging.error(f"❌ Failed to create snapshot: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"❌ Error creating snapshot: {e}")
+        return False
 
 def main():
-    print("Starting Meilisearch indexing job...")
+    """Main function to read, process, and upload data."""
     
-    # Create index
-    create_index()
+    logging.info("Starting Meilisearch indexing job...")
     
-    # Configure index settings
-    configure_index()
+    # 1. Wait for Meilisearch to be ready
+    if not wait_for_meilisearch():
+        return
     
-    # Index the players
-    index_players()
+    # 2. Validate input file
+    input_file = Path('/active_players.jsonl')
+    if not input_file.is_file():
+        logging.error(f"❌ Input file not found: /active_players.jsonl")
+        return
+
+    # 3. Connect to Meilisearch
+    try:
+        logging.info(f"Connecting to Meilisearch at {MEILI_URL}...")
+        client = meilisearch.Client(MEILI_URL, MEILI_MASTER_KEY)
+        index = client.index(INDEX_NAME)
+        logging.info(f"✅ Connection successful. Using index '{INDEX_NAME}'.")
+        
+        # Clear any pending tasks
+        logging.info("Clearing any pending tasks...")
+        try:
+            response = requests.delete(
+                f"{MEILI_URL}/tasks?statuses=enqueued,processing", 
+                headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
+            )
+            if response.status_code == 200:
+                logging.info("✅ Cleared pending tasks.")
+            else:
+                logging.warning(f"⚠️ Could not clear tasks: {response.status_code}")
+        except Exception as e:
+            logging.warning(f"⚠️ Could not clear tasks: {e}")
+            
+    except Exception as e:
+        logging.error(f"❌ Could not connect to Meilisearch: {e}")
+        return
+        
+    # 4. Read file and process documents
+    documents = []
+    total_processed = 0
     
-    print("Indexing job finished successfully!")
+    logging.info(f"Reading and processing data from {input_file}...")
+    with open(input_file, 'r') as f:
+        for i, line in enumerate(f):
+            try:
+                player_data = json.loads(line)
+                total_processed += 1
+                
+                processed_doc = process_player_data(player_data)
+                if processed_doc:
+                    documents.append(processed_doc)
+                        
+            except json.JSONDecodeError:
+                logging.warning(f"Skipping malformed JSON on line {i+1}")
+                continue
+    
+    logging.info(f"✅ Processing complete:")
+    logging.info(f"   Total processed: {total_processed:,}")
+    logging.info(f"   To be indexed: {len(documents):,}")
+
+    # 5. Upload to Meilisearch in batches
+    if not documents:
+        logging.info("No documents to upload.")
+        return
+        
+    logging.info(f"Uploading {len(documents)} documents in batches of {BATCH_SIZE}...")
+    successful_batches = 0
+    failed_batches = 0
+    
+    for i in range(0, len(documents), BATCH_SIZE):
+        batch = documents[i:i + BATCH_SIZE]
+        batch_num = i//BATCH_SIZE + 1
+        total_batches = (len(documents) + BATCH_SIZE - 1)//BATCH_SIZE
+        
+        for attempt in range(3):  # Retry up to 3 times
+            try:
+                task = index.add_documents(batch, primary_key='profile_id')
+                client.wait_for_task(task.task_uid, timeout_in_ms=30000)  # 30 second timeout
+                logging.info(f"  - Uploaded batch {batch_num}/{total_batches}")
+                successful_batches += 1
+                break
+            except Exception as e:
+                if attempt < 2:  # Not the last attempt
+                    logging.warning(f"  - Retry {attempt + 1}/3 for batch {batch_num}: {e}")
+                    time.sleep(2)  # Wait 2 seconds before retry
+                else:
+                    logging.error(f"❌ Failed to upload batch {batch_num} after 3 attempts: {e}")
+                    failed_batches += 1
+                    # Continue with next batch instead of stopping
+                    
+    logging.info(f"🎉 Indexing complete! Successful: {successful_batches}, Failed: {failed_batches}")
+    
+    # 6. Create snapshot
+    if successful_batches > 0:
+        if create_snapshot():
+            logging.info("✅ Snapshot created successfully - ready for hot-swap!")
+        else:
+            logging.error("❌ Failed to create snapshot")
+    else:
+        logging.warning("⚠️ No successful batches - skipping snapshot creation")
 
 if __name__ == "__main__":
     main() 

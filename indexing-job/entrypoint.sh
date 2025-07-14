@@ -7,6 +7,14 @@ gcloud auth list
 echo "Testing GCS access..."
 gsutil ls gs://aoe2-site-data/ || echo "GCS access failed"
 
+# Debug: Check specific file access
+echo "Testing specific file access..."
+gsutil ls gs://aoe2-site-data/active_players.jsonl || echo "active_players.jsonl not found or no access"
+
+# Debug: Check bucket permissions
+echo "Checking bucket permissions..."
+gsutil iam get gs://aoe2-site-data/ || echo "Cannot get bucket IAM"
+
 # Debug: Check PATH and Meilisearch binary
 echo "PATH: $PATH"
 echo "Checking Meilisearch binary..."
@@ -37,7 +45,7 @@ sleep 5
 
 # Trigger a snapshot
 echo "Creating snapshot..."
-curl -X POST 'http://localhost:7700/snapshot' -H 'X-Meili-API-Key: masterKey'
+curl -X POST 'http://localhost:7700/snapshot' -H 'Authorization: Bearer masterKey'
 
 # Wait for snapshot to be created
 sleep 10
