@@ -151,13 +151,14 @@ def main():
     
     # 1. Wait for Meilisearch to be ready
     if not wait_for_meilisearch():
-        return
+        logging.error("❌ Meilisearch not ready - exiting")
+        sys.exit(1)
     
     # 2. Validate input file
     input_file = Path('/active_players.jsonl')
     if not input_file.is_file():
         logging.error(f"❌ Input file not found: /active_players.jsonl")
-        return
+        sys.exit(1)
 
     # 3. Connect to Meilisearch
     try:
@@ -182,7 +183,7 @@ def main():
             
     except Exception as e:
         logging.error(f"❌ Could not connect to Meilisearch: {e}")
-        return
+        sys.exit(1)
         
     # 4. Read file and process documents
     documents = []
@@ -210,34 +211,26 @@ def main():
     # 5. Upload to Meilisearch in batches
     if not documents:
         logging.info("No documents to upload.")
-        return
+        sys.exit(0)
         
     logging.info(f"Uploading {len(documents)} documents in batches of {BATCH_SIZE}...")
     successful_batches = 0
-    failed_batches = 0
     
     for i in range(0, len(documents), BATCH_SIZE):
         batch = documents[i:i + BATCH_SIZE]
         batch_num = i//BATCH_SIZE + 1
         total_batches = (len(documents) + BATCH_SIZE - 1)//BATCH_SIZE
         
-        for attempt in range(3):  # Retry up to 3 times
-            try:
-                task = index.add_documents(batch, primary_key='profile_id')
-                client.wait_for_task(task.task_uid, timeout_in_ms=30000)  # 30 second timeout
-                logging.info(f"  - Uploaded batch {batch_num}/{total_batches}")
-                successful_batches += 1
-                break
-            except Exception as e:
-                if attempt < 2:  # Not the last attempt
-                    logging.warning(f"  - Retry {attempt + 1}/3 for batch {batch_num}: {e}")
-                    time.sleep(2)  # Wait 2 seconds before retry
-                else:
-                    logging.error(f"❌ Failed to upload batch {batch_num} after 3 attempts: {e}")
-                    failed_batches += 1
-                    # Continue with next batch instead of stopping
+        try:
+            task = index.add_documents(batch, primary_key='profile_id')
+            client.wait_for_task(task.task_uid, timeout_in_ms=30000)  # 30 second timeout
+            logging.info(f"  - Uploaded batch {batch_num}/{total_batches}")
+            successful_batches += 1
+        except Exception as e:
+            logging.error(f"❌ Failed to upload batch {batch_num}: {e}")
+            sys.exit(1)
                     
-    logging.info(f"🎉 Indexing complete! Successful: {successful_batches}, Failed: {failed_batches}")
+    logging.info(f"🎉 Indexing complete! Successful batches: {successful_batches}")
     
     # 6. Create snapshot
     if successful_batches > 0:
@@ -251,10 +244,10 @@ def main():
                 sys.exit(1)
         else:
             logging.error("❌ Failed to create snapshot")
-            sys.exit(1)  # Exit with error code if snapshot fails
+            sys.exit(1)
     else:
-        logging.warning("⚠️ No successful batches - skipping snapshot creation")
-        sys.exit(0)
+        logging.error("❌ No successful batches - exiting")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main() 
