@@ -21,8 +21,8 @@ echo "Checking Meilisearch binary..."
 ls -la /usr/local/bin/meilisearch || echo "Meilisearch not found in /usr/local/bin"
 which meilisearch || echo "Meilisearch not found in PATH"
 
-# Start Meilisearch in the background
-/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --snapshot-dir=/meili_data/snapshots &
+# Start Meilisearch in the background with memory limits
+/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --snapshot-dir=/meili_data/snapshots --max-indexing-memory=1GB &
 MEILI_PID=$!
 
 # Wait for Meilisearch to be ready
@@ -32,9 +32,28 @@ until curl -s http://localhost:7700/health | grep -q '"status":"available"'; do
 done
 echo "Meilisearch is ready!"
 
+# Function to check if Meilisearch is still running
+check_meilisearch() {
+  if ! kill -0 $MEILI_PID 2>/dev/null; then
+    echo "❌ Meilisearch process died unexpectedly"
+    return 1
+  fi
+  if ! curl -s http://localhost:7700/health | grep -q '"status":"available"'; then
+    echo "❌ Meilisearch is not responding"
+    return 1
+  fi
+  return 0
+}
+
 # Download the JSONL file from GCS
 echo "Downloading active_players.jsonl from GCS..."
 gsutil cp gs://aoe2-site-data/active_players.jsonl /active_players.jsonl
+
+# Check Meilisearch before starting indexing
+if ! check_meilisearch; then
+    echo "❌ Meilisearch is not running - cannot proceed with indexing"
+    exit 1
+fi
 
 # Run the indexing script (handles indexing + snapshot creation)
 echo "Starting indexing..."

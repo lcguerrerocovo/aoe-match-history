@@ -64,13 +64,26 @@ def wait_for_meilisearch():
     logging.error("❌ Meilisearch failed to start")
     return False
 
+def check_meilisearch_running():
+    """Check if Meilisearch is still running and accessible."""
+    try:
+        response = requests.get(f"{MEILI_URL}/health", timeout=5)
+        if response.status_code == 200:
+            health_data = response.json()
+            return health_data.get('status') == 'available'
+    except Exception as e:
+        logging.error(f"❌ Meilisearch health check failed: {e}")
+        return False
+    return False
+
 def create_snapshot():
     """Create a snapshot and return the snapshot file path."""
     try:
         logging.info("Creating snapshot...")
         response = requests.post(
             f"{MEILI_URL}/snapshots",
-            headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
+            headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
+            timeout=30
         )
         
         if response.status_code in (200, 202):
@@ -82,7 +95,8 @@ def create_snapshot():
             for _ in range(60):  # Wait up to 2 minutes
                 task_response = requests.get(
                     f"{MEILI_URL}/tasks/{task_uid}",
-                    headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
+                    headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
+                    timeout=10
                 )
                 if task_response.status_code == 200:
                     task_info = task_response.json()
@@ -234,6 +248,11 @@ def main():
     
     # 6. Create snapshot
     if successful_batches > 0:
+        # Check if Meilisearch is still running before attempting snapshot
+        if not check_meilisearch_running():
+            logging.error("❌ Meilisearch is not running - cannot create snapshot")
+            sys.exit(1)
+            
         if create_snapshot():
             logging.info("✅ Snapshot created successfully - ready for hot-swap!")
             if upload_snapshot_to_gcs():
