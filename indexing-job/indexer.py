@@ -64,6 +64,40 @@ def wait_for_meilisearch():
     logging.error("❌ Meilisearch failed to start")
     return False
 
+def wait_for_tasks_completion():
+    """Wait for all pending tasks to complete before creating snapshot."""
+    try:
+        logging.info("Waiting for all indexing tasks to complete...")
+        max_wait_time = 300  # 5 minutes max wait
+        wait_interval = 5    # Check every 5 seconds
+        
+        for _ in range(max_wait_time // wait_interval):
+            response = requests.get(
+                f"{MEILI_URL}/tasks?statuses=enqueued,processing",
+                headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                tasks = response.json().get('results', [])
+                if not tasks:
+                    logging.info("✅ All tasks completed!")
+                    return True
+                else:
+                    pending_count = len(tasks)
+                    logging.info(f"⏳ Waiting for {pending_count} tasks to complete...")
+            else:
+                logging.warning(f"⚠️ Could not check task status: {response.status_code}")
+            
+            time.sleep(wait_interval)
+        
+        logging.error("❌ Timeout waiting for tasks to complete")
+        return False
+        
+    except Exception as e:
+        logging.error(f"❌ Error waiting for tasks completion: {e}")
+        return False
+
 def check_meilisearch_running():
     """Check if Meilisearch is still running and accessible."""
     try:
@@ -246,11 +280,25 @@ def main():
                     
     logging.info(f"🎉 Indexing complete! Successful batches: {successful_batches}")
     
-    # 6. Create snapshot
+    # 6. Wait for all tasks to complete and create snapshot
     if successful_batches > 0:
         # Check if Meilisearch is still running before attempting snapshot
         if not check_meilisearch_running():
             logging.error("❌ Meilisearch is not running - cannot create snapshot")
+            sys.exit(1)
+        
+        # Wait for all indexing tasks to complete
+        if not wait_for_tasks_completion():
+            logging.error("❌ Failed to wait for tasks completion")
+            sys.exit(1)
+        
+        # Sleep to allow memory to stabilize
+        logging.info("Sleeping for 10 seconds to allow memory to stabilize...")
+        time.sleep(10)
+        
+        # Check Meilisearch health again after waiting
+        if not check_meilisearch_running():
+            logging.error("❌ Meilisearch is not running after waiting - cannot create snapshot")
             sys.exit(1)
             
         if create_snapshot():
