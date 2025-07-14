@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# Cleanup function
+cleanup() {
+  echo "🧹 Cleaning up test data..."
+  rm -f ../../data/test_players.jsonl
+  rm -rf ../../meili_data
+  echo "🛑 Stopping any running Meilisearch containers..."
+  docker ps -q --filter ancestor=getmeili/meilisearch:v1.7.3 | xargs -r docker stop
+}
+trap cleanup EXIT
+
 echo "🚀 Running Cloud Run indexer locally..."
 
 # Check if Docker is available
@@ -36,5 +46,4 @@ docker run --rm \
     "$IMAGE_NAME" \
     -c "chmod +x /entrypoint.sh && /entrypoint.sh"
 
-rm -f ../../data/test_players.jsonl
 echo "✅ Local run complete!" 

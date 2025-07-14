@@ -73,7 +73,7 @@ def create_snapshot():
             headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"}
         )
         
-        if response.status_code == 200:
+        if response.status_code in (200, 202):
             snapshot_data = response.json()
             task_uid = snapshot_data.get('taskUid')
             
@@ -109,29 +109,37 @@ def upload_snapshot_to_gcs():
     try:
         import subprocess
         import glob
-        
+        import os
+        logging.info("Listing files in /meili_data/snapshots before upload:")
+        try:
+            files = os.listdir("/meili_data/snapshots")
+            logging.info(files)
+        except Exception as e:
+            logging.error(f"Could not list /meili_data/snapshots: {e}")
         # Find the snapshot file
         snapshot_files = glob.glob("/meili_data/snapshots/*.snapshot")
         if not snapshot_files:
-            logging.error("❌ No snapshot files found")
+            logging.error("❌ No snapshot files found in /meili_data/snapshots. If running in Docker, ensure --snapshot-dir is set to /meili_data/snapshots and the volume is mounted.")
             return False
-            
         snapshot_file = snapshot_files[0]
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         gcs_path = f"gs://aoe2-site-data/meilisearch-snapshot-{timestamp}.snapshot"
-        
         logging.info(f"Uploading snapshot to {gcs_path}...")
-        result = subprocess.run([
-            "gsutil", "cp", snapshot_file, gcs_path
-        ], capture_output=True, text=True)
-        
-        if result.returncode == 0:
+        process = subprocess.Popen(
+            ["gsutil", "cp", snapshot_file, gcs_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            logging.info(f"gsutil: {line.strip()}")
+        process.wait()
+        if process.returncode == 0:
             logging.info("✅ Snapshot uploaded to GCS successfully!")
             return True
         else:
-            logging.error(f"❌ Failed to upload snapshot: {result.stderr}")
+            logging.error(f"❌ Failed to upload snapshot, exit code: {process.returncode}")
             return False
-            
     except Exception as e:
         logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False

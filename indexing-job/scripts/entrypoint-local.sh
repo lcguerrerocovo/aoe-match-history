@@ -8,7 +8,7 @@ ls -la /usr/local/bin/meilisearch || echo "Meilisearch not found in /usr/local/b
 which meilisearch || echo "Meilisearch not found in PATH"
 
 # Start Meilisearch in the background
-/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --http-addr=localhost:7700 &
+/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --http-addr=localhost:7700 --snapshot-dir=/meili_data/snapshots &
 MEILI_PID=$!
 
 # Wait for Meilisearch to be ready

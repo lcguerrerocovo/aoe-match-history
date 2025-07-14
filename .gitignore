@@ -42,6 +42,7 @@ data/collected_players.jsonl
 data/active_players.jsonl
 data/matches/
 seen_matches.json
+meili_data/*
 
 # IDE
 .idea/
