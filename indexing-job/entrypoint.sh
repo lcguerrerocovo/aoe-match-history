@@ -15,14 +15,17 @@ gsutil ls gs://aoe2-site-data/active_players.jsonl || echo "active_players.jsonl
 echo "Checking bucket permissions..."
 gsutil iam get gs://aoe2-site-data/ || echo "Cannot get bucket IAM"
 
+# Use default service account (Cloud Run provides this automatically)
+echo "Using default service account authentication..."
+
 # Debug: Check PATH and Meilisearch binary
 echo "PATH: $PATH"
 echo "Checking Meilisearch binary..."
 ls -la /usr/local/bin/meilisearch || echo "Meilisearch not found in /usr/local/bin"
 which meilisearch || echo "Meilisearch not found in PATH"
 
-# Start Meilisearch in the background with memory limits
-/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --snapshot-dir=/meili_data/snapshots --max-indexing-memory=1GB &
+# Start Meilisearch in the background (let it use available memory)
+/usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --snapshot-dir=/meili_data/snapshots &
 MEILI_PID=$!
 
 # Wait for Meilisearch to be ready
