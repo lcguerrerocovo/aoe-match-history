@@ -10,6 +10,7 @@ import json
 import os
 import logging
 import meilisearch
+import sys
 from pathlib import Path
 from datetime import datetime, timezone
 import requests
@@ -101,6 +102,38 @@ def create_snapshot():
             
     except Exception as e:
         logging.error(f"❌ Error creating snapshot: {e}")
+        return False
+
+def upload_snapshot_to_gcs():
+    """Upload the created snapshot to Google Cloud Storage."""
+    try:
+        import subprocess
+        import glob
+        
+        # Find the snapshot file
+        snapshot_files = glob.glob("/meili_data/snapshots/*.snapshot")
+        if not snapshot_files:
+            logging.error("❌ No snapshot files found")
+            return False
+            
+        snapshot_file = snapshot_files[0]
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        gcs_path = f"gs://aoe2-site-data/meilisearch-snapshot-{timestamp}.snapshot"
+        
+        logging.info(f"Uploading snapshot to {gcs_path}...")
+        result = subprocess.run([
+            "gsutil", "cp", snapshot_file, gcs_path
+        ], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            logging.info("✅ Snapshot uploaded to GCS successfully!")
+            return True
+        else:
+            logging.error(f"❌ Failed to upload snapshot: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False
 
 def main():
@@ -202,10 +235,18 @@ def main():
     if successful_batches > 0:
         if create_snapshot():
             logging.info("✅ Snapshot created successfully - ready for hot-swap!")
+            if upload_snapshot_to_gcs():
+                logging.info("✅ Job completed successfully!")
+                sys.exit(0)
+            else:
+                logging.error("❌ Failed to upload snapshot to GCS")
+                sys.exit(1)
         else:
             logging.error("❌ Failed to create snapshot")
+            sys.exit(1)  # Exit with error code if snapshot fails
     else:
         logging.warning("⚠️ No successful batches - skipping snapshot creation")
+        sys.exit(0)
 
 if __name__ == "__main__":
     main() 

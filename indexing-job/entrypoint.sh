@@ -36,30 +36,17 @@ echo "Meilisearch is ready!"
 echo "Downloading active_players.jsonl from GCS..."
 gsutil cp gs://aoe2-site-data/active_players.jsonl /active_players.jsonl
 
-# Run the indexing script
+# Run the indexing script (handles indexing + snapshot creation)
 echo "Starting indexing..."
 python3 /indexer.py
 
-# Wait a moment for indexing to complete
-sleep 5
-
-# Trigger a snapshot
-echo "Creating snapshot..."
-curl -X POST 'http://localhost:7700/snapshot' -H 'Authorization: Bearer masterKey'
-
-# Wait for snapshot to be created
-sleep 10
-
-# Upload snapshot to GCS
-echo "Uploading snapshot to GCS..."
-SNAPSHOT_FILE=$(ls /meili_data/snapshots/*.snapshot | head -1)
-if [ -n "$SNAPSHOT_FILE" ]; then
-    gsutil cp "$SNAPSHOT_FILE" gs://aoe2-site-data/meilisearch-snapshot-$(date +%Y%m%d-%H%M%S).snapshot
-    echo "Snapshot uploaded successfully!"
-else
-    echo "No snapshot file found!"
+# Check if Python script succeeded
+if [ $? -ne 0 ]; then
+    echo "Indexing failed"
     exit 1
 fi
+
+echo "✅ Job completed successfully!"
 
 # Stop Meilisearch
 echo "Stopping Meilisearch..."
