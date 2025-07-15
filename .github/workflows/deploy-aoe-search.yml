@@ -106,7 +106,16 @@ jobs:
             sudo docker stop meilisearch 2>/dev/null || true
             sudo docker rm meilisearch 2>/dev/null || true
             
-            # Start Meilisearch with snapshot
+            # Remove existing database to allow snapshot import
+            sudo rm -rf /var/lib/meilisearch/data/data.ms
+            
+            # Import the snapshot
+            sudo docker run --rm \
+              -v /var/lib/meilisearch/data:/meili_data \
+              getmeili/meilisearch:v1.7 \
+              meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
+            
+            # Start Meilisearch with imported data
             sudo docker run -d \
               --name meilisearch \
               --restart unless-stopped \

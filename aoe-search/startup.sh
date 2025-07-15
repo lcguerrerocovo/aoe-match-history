@@ -37,7 +37,22 @@ chmod 755 /var/lib/meilisearch/data/snapshots
 # --- 3. Check for Existing Snapshot ---
 echo "Checking for existing snapshot..."
 if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
-    echo "✅ Found existing snapshot, will use it"
+    echo "✅ Found existing snapshot, will import it"
+    
+    # Remove existing database if it exists
+    if [ -d "/var/lib/meilisearch/data/data.ms" ]; then
+        echo "Removing existing database to import snapshot..."
+        rm -rf /var/lib/meilisearch/data/data.ms
+    fi
+    
+    # Import the snapshot
+    echo "Importing snapshot..."
+    docker run --rm \
+      -v /var/lib/meilisearch/data:/meili_data \
+      getmeili/meilisearch:v1.7 \
+      meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
+    
+    echo "✅ Snapshot imported successfully"
 else
     echo "⚠️ No existing snapshot found, will start with empty index"
 fi
