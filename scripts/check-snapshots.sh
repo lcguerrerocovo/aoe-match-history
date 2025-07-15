@@ -128,10 +128,109 @@ done
 
 # Verify the hot-swap worked
 if curl -f http://localhost:7700/health > /dev/null 2>&1; then
-    echo "🎉 Hot-swap completed successfully!"
-    echo "📊 New snapshot is now active"
-    echo "📋 New fingerprint: $LATEST_FINGERPRINT"
+    echo "✅ Meilisearch is healthy after hot-swap"
 else
     echo "❌ Hot-swap failed - Meilisearch is not responding"
+    exit 1
+fi
+
+# Generate fingerprint from live index to verify hot-swap
+echo "🔍 Verifying hot-swap by generating live index fingerprint..."
+generate_live_fingerprint() {
+    # Configuration
+    MEILI_URL="http://localhost:7700"
+    INDEX_NAME="players"
+    
+    # Get document count and update time
+    STATS_RESPONSE=$(curl -s -H "Authorization: Bearer $MEILI_MASTER_KEY" "$MEILI_URL/indexes/$INDEX_NAME/stats")
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to get index stats"
+        return 1
+    fi
+    
+    DOC_COUNT=$(echo "$STATS_RESPONSE" | jq -r '.numberOfDocuments // 0')
+    UPDATED_AT=$(echo "$STATS_RESPONSE" | jq -r '.updatedAt // ""')
+    
+    if [ "$DOC_COUNT" = "null" ] || [ "$DOC_COUNT" = "0" ]; then
+        echo "❌ No documents found in index"
+        return 1
+    fi
+    
+    echo "📊 Live index stats: $DOC_COUNT documents, updated: $UPDATED_AT"
+    
+    # Sample aliases from throughout the index for better coverage
+    SAMPLE_ALIASES=""
+    SAMPLE_SIZE=50  # Number of samples to take (increased for robustness)
+    SAMPLE_INTERVAL=$((DOC_COUNT / SAMPLE_SIZE))
+    
+    echo "📊 Sampling $SAMPLE_SIZE aliases from $DOC_COUNT total (interval: $SAMPLE_INTERVAL)"
+    
+    for i in $(seq 0 $((SAMPLE_SIZE - 1))); do
+        OFFSET=$((i * SAMPLE_INTERVAL))
+        if [ $OFFSET -ge $DOC_COUNT ]; then
+            break
+        fi
+        
+        SAMPLE_RESPONSE=$(curl -s -H "Authorization: Bearer $MEILI_MASTER_KEY" "$MEILI_URL/indexes/$INDEX_NAME/documents?limit=1&offset=$OFFSET&fields=alias")
+        if [ $? -ne 0 ]; then
+            echo "❌ Failed to get sample at offset $OFFSET"
+            continue
+        fi
+        
+        # Extract results array from response
+        SAMPLE_DOCS=$(echo "$SAMPLE_RESPONSE" | jq -r '.results // .')
+        if [ "$SAMPLE_DOCS" = "null" ]; then
+            echo "❌ Failed to parse sample at offset $OFFSET"
+            continue
+        fi
+        
+        ALIAS=$(echo "$SAMPLE_DOCS" | jq -r '.[0] | .alias // empty')
+        if [ -n "$ALIAS" ] && [ "$ALIAS" != "null" ]; then
+            if [ -n "$SAMPLE_ALIASES" ]; then
+                SAMPLE_ALIASES="${SAMPLE_ALIASES}_${ALIAS}"
+            else
+                SAMPLE_ALIASES="$ALIAS"
+            fi
+        fi
+    done
+    
+    if [ -z "$SAMPLE_ALIASES" ]; then
+        echo "❌ No valid aliases collected"
+        return 1
+    fi
+    
+    # Sort the aliases for consistency (convert to array, sort, join back)
+    SAMPLE_ALIASES=$(echo "$SAMPLE_ALIASES" | tr '_' '\n' | sort | tr '\n' '_' | sed 's/_$//')
+    
+    # Create fingerprint data
+    FINGERPRINT_DATA="${DOC_COUNT}_${SAMPLE_ALIASES}_${UPDATED_AT}"
+    
+    # Generate hash
+    LIVE_FINGERPRINT=$(echo -n "$FINGERPRINT_DATA" | sha256sum | cut -d' ' -f1)
+    
+    echo "🔍 Generated live fingerprint: $LIVE_FINGERPRINT"
+    echo "📋 Fingerprint data: $DOC_COUNT docs, aliases: $(echo "$SAMPLE_ALIASES" | cut -d'_' -f1-5)..."
+    
+    echo "$LIVE_FINGERPRINT"
+}
+
+# Generate fingerprint from live index
+LIVE_FINGERPRINT=$(generate_live_fingerprint)
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to generate live fingerprint"
+    exit 1
+fi
+
+# Compare live fingerprint with expected fingerprint
+if [ "$LIVE_FINGERPRINT" = "$LATEST_FINGERPRINT" ]; then
+    echo "🎉 Hot-swap verification successful!"
+    echo "✅ Live index fingerprint matches expected fingerprint"
+    echo "📊 New snapshot is now active and verified"
+    echo "📋 Verified fingerprint: $LIVE_FINGERPRINT"
+else
+    echo "❌ Hot-swap verification failed!"
+    echo "❌ Live fingerprint: $LIVE_FINGERPRINT"
+    echo "❌ Expected fingerprint: $LATEST_FINGERPRINT"
+    echo "❌ Fingerprints do not match - hot-swap may have failed"
     exit 1
 fi 

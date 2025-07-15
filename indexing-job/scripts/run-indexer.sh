@@ -32,8 +32,8 @@ LOCAL_IMAGE="meilisearch-indexer-local"
 # Build the image from the Dockerfile (only if BUILD=true)
 if [ "$BUILD" = "true" ]; then
     echo "📦 Building Docker image locally..."
-    docker build -f ../Dockerfile.indexer -t "$LOCAL_IMAGE" ..
-    IMAGE_NAME="$LOCAL_IMAGE"
+    docker build -f ../Dockerfile.indexer -t "$LOCAL_IMAGE:latest" .. --network=host
+    IMAGE_NAME="$LOCAL_IMAGE:latest"
 else
     echo "📥 Pulling production image from Artifact Registry..."
     docker pull "$PROD_IMAGE"
@@ -49,17 +49,20 @@ echo "📊 Test data: $(wc -l < ../../data/test_players.jsonl) records"
 
 # Run the container
 echo "🏃 Running indexer container..."
+echo "Current directory: $(pwd)"
+echo "Indexer.py path: ../indexer.py"
+echo "Indexer.py exists: $(test -f '../indexer.py' && echo 'YES' || echo 'NO')"
 docker run --rm \
-    --platform linux/amd64 \
     --entrypoint /bin/bash \
     -v "$(pwd)/entrypoint-local.sh:/entrypoint.sh" \
-    -v "$(pwd)/../indexer.py:/indexer.py" \
+    -v "../indexer.py:/indexer.py" \
     -v "$(pwd)/../../data/test_players.jsonl:/active_players.jsonl" \
     -v "$(pwd)/../../meili_data:/meili_data" \
     -v "$HOME/.config/gcloud:/root/.config/gcloud" \
     -e MEILI_HTTP_ADDR="http://localhost:7700" \
     -e MEILI_MASTER_KEY="masterKey" \
-    -e SKIP_GCS_UPLOAD="true" \
+    -e SKIP_GCS_UPLOAD="false" \
+    -e GOOGLE_APPLICATION_CREDENTIALS="/root/.config/gcloud/application_default_credentials.json" \
     "$IMAGE_NAME" \
     -c "chmod +x /entrypoint.sh && /entrypoint.sh"
 

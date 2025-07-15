@@ -183,57 +183,67 @@ def generate_index_fingerprint():
             logging.error(f"❌ Stats response text: {stats_response.text}")
             return None
         
-        # Get first 5 documents
-        first_docs_response = requests.get(
-            f"{MEILI_URL}/indexes/{INDEX_NAME}/documents?limit=5&fields=profile_id",
+        # Check if index exists first
+        index_info_response = requests.get(
+            f"{MEILI_URL}/indexes/{INDEX_NAME}",
             headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
             timeout=10
         )
-        
-        if first_docs_response.status_code != 200:
-            logging.error(f"❌ Failed to get first documents: {first_docs_response.status_code}")
+        logging.info(f"Index info response status: {index_info_response.status_code}")
+        if index_info_response.status_code != 200:
+            logging.error(f"❌ Index {INDEX_NAME} does not exist or is not accessible")
+            logging.error(f"❌ Response: {index_info_response.text}")
             return None
             
-        try:
-            first_docs = first_docs_response.json()
-            if not isinstance(first_docs, list):
-                logging.error(f"❌ First documents response is not a list: {type(first_docs)}")
-                return None
-            first_ids = sorted([doc.get('profile_id', '') for doc in first_docs if isinstance(doc, dict)])
-        except Exception as e:
-            logging.error(f"❌ Failed to parse first documents JSON: {e}")
-            return None
+        # Sample aliases from throughout the index for better coverage
+        sample_aliases = []
+        sample_size = 50  # Number of samples to take (increased for robustness)
+        sample_interval = max(1, doc_count // sample_size)  # Space between samples
         
-        # Get last 5 documents
-        last_docs_response = requests.get(
-            f"{MEILI_URL}/indexes/{INDEX_NAME}/documents?limit=5&offset={max(0, doc_count-5)}&fields=profile_id",
-            headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
-            timeout=10
-        )
+        logging.info(f"📊 Sampling {sample_size} aliases from {doc_count} total (interval: {sample_interval})")
         
-        if last_docs_response.status_code != 200:
-            logging.error(f"❌ Failed to get last documents: {last_docs_response.status_code}")
+        for i in range(sample_size):
+            offset = i * sample_interval
+            if offset >= doc_count:
+                break
+                
+            sample_response = requests.get(
+                f"{MEILI_URL}/indexes/{INDEX_NAME}/documents?limit=1&offset={offset}&fields=alias",
+                headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
+                timeout=10
+            )
+            
+            if sample_response.status_code != 200:
+                logging.error(f"❌ Failed to get sample at offset {offset}: {sample_response.status_code}")
+                continue
+                
+            try:
+                sample_json = sample_response.json()
+                sample_docs = sample_json.get('results', sample_json) if isinstance(sample_json, dict) else sample_json
+                if isinstance(sample_docs, list) and len(sample_docs) > 0:
+                    alias = sample_docs[0].get('alias')
+                    if alias:
+                        sample_aliases.append(alias)
+            except Exception as e:
+                logging.error(f"❌ Failed to parse sample at offset {offset}: {e}")
+                continue
+        
+        if not sample_aliases:
+            logging.error("❌ No valid aliases collected")
             return None
             
-        try:
-            last_docs = last_docs_response.json()
-            if not isinstance(last_docs, list):
-                logging.error(f"❌ Last documents response is not a list: {type(last_docs)}")
-                return None
-            last_ids = sorted([doc.get('profile_id', '') for doc in last_docs if isinstance(doc, dict)])
-        except Exception as e:
-            logging.error(f"❌ Failed to parse last documents JSON: {e}")
-            return None
+        # Sort the aliases for consistency
+        sample_aliases = sorted(sample_aliases)
         
         # Create fingerprint
-        fingerprint_data = f"{doc_count}_{'_'.join(first_ids)}_{'_'.join(last_ids)}_{updated_at}"
+        fingerprint_data = f"{doc_count}_{'_'.join(sample_aliases)}_{updated_at}"
         
         # Generate hash
         import hashlib
         fingerprint_hash = hashlib.sha256(fingerprint_data.encode()).hexdigest()
         
         logging.info(f"Generated index fingerprint: {fingerprint_hash}")
-        logging.info(f"Fingerprint data: {doc_count} docs, first: {first_ids[:3]}..., last: {last_ids[:3]}...")
+        logging.info(f"Fingerprint data: {doc_count} docs, aliases: {sample_aliases[:5]}...")
         
         return fingerprint_hash
         

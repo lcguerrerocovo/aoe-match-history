@@ -26,8 +26,8 @@ else
     exit 1
 fi
 
-# Set environment variable to skip GCS upload for local testing
-export SKIP_GCS_UPLOAD=true
+# Use the SKIP_GCS_UPLOAD environment variable if set, otherwise default to true for local testing
+export SKIP_GCS_UPLOAD=${SKIP_GCS_UPLOAD:-true}
 
 # Run the indexing script
 echo "Starting indexing..."
