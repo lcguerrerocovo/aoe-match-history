@@ -169,9 +169,19 @@ def generate_index_fingerprint():
             logging.error(f"❌ Failed to get index stats: {stats_response.status_code}")
             return None
             
-        stats = stats_response.json()
-        doc_count = stats.get('numberOfDocuments', 0)
-        updated_at = stats.get('updatedAt', '')
+        try:
+            stats = stats_response.json()
+            if not isinstance(stats, dict):
+                logging.error(f"❌ Stats response is not a dict: {type(stats)}")
+                logging.error(f"❌ Stats response content: {stats}")
+                return None
+            doc_count = stats.get('numberOfDocuments', 0)
+            updated_at = stats.get('updatedAt', '')
+            logging.info(f"📊 Index stats: {doc_count} documents, updated: {updated_at}")
+        except Exception as e:
+            logging.error(f"❌ Failed to parse stats JSON: {e}")
+            logging.error(f"❌ Stats response text: {stats_response.text}")
+            return None
         
         # Get first 5 documents
         first_docs_response = requests.get(
@@ -184,8 +194,15 @@ def generate_index_fingerprint():
             logging.error(f"❌ Failed to get first documents: {first_docs_response.status_code}")
             return None
             
-        first_docs = first_docs_response.json()
-        first_ids = sorted([doc.get('profile_id', '') for doc in first_docs])
+        try:
+            first_docs = first_docs_response.json()
+            if not isinstance(first_docs, list):
+                logging.error(f"❌ First documents response is not a list: {type(first_docs)}")
+                return None
+            first_ids = sorted([doc.get('profile_id', '') for doc in first_docs if isinstance(doc, dict)])
+        except Exception as e:
+            logging.error(f"❌ Failed to parse first documents JSON: {e}")
+            return None
         
         # Get last 5 documents
         last_docs_response = requests.get(
@@ -198,8 +215,15 @@ def generate_index_fingerprint():
             logging.error(f"❌ Failed to get last documents: {last_docs_response.status_code}")
             return None
             
-        last_docs = last_docs_response.json()
-        last_ids = sorted([doc.get('profile_id', '') for doc in last_docs])
+        try:
+            last_docs = last_docs_response.json()
+            if not isinstance(last_docs, list):
+                logging.error(f"❌ Last documents response is not a list: {type(last_docs)}")
+                return None
+            last_ids = sorted([doc.get('profile_id', '') for doc in last_docs if isinstance(doc, dict)])
+        except Exception as e:
+            logging.error(f"❌ Failed to parse last documents JSON: {e}")
+            return None
         
         # Create fingerprint
         fingerprint_data = f"{doc_count}_{'_'.join(first_ids)}_{'_'.join(last_ids)}_{updated_at}"
@@ -238,7 +262,9 @@ def upload_snapshot_to_gcs():
         snapshot_file = snapshot_files[0]
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         
-        # Generate index fingerprint first
+        # Generate index fingerprint first (wait a bit for indexing to settle)
+        logging.info("Waiting 5 seconds for indexing to fully complete before generating fingerprint...")
+        time.sleep(5)
         fingerprint_hash = generate_index_fingerprint()
         if not fingerprint_hash:
             logging.error("❌ Could not generate index fingerprint - aborting upload")
