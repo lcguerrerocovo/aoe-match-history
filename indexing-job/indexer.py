@@ -152,6 +152,98 @@ def create_snapshot():
         logging.error(f"❌ Error creating snapshot: {e}")
         return False
 
+def hot_swap_snapshot_to_vm():
+    """Hot-swap the latest snapshot to the production Meilisearch VM."""
+    try:
+        import subprocess
+        import glob
+        import os
+        
+        logging.info("🔄 Starting hot-swap to production VM...")
+        
+        # Find the local snapshot file that was just created
+        snapshot_files = glob.glob("/meili_data/snapshots/*.snapshot")
+        if not snapshot_files:
+            logging.error("❌ No snapshot files found in /meili_data/snapshots")
+            return False
+        
+        local_snapshot_path = snapshot_files[0]
+        logging.info(f"Using local snapshot: {local_snapshot_path}")
+        
+        # Get VM details
+        vm_name = "aoe-search"
+        zone = "us-central1-a"
+        project_id = "aoe2-site"
+        
+        # SSH into VM and perform hot-swap
+        ssh_command = f"""
+        # Stop Meilisearch
+        sudo docker stop meilisearch
+        
+        # Backup current snapshot directory
+        sudo mv /var/lib/meilisearch/data/snapshots /var/lib/meilisearch/data/snapshots.backup.$(date +%Y%m%d-%H%M%S) || true
+        
+        # Create fresh snapshots directory
+        sudo mkdir -p /var/lib/meilisearch/data/snapshots
+        
+        # Copy new snapshot to snapshots directory
+        sudo cp /tmp/latest.snapshot /var/lib/meilisearch/data/snapshots/
+        
+        # Start Meilisearch (it will automatically load the snapshot)
+        sudo docker start meilisearch
+        
+        # Wait for Meilisearch to be healthy
+        echo "Waiting for Meilisearch to be healthy..."
+        for i in $(seq 1 30); do
+            if curl -f http://localhost:7700/health > /dev/null 2>&1; then
+                echo "✅ Meilisearch is healthy after hot-swap"
+                break
+            fi
+            echo "Waiting for Meilisearch... (attempt $i/30)"
+            sleep 2
+        done
+        
+        # Clean up
+        rm -f /tmp/latest.snapshot
+        """
+        
+        # Copy snapshot to VM first
+        logging.info("Copying snapshot to VM...")
+        scp_process = subprocess.run([
+            "gcloud", "compute", "scp", local_snapshot_path,
+            f"{vm_name}:/tmp/latest.snapshot",
+            "--zone", zone,
+            "--project", project_id,
+            "--quiet"
+        ], capture_output=True, text=True, timeout=300)
+        
+        if scp_process.returncode != 0:
+            logging.error(f"❌ Failed to copy snapshot to VM: {scp_process.stderr}")
+            return False
+        
+        # Execute SSH command to perform hot-swap
+        process = subprocess.run([
+            "gcloud", "compute", "ssh", vm_name,
+            "--zone", zone,
+            "--project", project_id,
+            "--command", ssh_command,
+            "--quiet"
+        ], capture_output=True, text=True, timeout=300)  # 5 minute timeout
+        
+        if process.returncode == 0:
+            logging.info("✅ Hot-swap completed successfully!")
+            return True
+        else:
+            logging.error(f"❌ Hot-swap failed: {process.stderr}")
+            return False
+            
+    except subprocess.TimeoutExpired:
+        logging.error("❌ Hot-swap timed out after 5 minutes")
+        return False
+    except Exception as e:
+        logging.error(f"❌ Error during hot-swap: {e}")
+        return False
+
 def upload_snapshot_to_gcs():
     """Upload the created snapshot to Google Cloud Storage."""
     try:
@@ -304,8 +396,13 @@ def main():
         if create_snapshot():
             logging.info("✅ Snapshot created successfully - ready for hot-swap!")
             if upload_snapshot_to_gcs():
-                logging.info("✅ Job completed successfully!")
-                sys.exit(0)
+                logging.info("✅ Snapshot uploaded to GCS successfully!")
+                if hot_swap_snapshot_to_vm():
+                    logging.info("✅ Job completed successfully with hot-swap!")
+                    sys.exit(0)
+                else:
+                    logging.error("❌ Failed to hot-swap snapshot to VM")
+                    sys.exit(1)
             else:
                 logging.error("❌ Failed to upload snapshot to GCS")
                 sys.exit(1)

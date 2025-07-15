@@ -10,6 +10,7 @@ The indexing job:
 3. Indexes all players with searchable fields (name, clan, country)
 4. Creates a snapshot of the index
 5. Uploads the snapshot back to GCS for later restoration
+6. **NEW**: Automatically performs hot-swap to production VM
 
 ## Files
 
@@ -17,6 +18,36 @@ The indexing job:
 - `entrypoint.sh` - Main script that orchestrates the indexing process
 - `indexer.py` - Python script that reads JSONL and indexes players into Meilisearch
 - `build_and_deploy_indexer.sh` - Script to build and deploy the Cloud Run job
+- `scripts/run-indexer.sh` - Local testing script with indexing and hot-swap modes
+- `scripts/entrypoint-local.sh` - Local entrypoint script for testing
+
+## Local Testing
+
+You can test the indexing job locally using Docker:
+
+### Prerequisites for Local Testing
+
+1. Docker installed and running
+2. Google Cloud SDK authenticated (`gcloud auth login`)
+3. Access to the Artifact Registry repository
+
+### Local Indexing Test
+
+Runs the full indexing process with a subset of data:
+
+```bash
+cd indexing-job/scripts
+./run-indexer.sh
+```
+
+**What it does:**
+- Creates test data subset (first 2500 records from `active_players.jsonl`)
+- Starts local Meilisearch instance
+- Runs full indexing process
+- Creates and uploads snapshot to GCS
+- Cleans up test data when done
+
+**Note:** Hot-swap functionality is only available in the production Cloud Run job environment, not in local testing.
 
 ## Usage
 
@@ -28,6 +59,7 @@ The indexing job:
    - `roles/run.admin` (for deploying Cloud Run jobs)
    - `roles/cloudscheduler.admin` (for creating scheduled jobs)
    - `roles/storage.admin` (for accessing GCS)
+   - `roles/compute.viewer` (for accessing VM)
 3. Artifact Registry repository `meilisearch` should exist in `us-central1`
 
 ### Build and Deploy
@@ -85,4 +117,5 @@ sudo systemctl start meilisearch
 - Check Cloud Run job logs for detailed execution information
 - Ensure GCS bucket permissions are correct
 - Verify the JSONL file format matches expected schema
-- Monitor snapshot creation and upload success 
+- Monitor snapshot creation and upload success
+- For local testing issues, ensure Docker is running and gcloud is authenticated 
