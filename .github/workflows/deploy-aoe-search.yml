@@ -40,28 +40,18 @@ jobs:
             exit 1
           fi
       
-      - name: Wait for VM to be ready
+      - name: Wait for startup script to complete
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          echo "⏳ Waiting for AOE Search VM to be ready..."
-          for i in {1..30}; do
+          echo "⏳ Waiting for startup script to complete..."
+          for i in {1..60}; do
             if curl -f "http://$EXTERNAL_IP:7700/health" > /dev/null 2>&1; then
-              echo "✅ AOE Search VM is ready!"
+              echo "✅ Startup script completed - Meilisearch is ready!"
               break
             fi
-            echo "Waiting for VM... (attempt $i/30)"
+            echo "Waiting for startup script... (attempt $i/60)"
             sleep 10
           done
-      
-      - name: Update Meilisearch Configuration
-        run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          echo "🔧 Updating Meilisearch configuration..."
-          curl -X PATCH "http://$EXTERNAL_IP:7700/indexes/players/settings" \
-            -H "Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}" \
-            -H "Content-Type: application/json" \
-            --data-binary @aoe-search/meilisearch_config.json
-          echo "✅ Meilisearch configuration updated"
       
       - name: Get latest snapshot from GCS
         id: get-snapshot
@@ -99,7 +89,7 @@ jobs:
             sudo chmod 644 /var/lib/meilisearch/data/snapshots/*
           "
       
-      - name: Restart Meilisearch with new snapshot
+      - name: Import snapshot and restart Meilisearch
         run: |
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
             # Stop Meilisearch if running
@@ -115,13 +105,15 @@ jobs:
               getmeili/meilisearch:v1.7 \
               meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
             
-            # Start Meilisearch with imported data
+            # Start Meilisearch with imported data (same config as startup script)
+            # Get master key from VM metadata to match startup script
+            MASTER_KEY=\$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key" -H "Metadata-Flavor: Google")
             sudo docker run -d \
               --name meilisearch \
               --restart unless-stopped \
               -p 7700:7700 \
               -e MEILI_ENV=production \
-              -e MEILI_MASTER_KEY=${{ secrets.MEILISEARCH_MASTER_KEY }} \
+              -e MEILI_MASTER_KEY=\$MASTER_KEY \
               -v /var/lib/meilisearch/data:/meili_data \
               getmeili/meilisearch:v1.7
               
