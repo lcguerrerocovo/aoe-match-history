@@ -37,7 +37,17 @@ Runs the full indexing process with a subset of data:
 
 ```bash
 cd indexing-job/scripts
-./run-indexer.sh
+./run-indexer.sh [BUILD]
+```
+
+**Parameters:**
+- `BUILD` (optional): Set to "true" to build Docker image locally, "false" to use production image (default: "true")
+
+**Examples:**
+```bash
+./run-indexer.sh          # Build locally and run (default)
+./run-indexer.sh true     # Build locally and run
+./run-indexer.sh false    # Pull production image from Artifact Registry and run
 ```
 
 **What it does:**

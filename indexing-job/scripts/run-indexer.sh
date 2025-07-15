@@ -2,9 +2,9 @@
 set -e
 
 # Check command line argument
-MODE=${1:-"index"}  # Default to "index" if no argument provided
+BUILD=${1:-"true"}  # Default to "true" if no argument provided
 
-echo "🔧 Running in mode: $MODE"
+echo "🔧 Build mode: $BUILD"
 
 # Cleanup function
 cleanup() {
@@ -26,12 +26,21 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Use the correct Artifact Registry path
-IMAGE_NAME="us-central1-docker.pkg.dev/aoe2-site/meilisearch/meilisearch-indexer"
-echo "🔨 Using image: $IMAGE_NAME"
+PROD_IMAGE="us-central1-docker.pkg.dev/aoe2-site/meilisearch/meilisearch-indexer"
+LOCAL_IMAGE="meilisearch-indexer-local"
 
-# Pull the image
-echo "📥 Pulling image from registry..."
-docker pull "$IMAGE_NAME"
+# Build the image from the Dockerfile (only if BUILD=true)
+if [ "$BUILD" = "true" ]; then
+    echo "📦 Building Docker image locally..."
+    docker build -f ../Dockerfile.indexer -t "$LOCAL_IMAGE" ..
+    IMAGE_NAME="$LOCAL_IMAGE"
+else
+    echo "📥 Pulling production image from Artifact Registry..."
+    docker pull "$PROD_IMAGE"
+    IMAGE_NAME="$PROD_IMAGE"
+fi
+
+echo "🔨 Using image: $IMAGE_NAME"
 
 # Create test data subset (first 2500 records)
 echo "📝 Creating test data subset..."
@@ -50,6 +59,7 @@ docker run --rm \
     -v "$HOME/.config/gcloud:/root/.config/gcloud" \
     -e MEILI_HTTP_ADDR="http://localhost:7700" \
     -e MEILI_MASTER_KEY="masterKey" \
+    -e SKIP_GCS_UPLOAD="true" \
     "$IMAGE_NAME" \
     -c "chmod +x /entrypoint.sh && /entrypoint.sh"
 

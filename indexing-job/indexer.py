@@ -384,10 +384,15 @@ def main():
         logging.error("❌ Meilisearch not ready - exiting")
         sys.exit(1)
     
-    # 2. Download the input file from GCS
-    if not download_active_players_file():
-        logging.error("❌ Failed to download input file - exiting")
-        sys.exit(1)
+    # 2. Download the input file from GCS (skip if file already exists locally)
+    input_file = Path('/active_players.jsonl')
+    if input_file.exists():
+        logging.info("📁 Using existing local file: /active_players.jsonl")
+    else:
+        logging.info("📥 Downloading file from GCS...")
+        if not download_active_players_file():
+            logging.error("❌ Failed to download input file - exiting")
+            sys.exit(1)
     
     # 3. Validate input file
     input_file = Path('/active_players.jsonl')
@@ -490,13 +495,20 @@ def main():
             
         if create_snapshot():
             logging.info("✅ Snapshot created successfully!")
-            if upload_snapshot_to_gcs():
-                logging.info("✅ Snapshot uploaded to GCS successfully!")
-                logging.info("✅ Job completed successfully! VM will handle hot-swap automatically.")
+            
+            # Check if we're running locally (skip GCS upload for local testing)
+            if os.getenv('SKIP_GCS_UPLOAD') == 'true':
+                logging.info("🏠 Running locally - skipping GCS upload")
+                logging.info("✅ Job completed successfully!")
                 sys.exit(0)
             else:
-                logging.error("❌ Failed to upload snapshot to GCS")
-                sys.exit(1)
+                if upload_snapshot_to_gcs():
+                    logging.info("✅ Snapshot uploaded to GCS successfully!")
+                    logging.info("✅ Job completed successfully! VM will handle hot-swap automatically.")
+                    sys.exit(0)
+                else:
+                    logging.error("❌ Failed to upload snapshot to GCS")
+                    sys.exit(1)
         else:
             logging.error("❌ Failed to create snapshot")
             sys.exit(1)

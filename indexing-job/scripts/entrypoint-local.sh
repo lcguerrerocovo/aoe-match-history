@@ -26,6 +26,9 @@ else
     exit 1
 fi
 
+# Set environment variable to skip GCS upload for local testing
+export SKIP_GCS_UPLOAD=true
+
 # Run the indexing script
 echo "Starting indexing..."
 python3 /indexer.py
