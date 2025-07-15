@@ -9,7 +9,6 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
-      - 'meilisearch_config.json'
   pull_request:
     branches: [ master ]
     paths:
@@ -18,7 +17,6 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
-      - 'meilisearch_config.json'
 
 jobs:
   build-and-deploy:
@@ -245,70 +243,7 @@ jobs:
             --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug
 
-  deploy-meilisearch-config:
-    runs-on: ubuntu-latest
-    needs: [deploy-proxy-function]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Google Auth
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-      
-      - name: Get Meilisearch VM External IP
-        run: |
-          # Get the external IP of the Meilisearch VM
-          EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
-          if [ -z "$EXTERNAL_IP" ]; then
-            echo "⚠️  Meilisearch VM not found. Skipping config deployment."
-            echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
-            echo "SKIP_MEILISEARCH_CONFIG=true" >> $GITHUB_ENV
-          else
-            echo "✅ Found Meilisearch VM at external IP: $EXTERNAL_IP"
-            echo "MEILISEARCH_HOST=http://$EXTERNAL_IP:7700" >> $GITHUB_ENV
-            echo "SKIP_MEILISEARCH_CONFIG=false" >> $GITHUB_ENV
-          fi
-      
-      - name: Deploy Meilisearch Configuration
-        if: env.SKIP_MEILISEARCH_CONFIG != 'true'
-        run: |
-          echo "🔧 Updating Meilisearch configuration via API..."
-          
-          # Extract external IP from environment variable
-          MEILISEARCH_HOST="${{ env.MEILISEARCH_HOST }}"
-          EXTERNAL_IP=$(echo "$MEILISEARCH_HOST" | sed 's|http://||' | sed 's|:7700||')
-          
-          if [ -z "$EXTERNAL_IP" ]; then
-            echo "❌ No external IP found, skipping Meilisearch config"
-            exit 0
-          fi
-          
-          echo "📍 Using external IP: $EXTERNAL_IP"
-          
-          # Wait for Meilisearch to be healthy
-          echo "⏳ Waiting for Meilisearch to be healthy..."
-          for i in {1..10}; do
-            if curl -f "http://$EXTERNAL_IP:7700/health" > /dev/null 2>&1; then
-              echo "✅ Meilisearch is healthy"
-              break
-            fi
-            echo "Waiting for Meilisearch... (attempt $i/10)"
-            sleep 10
-          done
-          
-          # Update index settings via API
-          echo "📝 Updating index settings..."
-          curl -X PATCH "http://$EXTERNAL_IP:7700/indexes/players/settings" \
-            -H "Authorization: Bearer ${{ secrets.MEILISEARCH_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            --data-binary @meilisearch_config.json
-          
-          echo "✅ Meilisearch configuration updated successfully"
+
 
   clear-cloudflare-cache:
     runs-on: ubuntu-latest

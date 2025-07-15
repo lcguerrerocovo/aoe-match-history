@@ -76,7 +76,7 @@ MEILI_MASTER_KEY="your-secure-key" bash scripts/deploy.sh
 The deployment script:
 - Creates an e2-micro VM in `us-central1-a` (free tier compatible)
 - Installs Docker and Meilisearch automatically
-- Configures the search index using `meilisearch_config.json`
+- Configures the search index using `aoe-search/meilisearch_config.json`
 - Sets up firewall rules for internal access
 - Provides environment variables for indexing
 
@@ -212,7 +212,7 @@ curl -X DELETE -H "Authorization: Bearer your-master-key" \
 ### Configuration
 
 #### Search Index Settings
-The search index is configured via `meilisearch_config.json`:
+The search index is configured via `aoe-search/meilisearch_config.json`:
 - **Searchable fields**: `name`, `alias`
 - **Filterable fields**: `country`, `total_matches`, `last_match_date`
 - **Sortable fields**: `total_matches`, `last_match_date`

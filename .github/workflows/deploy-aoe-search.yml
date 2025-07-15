@@ -1,0 +1,65 @@
+name: Deploy AOE Search VM
+
+on:
+  push:
+    paths:
+      - 'aoe-search/**'
+    paths-ignore:
+      - 'aoe-search/meilisearch_config.json'
+  workflow_dispatch:
+
+jobs:
+  deploy-aoe-search-vm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Deploy AOE Search VM
+        run: |
+          cd aoe-search
+          chmod +x deploy-vm.sh
+          MEILI_MASTER_KEY="${{ secrets.MEILISEARCH_MASTER_KEY }}" ./deploy-vm.sh
+      
+      - name: Get VM External IP
+        id: vm-ip
+        run: |
+          EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+          if [ -n "$EXTERNAL_IP" ]; then
+            echo "vm_external_ip=$EXTERNAL_IP" >> $GITHUB_OUTPUT
+            echo "✅ AOE Search VM deployed at: $EXTERNAL_IP"
+          else
+            echo "❌ Failed to get VM external IP"
+            exit 1
+          fi
+      
+      - name: Wait for VM to be ready
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          echo "⏳ Waiting for AOE Search VM to be ready..."
+          for i in {1..30}; do
+            if curl -f "http://$EXTERNAL_IP:7700/health" > /dev/null 2>&1; then
+              echo "✅ AOE Search VM is ready!"
+              break
+            fi
+            echo "Waiting for VM... (attempt $i/30)"
+            sleep 10
+          done
+      
+      - name: Update Meilisearch Configuration
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          echo "🔧 Updating Meilisearch configuration..."
+          curl -X PATCH "http://$EXTERNAL_IP:7700/indexes/players/settings" \
+            -H "Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @aoe-search/meilisearch_config.json
+          echo "✅ Meilisearch configuration updated" 

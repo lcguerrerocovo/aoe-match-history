@@ -8,7 +8,7 @@ VM_NAME="${SEARCH_VM_NAME:-aoe-search}"
 MEILI_MASTER_KEY="${MEILI_MASTER_KEY:-a-secure-master-key-change-this}"
 
 # Config file paths
-STARTUP_SCRIPT="./scripts/startup.sh"
+STARTUP_SCRIPT="./startup.sh"
 MEILI_CONFIG="./meilisearch_config.json"
 
 echo "🚀 Deploying Meilisearch VM..."
@@ -84,6 +84,7 @@ INTERNAL_IP=$(gcloud compute instances describe "$VM_NAME" --zone="$ZONE" --proj
 
 echo ""
 echo "🎉 Meilisearch VM Deployed!"
+echo "   VM Name:    $VM_NAME"
 echo "   External IP: $EXTERNAL_IP"
 echo "   Internal IP: $INTERNAL_IP"
 echo "   Master Key:  $MEILI_MASTER_KEY"
