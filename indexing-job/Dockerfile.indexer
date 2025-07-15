@@ -7,7 +7,7 @@ FROM alpine:3.20
 RUN apk add --no-cache curl wget python3 py3-requests bash libc6-compat py3-pip
 
 # Install Python dependencies
-RUN pip3 install --break-system-packages meilisearch
+RUN pip3 install --break-system-packages meilisearch google-cloud-storage
 
 # Install Google Cloud SDK for GCS access
 RUN wget --quiet https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-455.0.0-linux-x86_64.tar.gz \

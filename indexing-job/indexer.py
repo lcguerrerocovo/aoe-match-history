@@ -15,6 +15,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 import requests
 import time
+from google.cloud import storage
 
 # --- Configuration ---
 INDEX_NAME = "players"
@@ -328,6 +329,25 @@ def upload_snapshot_to_gcs():
         logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False
 
+def download_active_players_file():
+    """Download active_players.jsonl from GCS using Python client."""
+    try:
+        logging.info("Downloading active_players.jsonl from GCS using Python client...")
+        
+        # Initialize the GCS client (uses default credentials in Cloud Run)
+        client = storage.Client()
+        bucket = client.bucket('aoe2-site-data')
+        blob = bucket.blob('active_players.jsonl')
+        
+        # Download the file
+        blob.download_to_filename('/active_players.jsonl')
+        logging.info("✅ Successfully downloaded active_players.jsonl")
+        return True
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to download active_players.jsonl: {e}")
+        return False
+
 def main():
     """Main function to read, process, and upload data."""
     
@@ -338,13 +358,18 @@ def main():
         logging.error("❌ Meilisearch not ready - exiting")
         sys.exit(1)
     
-    # 2. Validate input file
+    # 2. Download the input file from GCS
+    if not download_active_players_file():
+        logging.error("❌ Failed to download input file - exiting")
+        sys.exit(1)
+    
+    # 3. Validate input file
     input_file = Path('/active_players.jsonl')
     if not input_file.is_file():
         logging.error(f"❌ Input file not found: /active_players.jsonl")
         sys.exit(1)
 
-    # 3. Connect to Meilisearch
+    # 4. Connect to Meilisearch
     try:
         logging.info(f"Connecting to Meilisearch at {MEILI_URL}...")
         client = meilisearch.Client(MEILI_URL, MEILI_MASTER_KEY)

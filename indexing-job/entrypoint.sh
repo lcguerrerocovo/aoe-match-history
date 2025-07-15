@@ -18,6 +18,9 @@ until curl -s http://localhost:7700/health | grep -q '"status":"available"'; do
 done
 echo "Meilisearch is ready!"
 
+# Note: GCS access now handled by Python google-cloud-storage library
+echo "Using Python google-cloud-storage library for GCS access..."
+
 # Function to check if Meilisearch is still running
 check_meilisearch() {
   if ! kill -0 $MEILI_PID 2>/dev/null; then
@@ -30,10 +33,6 @@ check_meilisearch() {
   fi
   return 0
 }
-
-# Download the JSONL file from GCS
-echo "Downloading active_players.jsonl from GCS..."
-gsutil cp gs://aoe2-site-data/active_players.jsonl /active_players.jsonl
 
 # Check Meilisearch before starting indexing
 if ! check_meilisearch; then
