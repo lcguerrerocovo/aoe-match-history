@@ -1,62 +1,31 @@
 #!/bin/bash
 set -e
 set -o pipefail
-set -x # Keep this for maximum debug verbosity
 
 echo "--- Meilisearch VM Startup Script ---"
 
 # --- Configuration ---
 MEILI_MASTER_KEY=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key" -H "Metadata-Flavor: Google" || echo "a-default-dev-only-master-key")
 
-# Set a consistent environment for the script
-export LANG="C.UTF-8"
-export LC_ALL="C.UTF-8"
-export PYTHONIOENCODING="UTF-8"
-
 # --- 1. System Setup ---
 echo "COS detected - Docker is pre-installed"
 echo "Checking Docker status..."
-
-# Test basic requirements (curl and tar are always there, network connectivity is key)
-echo "Testing basic requirements..."
-echo "curl version: $(curl --version | head -1)"
-echo "tar version: $(tar --version | head -1)"
-echo "Network connectivity test:"
-if curl -s --connect-timeout 5 https://storage.googleapis.com/ >/dev/null; then
-    echo "✅ Network connectivity to Google Storage OK"
-else
-    echo "❌ Network connectivity to Google Storage failed"
-    exit 1
-fi
 
 # COS comes with Docker pre-installed, just ensure it's running
 systemctl status docker || echo "Docker not running, starting it..."
 systemctl start docker || echo "Docker start failed, but continuing..."
 
 # Install jq if not available (COS might not have it)
-# We'll still try /usr/local/bin for jq, as it's a single binary and might bypass some issues
 if ! command -v jq &> /dev/null; then
     echo "Installing jq..."
-    # mkdir -p /usr/local/bin might still fail if /usr/local is truly read-only, but curl -o might work
     curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /usr/local/bin/jq || {
         echo "⚠️ Failed to install jq to /usr/local/bin. Trying /tmp/jq and adding to PATH temporarily."
         curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /tmp/jq
         chmod +x /tmp/jq
-        export PATH=$PATH:/tmp # Add /tmp to PATH for jq
+        export PATH=$PATH:/tmp
     }
-    # If /usr/local/bin/jq was created, ensure it's executable
     [ -f "/usr/local/bin/jq" ] && chmod +x /usr/local/bin/jq
 fi
-
-# --- NEW GCS INTERACTION METHOD: Using Dockerized gcloud CLI ---
-# Define a helper function to run gcloud storage commands inside a Docker container
-function run_gcloud_storage_in_docker() {
-  docker run --rm \
-    -v /var/lib/meilisearch/data/snapshots:/mnt/snapshots \
-    --entrypoint="gcloud" \
-    gcr.io/google.com/cloudsdktool/cloud-sdk:latest \
-    alpha storage "$@"
-}
 
 # --- 2. Meilisearch Setup ---
 echo "Creating directories for Meilisearch..."
@@ -65,53 +34,12 @@ chmod 755 /var/lib/meilisearch
 chmod 755 /var/lib/meilisearch/data
 chmod 755 /var/lib/meilisearch/data/snapshots
 
-# --- 3. Download Latest Snapshot ---
-echo "Checking for latest snapshot in GCS using Dockerized gcloud alpha storage..."
-
-# Define the GCS bucket path
-GCS_BUCKET="gs://aoe2-site-data/snapshots/"
-
-# Get all snapshot directories, sort them, and pick the latest one
-# This uses 'gcloud alpha storage ls' which should now work via Docker
-LATEST_SNAPSHOT_DIR=$(run_gcloud_storage_in_docker ls "$GCS_BUCKET" --recursive 2>/dev/null | \
-    grep -E '[0-9]{8}-[0-9]{6}/data.snapshot$' | \
-    sort | tail -1 | sed 's|/data.snapshot$||' || echo "")
-
-if [ -n "$LATEST_SNAPSHOT_DIR" ]; then
-    SNAPSHOT_OBJECT_PATH="${LATEST_SNAPSHOT_DIR}/data.snapshot"
-    
-    # Paths within the Docker container (mounted from host)
-    CONTAINER_SNAPSHOT_DEST="/mnt/snapshots/latest.snapshot"
-    CONTAINER_FINGERPRINT_DEST="/mnt/snapshots/latest.fingerprint.txt"
-    CONTAINER_METADATA_DEST="/mnt/snapshots/latest.metadata.json"
-
-    echo "Attempting to find and download snapshot from: $SNAPSHOT_OBJECT_PATH"
-
-    # Use gcloud alpha storage cp to download the file into the mounted directory
-    echo "Downloading snapshot to $CONTAINER_SNAPSHOT_DEST (host path: /var/lib/meilisearch/data/snapshots/latest.snapshot)..."
-    if run_gcloud_storage_in_docker cp "$SNAPSHOT_OBJECT_PATH" "$CONTAINER_SNAPSHOT_DEST"; then
-        echo "✅ Snapshot downloaded successfully."
-        
-        # Extract snapshot directory and download metadata/fingerprint
-        SNAPSHOT_DIR=$(echo "$LATEST_SNAPSHOT_DIR" | sed 's|gs://aoe2-site-data/||')
-        FINGERPRINT_CLOUD_PATH="gs://aoe2-site-data/${SNAPSHOT_DIR}/fingerprint.txt"
-        METADATA_CLOUD_PATH="gs://aoe2-site-data/${SNAPSHOT_DIR}/metadata.json"
-        
-        # Download fingerprint (optional, allow failure)
-        echo "Downloading fingerprint from $FINGERPRINT_CLOUD_PATH..."
-        run_gcloud_storage_in_docker cp "$FINGERPRINT_CLOUD_PATH" "$CONTAINER_FINGERPRINT_DEST" 2>/dev/null || echo "No fingerprint found at $FINGERPRINT_CLOUD_PATH"
-        
-        # Download metadata (optional, allow failure)
-        echo "Downloading metadata from $METADATA_CLOUD_PATH..."
-        run_gcloud_storage_in_docker cp "$METADATA_CLOUD_PATH" "$CONTAINER_METADATA_DEST" 2>/dev/null || echo "No metadata found at $METADATA_CLOUD_PATH"
-        
-        echo "✅ Snapshot and associated files downloaded successfully"
-    else
-        echo "❌ Failed to download snapshot: $SNAPSHOT_OBJECT_PATH. Check service account permissions or file existence."
-        echo "⚠️  Starting with empty index"
-    fi
+# --- 3. Check for Existing Snapshot ---
+echo "Checking for existing snapshot..."
+if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
+    echo "✅ Found existing snapshot, will use it"
 else
-    echo "⚠️  No snapshot directories or data.snapshot files found in GCS. Starting with empty index."
+    echo "⚠️ No existing snapshot found, will start with empty index"
 fi
 
 echo "Starting Meilisearch via Docker..."
@@ -177,161 +105,5 @@ else
       --data-binary @/var/lib/meilisearch/settings_config.json
 fi
 
-# --- 5. Setup Snapshot Update Cron Job ---
-echo "Setting up snapshot update cron job..."
-
-# Ensure the directory exists
-mkdir -p /var/lib/meilisearch
-
-cat > /var/lib/meilisearch/check_snapshots.sh << 'EOF'
-#!/bin/bash
-set -e
-
-# Set a consistent Python environment for cron script
-export LANG="C.UTF-8"
-export LC_ALL="C.UTF-8"
-export PYTHONIOENCODING="UTF-8"
-
-# Define a helper function to run gcloud storage commands inside a Docker container
-function run_gcloud_storage_in_docker_cron() {
-  docker run --rm \
-    -v /var/lib/meilisearch/data/snapshots:/mnt/snapshots \
-    --entrypoint="gcloud" \
-    gcr.io/google.com/cloudsdktool/cloud-sdk:latest \
-    alpha storage "$@"
-}
-
-echo "$(date): Checking for new snapshots..."
-
-# Define the GCS bucket path
-GCS_BUCKET="gs://aoe2-site-data/snapshots/"
-
-# Get all snapshot directories, sort them, and pick the latest one
-LATEST_SNAPSHOT_DIR=$(run_gcloud_storage_in_docker_cron ls "$GCS_BUCKET" --recursive 2>/dev/null | \
-    grep -E '[0-9]{8}-[0-9]{6}/data.snapshot$' | \
-    sort | tail -1 | sed 's|/data.snapshot$||' || echo "")
-
-if [ -z "$LATEST_SNAPSHOT_DIR" ]; then
-    echo "No snapshots found in GCS"
-    exit 0
-fi
-
-SNAPSHOT_OBJECT_PATH="${LATEST_SNAPSHOT_DIR}/data.snapshot"
-LOCAL_SNAPSHOT_DEST="/mnt/snapshots/latest.snapshot" # Path *within* the container
-LOCAL_FINGERPRINT_DEST="/mnt/snapshots/latest.fingerprint.txt"
-LOCAL_METADATA_DEST="/mnt/snapshots/latest.metadata.json"
-
-echo "Latest snapshot directory: $SNAPSHOT_DIR"
-
-# Check current fingerprint to avoid unnecessary download/restart
-CURRENT_FINGERPRINT=""
-if [ -f "/var/lib/meilisearch/data/snapshots/latest.fingerprint.txt" ]; then
-    CURRENT_FINGERPRINT=$(cat /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt)
-fi
-
-# Get latest fingerprint from GCS (if it exists)
-LATEST_FINGERPRINT=""
-FINGERPRINT_CLOUD_PATH="${LATEST_SNAPSHOT_DIR}/fingerprint.txt"
-TEMP_FINGERPRINT="/tmp/latest_fingerprint.txt" # Temporary file for download, inside container
-
-if run_gcloud_storage_in_docker_cron cp "$FINGERPRINT_CLOUD_PATH" "$TEMP_FINGERPRINT" 2>/dev/null; then
-    LATEST_FINGERPRINT=$(cat "$TEMP_FINGERPRINT") # This cat is *outside* the container
-    rm -f "$TEMP_FINGERPRINT"
-    echo "Latest snapshot fingerprint: $LATEST_FINGERPRINT"
-else
-    echo "No latest fingerprint found in GCS for comparison."
-    exit 0 # Exit if no fingerprint to compare, to avoid unnecessary swaps
-fi
-
-if [ "$CURRENT_FINGERPRINT" = "$LATEST_FINGERPRINT" ]; then
-    echo "No new snapshot detected (fingerprint: $LATEST_FINGERPRINT)"
-    exit 0
-fi
-
-echo "New snapshot detected! Performing hot-swap..."
-
-# Stop Meilisearch
-docker stop meilisearch
-
-# Backup current files
-if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
-    mv /var/lib/meilisearch/data/snapshots/latest.snapshot /var/lib/meilisearch/data/snapshots/latest.snapshot.backup.$(date +%Y%m%d-%H%M%S)
-fi
-
-if [ -f "/var/lib/meilisearch/data/snapshots/latest.fingerprint.txt" ]; then
-    mv /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt.backup.$(date +%Y%m%d-%H%M%S)
-fi
-
-if [ -f "/var/lib/meilisearch/data/snapshots/latest.metadata.json" ]; then
-    mv /var/lib/meilisearch/data/snapshots/latest.metadata.json /var/lib/meilisearch/data/snapshots/latest.metadata.json.backup.$(date +%Y%m%d-%H%M%S)
-fi
-
-# Download new snapshot and its metadata/fingerprint
-run_gcloud_storage_in_docker_cron cp "$SNAPSHOT_OBJECT_PATH" "$LOCAL_SNAPSHOT_DEST"
-run_gcloud_storage_in_docker_cron cp "$FINGERPRINT_CLOUD_PATH" "$LOCAL_FINGERPRINT_DEST" 2>/dev/null || echo "No fingerprint found to download."
-run_gcloud_storage_in_docker_cron cp "$METADATA_CLOUD_PATH" "$LOCAL_METADATA_DEST" 2>/dev/null || echo "No metadata found to download."
-
-# Start Meilisearch
-docker start meilisearch
-
-# Wait for Meilisearch to be healthy
-echo "Waiting for Meilisearch to be healthy..."
-for i in $(seq 1 30); do
-    if curl -f http://localhost:7700/health > /dev/null 2>&1; then
-        echo "✅ Meilisearch is healthy after hot-swap"
-        break
-    fi
-    echo "Waiting for Meilisearch... (attempt $i/30)"
-    sleep 2
-done
-
-echo "✅ Hot-swap completed successfully!"
-EOF
-
-chmod +x /var/lib/meilisearch/check_snapshots.sh
-
-# COS doesn't have cron, so we'll use systemd timer instead
-echo "Setting up systemd timer for snapshot checks..."
-
-# Create systemd service file
-cat > /etc/systemd/system/meilisearch-snapshot-check.service << 'EOF'
-[Unit]
-Description=Meilisearch Snapshot Check
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/var/lib/meilisearch/check_snapshots.sh
-User=root
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Create systemd timer file
-cat > /etc/systemd/system/meilisearch-snapshot-check.timer << 'EOF'
-[Unit]
-Description=Run Meilisearch snapshot check every 2 days
-Requires=meilisearch-snapshot-check.service
-
-[Timer]
-OnCalendar=*-*-* 00:00:00
-RandomizedDelaySec=3600
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-# Enable and start the timer
-systemctl daemon-reload
-systemctl enable meilisearch-snapshot-check.timer
-systemctl start meilisearch-snapshot-check.timer
-
-echo "✅ Systemd timer configured (runs every 2 days at midnight)"
-
 echo "✅ Meilisearch setup and configuration complete."
-echo "✅ Snapshot update cron job configured (runs every 2 days at midnight)"
 echo "--- Startup Script Finished ---"

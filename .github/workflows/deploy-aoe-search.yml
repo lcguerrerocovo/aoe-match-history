@@ -1,12 +1,14 @@
-name: Deploy AOE Search VM
+name: Deploy AOE Search VM with Latest Snapshot
 
 on:
   push:
     paths:
       - 'aoe-search/deploy-vm.sh'
       - 'aoe-search/startup.sh'
-      - 'aoe-search/check-snapshots.sh'
       - '.github/workflows/deploy-aoe-search.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
 
 jobs:
   deploy-aoe-search-vm:
@@ -62,4 +64,103 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}" \
             -H "Content-Type: application/json" \
             --data-binary @aoe-search/meilisearch_config.json
-          echo "✅ Meilisearch configuration updated" 
+          echo "✅ Meilisearch configuration updated"
+      
+      - name: Get latest snapshot from GCS
+        id: get-snapshot
+        run: |
+          # Get the latest snapshot directory
+          LATEST_SNAPSHOT_DIR=$(gsutil ls gs://aoe2-site-data/snapshots/ | grep -E '[0-9]{8}-[0-9]{6}/$' | sort | tail -1 | sed 's|/$||')
+          echo "Latest snapshot: $LATEST_SNAPSHOT_DIR"
+          
+          # Download the snapshot files to GitHub Actions runner
+          mkdir -p ./latest-snapshot
+          gsutil cp "${LATEST_SNAPSHOT_DIR}/data.snapshot" ./latest-snapshot/
+          gsutil cp "${LATEST_SNAPSHOT_DIR}/fingerprint.txt" ./latest-snapshot/ 2>/dev/null || echo "No fingerprint found"
+          gsutil cp "${LATEST_SNAPSHOT_DIR}/metadata.json" ./latest-snapshot/ 2>/dev/null || echo "No metadata found"
+          
+          # Set output for next steps
+          echo "snapshot_dir=${LATEST_SNAPSHOT_DIR}" >> $GITHUB_OUTPUT
+          echo "fingerprint=$(cat ./latest-snapshot/fingerprint.txt 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
+      
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/vm_key
+          chmod 600 ~/.ssh/vm_key
+          ssh-keyscan -H ${{ steps.vm-ip.outputs.vm_external_ip }} >> ~/.ssh/known_hosts
+      
+      - name: Upload snapshot to VM
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          
+          # Create snapshot directory on VM
+          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "sudo mkdir -p /var/lib/meilisearch/data/snapshots"
+          
+          # Upload snapshot files
+          scp -i ~/.ssh/vm_key ./latest-snapshot/* ${{ secrets.VM_USER }}@$EXTERNAL_IP:/tmp/
+          
+          # Move files to proper location and set permissions
+          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+            sudo mv /tmp/data.snapshot /var/lib/meilisearch/data/snapshots/latest.snapshot
+            sudo mv /tmp/fingerprint.txt /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
+            sudo mv /tmp/metadata.json /var/lib/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
+            sudo chown -R root:root /var/lib/meilisearch/data/snapshots/
+            sudo chmod 644 /var/lib/meilisearch/data/snapshots/*
+          "
+      
+      - name: Restart Meilisearch with new snapshot
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          
+          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+            # Stop Meilisearch if running
+            sudo docker stop meilisearch 2>/dev/null || true
+            sudo docker rm meilisearch 2>/dev/null || true
+            
+            # Start Meilisearch with snapshot
+            sudo docker run -d \
+              --name meilisearch \
+              --restart unless-stopped \
+              -p 7700:7700 \
+              -e MEILI_ENV=production \
+              -e MEILI_MASTER_KEY=${{ secrets.MEILISEARCH_MASTER_KEY }} \
+              -v /var/lib/meilisearch/data:/meili_data \
+              getmeili/meilisearch:v1.7
+              
+            # Wait for Meilisearch to be healthy
+            echo 'Waiting for Meilisearch to start...'
+            for i in {1..30}; do
+              if curl -f http://localhost:7700/health >/dev/null 2>&1; then
+                echo '✅ Meilisearch is healthy'
+                break
+              fi
+              echo \"Waiting for Meilisearch... (attempt \$i/30)\"
+              sleep 2
+            done
+          "
+      
+      - name: Verify deployment
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          
+          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+            # Check if Meilisearch is running
+            if sudo docker ps | grep -q meilisearch; then
+              echo '✅ Meilisearch is running'
+              
+              # Check if snapshot was loaded
+              if [ -f '/var/lib/meilisearch/data/snapshots/latest.fingerprint.txt' ]; then
+                CURRENT_FINGERPRINT=\$(cat /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt)
+                echo \"✅ Snapshot loaded with fingerprint: \$CURRENT_FINGERPRINT\"
+              else
+                echo '⚠️ No fingerprint file found'
+              fi
+              
+              # Get document count
+              DOC_COUNT=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/indexes/players/stats | jq -r '.numberOfDocuments // 0')
+              echo \"📊 Index contains \$DOC_COUNT documents\"
+            else
+              echo '❌ Meilisearch is not running'
+              exit 1
+            fi
+          " 
