@@ -444,10 +444,7 @@ The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
 
 Grant roles:
 ```bash
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/compute.viewer"
-  
+# Core application roles
 gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/run.admin"
@@ -464,6 +461,16 @@ gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/storage.admin"
 
+# Meilisearch VM deployment roles
+gcloud projects add-iam-policy-binding aoe2-site \
+  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+  --role="roles/compute.instanceAdmin.v1"
+
+gcloud projects add-iam-policy-binding aoe2-site \
+  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+  --role="roles/compute.networkAdmin"
+
+# Public API access
 gcloud run services add-iam-policy-binding aoe2-api-proxy \
   --region=us-central1 \
   --member="allUsers" \
