@@ -252,18 +252,19 @@ def generate_index_fingerprint():
         return None
 
 def upload_snapshot_to_gcs():
-    """Upload the created snapshot to Google Cloud Storage."""
+    """Upload the created snapshot to Google Cloud Storage using Python client."""
     try:
-        import subprocess
         import glob
         import os
         import json
+        
         logging.info("Listing files in /meili_data/snapshots before upload:")
         try:
             files = os.listdir("/meili_data/snapshots")
             logging.info(files)
         except Exception as e:
             logging.error(f"Could not list /meili_data/snapshots: {e}")
+            
         # Find the snapshot file
         snapshot_files = glob.glob("/meili_data/snapshots/*.snapshot")
         if not snapshot_files:
@@ -280,87 +281,67 @@ def upload_snapshot_to_gcs():
             logging.error("❌ Could not generate index fingerprint - aborting upload")
             return False
         
+        # Initialize GCS client
+        client = storage.Client()
+        bucket = client.bucket('aoe2-site-data')
+        
         # Create directory structure: snapshots/{timestamp}/
         snapshot_dir = f"snapshots/{timestamp}"
-        gcs_snapshot_path = f"gs://aoe2-site-data/{snapshot_dir}/data.snapshot"
-        gcs_fingerprint_path = f"gs://aoe2-site-data/{snapshot_dir}/fingerprint.txt"
-        gcs_metadata_path = f"gs://aoe2-site-data/{snapshot_dir}/metadata.json"
         
-        logging.info(f"Uploading snapshot to {gcs_snapshot_path}...")
-        process = subprocess.Popen(
-            ["gsutil", "cp", snapshot_file, gcs_snapshot_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
-        for line in process.stdout:
-            logging.info(f"gsutil: {line.strip()}")
-        process.wait()
-        if process.returncode == 0:
-            logging.info("✅ Snapshot uploaded to GCS successfully!")
-            
-            # Create fingerprint marker file
-            fingerprint_file = f"/tmp/fingerprint-{timestamp}.txt"
-            with open(fingerprint_file, 'w') as f:
-                f.write(fingerprint_hash)
-            
-            # Upload fingerprint marker
-            fingerprint_process = subprocess.run([
-                "gsutil", "cp", fingerprint_file, gcs_fingerprint_path
-            ], capture_output=True, text=True, timeout=60)
-            
-            if fingerprint_process.returncode == 0:
-                logging.info(f"✅ Fingerprint marker uploaded: {fingerprint_hash}")
-            else:
-                logging.warning(f"⚠️ Failed to upload fingerprint marker: {fingerprint_process.stderr}")
-            
-            os.remove(fingerprint_file)
-            
-            # Create metadata file
-            metadata = {
-                "fingerprint_hash": fingerprint_hash,
-                "timestamp": timestamp,
-                "snapshot_path": gcs_snapshot_path,
-                "index_name": INDEX_NAME,
-                "created_at": datetime.now().isoformat(),
-                "document_count": None  # Will be filled from stats
-            }
-            
-            # Get document count for metadata
-            try:
-                import requests
-                stats_response = requests.get(
-                    f"{MEILI_URL}/indexes/{INDEX_NAME}/stats",
-                    headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
-                    timeout=10
-                )
-                if stats_response.status_code == 200:
-                    stats = stats_response.json()
-                    metadata["document_count"] = stats.get('numberOfDocuments', 0)
-            except Exception as e:
-                logging.warning(f"Could not get document count: {e}")
-            
-            metadata_file = f"/tmp/snapshot-metadata-{timestamp}.json"
-            with open(metadata_file, 'w') as f:
-                json.dump(metadata, f, indent=2)
-            
-            # Upload metadata
-            metadata_process = subprocess.run([
-                "gsutil", "cp", metadata_file, gcs_metadata_path
-            ], capture_output=True, text=True, timeout=60)
-            
-            if metadata_process.returncode == 0:
-                logging.info(f"✅ Metadata uploaded successfully")
-                logging.info(f"📁 Snapshot stored in: {snapshot_dir}/")
-                os.remove(metadata_file)
-            else:
-                logging.warning(f"⚠️ Failed to upload metadata: {metadata_process.stderr}")
-                os.remove(metadata_file)
-            
-            return True
-        else:
-            logging.error(f"❌ Failed to upload snapshot, exit code: {process.returncode}")
-            return False
+        logging.info(f"Uploading snapshot to {snapshot_dir}/data.snapshot...")
+        
+        # Upload snapshot file
+        snapshot_blob = bucket.blob(f"{snapshot_dir}/data.snapshot")
+        snapshot_blob.upload_from_filename(snapshot_file)
+        logging.info("✅ Snapshot uploaded to GCS successfully!")
+        
+        # Create and upload fingerprint marker file
+        fingerprint_file = f"/tmp/fingerprint-{timestamp}.txt"
+        with open(fingerprint_file, 'w') as f:
+            f.write(fingerprint_hash)
+        
+        fingerprint_blob = bucket.blob(f"{snapshot_dir}/fingerprint.txt")
+        fingerprint_blob.upload_from_filename(fingerprint_file)
+        logging.info(f"✅ Fingerprint marker uploaded: {fingerprint_hash}")
+        os.remove(fingerprint_file)
+        
+        # Create metadata file
+        metadata = {
+            "fingerprint_hash": fingerprint_hash,
+            "timestamp": timestamp,
+            "snapshot_path": f"gs://aoe2-site-data/{snapshot_dir}/data.snapshot",
+            "index_name": INDEX_NAME,
+            "created_at": datetime.now().isoformat(),
+            "document_count": None  # Will be filled from stats
+        }
+        
+        # Get document count for metadata
+        try:
+            import requests
+            stats_response = requests.get(
+                f"{MEILI_URL}/indexes/{INDEX_NAME}/stats",
+                headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
+                timeout=10
+            )
+            if stats_response.status_code == 200:
+                stats = stats_response.json()
+                metadata["document_count"] = stats.get('numberOfDocuments', 0)
+        except Exception as e:
+            logging.warning(f"Could not get document count: {e}")
+        
+        # Create and upload metadata file
+        metadata_file = f"/tmp/snapshot-metadata-{timestamp}.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        metadata_blob = bucket.blob(f"{snapshot_dir}/metadata.json")
+        metadata_blob.upload_from_filename(metadata_file)
+        logging.info(f"✅ Metadata uploaded successfully")
+        logging.info(f"📁 Snapshot stored in: {snapshot_dir}/")
+        os.remove(metadata_file)
+        
+        return True
+        
     except Exception as e:
         logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False

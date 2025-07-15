@@ -13,6 +13,18 @@ MEILI_MASTER_KEY=$(curl "http://metadata.google.internal/computeMetadata/v1/inst
 echo "COS detected - Docker is pre-installed"
 echo "Checking Docker status..."
 
+# Test basic requirements
+echo "Testing basic requirements..."
+echo "curl version: $(curl --version | head -1)"
+echo "tar version: $(tar --version | head -1)"
+echo "Network connectivity test:"
+if curl -s --connect-timeout 5 https://storage.googleapis.com/ >/dev/null; then
+    echo "✅ Network connectivity to Google Storage OK"
+else
+    echo "❌ Network connectivity to Google Storage failed"
+    exit 1
+fi
+
 # COS comes with Docker pre-installed, just ensure it's running
 systemctl status docker || echo "Docker not running, starting it..."
 systemctl start docker || echo "Docker start failed, but continuing..."
@@ -24,6 +36,135 @@ if ! command -v jq &> /dev/null; then
     curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /usr/local/bin/jq
     chmod +x /usr/local/bin/jq
 fi
+
+# Define paths for gsutil installation
+GSUTIL_INSTALL_ROOT="/mnt/stateful_partition/gsutil"
+GSUTIL_BIN_DIR="/mnt/stateful_partition/bin"
+GSUTIL_SYMLINK_PATH="${GSUTIL_BIN_DIR}/gsutil"
+
+# Install minimal gsutil if not available (COS doesn't have it)
+if [ ! -f "$GSUTIL_SYMLINK_PATH" ]; then
+    echo "Installing minimal gsutil..."
+    echo "Current directory: $(pwd)"
+    echo "Available disk space:"
+    df -h /mnt/stateful_partition
+    
+    # Use /mnt/stateful_partition for downloads and installation
+    cd /mnt/stateful_partition
+    echo "Changed to: $(pwd)"
+    
+    echo "Downloading gsutil.tar.gz..."
+    if ! curl -v -O https://storage.googleapis.com/pub/gsutil.tar.gz; then
+        echo "❌ Failed to download gsutil.tar.gz"
+        exit 1
+    fi
+    
+    echo "Checking downloaded file..."
+    ls -la gsutil.tar.gz
+    
+    echo "Extracting gsutil..."
+    if ! tar -xf gsutil.tar.gz; then
+        echo "❌ Failed to extract gsutil.tar.gz"
+        exit 1
+    fi
+    
+    echo "Checking extracted files..."
+    ls -la gsutil/
+    
+    # --- CONSISTENT FIX FOR GSUTIL PYTHON PATH (NEW APPROACH) ---
+    PYTHON3_ACTUAL_PATH="/usr/bin/python3.11" # This is the verified working path
+
+    echo "Modifying gsutil wrapper script to use $PYTHON3_ACTUAL_PATH for gsutil.py..."
+    
+    # Rename original gsutil to backup
+    mv "$GSUTIL_INSTALL_ROOT"/gsutil "$GSUTIL_INSTALL_ROOT"/gsutil.original_wrapper || true
+    
+    # Create custom gsutil wrapper
+    cat > "$GSUTIL_INSTALL_ROOT"/gsutil << 'EOF'
+#!/bin/bash
+# This is a custom gsutil wrapper for Container-Optimized OS
+# to ensure it uses the correct Python interpreter.
+# The actual Python script is gsutil.py in the same directory.
+
+PYTHON_INTERPRETER="/usr/bin/python3.11"
+GSUTIL_PYTHON_SCRIPT="$(dirname "$0")/gsutil.py"
+GSUTIL_INSTALL_DIR="$(dirname "$0")"
+
+# Ensure gsutil can find its bundled dependencies
+# This is crucial for gsutil to load modules from its third_party directory
+export PYTHONPATH="${GSUTIL_INSTALL_DIR}:${GSUTIL_INSTALL_DIR}/gslib:${GSUTIL_INSTALL_DIR}/third_party"
+
+exec "$PYTHON_INTERPRETER" "$GSUTIL_PYTHON_SCRIPT" "$@"
+EOF
+    
+    chmod +x "$GSUTIL_INSTALL_ROOT"/gsutil
+    echo "✅ Custom gsutil wrapper created."
+    # --- END CONSISTENT FIX ---
+    
+    # Create symlink in /mnt/stateful_partition/bin (writable location)
+    mkdir -p "$GSUTIL_BIN_DIR"
+    if ! ln -sf "$GSUTIL_INSTALL_ROOT"/gsutil "$GSUTIL_SYMLINK_PATH"; then
+        echo "❌ Failed to create symlink"
+        exit 1
+    fi
+    
+    echo "Created symlink: $(ls -la "$GSUTIL_SYMLINK_PATH")"
+    
+    rm -f gsutil.tar.gz
+    cd /
+    echo "✅ Minimal gsutil installed"
+else
+    echo "gsutil already installed at $GSUTIL_SYMLINK_PATH. Skipping installation."
+    # For existing installations, ensure the custom wrapper is in place
+    # This check ensures it's idempotent
+    if ! grep -q "Custom gsutil wrapper for Container-Optimized OS" "$GSUTIL_INSTALL_ROOT"/gsutil 2>/dev/null; then
+        echo "Updating existing gsutil wrapper to ensure correct Python interpreter."
+        mv "$GSUTIL_INSTALL_ROOT"/gsutil "$GSUTIL_INSTALL_ROOT"/gsutil.original_wrapper_backup || true
+        cat > "$GSUTIL_INSTALL_ROOT"/gsutil << 'EOF'
+#!/bin/bash
+# This is a custom gsutil wrapper for Container-Optimized OS
+# to ensure it uses the correct Python interpreter.
+# The actual Python script is gsutil.py in the same directory.
+
+PYTHON_INTERPRETER="/usr/bin/python3.11"
+GSUTIL_PYTHON_SCRIPT="$(dirname "$0")/gsutil.py"
+GSUTIL_INSTALL_DIR="$(dirname "$0")"
+
+export PYTHONPATH="${GSUTIL_INSTALL_DIR}:${GSUTIL_INSTALL_DIR}/gslib:${GSUTIL_INSTALL_DIR}/third_party"
+
+exec "$PYTHON_INTERPRETER" "$GSUTIL_PYTHON_SCRIPT" "$@"
+EOF
+        chmod +x "$GSUTIL_INSTALL_ROOT"/gsutil
+        echo "✅ Existing gsutil wrapper updated."
+    fi
+fi
+
+# Always export PATH for subsequent commands in this script and its children
+export PATH=$PATH:$GSUTIL_BIN_DIR
+echo "Added $GSUTIL_BIN_DIR to PATH: $PATH"
+
+# --- TEST GSUTIL AFTER INSTALLATION AND PATH SETUP ---
+echo "Testing gsutil installation and execution..."
+# Test if the command can be found in PATH
+GSUTIL_COMMAND_PATH=$(command -v gsutil)
+if [ -z "$GSUTIL_COMMAND_PATH" ]; then
+    echo "❌ gsutil command still not found in PATH after installation!"
+    echo "Current PATH: $PATH"
+    ls -la "$GSUTIL_SYMLINK_PATH"
+    exit 1
+else
+    echo "✅ gsutil found in PATH at: $GSUTIL_COMMAND_PATH"
+    # Attempt to run gsutil version. Redirect stderr to stdout for fuller error messages.
+    if "$GSUTIL_COMMAND_PATH" version &> /dev/null; then
+        echo "✅ gsutil test successful: $("$GSUTIL_COMMAND_PATH" version | head -n 1)"
+    else
+        echo "❌ gsutil command found but failed to execute 'gsutil version' internally."
+        echo "Detailed gsutil error output:"
+        "$GSUTIL_COMMAND_PATH" version || true
+        exit 1
+    fi
+fi
+# --- END TEST BLOCK ---
 
 # --- 2. Meilisearch Setup ---
 echo "Creating directories for Meilisearch..."
@@ -139,10 +280,24 @@ cat > /var/lib/meilisearch/check_snapshots.sh << 'EOF'
 #!/bin/bash
 set -e
 
+# Define the absolute path to gsutil in the cron script too!
+GSUTIL_BIN_DIR="/mnt/stateful_partition/bin"
+GSUTIL_SYMLINK_PATH="${GSUTIL_BIN_DIR}/gsutil"
+
+# Path to the actual extracted gsutil directory
+GSUTIL_INSTALL_ROOT="/mnt/stateful_partition/gsutil"
+
+# Ensure PATH is set for this script
+export PATH="$PATH:$GSUTIL_BIN_DIR"
+
+# Ensure gsutil can find its bundled dependencies for this cron execution
+# This is crucial for gsutil to load modules from its third_party directory
+export PYTHONPATH="${GSUTIL_INSTALL_ROOT}:${GSUTIL_INSTALL_ROOT}/gslib:${GSUTIL_INSTALL_ROOT}/third_party"
+
 echo "$(date): Checking for new snapshots..."
 
 # Get latest snapshot from GCS (sorted by timestamp)
-LATEST_SNAPSHOT_DIR=$(gsutil ls gs://aoe2-site-data/snapshots/ 2>/dev/null | grep -E '[0-9]{8}-[0-9]{6}/$' | sort | tail -1 | sed 's|/$||' || echo "")
+LATEST_SNAPSHOT_DIR=$("$GSUTIL_SYMLINK_PATH" ls gs://aoe2-site-data/snapshots/ 2>/dev/null | grep -E '[0-9]{8}-[0-9]{6}/$' | sort | tail -1 | sed 's|/$||' || echo "")
 
 if [ -z "$LATEST_SNAPSHOT_DIR" ]; then
     echo "No snapshots found in GCS"
@@ -151,7 +306,7 @@ fi
 
 # Check if data.snapshot exists in the latest directory
 SNAPSHOT_PATH="${LATEST_SNAPSHOT_DIR}/data.snapshot"
-if ! gsutil ls "$SNAPSHOT_PATH" >/dev/null 2>&1; then
+if ! "$GSUTIL_SYMLINK_PATH" -q stat "$SNAPSHOT_PATH" >/dev/null 2>&1; then
     echo "Latest directory $LATEST_SNAPSHOT_DIR does not contain data.snapshot"
     exit 0
 fi
@@ -164,7 +319,7 @@ echo "Latest snapshot directory: $SNAPSHOT_DIR"
 
 # Download latest fingerprint
 TEMP_FINGERPRINT="/tmp/latest_fingerprint.txt"
-gsutil cp "$LATEST_FINGERPRINT_PATH" "$TEMP_FINGERPRINT" 2>/dev/null || {
+"$GSUTIL_SYMLINK_PATH" cp "$LATEST_FINGERPRINT_PATH" "$TEMP_FINGERPRINT" 2>/dev/null || {
     echo "Could not download fingerprint"
     exit 1
 }
@@ -204,14 +359,14 @@ if [ -f "/var/lib/meilisearch/data/snapshots/latest.metadata.json" ]; then
 fi
 
 # Download new snapshot
-gsutil cp "$SNAPSHOT_PATH" /var/lib/meilisearch/data/snapshots/latest.snapshot
+"$GSUTIL_SYMLINK_PATH" cp "$SNAPSHOT_PATH" /var/lib/meilisearch/data/snapshots/latest.snapshot
 
 # Download new fingerprint
-gsutil cp "$LATEST_FINGERPRINT_PATH" /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt
+"$GSUTIL_SYMLINK_PATH" cp "$LATEST_FINGERPRINT_PATH" /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt
 
 # Download new metadata
 METADATA_PATH="gs://aoe2-site-data/${SNAPSHOT_DIR}/metadata.json"
-gsutil cp "$METADATA_PATH" /var/lib/meilisearch/data/snapshots/latest.metadata.json
+"$GSUTIL_SYMLINK_PATH" cp "$METADATA_PATH" /var/lib/meilisearch/data/snapshots/latest.metadata.json
 
 # Start Meilisearch
 docker start meilisearch
