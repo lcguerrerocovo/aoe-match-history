@@ -6,9 +6,6 @@ on:
       - 'aoe-search/deploy-vm.sh'
       - 'aoe-search/startup.sh'
       - '.github/workflows/deploy-aoe-search.yml'
-  workflow_dispatch:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM
 
 jobs:
   deploy-aoe-search-vm:
@@ -83,24 +80,18 @@ jobs:
           echo "snapshot_dir=${LATEST_SNAPSHOT_DIR}" >> $GITHUB_OUTPUT
           echo "fingerprint=$(cat ./latest-snapshot/fingerprint.txt 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
       
-      - name: Setup SSH key
-        run: |
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/vm_key
-          chmod 600 ~/.ssh/vm_key
-          ssh-keyscan -H ${{ steps.vm-ip.outputs.vm_external_ip }} >> ~/.ssh/known_hosts
-      
       - name: Upload snapshot to VM
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
           # Create snapshot directory on VM
-          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "sudo mkdir -p /var/lib/meilisearch/data/snapshots"
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /var/lib/meilisearch/data/snapshots"
           
-          # Upload snapshot files
-          scp -i ~/.ssh/vm_key ./latest-snapshot/* ${{ secrets.VM_USER }}@$EXTERNAL_IP:/tmp/
+          # Upload snapshot files using gcloud compute scp
+          gcloud compute scp --zone=us-central1-a ./latest-snapshot/* aoe-search:/tmp/
           
           # Move files to proper location and set permissions
-          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
             sudo mv /tmp/data.snapshot /var/lib/meilisearch/data/snapshots/latest.snapshot
             sudo mv /tmp/fingerprint.txt /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
             sudo mv /tmp/metadata.json /var/lib/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
@@ -110,9 +101,7 @@ jobs:
       
       - name: Restart Meilisearch with new snapshot
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          
-          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
             # Stop Meilisearch if running
             sudo docker stop meilisearch 2>/dev/null || true
             sudo docker rm meilisearch 2>/dev/null || true
@@ -141,9 +130,7 @@ jobs:
       
       - name: Verify deployment
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          
-          ssh -i ~/.ssh/vm_key ${{ secrets.VM_USER }}@$EXTERNAL_IP "
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
             # Check if Meilisearch is running
             if sudo docker ps | grep -q meilisearch; then
               echo '✅ Meilisearch is running'
