@@ -1,23 +1,6 @@
 #!/bin/bash
 set -e
 
-# Debug: Check service account and GCS access
-echo "Checking service account..."
-gcloud auth list
-echo "Testing GCS access..."
-gsutil ls gs://aoe2-site-data/ || echo "GCS access failed"
-
-# Debug: Check specific file access
-echo "Testing specific file access..."
-gsutil ls gs://aoe2-site-data/active_players.jsonl || echo "active_players.jsonl not found or no access"
-
-# Debug: Check bucket permissions
-echo "Checking bucket permissions..."
-gsutil iam get gs://aoe2-site-data/ || echo "Cannot get bucket IAM"
-
-# Use default service account (Cloud Run provides this automatically)
-echo "Using default service account authentication..."
-
 # Debug: Check PATH and Meilisearch binary
 echo "PATH: $PATH"
 echo "Checking Meilisearch binary..."
