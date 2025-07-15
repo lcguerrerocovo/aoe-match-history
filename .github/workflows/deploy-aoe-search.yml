@@ -3,10 +3,10 @@ name: Deploy AOE Search VM
 on:
   push:
     paths:
-      - 'aoe-search/**'
-    paths-ignore:
-      - 'aoe-search/meilisearch_config.json'
-  workflow_dispatch:
+      - 'aoe-search/deploy-vm.sh'
+      - 'aoe-search/startup.sh'
+      - 'aoe-search/check-snapshots.sh'
+      - '.github/workflows/deploy-aoe-search.yml'
 
 jobs:
   deploy-aoe-search-vm:
