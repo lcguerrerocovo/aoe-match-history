@@ -73,7 +73,7 @@ jobs:
       
 
       
-      - name: Upload snapshot and restart VM
+      - name: Upload snapshot and restart Docker
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
@@ -92,13 +92,41 @@ jobs:
             sudo chmod 644 /mnt/stateful_partition/meilisearch/snapshots/*
           "
           
-          # Restart VM to trigger startup script with snapshot detection
-          echo "🔄 Restarting VM to load snapshot via startup script..."
-          gcloud compute instances stop aoe-search --zone=us-central1-a
-          gcloud compute instances start aoe-search --zone=us-central1-a
+          # Restart Docker container to load snapshot
+          echo "🔄 Restarting Docker container to load snapshot..."
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            sudo docker restart meilisearch
+          "
           
-          echo "⏳ Waiting for VM to restart and startup script to complete..."
-          sleep 30
+          echo "⏳ Waiting for Docker restart to complete..."
+          sleep 10
+          
+          # Apply settings after snapshot is loaded
+          echo "🔧 Applying index settings after snapshot load..."
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            # Wait for Meilisearch to be ready after restart
+            until curl -f http://localhost:7700/health >/dev/null 2>&1; do
+              echo 'Waiting for Meilisearch to be ready...'
+              sleep 3
+            done
+            
+            # Get config from VM metadata and apply settings
+            MEILI_CONFIG=\$(curl -s \"http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config\" -H \"Metadata-Flavor: Google\")
+            SETTINGS_RESPONSE=\$(curl -X PATCH 'http://localhost:7700/indexes/players/settings' \\
+              -H 'Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}' \\
+              -H 'Content-Type: application/json' \\
+              --data-binary \"\$MEILI_CONFIG\")
+            
+            # Wait for settings task to complete
+            SETTINGS_TASK_UID=\$(echo \"\$SETTINGS_RESPONSE\" | jq -r '.taskUid // empty')
+            if [ -n \"\$SETTINGS_TASK_UID\" ]; then
+              echo \"⏳ Waiting for settings to apply (task \$SETTINGS_TASK_UID)...\"
+              until [ \"\$(curl -s -H \\\"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\\\" http://localhost:7700/tasks/\$SETTINGS_TASK_UID | jq -r '.status')\" = \"succeeded\" ]; do
+                sleep 3
+              done
+              echo \"✅ Settings applied successfully\"
+            fi
+          "
       
       - name: Verify deployment
         run: |

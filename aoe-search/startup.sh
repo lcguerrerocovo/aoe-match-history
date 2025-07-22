@@ -6,178 +6,97 @@ echo "--- Meilisearch VM Startup Script ---"
 
 # --- Configuration ---
 MEILI_MASTER_KEY=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key" -H "Metadata-Flavor: Google" || echo "a-default-dev-only-master-key")
+MEILI_CONFIG=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config" -H "Metadata-Flavor: Google" 2>/dev/null || echo "")
 
 # --- 1. System Setup ---
-echo "COS detected - Docker is pre-installed"
-echo "Checking Docker status..."
+echo "Setting up system..."
 
-# COS comes with Docker pre-installed, just ensure it's running
-systemctl status docker || echo "Docker not running, starting it..."
+# Ensure Docker is running
 systemctl start docker || echo "Docker start failed, but continuing..."
 
-# Install jq if not available (COS might not have it)
+# Install jq if needed
 if ! command -v jq &> /dev/null; then
     echo "Installing jq..."
-    curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /usr/local/bin/jq || {
-        echo "⚠️ Failed to install jq to /usr/local/bin. Trying /tmp/jq and adding to PATH temporarily."
-        curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /tmp/jq
-        chmod +x /tmp/jq
-        export PATH=$PATH:/tmp
-    }
-    [ -f "/usr/local/bin/jq" ] && chmod +x /usr/local/bin/jq
+    curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o /usr/local/bin/jq
+    chmod +x /usr/local/bin/jq
 fi
 
-# --- 2. Meilisearch Setup ---
-echo "Creating directories for Meilisearch..."
-# Use persistent storage that survives VM restarts
+# --- 2. Create Directories ---
+echo "Creating persistent directories..."
 mkdir -p /mnt/stateful_partition/meilisearch/data
 mkdir -p /mnt/stateful_partition/meilisearch/snapshots
-chmod 755 /mnt/stateful_partition/meilisearch
 chmod 755 /mnt/stateful_partition/meilisearch/data
 chmod 755 /mnt/stateful_partition/meilisearch/snapshots
 
-# --- 3. Start Meilisearch ---
-echo "Starting Meilisearch via Docker..."
+# --- 3. Stop and Remove Existing Container ---
+echo "Cleaning up existing container..."
+docker stop meilisearch 2>/dev/null || true
+docker rm meilisearch 2>/dev/null || true
 
-# Check if container already exists and remove it
-if docker ps -a --format "table {{.Names}}" | grep -q "^meilisearch$"; then
-    echo "Removing existing meilisearch container..."
-    docker stop meilisearch 2>/dev/null || true
-    docker rm meilisearch 2>/dev/null || true
-fi
+# --- 4. Start Meilisearch ---
+echo "Starting Meilisearch..."
+docker run -d \
+  --name meilisearch \
+  --restart unless-stopped \
+  -p 7700:7700 \
+  -e MEILI_ENV=production \
+  -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
+  -v /mnt/stateful_partition/meilisearch/data:/meili_data \
+  -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
+  getmeili/meilisearch:v1.7
 
-# Always remove existing database to ensure clean start
-# This prevents corruption issues and ensures snapshot import works properly
-if [ -d "/mnt/stateful_partition/meilisearch/data/data.ms" ]; then
-    echo "Removing existing database for clean start..."
-    rm -rf /mnt/stateful_partition/meilisearch/data/data.ms
-fi
+echo "✅ Meilisearch container started"
 
-# Check for existing snapshot and start accordingly
-if [ -f "/mnt/stateful_partition/meilisearch/snapshots/latest.snapshot" ]; then
-    echo "✅ Found existing snapshot, starting with snapshot import"
-    
-    # Start Meilisearch with snapshot import
-    docker run -d \
-      --name meilisearch \
-      --restart unless-stopped \
-      -p 7700:7700 \
-      -e MEILI_ENV=production \
-      -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
-      -v /mnt/stateful_partition/meilisearch/data:/meili_data \
-      -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
-      getmeili/meilisearch:v1.7 \
-      meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
-    
-    echo "✅ Meilisearch started with snapshot"
-else
-    echo "⚠️ No existing snapshot found, starting with empty index"
-    
-    # Start Meilisearch normally
-    docker run -d \
-      --name meilisearch \
-      --restart unless-stopped \
-      -p 7700:7700 \
-      -e MEILI_ENV=production \
-      -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
-      -v /mnt/stateful_partition/meilisearch/data:/meili_data \
-      -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
-      getmeili/meilisearch:v1.7
-fi
-
-# --- 5. Meilisearch Configuration ---
-echo "Waiting for Meilisearch to start..."
-# Wait for the container to be running
-until [ "$(docker inspect -f {{.State.Status}} meilisearch)" == "running" ]; do
-    echo "Meilisearch container is starting..."
-    sleep 3
-done;
-
-# Wait for the service to be responsive
-echo "Waiting for Meilisearch to be responsive..."
+# --- 5. Wait for Meilisearch to be Ready ---
+echo "Waiting for Meilisearch to be ready..."
 until curl -f http://localhost:7700/health > /dev/null 2>&1; do
-    echo "Meilisearch is starting..."
+    echo "Meilisearch starting..."
     sleep 3
-done;
-echo "✅ Meilisearch is healthy."
+done
+echo "✅ Meilisearch is healthy"
 
-# Set up index configuration
-echo "📝 Setting up index configuration..."
-
-# Fetch the index configuration from the VM's metadata
-if ! curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config" -H "Metadata-Flavor: Google" > /var/lib/meilisearch/index_config.json; then
-    echo "❌ Failed to fetch index configuration from metadata"
-    exit 1
-fi
-
-# Check if index already exists (from snapshot import)
-INDEX_RESPONSE=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players 2>/dev/null)
-if echo "$INDEX_RESPONSE" | grep -q '"indexUid":"players"'; then
-    echo "✅ Index 'players' already exists (from snapshot)"
-else
-    echo "Creating new index..."
+# --- 6. Wait for All Tasks to Complete ---
+echo "Waiting for all pending tasks to complete..."
+for i in {1..60}; do
+    PENDING_TASKS=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks | jq -r '.results[] | select(.status == "enqueued" or .status == "processing") | .uid' | head -5)
     
-    # Extract primaryKey from the config to create the index first
-    PRIMARY_KEY=$(grep -o '"primaryKey": *"[^"]*"' /var/lib/meilisearch/index_config.json | cut -d'"' -f4)
+    if [ -z "$PENDING_TASKS" ]; then
+        echo "✅ No pending tasks found"
+        break
+    else
+        echo "⏳ Waiting for tasks: $PENDING_TASKS"
+        sleep 5
+    fi
+done
 
-    echo "Creating index 'players' with primary key '${PRIMARY_KEY}'..."
-    if ! curl -X POST 'http://localhost:7700/indexes' \
+# --- 7. Create Index if Needed ---
+echo "Checking if index exists..."
+INDEX_EXISTS=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players 2>/dev/null | jq -r '.uid // empty')
+
+if [ -z "$INDEX_EXISTS" ]; then
+    echo "Creating players index..."
+    CREATE_RESPONSE=$(curl -X POST 'http://localhost:7700/indexes' \
       -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
       -H 'Content-Type: application/json' \
-      --data-binary "{\"uid\": \"players\", \"primaryKey\": \"${PRIMARY_KEY:-profile_id}\"}"; then
-        echo "❌ Failed to create index"
-        exit 1
+      --data-binary '{"uid": "players", "primaryKey": "profile_id"}')
+    
+    CREATE_TASK_UID=$(echo "$CREATE_RESPONSE" | jq -r '.taskUid // empty')
+    if [ -n "$CREATE_TASK_UID" ]; then
+        echo "⏳ Waiting for index creation..."
+        until [ "$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks/$CREATE_TASK_UID | jq -r '.status')" = "succeeded" ]; do
+            sleep 3
+        done
+        echo "✅ Index created"
     fi
-fi
-
-# Always apply index settings (snapshots don't include settings, only documents)
-echo "Applying index settings..."
-# Create a settings-only config by removing uid and primaryKey fields
-jq 'del(.uid, .primaryKey)' /var/lib/meilisearch/index_config.json > /var/lib/meilisearch/settings_config.json
-
-# Use PATCH to apply settings to the existing index
-SETTINGS_RESPONSE=$(curl -X PATCH "http://localhost:7700/indexes/players/settings" \
-  -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/var/lib/meilisearch/settings_config.json)
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to apply index settings"
-    exit 1
-fi
-
-# Extract task UID from response and wait for completion
-TASK_UID=$(echo "$SETTINGS_RESPONSE" | jq -r '.taskUid // empty')
-if [ -n "$TASK_UID" ]; then
-    echo "⏳ Waiting for settings update task $TASK_UID to complete..."
-    until [ "$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks/$TASK_UID | jq -r '.status')" = "succeeded" ]; do
-        echo "Settings task still processing..."
-        sleep 3
-    done
-    echo "✅ Settings update completed successfully"
 else
-    echo "⚠️ No task UID returned, assuming settings applied immediately"
+    echo "✅ Index already exists"
 fi
 
-# Final verification
-echo "Verifying setup..."
-if curl -f "http://localhost:7700/health" > /dev/null 2>&1; then
-    echo "✅ Meilisearch is healthy."
-    
-    # Check if index has data (for snapshot verification)
-    DOC_COUNT=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players/stats 2>/dev/null | jq -r '.numberOfDocuments // 0' 2>/dev/null || echo "0")
-    echo "📊 Index contains $DOC_COUNT documents"
-    
-    if [ "$DOC_COUNT" -gt 0 ]; then
-        echo "✅ Snapshot data loaded successfully"
-    else
-        echo "ℹ️ Index is empty (no snapshot imported or empty snapshot)"
-    fi
-    
-    echo "✅ Startup script finished successfully."
-else
-    echo "❌ Meilisearch health check failed after setup"
-    exit 1
-fi
+# --- 8. Initial Verification ---
+echo "Initial verification..."
+DOC_COUNT=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players/stats | jq -r '.numberOfDocuments // 0')
+
+echo "📊 Documents: $DOC_COUNT"
+echo "✅ Startup script completed - settings will be applied after snapshot loading"
 
 echo "--- Startup Script Finished ---"
