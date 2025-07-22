@@ -130,6 +130,31 @@ jobs:
           
           echo "⏳ Waiting for Meilisearch to start with new snapshot..."
           sleep 10
+          
+          # Apply index configuration (snapshots don't include settings)
+          echo "📝 Applying index configuration after snapshot import..."
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            # Get master key from metadata
+            MASTER_KEY=\$(curl -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key)
+            
+            # Fetch and apply configuration (same as startup script logic)
+            curl 'http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config' -H 'Metadata-Flavor: Google' > /tmp/index_config.json
+            jq 'del(.uid, .primaryKey)' /tmp/index_config.json > /tmp/settings_config.json
+            
+            # Wait for Meilisearch to be ready
+            until curl -f http://localhost:7700/health >/dev/null 2>&1; do
+              echo 'Waiting for Meilisearch to be ready...'
+              sleep 3
+            done
+            
+            # Apply settings
+            curl -X PATCH 'http://localhost:7700/indexes/players/settings' \
+              -H \"Authorization: Bearer \$MASTER_KEY\" \
+              -H 'Content-Type: application/json' \
+              --data-binary @/tmp/settings_config.json
+              
+            echo '✅ Index configuration applied'
+          "
       
       - name: Verify deployment
         run: |
