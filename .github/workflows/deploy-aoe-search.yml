@@ -73,49 +73,81 @@ jobs:
       
 
       
-      - name: Upload snapshot to VM
+      - name: Upload snapshot and restart Meilisearch
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
-          # Create snapshot directory on VM (persistent storage)
-          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/data/snapshots"
+          # Create snapshot directory on VM
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /var/lib/meilisearch/data/snapshots"
           
           # Upload snapshot files using gcloud compute scp
           gcloud compute scp --zone=us-central1-a ./latest-snapshot/* aoe-search:/tmp/
           
-          # Move files to persistent storage location
+          # Move files to Meilisearch data directory
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            sudo mv /tmp/data.snapshot /mnt/stateful_partition/meilisearch/data/snapshots/latest.snapshot
-            sudo mv /tmp/fingerprint.txt /mnt/stateful_partition/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
-            sudo mv /tmp/metadata.json /mnt/stateful_partition/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
-            sudo chown -R root:root /mnt/stateful_partition/meilisearch/data/snapshots/
-            sudo chmod 644 /mnt/stateful_partition/meilisearch/data/snapshots/*
+            sudo mv /tmp/data.snapshot /var/lib/meilisearch/data/snapshots/latest.snapshot
+            sudo mv /tmp/fingerprint.txt /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
+            sudo mv /tmp/metadata.json /var/lib/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
+            sudo chown -R root:root /var/lib/meilisearch/data/snapshots/
+            sudo chmod 644 /var/lib/meilisearch/data/snapshots/*
           "
-      
-      - name: Restart VM to apply new snapshot
-        run: |
-          echo "🔄 Restarting VM to load new snapshot..."
-          gcloud compute instances reset aoe-search --zone=us-central1-a
           
-          echo "⏳ Waiting for VM to restart and startup script to complete..."
-          sleep 30
-          
-          # Wait for VM to be accessible again
-          for i in {1..30}; do
-            if gcloud compute ssh aoe-search --zone=us-central1-a --command="echo 'VM is ready'" >/dev/null 2>&1; then
-              echo "✅ VM is accessible"
-              break
+          # Restart container with startup script logic
+          echo "🔄 Restarting Meilisearch container to load new snapshot..."
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            # Stop and remove container completely to trigger fresh startup logic
+            sudo docker stop meilisearch 2>/dev/null || true
+            sudo docker rm meilisearch 2>/dev/null || true
+            
+            # Get master key from metadata
+            MASTER_KEY=\$(curl -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key)
+            
+            # Use the same startup script logic to detect and import snapshot
+            if [ -f '/var/lib/meilisearch/data/snapshots/latest.snapshot' ]; then
+                echo 'Found snapshot, starting with import'
+                sudo rm -rf /var/lib/meilisearch/data/data.ms
+                sudo docker run -d \\
+                  --name meilisearch \\
+                  --restart unless-stopped \\
+                  -p 7700:7700 \\
+                  -e MEILI_ENV=production \\
+                  -e MEILI_MASTER_KEY=\$MASTER_KEY \\
+                  -v /var/lib/meilisearch/data:/meili_data \\
+                  getmeili/meilisearch:v1.7 \\
+                  meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
+            else
+                echo 'No snapshot found, starting normally'
+                sudo docker run -d \\
+                  --name meilisearch \\
+                  --restart unless-stopped \\
+                  -p 7700:7700 \\
+                  -e MEILI_ENV=production \\
+                  -e MEILI_MASTER_KEY=\$MASTER_KEY \\
+                  -v /var/lib/meilisearch/data:/meili_data \\
+                  getmeili/meilisearch:v1.7
             fi
-            echo "Waiting for VM... (attempt $i/30)"
-            sleep 10
-          done
+          "
+          
+          echo "⏳ Waiting for Meilisearch to start with new snapshot..."
+          sleep 10
       
       - name: Verify deployment
         run: |
+          echo "⏳ Waiting for Meilisearch to be ready..."
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            # Wait for container to be running and healthy
+            for i in {1..30}; do
+              if sudo docker ps | grep -q meilisearch && curl -f http://localhost:7700/health >/dev/null 2>&1; then
+                echo '✅ Meilisearch is running and healthy'
+                break
+              fi
+              echo \"Waiting for Meilisearch... (attempt \$i/30)\"
+              sleep 5
+            done
+            
             # Check if Meilisearch is running
             if sudo docker ps | grep -q meilisearch; then
-              echo '✅ Meilisearch is running'
+              echo '✅ Meilisearch container is running'
               
               # Check if snapshot was loaded
               if [ -f '/var/lib/meilisearch/data/snapshots/latest.fingerprint.txt' ]; then

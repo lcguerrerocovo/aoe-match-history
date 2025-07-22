@@ -29,15 +29,10 @@ fi
 
 # --- 2. Meilisearch Setup ---
 echo "Creating directories for Meilisearch..."
-# Use persistent storage location that survives reboots
-mkdir -p /mnt/stateful_partition/meilisearch/data/snapshots
-mkdir -p /var/lib/meilisearch/data
-# Create symlink from ephemeral to persistent storage (remove target first to prevent recursive symlinks)
-rm -rf /var/lib/meilisearch/data/snapshots
-ln -sf /mnt/stateful_partition/meilisearch/data/snapshots /var/lib/meilisearch/data/snapshots
-chmod 755 /mnt/stateful_partition/meilisearch
-chmod 755 /mnt/stateful_partition/meilisearch/data
-chmod 755 /mnt/stateful_partition/meilisearch/data/snapshots
+mkdir -p /var/lib/meilisearch/data/snapshots
+chmod 755 /var/lib/meilisearch
+chmod 755 /var/lib/meilisearch/data
+chmod 755 /var/lib/meilisearch/data/snapshots
 
 # --- 3. Start Meilisearch ---
 echo "Starting Meilisearch via Docker..."
