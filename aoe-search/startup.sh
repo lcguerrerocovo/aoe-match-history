@@ -29,12 +29,12 @@ fi
 
 # --- 2. Meilisearch Setup ---
 echo "Creating directories for Meilisearch..."
-# Remove any existing broken symlinks or directories
-rm -rf /var/lib/meilisearch/data/snapshots
-mkdir -p /var/lib/meilisearch/data/snapshots
-chmod 755 /var/lib/meilisearch
-chmod 755 /var/lib/meilisearch/data
-chmod 755 /var/lib/meilisearch/data/snapshots
+# Use persistent storage that survives VM restarts
+mkdir -p /mnt/stateful_partition/meilisearch/data
+mkdir -p /mnt/stateful_partition/meilisearch/snapshots
+chmod 755 /mnt/stateful_partition/meilisearch
+chmod 755 /mnt/stateful_partition/meilisearch/data
+chmod 755 /mnt/stateful_partition/meilisearch/snapshots
 
 # --- 3. Start Meilisearch ---
 echo "Starting Meilisearch via Docker..."
@@ -48,20 +48,14 @@ fi
 
 # Always remove existing database to ensure clean start
 # This prevents corruption issues and ensures snapshot import works properly
-if [ -d "/var/lib/meilisearch/data/data.ms" ]; then
+if [ -d "/mnt/stateful_partition/meilisearch/data/data.ms" ]; then
     echo "Removing existing database for clean start..."
-    rm -rf /var/lib/meilisearch/data/data.ms
+    rm -rf /mnt/stateful_partition/meilisearch/data/data.ms
 fi
 
 # Check for existing snapshot and start accordingly
-if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
+if [ -f "/mnt/stateful_partition/meilisearch/snapshots/latest.snapshot" ]; then
     echo "✅ Found existing snapshot, starting with snapshot import"
-    
-    # Remove existing database if it exists
-    if [ -d "/var/lib/meilisearch/data/data.ms" ]; then
-        echo "Removing existing database to import snapshot..."
-        rm -rf /var/lib/meilisearch/data/data.ms
-    fi
     
     # Start Meilisearch with snapshot import
     docker run -d \
@@ -70,7 +64,8 @@ if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
       -p 7700:7700 \
       -e MEILI_ENV=production \
       -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
-      -v /var/lib/meilisearch/data:/meili_data \
+      -v /mnt/stateful_partition/meilisearch/data:/meili_data \
+      -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
       getmeili/meilisearch:v1.7 \
       meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
     
@@ -85,7 +80,8 @@ else
       -p 7700:7700 \
       -e MEILI_ENV=production \
       -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
-      -v /var/lib/meilisearch/data:/meili_data \
+      -v /mnt/stateful_partition/meilisearch/data:/meili_data \
+      -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
       getmeili/meilisearch:v1.7
 fi
 
@@ -140,12 +136,27 @@ echo "Applying index settings..."
 jq 'del(.uid, .primaryKey)' /var/lib/meilisearch/index_config.json > /var/lib/meilisearch/settings_config.json
 
 # Use PATCH to apply settings to the existing index
-if ! curl -X PATCH "http://localhost:7700/indexes/players/settings" \
+SETTINGS_RESPONSE=$(curl -X PATCH "http://localhost:7700/indexes/players/settings" \
   -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
   -H 'Content-Type: application/json' \
-  --data-binary @/var/lib/meilisearch/settings_config.json; then
+  --data-binary @/var/lib/meilisearch/settings_config.json)
+
+if [ $? -ne 0 ]; then
     echo "❌ Failed to apply index settings"
     exit 1
+fi
+
+# Extract task UID from response and wait for completion
+TASK_UID=$(echo "$SETTINGS_RESPONSE" | jq -r '.taskUid // empty')
+if [ -n "$TASK_UID" ]; then
+    echo "⏳ Waiting for settings update task $TASK_UID to complete..."
+    until [ "$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks/$TASK_UID | jq -r '.status')" = "succeeded" ]; do
+        echo "Settings task still processing..."
+        sleep 3
+    done
+    echo "✅ Settings update completed successfully"
+else
+    echo "⚠️ No task UID returned, assuming settings applied immediately"
 fi
 
 # Final verification
