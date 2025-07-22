@@ -441,6 +441,7 @@ The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
 - `roles/iam.serviceAccountUser` - Act as the service account
 - `roles/datastore.user` - Access Firestore for session management
 - `roles/compute.viewer` - View compute instances (for Meilisearch VM detection)
+- `roles/cloudbuild.builds.editor` - Build containers from source for Cloud Run deployment
 
 Grant roles:
 ```bash
@@ -460,6 +461,10 @@ gcloud projects add-iam-policy-binding aoe2-site \
 gcloud projects add-iam-policy-binding aoe2-site \
   --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
   --role="roles/storage.admin"
+
+gcloud projects add-iam-policy-binding aoe2-site \
+  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+  --role="roles/cloudbuild.builds.editor"
 
 # Meilisearch VM deployment roles
 gcloud projects add-iam-policy-binding aoe2-site \
