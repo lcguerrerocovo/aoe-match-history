@@ -7,9 +7,8 @@ ZONE="${GCP_ZONE:-us-central1-a}"
 VM_NAME="${SEARCH_VM_NAME:-aoe-search}"
 MEILI_MASTER_KEY="${MEILI_MASTER_KEY:-a-secure-master-key-change-this}"
 
-# Config file paths
+# Startup script path
 STARTUP_SCRIPT="./startup.sh"
-MEILI_CONFIG="./meilisearch_config.json"
 
 echo "🚀 Deploying Meilisearch VM..."
 echo "   Project: $PROJECT_ID"
@@ -24,7 +23,7 @@ if gcloud compute instances describe "$VM_NAME" --zone="$ZONE" --project="$PROJE
     gcloud compute instances add-metadata "$VM_NAME" \
       --project="$PROJECT_ID" \
       --zone="$ZONE" \
-      --metadata-from-file="startup-script=$STARTUP_SCRIPT,meili_config=$MEILI_CONFIG" \
+      --metadata-from-file="startup-script=$STARTUP_SCRIPT" \
       --metadata="meili_master_key=$MEILI_MASTER_KEY"
     
     # Restart to apply new startup script
@@ -47,7 +46,7 @@ else
       --boot-disk-type="pd-balanced" \
       --boot-disk-auto-delete \
       --labels="purpose=search,component=meilisearch,os=cos" \
-      --metadata-from-file="startup-script=$STARTUP_SCRIPT,meili_config=$MEILI_CONFIG" \
+      --metadata-from-file="startup-script=$STARTUP_SCRIPT" \
       --metadata="meili_master_key=$MEILI_MASTER_KEY"
 fi
 

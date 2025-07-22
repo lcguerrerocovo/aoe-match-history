@@ -411,6 +411,28 @@ def main():
                 logging.warning(f"⚠️ Could not clear tasks: {response.status_code}")
         except Exception as e:
             logging.warning(f"⚠️ Could not clear tasks: {e}")
+        
+        # Apply index settings
+        logging.info("Applying index settings...")
+        try:
+            # Load settings from config file
+            config_path = "/meilisearch_config.json"
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                
+                # Extract settings (everything except uid and primaryKey)
+                settings = {k: v for k, v in config.items() if k not in ['uid', 'primaryKey']}
+                
+                # Apply settings
+                task = index.update_settings(settings)
+                client.wait_for_task(task.task_uid, timeout_in_ms=30000)
+                logging.info("✅ Index settings applied successfully")
+            else:
+                logging.warning(f"⚠️ Config file not found at {config_path}")
+        except Exception as e:
+            logging.error(f"❌ Failed to apply settings: {e}")
+            sys.exit(1)
             
     except Exception as e:
         logging.error(f"❌ Could not connect to Meilisearch: {e}")

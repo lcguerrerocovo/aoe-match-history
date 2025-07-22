@@ -28,13 +28,17 @@ mkdir -p /mnt/stateful_partition/meilisearch/snapshots
 chmod 755 /mnt/stateful_partition/meilisearch/data
 chmod 755 /mnt/stateful_partition/meilisearch/snapshots
 
-# --- 3. Stop and Remove Existing Container ---
-echo "Cleaning up existing container..."
-docker stop meilisearch 2>/dev/null || true
-docker rm meilisearch 2>/dev/null || true
+# --- 3. Clean Database Directory ---
+echo "Cleaning database directory..."
+rm -rf /mnt/stateful_partition/meilisearch/data/*
 
 # --- 4. Start Meilisearch ---
 echo "Starting Meilisearch..."
+
+# Stop and remove existing container if it exists
+docker stop meilisearch 2>/dev/null || true
+docker rm meilisearch 2>/dev/null || true
+
 docker run -d \
   --name meilisearch \
   --restart unless-stopped \
@@ -47,56 +51,5 @@ docker run -d \
 
 echo "✅ Meilisearch container started"
 
-# --- 5. Wait for Meilisearch to be Ready ---
-echo "Waiting for Meilisearch to be ready..."
-until curl -f http://localhost:7700/health > /dev/null 2>&1; do
-    echo "Meilisearch starting..."
-    sleep 3
-done
-echo "✅ Meilisearch is healthy"
-
-# --- 6. Wait for All Tasks to Complete ---
-echo "Waiting for all pending tasks to complete..."
-for i in {1..60}; do
-    PENDING_TASKS=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks | jq -r '.results[] | select(.status == "enqueued" or .status == "processing") | .uid' | head -5)
-    
-    if [ -z "$PENDING_TASKS" ]; then
-        echo "✅ No pending tasks found"
-        break
-    else
-        echo "⏳ Waiting for tasks: $PENDING_TASKS"
-        sleep 5
-    fi
-done
-
-# --- 7. Create Index if Needed ---
-echo "Checking if index exists..."
-INDEX_EXISTS=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players 2>/dev/null | jq -r '.uid // empty')
-
-if [ -z "$INDEX_EXISTS" ]; then
-    echo "Creating players index..."
-    CREATE_RESPONSE=$(curl -X POST 'http://localhost:7700/indexes' \
-      -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
-      -H 'Content-Type: application/json' \
-      --data-binary '{"uid": "players", "primaryKey": "profile_id"}')
-    
-    CREATE_TASK_UID=$(echo "$CREATE_RESPONSE" | jq -r '.taskUid // empty')
-    if [ -n "$CREATE_TASK_UID" ]; then
-        echo "⏳ Waiting for index creation..."
-        until [ "$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/tasks/$CREATE_TASK_UID | jq -r '.status')" = "succeeded" ]; do
-            sleep 3
-        done
-        echo "✅ Index created"
-    fi
-else
-    echo "✅ Index already exists"
-fi
-
-# --- 8. Initial Verification ---
-echo "Initial verification..."
-DOC_COUNT=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players/stats | jq -r '.numberOfDocuments // 0')
-
-echo "📊 Documents: $DOC_COUNT"
-echo "✅ Startup script completed - settings will be applied after snapshot loading"
-
+echo "✅ Startup script completed"
 echo "--- Startup Script Finished ---"

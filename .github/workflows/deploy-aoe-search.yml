@@ -73,11 +73,11 @@ jobs:
       
 
       
-      - name: Upload snapshot and restart Docker
+      - name: Upload snapshot files
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
-          # Create persistent snapshot directory on VM
+          # Create persistent directories on VM
           gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/snapshots"
           
           # Upload snapshot files using gcloud compute scp
@@ -92,114 +92,46 @@ jobs:
             sudo chmod 644 /mnt/stateful_partition/meilisearch/snapshots/*
           "
           
-          # Restart Docker container to load snapshot
-          echo "🔄 Restarting Docker container to load snapshot..."
-          gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            sudo docker restart meilisearch
-          "
-          
-          echo "⏳ Waiting for Docker restart to complete..."
-          sleep 10
-          
-          # Apply settings after snapshot is loaded
-          echo "🔧 Applying index settings after snapshot load..."
-          gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            # Wait for Meilisearch to be ready after restart
-            until curl -f http://localhost:7700/health >/dev/null 2>&1; do
-              echo 'Waiting for Meilisearch to be ready...'
-              sleep 3
-            done
-            
-            # Get config from VM metadata and apply settings
-            MEILI_CONFIG=\$(curl -s \"http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config\" -H \"Metadata-Flavor: Google\")
-            SETTINGS_RESPONSE=\$(curl -X PATCH 'http://localhost:7700/indexes/players/settings' \\
-              -H 'Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}' \\
-              -H 'Content-Type: application/json' \\
-              --data-binary \"\$MEILI_CONFIG\")
-            
-            # Wait for settings task to complete
-            SETTINGS_TASK_UID=\$(echo \"\$SETTINGS_RESPONSE\" | jq -r '.taskUid // empty')
-            if [ -n \"\$SETTINGS_TASK_UID\" ]; then
-              echo \"⏳ Waiting for settings to apply (task \$SETTINGS_TASK_UID)...\"
-              until [ \"\$(curl -s -H \\\"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\\\" http://localhost:7700/tasks/\$SETTINGS_TASK_UID | jq -r '.status')\" = \"succeeded\" ]; do
-                sleep 3
-              done
-              echo \"✅ Settings applied successfully\"
-            fi
-          "
+          echo "✅ Snapshot files uploaded and moved to persistent storage"
       
-      - name: Verify deployment
+      - name: Upload wrapper and config files
         run: |
-          echo "⏳ Waiting for VM restart and startup script to complete..."
-          # Wait for VM to be accessible again
-          for i in {1..60}; do
-            if gcloud compute ssh aoe-search --zone=us-central1-a --command="echo 'VM is ready'" >/dev/null 2>&1; then
-              echo "✅ VM is accessible"
-              break
-            fi
-            echo "Waiting for VM to be ready... (attempt $i/60)"
-            sleep 10
-          done
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
-          echo "⏳ Waiting for startup script and Meilisearch to be ready..."
+          # Create Meilisearch directories
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/config"
+          
+          # Upload wrapper and config files to /tmp first
+          echo "🔄 Uploading wrapper and config files..."
+          gcloud compute scp --zone=us-central1-a aoe-search/meilisearch-wrapper.sh aoe-search:/tmp/
+          gcloud compute scp --zone=us-central1-a aoe-search/meilisearch_config.json aoe-search:/tmp/
+          
+          # Move files to Meilisearch directory with proper permissions
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            # Wait for startup script to complete and Meilisearch to be healthy
-            for i in {1..60}; do
-              if sudo docker ps | grep -q meilisearch && curl -f http://localhost:7700/health >/dev/null 2>&1; then
-                echo '✅ Meilisearch is running and healthy'
-                break
-              fi
-              echo \"Waiting for startup script and Meilisearch... (attempt \$i/60)\"
-              sleep 10
-            done
-            
-            # Check if Meilisearch is running
-            if sudo docker ps | grep -q meilisearch; then
-              echo '✅ Meilisearch container is running'
-              
-              # Check if snapshot was loaded from persistent storage
-              if [ -f '/mnt/stateful_partition/meilisearch/snapshots/latest.fingerprint.txt' ]; then
-                CURRENT_FINGERPRINT=\$(cat /mnt/stateful_partition/meilisearch/snapshots/latest.fingerprint.txt)
-                echo \"✅ Snapshot loaded with fingerprint: \$CURRENT_FINGERPRINT\"
-              else
-                echo '⚠️ No fingerprint file found'
-              fi
-              
-              # Get document count and verify configuration
-              DOC_COUNT=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/indexes/players/stats | jq -r '.numberOfDocuments // 0')
-              echo \"📊 Index contains \$DOC_COUNT documents\"
-              
-              # Check if configuration was applied
-              SORTABLE_ATTRS=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/indexes/players/settings | jq -r '.sortableAttributes // []' | jq length)
-              echo \"📝 Index has \$SORTABLE_ATTRS sortable attributes configured\"
-              
-              # Check for any pending settings tasks
-              PENDING_TASKS=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/tasks | jq -r '.results[] | select(.type == \"settingsUpdate\" and .status == \"enqueued\") | .uid' | head -1)
-              if [ -n \"\$PENDING_TASKS\" ]; then
-                echo \"⚠️ Found pending settings task \$PENDING_TASKS - waiting for completion...\"
-                until [ \"\$(curl -s -H \\\"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\\\" http://localhost:7700/tasks/\$PENDING_TASKS | jq -r '.status')\" = \"succeeded\" ]; do
-                  echo \"Settings task still processing...\"
-                  sleep 5
-                done
-                echo \"✅ Settings task completed\"
-                
-                # Re-check settings after task completion
-                SORTABLE_ATTRS=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/indexes/players/settings | jq -r '.sortableAttributes // []' | jq length)
-                echo \"📝 Index now has \$SORTABLE_ATTRS sortable attributes configured\"
-              fi
-              
-              # Verify both snapshot data and configuration
-              if [ \"\$DOC_COUNT\" -gt 0 ] && [ \"\$SORTABLE_ATTRS\" -gt 0 ]; then
-                echo \"✅ Deployment verified - \$DOC_COUNT documents loaded with proper configuration\"
-              else
-                echo \"❌ Deployment issue: documents=\$DOC_COUNT, sortable_attrs=\$SORTABLE_ATTRS\"
-                exit 1
-              fi
-            else
-              echo '❌ Meilisearch is not running'
-              exit 1
-            fi
+            sudo mv /tmp/meilisearch-wrapper.sh /mnt/stateful_partition/meilisearch/
+            sudo mv /tmp/meilisearch_config.json /mnt/stateful_partition/meilisearch/config/
+            sudo chmod 755 /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
+            sudo chown -R root:root /mnt/stateful_partition/meilisearch/
+            ls -la /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
           "
+          
+          echo "✅ Wrapper and config files uploaded to Meilisearch directory"
+      
+      - name: Run Meilisearch wrapper
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          
+          # Run the wrapper
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="
+            echo \"Snapshot files in persistent storage:\"
+            ls -la /mnt/stateful_partition/meilisearch/snapshots/
+            echo \"Wrapper file permissions:\"
+            ls -la /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
+            echo \"Running Meilisearch wrapper...\"
+            sudo bash /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
+          "
+          
+          echo "✅ Meilisearch wrapper completed successfully"
       
       - name: Update Proxy Function with New IP
         run: |

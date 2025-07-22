@@ -28,6 +28,9 @@ ENV PATH="/usr/local/bin:${PATH}"
 # Copy indexing script
 COPY indexer.py /indexer.py
 
+# Copy Meilisearch config
+COPY meilisearch_config.json /meilisearch_config.json
+
 # Python requests is already installed via py3-requests
 
 # Copy entrypoint script
