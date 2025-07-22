@@ -161,7 +161,7 @@ jobs:
       - name: Enable APIs
         run: |
           gcloud services enable cloudresourcemanager.googleapis.com
-          gcloud services enable cloudfunctions.googleapis.com
+          gcloud services enable run.googleapis.com
           gcloud services enable cloudbuild.googleapis.com
           gcloud services enable firestore.googleapis.com
       
@@ -184,19 +184,16 @@ jobs:
             echo "MEILISEARCH_HOST=http://$EXTERNAL_IP:7700" >> $GITHUB_ENV
           fi
       
-      - name: Deploy Proxy Cloud Function
+      - name: Deploy Proxy Cloud Run Service
         run: |
           cd functions/proxy
           rm -rf node_modules
           npm cache clean --force
           npm ci
-          gcloud functions deploy aoe2-api-proxy \
-            --gen2 \
-            --runtime=nodejs20 \
-            --region=us-central1 \
+          gcloud run deploy aoe2-api-proxy \
             --source=. \
-            --entry-point=proxy \
-            --trigger-http \
+            --region=us-central1 \
+            --platform=managed \
             --allow-unauthenticated \
             --memory=256MB \
             --timeout=30s \
@@ -295,59 +292,3 @@ jobs:
             --data '{"files": ["https://us-central1-aoe2-site.cloudfunctions.net/aoe2-api-proxy"]}'
           
           echo "✅ Cloudflare cache cleared successfully"
-      
-      - name: Update Cloudflare DNS
-        run: |
-          echo "🌐 Updating Cloudflare DNS for new region..."
-          
-          # Cloudflare API token should be stored in secrets
-          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
-            echo "⚠️  CLOUDFLARE_API_TOKEN not set, skipping DNS update"
-            exit 0
-          fi
-          
-          # Zone ID for aoe2.site
-          ZONE_ID="${{ secrets.CLOUDFLARE_ZONE_ID }}"
-          
-          if [ -z "$ZONE_ID" ]; then
-            echo "⚠️  CLOUDFLARE_ZONE_ID not set, skipping DNS update"
-            exit 0
-          fi
-          
-          # Get the current DNS record ID for api.aoe2.site
-          echo "📝 Getting current DNS record..."
-          RECORD_RESPONSE=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?name=api.aoe2.site" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -H "Content-Type: application/json")
-          
-          RECORD_ID=$(echo "$RECORD_RESPONSE" | jq -r '.result[0].id // empty')
-          
-          if [ -z "$RECORD_ID" ] || [ "$RECORD_ID" = "null" ]; then
-            echo "⚠️  No existing DNS record found for api.aoe2.site, creating new one..."
-            
-            # Create new CNAME record
-            curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              --data '{
-                "type": "CNAME",
-                "name": "api",
-                "content": "aoe2-api-proxy-w23c4qxc5a-uc.a.run.app",
-                "proxied": true
-              }'
-          else
-            echo "📝 Updating existing DNS record..."
-            
-            # Update existing CNAME record
-            curl -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
-              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              --data '{
-                "type": "CNAME",
-                "name": "api",
-                "content": "aoe2-api-proxy-w23c4qxc5a-uc.a.run.app",
-                "proxied": true
-              }'
-          fi
-          
-          echo "✅ Cloudflare DNS updated successfully"
