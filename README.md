@@ -100,33 +100,36 @@ MEILISEARCH_API_KEY="a-secure-master-key-change-this"
 
 ### Management and Troubleshooting
 
-#### SSH Access
+#### SSH Access and Basic Commands
 ```bash
-# Connect to the VM
-gcloud compute ssh aoe-search-vm --zone=us-central1-a --project=aoe2-site
-```
+# Connect to the search VM
+gcloud compute ssh aoe-search --zone=us-central1-a
 
-#### Health Checks
-```bash
-# Check if Meilisearch is running
+# Check running containers
+sudo docker ps -a
+
+# Check Meilisearch health
 curl http://localhost:7700/health
 
-# Check from external (if firewall allows)
-curl http://<EXTERNAL_IP>:7700/health
+# Check with authentication
+curl -H "Authorization: Bearer your-master-key" http://localhost:7700/health
 
-# Check Docker container status
-sudo docker ps
+# Check index status and document count
+curl -H "Authorization: Bearer your-master-key" http://localhost:7700/indexes/players/stats
 ```
 
-#### Logs and Monitoring
+#### Log Analysis and Monitoring
 
-**Startup Script Logs** (most important):
+**Startup Script Logs** (most important for deployment issues):
 ```bash
 # Real-time startup script execution
 sudo journalctl -u google-startup-scripts.service -f
 
 # Recent startup logs
 sudo journalctl -u google-startup-scripts.service --since "1 hour ago"
+
+# Check startup script status
+sudo systemctl status google-startup-scripts.service
 ```
 
 **Meilisearch Application Logs**:
@@ -134,20 +137,25 @@ sudo journalctl -u google-startup-scripts.service --since "1 hour ago"
 # Real-time Meilisearch logs
 sudo docker logs meilisearch -f
 
-# Recent Meilisearch logs
+# Recent Meilisearch logs  
 sudo docker logs meilisearch --since "1h"
+
+# Last 50 lines
+sudo docker logs --tail 50 meilisearch
 ```
 
 **System Logs**:
 ```bash
 # All system logs
-sudo journalctl -f
+sudo journalctl --since "1 hour ago"
 
-# Check startup script status
-sudo systemctl status google-startup-scripts.service
+# Docker service logs
+sudo journalctl -u docker.service
 ```
 
-#### Search Testing
+#### Testing and Verification
+
+**Search Testing**:
 ```bash
 # Test search from VM
 curl -X POST 'http://localhost:7700/indexes/players/search' \
@@ -160,6 +168,72 @@ curl -X POST 'http://<EXTERNAL_IP>:7700/indexes/players/search' \
   -H "Authorization: Bearer your-master-key" \
   -H 'Content-Type: application/json' \
   --data-binary '{"q": "viper"}'
+```
+
+**VM Metadata Checks**:
+```bash
+# Check startup script
+curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/startup-script
+
+# Check master key
+curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key
+```
+
+#### Common Issues and Solutions
+
+- **Container in development mode**: Check startup script logs and master key metadata
+- **Random container names**: Indicates startup script didn't run or failed
+- **No index found**: Check if snapshot was imported or index creation failed
+- **Authentication errors**: Verify master key in metadata and container environment
+- **Empty search results**: Check document count with stats endpoint
+
+#### Manual Recovery and Container Management
+
+**Container Operations**:
+```bash
+# Restart Meilisearch container
+sudo docker restart meilisearch
+
+# View container details and environment
+sudo docker inspect meilisearch | grep -A 20 "Env"
+
+# Check resource usage
+sudo docker stats meilisearch
+```
+
+**Manual Container Start** (if needed):
+```bash
+# Stop and remove existing container
+sudo docker stop meilisearch 2>/dev/null || true
+sudo docker rm meilisearch 2>/dev/null || true
+
+# Get master key from metadata
+MASTER_KEY=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key)
+
+# Start with proper configuration
+sudo docker run -d \
+  --name meilisearch \
+  --restart unless-stopped \
+  -p 7700:7700 \
+  -e MEILI_ENV=production \
+  -e MEILI_MASTER_KEY=$MASTER_KEY \
+  -v /var/lib/meilisearch/data:/meili_data \
+  getmeili/meilisearch:v1.7
+```
+
+#### Index Management
+```bash
+# Get index statistics
+curl -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players/stats
+
+# Get index settings
+curl -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players/settings
+
+# Clear and reindex (if needed)
+curl -X DELETE -H "Authorization: Bearer your-master-key" \
+  http://localhost:7700/indexes/players
 ```
 
 #### Firewall Management
@@ -180,33 +254,6 @@ gcloud compute firewall-rules create allow-meilisearch-external \
 
 # Remove external access (for production)
 gcloud compute firewall-rules delete allow-meilisearch-external
-```
-
-#### Container Management
-```bash
-# Restart Meilisearch
-sudo docker restart meilisearch
-
-# View container details
-sudo docker inspect meilisearch
-
-# Check resource usage
-sudo docker stats meilisearch
-```
-
-#### Index Management
-```bash
-# Get index statistics
-curl -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players/stats
-
-# Get index settings
-curl -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players/settings
-
-# Clear and reindex (if needed)
-curl -X DELETE -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players
 ```
 
 ### Configuration

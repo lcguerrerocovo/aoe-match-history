@@ -71,23 +71,25 @@ jobs:
           echo "snapshot_dir=${LATEST_SNAPSHOT_DIR}" >> $GITHUB_OUTPUT
           echo "fingerprint=$(cat ./latest-snapshot/fingerprint.txt 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
       
+
+      
       - name: Upload snapshot to VM
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           
-          # Create snapshot directory on VM
-          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /var/lib/meilisearch/data/snapshots"
+          # Create snapshot directory on VM (persistent storage)
+          gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/data/snapshots"
           
           # Upload snapshot files using gcloud compute scp
           gcloud compute scp --zone=us-central1-a ./latest-snapshot/* aoe-search:/tmp/
           
-          # Move files to proper location and set permissions
+          # Move files to persistent storage location
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            sudo mv /tmp/data.snapshot /var/lib/meilisearch/data/snapshots/latest.snapshot
-            sudo mv /tmp/fingerprint.txt /var/lib/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
-            sudo mv /tmp/metadata.json /var/lib/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
-            sudo chown -R root:root /var/lib/meilisearch/data/snapshots/
-            sudo chmod 644 /var/lib/meilisearch/data/snapshots/*
+            sudo mv /tmp/data.snapshot /mnt/stateful_partition/meilisearch/data/snapshots/latest.snapshot
+            sudo mv /tmp/fingerprint.txt /mnt/stateful_partition/meilisearch/data/snapshots/latest.fingerprint.txt 2>/dev/null || true
+            sudo mv /tmp/metadata.json /mnt/stateful_partition/meilisearch/data/snapshots/latest.metadata.json 2>/dev/null || true
+            sudo chown -R root:root /mnt/stateful_partition/meilisearch/data/snapshots/
+            sudo chmod 644 /mnt/stateful_partition/meilisearch/data/snapshots/*
           "
       
       - name: Restart VM to apply new snapshot
@@ -126,6 +128,14 @@ jobs:
               # Get document count
               DOC_COUNT=\$(curl -s -H \"Authorization: Bearer ${{ secrets.MEILISEARCH_MASTER_KEY }}\" http://localhost:7700/indexes/players/stats | jq -r '.numberOfDocuments // 0')
               echo \"📊 Index contains \$DOC_COUNT documents\"
+              
+              # Verify snapshot data was actually loaded
+              if [ \"\$DOC_COUNT\" -gt 0 ]; then
+                echo \"✅ Snapshot data verified - \$DOC_COUNT documents loaded\"
+              else
+                echo \"❌ Warning: Index is empty after snapshot import\"
+                exit 1
+              fi
             else
               echo '❌ Meilisearch is not running'
               exit 1

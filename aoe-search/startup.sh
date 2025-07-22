@@ -29,10 +29,15 @@ fi
 
 # --- 2. Meilisearch Setup ---
 echo "Creating directories for Meilisearch..."
-mkdir -p /var/lib/meilisearch/data/snapshots
-chmod 755 /var/lib/meilisearch
-chmod 755 /var/lib/meilisearch/data
-chmod 755 /var/lib/meilisearch/data/snapshots
+# Use persistent storage location that survives reboots
+mkdir -p /mnt/stateful_partition/meilisearch/data/snapshots
+mkdir -p /var/lib/meilisearch/data
+# Create symlink from ephemeral to persistent storage (remove target first to prevent recursive symlinks)
+rm -rf /var/lib/meilisearch/data/snapshots
+ln -sf /mnt/stateful_partition/meilisearch/data/snapshots /var/lib/meilisearch/data/snapshots
+chmod 755 /mnt/stateful_partition/meilisearch
+chmod 755 /mnt/stateful_partition/meilisearch/data
+chmod 755 /mnt/stateful_partition/meilisearch/data/snapshots
 
 # --- 3. Start Meilisearch ---
 echo "Starting Meilisearch via Docker..."
@@ -100,7 +105,8 @@ echo "✅ Meilisearch is healthy."
 echo "📝 Setting up index configuration..."
 
 # Check if index already exists (from snapshot import)
-if curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players >/dev/null 2>&1; then
+INDEX_RESPONSE=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players 2>/dev/null)
+if echo "$INDEX_RESPONSE" | grep -q '"indexUid":"players"'; then
     echo "✅ Index 'players' already exists (from snapshot)"
 else
     echo "Creating new index and applying configuration..."
@@ -140,7 +146,18 @@ fi
 # Final verification
 echo "Verifying setup..."
 if curl -f "http://localhost:7700/health" > /dev/null 2>&1; then
-    echo "✅ Meilisearch setup and configuration complete."
+    echo "✅ Meilisearch is healthy."
+    
+    # Check if index has data (for snapshot verification)
+    DOC_COUNT=$(curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players/stats 2>/dev/null | jq -r '.numberOfDocuments // 0' 2>/dev/null || echo "0")
+    echo "📊 Index contains $DOC_COUNT documents"
+    
+    if [ "$DOC_COUNT" -gt 0 ]; then
+        echo "✅ Snapshot data loaded successfully"
+    else
+        echo "ℹ️ Index is empty (no snapshot imported or empty snapshot)"
+    fi
+    
     echo "✅ Startup script finished successfully."
 else
     echo "❌ Meilisearch health check failed after setup"
