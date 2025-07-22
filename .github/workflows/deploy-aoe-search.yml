@@ -6,6 +6,7 @@ on:
       - 'aoe-search/deploy-vm.sh'
       - 'aoe-search/startup.sh'
       - '.github/workflows/deploy-aoe-search.yml'
+  workflow_dispatch:
 
 jobs:
   deploy-aoe-search-vm:
@@ -89,45 +90,23 @@ jobs:
             sudo chmod 644 /var/lib/meilisearch/data/snapshots/*
           "
       
-      - name: Import snapshot and restart Meilisearch
+      - name: Restart VM to apply new snapshot
         run: |
-          gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            # Stop Meilisearch if running
-            sudo docker stop meilisearch 2>/dev/null || true
-            sudo docker rm meilisearch 2>/dev/null || true
-            
-            # Remove existing database to allow snapshot import
-            sudo rm -rf /var/lib/meilisearch/data/data.ms
-            
-            # Import the snapshot
-            sudo docker run --rm \
-              -v /var/lib/meilisearch/data:/meili_data \
-              getmeili/meilisearch:v1.7 \
-              meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
-            
-            # Start Meilisearch with imported data (same config as startup script)
-            # Get master key from VM metadata to match startup script
-            MASTER_KEY=\$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key" -H "Metadata-Flavor: Google")
-            sudo docker run -d \
-              --name meilisearch \
-              --restart unless-stopped \
-              -p 7700:7700 \
-              -e MEILI_ENV=production \
-              -e MEILI_MASTER_KEY=\$MASTER_KEY \
-              -v /var/lib/meilisearch/data:/meili_data \
-              getmeili/meilisearch:v1.7
-              
-            # Wait for Meilisearch to be healthy
-            echo 'Waiting for Meilisearch to start...'
-            for i in {1..30}; do
-              if curl -f http://localhost:7700/health >/dev/null 2>&1; then
-                echo '✅ Meilisearch is healthy'
-                break
-              fi
-              echo \"Waiting for Meilisearch... (attempt \$i/30)\"
-              sleep 2
-            done
-          "
+          echo "🔄 Restarting VM to load new snapshot..."
+          gcloud compute instances reset aoe-search --zone=us-central1-a
+          
+          echo "⏳ Waiting for VM to restart and startup script to complete..."
+          sleep 30
+          
+          # Wait for VM to be accessible again
+          for i in {1..30}; do
+            if gcloud compute ssh aoe-search --zone=us-central1-a --command="echo 'VM is ready'" >/dev/null 2>&1; then
+              echo "✅ VM is accessible"
+              break
+            fi
+            echo "Waiting for VM... (attempt $i/30)"
+            sleep 10
+          done
       
       - name: Verify deployment
         run: |
@@ -151,4 +130,26 @@ jobs:
               echo '❌ Meilisearch is not running'
               exit 1
             fi
-          " 
+          "
+      
+      - name: Update Proxy Function with New IP
+        run: |
+          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
+          echo "🔄 Updating proxy function with new Meilisearch IP: $EXTERNAL_IP"
+          
+          cd functions/proxy
+          rm -rf node_modules
+          npm cache clean --force
+          npm ci
+          gcloud run deploy aoe2-api-proxy \
+            --source=. \
+            --region=us-central1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=256Mi \
+            --timeout=30s \
+            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }},MEILISEARCH_HOST=http://$EXTERNAL_IP:7700,MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }}" \
+            --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
+            --verbosity=debug
+          
+          echo "✅ Proxy function updated with new Meilisearch IP" 

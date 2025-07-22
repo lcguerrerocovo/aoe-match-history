@@ -34,6 +34,7 @@ chmod 755 /var/lib/meilisearch
 chmod 755 /var/lib/meilisearch/data
 chmod 755 /var/lib/meilisearch/data/snapshots
 
+# --- 3. Start Meilisearch ---
 echo "Starting Meilisearch via Docker..."
 
 # Check if container already exists and remove it
@@ -43,16 +44,43 @@ if docker ps -a --format "table {{.Names}}" | grep -q "^meilisearch$"; then
     docker rm meilisearch 2>/dev/null || true
 fi
 
-docker run -d \
-  --name meilisearch \
-  --restart unless-stopped \
-  -p 7700:7700 \
-  -e MEILI_ENV=production \
-  -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
-  -v /var/lib/meilisearch/data:/meili_data \
-  getmeili/meilisearch:v1.7
+# Check for existing snapshot and start accordingly
+if [ -f "/var/lib/meilisearch/data/snapshots/latest.snapshot" ]; then
+    echo "✅ Found existing snapshot, starting with snapshot import"
+    
+    # Remove existing database if it exists
+    if [ -d "/var/lib/meilisearch/data/data.ms" ]; then
+        echo "Removing existing database to import snapshot..."
+        rm -rf /var/lib/meilisearch/data/data.ms
+    fi
+    
+    # Start Meilisearch with snapshot import
+    docker run -d \
+      --name meilisearch \
+      --restart unless-stopped \
+      -p 7700:7700 \
+      -e MEILI_ENV=production \
+      -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
+      -v /var/lib/meilisearch/data:/meili_data \
+      getmeili/meilisearch:v1.7 \
+      meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot
+    
+    echo "✅ Meilisearch started with snapshot"
+else
+    echo "⚠️ No existing snapshot found, starting with empty index"
+    
+    # Start Meilisearch normally
+    docker run -d \
+      --name meilisearch \
+      --restart unless-stopped \
+      -p 7700:7700 \
+      -e MEILI_ENV=production \
+      -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
+      -v /var/lib/meilisearch/data:/meili_data \
+      getmeili/meilisearch:v1.7
+fi
 
-# --- 3. Meilisearch Configuration ---
+# --- 5. Meilisearch Configuration ---
 echo "Waiting for Meilisearch to start..."
 # Wait for the container to be running
 until [ "$(docker inspect -f {{.State.Status}} meilisearch)" == "running" ]; do
@@ -68,39 +96,45 @@ until curl -f http://localhost:7700/health > /dev/null 2>&1; do
 done;
 echo "✅ Meilisearch is healthy."
 
-# Set up empty index configuration
-echo "📝 Setting up empty index configuration..."
-echo "Applying index configuration from metadata..."
+# Set up index configuration (will skip if already exists from snapshot)
+echo "📝 Setting up index configuration..."
 
-# Fetch the index configuration from the VM's metadata
-if ! curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config" -H "Metadata-Flavor: Google" > /var/lib/meilisearch/index_config.json; then
-    echo "❌ Failed to fetch index configuration from metadata"
-    exit 1
-fi
+# Check if index already exists (from snapshot import)
+if curl -s -H "Authorization: Bearer ${MEILI_MASTER_KEY}" http://localhost:7700/indexes/players >/dev/null 2>&1; then
+    echo "✅ Index 'players' already exists (from snapshot)"
+else
+    echo "Creating new index and applying configuration..."
+    
+    # Fetch the index configuration from the VM's metadata
+    if ! curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_config" -H "Metadata-Flavor: Google" > /var/lib/meilisearch/index_config.json; then
+        echo "❌ Failed to fetch index configuration from metadata"
+        exit 1
+    fi
 
-# Extract primaryKey from the config to create the index first
-PRIMARY_KEY=$(grep -o '"primaryKey": *"[^"]*"' /var/lib/meilisearch/index_config.json | cut -d'"' -f4)
+    # Extract primaryKey from the config to create the index first
+    PRIMARY_KEY=$(grep -o '"primaryKey": *"[^"]*"' /var/lib/meilisearch/index_config.json | cut -d'"' -f4)
 
-echo "Creating index 'players' with primary key '${PRIMARY_KEY}'..."
-if ! curl -X POST 'http://localhost:7700/indexes' \
-  -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
-  -H 'Content-Type: application/json' \
-  --data-binary "{\"uid\": \"players\", \"primaryKey\": \"${PRIMARY_KEY:-profile_id}\"}"; then
-    echo "❌ Failed to create index"
-    exit 1
-fi
+    echo "Creating index 'players' with primary key '${PRIMARY_KEY}'..."
+    if ! curl -X POST 'http://localhost:7700/indexes' \
+      -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
+      -H 'Content-Type: application/json' \
+      --data-binary "{\"uid\": \"players\", \"primaryKey\": \"${PRIMARY_KEY:-profile_id}\"}"; then
+        echo "❌ Failed to create index"
+        exit 1
+    fi
 
-echo "Updating index settings..."
-# Create a settings-only config by removing uid and primaryKey fields
-jq 'del(.uid, .primaryKey)' /var/lib/meilisearch/index_config.json > /var/lib/meilisearch/settings_config.json
+    echo "Updating index settings..."
+    # Create a settings-only config by removing uid and primaryKey fields
+    jq 'del(.uid, .primaryKey)' /var/lib/meilisearch/index_config.json > /var/lib/meilisearch/settings_config.json
 
-# Use PATCH to apply settings to the existing index
-if ! curl -X PATCH "http://localhost:7700/indexes/players/settings" \
-  -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/var/lib/meilisearch/settings_config.json; then
-    echo "❌ Failed to apply index settings"
-    exit 1
+    # Use PATCH to apply settings to the existing index
+    if ! curl -X PATCH "http://localhost:7700/indexes/players/settings" \
+      -H "Authorization: Bearer ${MEILI_MASTER_KEY}" \
+      -H 'Content-Type: application/json' \
+      --data-binary @/var/lib/meilisearch/settings_config.json; then
+        echo "❌ Failed to apply index settings"
+        exit 1
+    fi
 fi
 
 # Final verification
