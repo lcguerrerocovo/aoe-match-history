@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 import requests
 import time
 from google.cloud import storage
+import asyncio
+from player_collector import collect_active_players
 
 # --- Configuration ---
 INDEX_NAME = "players"
@@ -355,9 +357,6 @@ def main():
     logging.info("🚀 Starting player data collection and filtering...")
     
     try:
-        from player_collector import collect_active_players
-        import asyncio
-        
         # Collect active players to temporary file
         output_file = "/tmp/active_players.jsonl"
         total_players, final_id = asyncio.run(collect_active_players(output_file))

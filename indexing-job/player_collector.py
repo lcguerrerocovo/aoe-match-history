@@ -21,13 +21,15 @@ API_BASE_URL = "https://aoe-api.worldsedgelink.com/community/leaderboard/GetPers
 # Environment variable configuration with defaults
 import os
 
-RATE_LIMIT_RPS = int(os.getenv('RATE_LIMIT_RPS', '50'))
-CONCURRENT_REQUESTS = int(os.getenv('CONCURRENT_REQUESTS', '25'))
-BATCH_SIZE = int(os.getenv('BATCH_SIZE', '200'))
+# Balanced defaults for Cloud Run Jobs (4Gi RAM, 2 CPU, 1 hour timeout)
+RATE_LIMIT_RPS = int(os.getenv('RATE_LIMIT_RPS', '50'))  # API rate limit is 50 RPS
+CONCURRENT_REQUESTS = int(os.getenv('CONCURRENT_REQUESTS', '20'))  # Balanced for Cloud Run
+BATCH_SIZE = int(os.getenv('BATCH_SIZE', '200'))  # Back to original for efficiency
 MAX_CONSECUTIVE_EMPTY_BATCHES = int(os.getenv('MAX_CONSECUTIVE_EMPTY_BATCHES', '5'))
 ACTIVE_YEARS = float(os.getenv('ACTIVE_YEARS', '2.0'))
 MIN_MATCHES = int(os.getenv('MIN_MATCHES', '1'))
-TIMEOUT_SECONDS = int(os.getenv('TIMEOUT_SECONDS', '10'))
+TIMEOUT_SECONDS = int(os.getenv('TIMEOUT_SECONDS', '12'))  # Balanced timeout
+START_PROFILE_ID = int(os.getenv('START_PROFILE_ID', '1'))  # Start from ID 1 (active players exist throughout range)
 
 # Headers matching your existing requests
 HEADERS = {
@@ -268,7 +270,7 @@ def save_players_batch(players_data: List[Dict], output_file: str) -> None:
     except Exception as e:
         logging.error(f"Failed to save batch of players: {e}")
 
-async def collect_active_players(output_file: str, start_profile_id: int = 1) -> tuple[int, int]:
+async def collect_active_players(output_file: str, start_profile_id: int = START_PROFILE_ID) -> tuple[int, int]:
     """
     Collect and filter active players from the API
     
@@ -287,6 +289,7 @@ async def collect_active_players(output_file: str, start_profile_id: int = 1) ->
     logging.info(f"Min matches: {MIN_MATCHES}")
     logging.info(f"Timeout: {TIMEOUT_SECONDS} seconds")
     logging.info(f"Max empty batches: {MAX_CONSECUTIVE_EMPTY_BATCHES}")
+    logging.info(f"Start profile ID: {START_PROFILE_ID}")
     logging.info(f"Output file: {output_file}")
     logging.info(f"Starting from profile_id: {start_profile_id}")
     
@@ -327,6 +330,11 @@ async def collect_active_players(output_file: str, start_profile_id: int = 1) ->
                     session, rate_limiter, batch_group
                 )
                 
+                # Update counters
+                successful_collections += group_successful
+                failed_collections += group_failed
+                batch_count += len(batch_group)
+                
                 if collected_players:
                     # Sort players by profile_id before saving
                     collected_players.sort(key=lambda p: p['profile_id'])
@@ -334,16 +342,19 @@ async def collect_active_players(output_file: str, start_profile_id: int = 1) ->
                     # Save entire batch group at once
                     save_players_batch(collected_players, output_file)
                     
-                    # Update counters
-                    successful_collections += group_successful
-                    consecutive_empty_batches = 0  # Reset counter on success
-                    batch_count += len(batch_group)
+                    # Reset empty counter on success
+                    consecutive_empty_batches = 0
                     logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: Found {len(collected_players)} active players from {len(batch_group)} batches")
                 else:
-                    consecutive_empty_batches += len(batch_group)
-                    failed_collections += group_failed
-                    batch_count += len(batch_group)
-                    logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: No active players found ({consecutive_empty_batches}/{MAX_CONSECUTIVE_EMPTY_BATCHES} empty)")
+                    # Only increment empty counter if ALL batches in the group failed
+                    # (i.e., no successful API responses at all)
+                    if group_failed == len(batch_group):
+                        consecutive_empty_batches += len(batch_group)
+                        logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: All {len(batch_group)} batches failed ({consecutive_empty_batches}/{MAX_CONSECUTIVE_EMPTY_BATCHES} empty)")
+                    else:
+                        # Some batches succeeded but had no active players - this is normal
+                        consecutive_empty_batches = 0  # Reset counter
+                        logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: API calls succeeded but no active players found in {len(batch_group)} batches")
                 
                 # Progress update
                 if (batch_count // CONCURRENT_REQUESTS) % 5 == 0:

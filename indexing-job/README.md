@@ -127,11 +127,12 @@ sudo systemctl start meilisearch
 
 | Parameter | Default | Description | Use Cases |
 |-----------|---------|-------------|-----------|
-| `RATE_LIMIT_RPS` | 50 | Requests per second limit | Reduce to 30-40 if hitting API limits |
-| `CONCURRENT_REQUESTS` | 25 | Number of concurrent API requests | Reduce to 15-20 for slower networks |
-| `BATCH_SIZE` | 200 | Profile IDs per API request | Reduce to 100-150 for slower APIs |
-| `TIMEOUT_SECONDS` | 10 | HTTP request timeout | Increase to 15-30 for slower networks |
+| `RATE_LIMIT_RPS` | 50 | Requests per second limit | API rate limit (50 RPS) |
+| `CONCURRENT_REQUESTS` | 20 | Number of concurrent API requests | Balanced for Cloud Run Jobs |
+| `BATCH_SIZE` | 200 | Profile IDs per API request | Balanced for efficiency |
+| `TIMEOUT_SECONDS` | 12 | HTTP request timeout | Balanced for network stability |
 | `MAX_CONSECUTIVE_EMPTY_BATCHES` | 5 | Stop after N empty batch groups | Increase for more thorough collection |
+| `START_PROFILE_ID` | 1 | Starting profile ID for collection | Active players exist throughout the ID range |
 
 ### Filtering Parameters
 
@@ -149,13 +150,13 @@ gcloud run jobs execute meilisearch-indexing-job --region=us-central1
 ### Conservative Collection (slower, more reliable)
 ```bash
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="RATE_LIMIT_RPS=30,CONCURRENT_REQUESTS=15,BATCH_SIZE=100,TIMEOUT_SECONDS=15"
+  --set-env-vars="RATE_LIMIT_RPS=30,CONCURRENT_REQUESTS=10,BATCH_SIZE=100,TIMEOUT_SECONDS=20"
 ```
 
 ### Aggressive Collection (faster, more data)
 ```bash
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="ACTIVE_YEARS=2.5,MIN_MATCHES=0,MAX_CONSECUTIVE_EMPTY_BATCHES=10"
+  --set-env-vars="RATE_LIMIT_RPS=50,CONCURRENT_REQUESTS=25,BATCH_SIZE=200,ACTIVE_YEARS=2.5,MIN_MATCHES=0,MAX_CONSECUTIVE_EMPTY_BATCHES=10"
 ```
 
 ### Retry Scenarios
@@ -163,13 +164,13 @@ gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
 #### API Rate Limiting
 ```bash
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="RATE_LIMIT_RPS=30,CONCURRENT_REQUESTS=15"
+  --set-env-vars="RATE_LIMIT_RPS=30,CONCURRENT_REQUESTS=10"
 ```
 
 #### Network Issues
 ```bash
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="TIMEOUT_SECONDS=30,BATCH_SIZE=100"
+  --set-env-vars="TIMEOUT_SECONDS=30,BATCH_SIZE=100,CONCURRENT_REQUESTS=10"
 ```
 
 #### More Comprehensive Data
@@ -178,11 +179,20 @@ gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
   --set-env-vars="ACTIVE_YEARS=2.5,MIN_MATCHES=0"
 ```
 
+#### Faster Collection (Skip Lower Ranges)
+```bash
+gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
+  --set-env-vars="START_PROFILE_ID=20000000"
+```
+
 ## Parameter Calculations
 
-- **Empty batch groups**: 5 × 25 × 200 = 25,000 consecutive empty profile IDs
-- **API calls per second**: 25 concurrent requests at 50 RPS = 2 requests per second per concurrent request
-- **Collection speed**: ~50,000 profile IDs per minute at default settings 
+- **Empty batch groups**: 5 × 20 × 200 = 20,000 consecutive empty profile IDs
+- **API calls per second**: 20 concurrent requests at 50 RPS = 2.5 requests per second per concurrent request
+- **Collection speed**: ~60,000 profile IDs per minute at default settings (API rate limit)
+- **Estimated runtime**: 
+  - Starting from ID 1: ~1.4 hours for 50M IDs (exceeds Cloud Run timeout)
+
 
 ## Troubleshooting
 

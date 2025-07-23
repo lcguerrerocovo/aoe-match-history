@@ -25,8 +25,9 @@ RUN chmod +x /usr/local/bin/meilisearch
 # Add /usr/local/bin to PATH explicitly
 ENV PATH="/usr/local/bin:${PATH}"
 
-# Copy indexing script
+# Copy indexing script and dependencies
 COPY indexer.py /indexer.py
+COPY player_collector.py /player_collector.py
 
 # Copy Meilisearch config
 COPY meilisearch_config.json /meilisearch_config.json
