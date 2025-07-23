@@ -7,10 +7,11 @@ This directory contains the Cloud Run job for building and maintaining the Meili
 The indexing job:
 1. Downloads `active_players.jsonl` from Google Cloud Storage
 2. Starts a local Meilisearch instance
-3. Indexes all players with searchable fields (name, clan, country)
-4. Creates a snapshot of the index
-5. Uploads the snapshot back to GCS for later restoration
-6. **NEW**: Automatically performs hot-swap to production VM
+3. Applies index settings from `meilisearch_config.json`
+4. Indexes all players with searchable fields (name, clan, country)
+5. Creates a snapshot of the index (includes settings)
+6. Uploads the snapshot back to GCS for later restoration
+7. **NEW**: Automatically performs hot-swap to production VM
 
 ## Files
 

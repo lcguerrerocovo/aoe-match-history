@@ -85,10 +85,10 @@ The deployment script:
 # Filter active players (matches > 0, active in last 2 years)
 python scripts/filter_active_players.py data/collected_players.jsonl data/active_players.jsonl
 
-# Index the filtered data
-export MEILI_HTTP_ADDR="http://34.58.214.230:7700"
-export MEILI_MASTER_KEY="a-secure-master-key-change-this"
-python scripts/index_from_jsonl.py data/active_players.jsonl
+# Deploy and run indexing job (creates snapshot with settings)
+cd indexing-job
+./build_and_deploy_indexer.sh
+gcloud run jobs execute meilisearch-indexing-job --region us-central1
 ```
 
 #### 3. Update Cloud Function
@@ -116,6 +116,9 @@ curl -H "Authorization: Bearer your-master-key" http://localhost:7700/health
 
 # Check index status and document count
 curl -H "Authorization: Bearer your-master-key" http://localhost:7700/indexes/players/stats
+
+# Restart with latest snapshot (bulletproof wrapper)
+sudo bash /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
 ```
 
 #### Log Analysis and Monitoring
