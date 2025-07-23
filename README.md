@@ -80,15 +80,18 @@ The deployment script:
 - Sets up firewall rules for internal access
 - Provides environment variables for indexing
 
-#### 2. Filter and Index Player Data
+#### 2. Deploy and Run Indexing Job
 ```bash
-# Filter active players (matches > 0, active in last 2 years)
-python scripts/filter_active_players.py data/collected_players.jsonl data/active_players.jsonl
-
-# Deploy and run indexing job (creates snapshot with settings)
+# Deploy the indexing job
 cd indexing-job
 ./build_and_deploy_indexer.sh
-gcloud run jobs execute meilisearch-indexing-job --region us-central1
+
+# Run with default settings (collects active players, creates snapshot)
+gcloud run jobs execute meilisearch-indexing-job --region=us-central1
+
+# Run with custom parameters (see indexing-job/PARAMETERS.md for options)
+gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
+  --set-env-vars="ACTIVE_YEARS=2.5,MIN_MATCHES=0"
 ```
 
 #### 3. Update Cloud Function

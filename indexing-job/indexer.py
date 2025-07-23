@@ -346,52 +346,39 @@ def upload_snapshot_to_gcs():
         logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False
 
-def download_active_players_file():
-    """Download active_players.jsonl from GCS using Python client."""
-    try:
-        logging.info("Downloading active_players.jsonl from GCS using Python client...")
-        
-        # Initialize the GCS client (uses default credentials in Cloud Run)
-        client = storage.Client()
-        bucket = client.bucket('aoe2-site-data')
-        blob = bucket.blob('active_players.jsonl')
-        
-        # Download the file
-        blob.download_to_filename('/active_players.jsonl')
-        logging.info("✅ Successfully downloaded active_players.jsonl")
-        return True
-        
-    except Exception as e:
-        logging.error(f"❌ Failed to download active_players.jsonl: {e}")
-        return False
-
 def main():
     """Main function to read, process, and upload data."""
     
     logging.info("Starting Meilisearch indexing job...")
     
-    # 1. Wait for Meilisearch to be ready
+    # 1. Collect and filter active players
+    logging.info("🚀 Starting player data collection and filtering...")
+    
+    try:
+        from player_collector import collect_active_players
+        import asyncio
+        
+        # Collect active players to temporary file
+        output_file = "/tmp/active_players.jsonl"
+        total_players, final_id = asyncio.run(collect_active_players(output_file))
+        
+        if total_players == 0:
+            logging.error("❌ No active players collected - exiting")
+            sys.exit(1)
+            
+        logging.info(f"✅ Collection complete: {total_players} active players collected")
+        input_file = Path(output_file)
+        
+    except Exception as e:
+        logging.error(f"❌ Failed to collect player data: {e}")
+        sys.exit(1)
+    
+    # 2. Wait for Meilisearch to be ready
     if not wait_for_meilisearch():
         logging.error("❌ Meilisearch not ready - exiting")
         sys.exit(1)
-    
-    # 2. Download the input file from GCS (skip if file already exists locally)
-    input_file = Path('/active_players.jsonl')
-    if input_file.exists():
-        logging.info("📁 Using existing local file: /active_players.jsonl")
-    else:
-        logging.info("📥 Downloading file from GCS...")
-        if not download_active_players_file():
-            logging.error("❌ Failed to download input file - exiting")
-            sys.exit(1)
-    
-    # 3. Validate input file
-    input_file = Path('/active_players.jsonl')
-    if not input_file.is_file():
-        logging.error(f"❌ Input file not found: /active_players.jsonl")
-        sys.exit(1)
-
-    # 4. Connect to Meilisearch
+        
+    # 3. Connect to Meilisearch
     try:
         logging.info(f"Connecting to Meilisearch at {MEILI_URL}...")
         client = meilisearch.Client(MEILI_URL, MEILI_MASTER_KEY)
