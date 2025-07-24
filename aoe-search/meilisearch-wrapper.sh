@@ -203,7 +203,7 @@ import_snapshot() {
             -e MEILI_MASTER_KEY="$MEILI_MASTER_KEY" \
             -v /mnt/stateful_partition/meilisearch/data:/meili_data \
             -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
-            getmeili/meilisearch:v1.7 \
+            getmeili/meilisearch:v1.7.3 \
             meilisearch --import-snapshot /meili_data/snapshots/latest.snapshot)
         
         echo "📦 Container started with ID: $container_id"

@@ -47,7 +47,7 @@ docker run -d \
   -e MEILI_MASTER_KEY=${MEILI_MASTER_KEY} \
   -v /mnt/stateful_partition/meilisearch/data:/meili_data \
   -v /mnt/stateful_partition/meilisearch/snapshots:/meili_data/snapshots \
-  getmeili/meilisearch:v1.7
+  getmeili/meilisearch:v1.7.3
 
 echo "✅ Meilisearch container started"
 
