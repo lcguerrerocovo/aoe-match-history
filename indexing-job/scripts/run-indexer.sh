@@ -61,6 +61,7 @@ export MAX_CONSECUTIVE_EMPTY_BATCHES=${MAX_CONSECUTIVE_EMPTY_BATCHES:-3}  # Stop
 export SKIP_GCS_UPLOAD=${SKIP_GCS_UPLOAD:-true}  # Skip GCS upload for local testing
 
 # Conservative rate limiting for local testing
+export BATCH_SIZE=${BATCH_SIZE:-200}  # Conservative rate limit for local testing
 export RATE_LIMIT_RPS=${RATE_LIMIT_RPS:-20}  # Conservative rate limit for local testing
 export CONCURRENT_REQUESTS=${CONCURRENT_REQUESTS:-5}  # Fewer concurrent requests for local testing
 export TIMEOUT_SECONDS=${TIMEOUT_SECONDS:-15}  # Longer timeout for local testing
@@ -91,6 +92,7 @@ docker run --rm \
     -e RATE_LIMIT_RPS="$RATE_LIMIT_RPS" \
     -e CONCURRENT_REQUESTS="$CONCURRENT_REQUESTS" \
     -e TIMEOUT_SECONDS="$TIMEOUT_SECONDS" \
+    -e BATCH_SIZE="$BATCH_SIZE" \
     -e GOOGLE_APPLICATION_CREDENTIALS="/root/.config/gcloud/application_default_credentials.json" \
     "$IMAGE_NAME" \
     -c "chmod +x /entrypoint.sh && /entrypoint.sh"

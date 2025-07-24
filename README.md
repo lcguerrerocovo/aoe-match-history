@@ -89,9 +89,9 @@ cd indexing-job
 # Run with default settings (collects active players, creates snapshot)
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1
 
-# Run with custom parameters (see indexing-job/PARAMETERS.md for options)
+# Run with custom parameters
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="ACTIVE_YEARS=2.5,MIN_MATCHES=0"
+  --set-env-vars="API_BATCH_SIZE=200,CONCURRENT_REQUESTS=35,ACTIVE_YEARS=2.5"
 ```
 
 #### 3. Update Cloud Function

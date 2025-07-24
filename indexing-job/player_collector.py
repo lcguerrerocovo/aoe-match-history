@@ -21,14 +21,14 @@ API_BASE_URL = "https://aoe-api.worldsedgelink.com/community/leaderboard/GetPers
 # Environment variable configuration with defaults
 import os
 
-# Balanced defaults for Cloud Run Jobs (4Gi RAM, 2 CPU, 1 hour timeout)
+# Aggressive defaults for Cloud Run Jobs (4Gi RAM, 2 CPU, 1 hour timeout)
 RATE_LIMIT_RPS = int(os.getenv('RATE_LIMIT_RPS', '50'))  # API rate limit is 50 RPS
-CONCURRENT_REQUESTS = int(os.getenv('CONCURRENT_REQUESTS', '20'))  # Balanced for Cloud Run
-BATCH_SIZE = int(os.getenv('BATCH_SIZE', '200'))  # Back to original for efficiency
-MAX_CONSECUTIVE_EMPTY_BATCHES = int(os.getenv('MAX_CONSECUTIVE_EMPTY_BATCHES', '5'))
+CONCURRENT_REQUESTS = int(os.getenv('CONCURRENT_REQUESTS', '40'))  # Aggressive - double the concurrency
+API_BATCH_SIZE = int(os.getenv('API_BATCH_SIZE', '200'))  # API maximum batch size
+MAX_CONSECUTIVE_EMPTY_BATCHES = int(os.getenv('MAX_CONSECUTIVE_EMPTY_BATCHES', '3'))  # Faster stopping
 ACTIVE_YEARS = float(os.getenv('ACTIVE_YEARS', '2.0'))
 MIN_MATCHES = int(os.getenv('MIN_MATCHES', '1'))
-TIMEOUT_SECONDS = int(os.getenv('TIMEOUT_SECONDS', '12'))  # Balanced timeout
+TIMEOUT_SECONDS = int(os.getenv('TIMEOUT_SECONDS', '8'))  # Faster timeout
 START_PROFILE_ID = int(os.getenv('START_PROFILE_ID', '1'))  # Start from ID 1 (active players exist throughout range)
 
 # Headers matching your existing requests
@@ -306,7 +306,7 @@ async def collect_active_players(output_file: str, start_profile_id: int = START
     logging.info("Starting async player data collection and filtering")
     logging.info(f"Rate limit: {RATE_LIMIT_RPS} requests per second")
     logging.info(f"Concurrent requests: {CONCURRENT_REQUESTS}")
-    logging.info(f"Batch size: {BATCH_SIZE} IDs per request")
+    logging.info(f"API batch size: {API_BATCH_SIZE} IDs per request")
     logging.info(f"Active years: {ACTIVE_YEARS}")
     logging.info(f"Min matches: {MIN_MATCHES}")
     logging.info(f"Timeout: {TIMEOUT_SECONDS} seconds")
@@ -339,9 +339,9 @@ async def collect_active_players(output_file: str, start_profile_id: int = START
             for _ in range(CONCURRENT_REQUESTS):
                 if consecutive_empty_batches >= MAX_CONSECUTIVE_EMPTY_BATCHES:
                     break
-                batch_ids = list(range(current_id, current_id + BATCH_SIZE))
+                batch_ids = list(range(current_id, current_id + API_BATCH_SIZE))
                 batch_group.append(batch_ids)
-                current_id += BATCH_SIZE
+                current_id += API_BATCH_SIZE
             
             if not batch_group:
                 break

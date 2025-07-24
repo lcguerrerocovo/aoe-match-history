@@ -21,7 +21,7 @@ from player_collector import collect_active_players
 
 # --- Configuration ---
 INDEX_NAME = "players"
-BATCH_SIZE = 2500
+MEILISEARCH_BATCH_SIZE = 2500
 MEILI_URL = "http://localhost:7700"
 MEILI_MASTER_KEY = "masterKey"
 
@@ -452,17 +452,17 @@ def main():
         logging.info("No documents to upload.")
         sys.exit(0)
         
-    logging.info(f"Uploading {len(documents)} documents in batches of {BATCH_SIZE}...")
+    logging.info(f"Uploading {len(documents)} documents in batches of {MEILISEARCH_BATCH_SIZE}...")
     successful_batches = 0
     
-    for i in range(0, len(documents), BATCH_SIZE):
-        batch = documents[i:i + BATCH_SIZE]
-        batch_num = i//BATCH_SIZE + 1
-        total_batches = (len(documents) + BATCH_SIZE - 1)//BATCH_SIZE
+    for i in range(0, len(documents), MEILISEARCH_BATCH_SIZE):
+        batch = documents[i:i + MEILISEARCH_BATCH_SIZE]
+        batch_num = i//MEILISEARCH_BATCH_SIZE + 1
+        total_batches = (len(documents) + MEILISEARCH_BATCH_SIZE - 1)//MEILISEARCH_BATCH_SIZE
         
         try:
             task = index.add_documents(batch, primary_key='profile_id')
-            client.wait_for_task(task.task_uid, timeout_in_ms=30000)  # 30 second timeout
+            client.wait_for_task(task.task_uid, timeout_in_ms=20000)  # 20 second timeout
             logging.info(f"  - Uploaded batch {batch_num}/{total_batches}")
             successful_batches += 1
         except Exception as e:
