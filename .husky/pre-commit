@@ -15,3 +15,15 @@ fi
 
 # Always run lint and type-check
 npm run lint && npm run type-check
+
+# Go back to root and check versions
+cd ..
+
+# Check if version check script exists
+if [ -f "scripts/check-versions.sh" ]; then
+    echo "📋 Checking version consistency..."
+    ./scripts/check-versions.sh
+    echo "✅ Version check passed"
+else
+    echo "⚠️ Version check script not found, skipping"
+fi
