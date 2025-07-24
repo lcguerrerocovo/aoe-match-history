@@ -18,16 +18,14 @@ echo "Waiting for Meilisearch to start..."
 sleep 5
 echo "Meilisearch should be ready now!"
 
-# Check if local file exists (mounted from host)
-if [ -f "/active_players.jsonl" ]; then
-    echo "Using local data file: /active_players.jsonl"
-else
-    echo "❌ Local data file not found: /active_players.jsonl"
-    exit 1
-fi
-
 # Use the SKIP_GCS_UPLOAD environment variable if set, otherwise default to true for local testing
 export SKIP_GCS_UPLOAD=${SKIP_GCS_UPLOAD:-true}
+
+# Log current configuration
+echo "📊 Current Configuration:"
+echo "  SKIP_GCS_UPLOAD: $SKIP_GCS_UPLOAD"
+echo "  START_PROFILE_ID: ${START_PROFILE_ID:-1}"
+echo "  MAX_CONSECUTIVE_EMPTY_BATCHES: ${MAX_CONSECUTIVE_EMPTY_BATCHES:-5}"
 
 # Run the indexing script
 echo "Starting indexing..."

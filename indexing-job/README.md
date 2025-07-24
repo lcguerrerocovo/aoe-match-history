@@ -24,7 +24,7 @@ The indexing job:
 
 ## Local Testing
 
-You can test the indexing job locally using Docker:
+You can test the indexing job locally using Docker with a comprehensive testing workflow that mirrors the production pipeline.
 
 ### Prerequisites for Local Testing
 
@@ -32,33 +32,85 @@ You can test the indexing job locally using Docker:
 2. Google Cloud SDK authenticated (`gcloud auth login`)
 3. Access to the Artifact Registry repository
 
-### Local Indexing Test
+### Enhanced Local Testing Workflow
 
-Runs the full indexing process with a subset of data:
+The local test script provides a complete testing environment:
 
 ```bash
 cd indexing-job/scripts
-./run-indexer.sh [BUILD]
+./run-indexer.sh
 ```
 
-**Parameters:**
-- `BUILD` (optional): Set to "true" to build Docker image locally, "false" to use production image (default: "true")
+**What the enhanced local test does:**
 
-**Examples:**
+1. **🧹 Clears existing data** - Removes any previous test data to start fresh
+2. **🚀 Runs indexing job** - Collects player data from API and creates snapshot
+3. **📦 Starts persistent container** - Imports the snapshot into a test Meilisearch instance
+4. **📊 Verifies document count** - Confirms snapshot import worked correctly
+5. **🧪 Keeps running for testing** - Container stays up until you press Ctrl+C
+6. **🧹 Cleanup** - Removes everything when done
+
+**Test Output Example:**
+```
+✅ Indexing job complete!
+🚀 Starting persistent Meilisearch container with snapshot...
+📦 Found timestamped snapshot: data.ms.snapshot
+✅ Meilisearch container started successfully!
+🌐 Access at: http://localhost:7700
+🔑 Master key: a-secure-master-key-change-this
+
+📊 Verifying document count...
+✅ Snapshot import successful: 599 documents loaded
+
+🛑 Press Ctrl+C to stop and cleanup
+```
+
+### Local Testing Parameters
+
+You can customize the local test behavior using environment variables:
+
 ```bash
-./run-indexer.sh          # Build locally and run (default)
-./run-indexer.sh true     # Build locally and run
-./run-indexer.sh false    # Pull production image from Artifact Registry and run
+# Test with conservative rate limiting
+RATE_LIMIT_RPS=20 CONCURRENT_REQUESTS=5 ./run-indexer.sh
+
+# Test with different collection criteria
+ACTIVE_YEARS=2.5 MIN_MATCHES=0 ./run-indexer.sh
+
+# Test starting from a specific profile ID
+START_PROFILE_ID=23000000 ./run-indexer.sh
+
+# Test with quick stopping (for debugging)
+MAX_CONSECUTIVE_EMPTY_BATCHES=3 ./run-indexer.sh
 ```
 
-**What it does:**
-- Creates test data subset (first 2500 records from `active_players.jsonl`)
-- Starts local Meilisearch instance
-- Runs full indexing process
-- Creates and uploads snapshot to GCS
-- Cleans up test data when done
+### Testing the Snapshot Functionality
 
-**Note:** Hot-swap functionality is only available in the production Cloud Run job environment, not in local testing.
+The local test specifically validates:
+- **Data collection** - API calls and filtering work correctly
+- **Snapshot creation** - Meilisearch creates proper snapshot files
+- **Snapshot import** - Documents are correctly restored from snapshot
+- **Document count verification** - Ensures no data loss during snapshot process
+
+### Manual Testing Commands
+
+Once the persistent container is running, you can test manually:
+
+```bash
+# Check index stats
+curl -H 'Authorization: Bearer a-secure-master-key-change-this' \
+  http://localhost:7700/indexes/players/stats
+
+# Search for players
+curl -H 'Authorization: Bearer a-secure-master-key-change-this' \
+  -H 'Content-Type: application/json' \
+  -d '{"q":"test"}' \
+  http://localhost:7700/indexes/players/search
+
+# Health check
+curl http://localhost:7700/health
+```
+
+**Note:** The local test environment uses the same Docker image and configuration as production, ensuring accurate testing of the entire pipeline.
 
 ## Usage
 

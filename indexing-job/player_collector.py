@@ -54,7 +54,7 @@ class RateLimiter:
                 await asyncio.sleep(sleep_time)
             self.last_called = time.time()
 
-def is_recently_active(last_match_date_value: Optional[int], years_threshold: int = ACTIVE_YEARS) -> bool:
+def is_recently_active(last_match_date_value: Optional[int], years_threshold: float = ACTIVE_YEARS) -> bool:
     """
     Check if a player has been active within the specified number of years.
     
@@ -65,7 +65,7 @@ def is_recently_active(last_match_date_value: Optional[int], years_threshold: in
     Returns:
         True if player is recently active, False otherwise
     """
-    if not last_match_date_value:
+    if not last_match_date_value or last_match_date_value == 0:
         return False
     
     try:
@@ -74,11 +74,16 @@ def is_recently_active(last_match_date_value: Optional[int], years_threshold: in
         current_date = datetime.now(timezone.utc)
         
         # Calculate the threshold date
-        threshold_date = current_date.replace(year=current_date.year - years_threshold)
+        threshold_date = current_date.replace(year=current_date.year - int(years_threshold))
+        
+        # Debug logging for first few players
+        if last_match_date_value <= 10:  # Only log first 10 players
+            logging.debug(f"Date check: last_match={last_match_date} ({last_match_date_value}), threshold={threshold_date}, active={last_match_date >= threshold_date}")
         
         return last_match_date >= threshold_date
-    except (ValueError, TypeError, OSError):
+    except (ValueError, TypeError, OSError) as e:
         # If we can't parse the timestamp, assume they're not recently active
+        logging.debug(f"Date parsing error for {last_match_date_value}: {e}")
         return False
 
 def should_include_player(player_data: Dict) -> bool:
@@ -91,20 +96,37 @@ def should_include_player(player_data: Dict) -> bool:
     Returns:
         True if player should be included, False otherwise
     """
-    # Must have minimum number of matches
-    if player_data.get('total_matches', 0) < MIN_MATCHES:
-        return False
-    
-    # Must be recently active
-    if not is_recently_active(player_data.get('last_match_date')):
-        return False
-    
-    # Must have basic required fields
     profile_id = player_data.get('profile_id')
+    total_matches = player_data.get('total_matches', 0)
+    last_match_date = player_data.get('last_match_date')
     name = player_data.get('name')
     alias = player_data.get('alias')
     
-    return bool(profile_id and (name or alias))
+    # Debug logging for first few players
+    if profile_id and profile_id <= 10:  # Only log first 10 players
+        logging.debug(f"Player {profile_id}: matches={total_matches}, last_match={last_match_date}, name='{name}', alias='{alias}'")
+    
+    # Must have minimum number of matches
+    if total_matches < MIN_MATCHES:
+        if profile_id and profile_id <= 10:
+            logging.debug(f"Player {profile_id}: Excluded - insufficient matches ({total_matches} < {MIN_MATCHES})")
+        return False
+    
+    # Must be recently active
+    if not is_recently_active(last_match_date):
+        if profile_id and profile_id <= 10:
+            logging.debug(f"Player {profile_id}: Excluded - not recently active (last_match={last_match_date})")
+        return False
+    
+    # Must have basic required fields
+    if not (profile_id and (name or alias)):
+        if profile_id and profile_id <= 10:
+            logging.debug(f"Player {profile_id}: Excluded - missing required fields")
+        return False
+    
+    if profile_id and profile_id <= 10:
+        logging.debug(f"Player {profile_id}: INCLUDED")
+    return True
 
 async def fetch_player_data(session: aiohttp.ClientSession, rate_limiter: RateLimiter, profile_ids: List[int]) -> Optional[List[Dict]]:
     """
@@ -186,7 +208,7 @@ async def fetch_player_data(session: aiohttp.ClientSession, rate_limiter: RateLi
                     
                     # Add enhanced stats to each player
                     member['total_matches'] = enhanced_data['total_matches']
-                    member['last_match_date'] = enhanced_data['last_match_date'] if enhanced_data['last_match_date'] > 0 else None
+                    member['last_match_date'] = enhanced_data['last_match_date'] if enhanced_data['last_match_date'] > 0 else 0
                     
                     # Filter players inline
                     if should_include_player(member):
