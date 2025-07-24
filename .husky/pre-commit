@@ -16,14 +16,22 @@ fi
 # Always run lint and type-check
 npm run lint && npm run type-check
 
-# Go back to root and check versions
+# Go back to root and check versions only if relevant files changed
 cd ..
 
-# Check if version check script exists
-if [ -f "scripts/check-versions.sh" ]; then
-    echo "📋 Checking version consistency..."
-    ./scripts/check-versions.sh
-    echo "✅ Version check passed"
+# Check if any relevant files were modified
+RELEVANT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(indexing-job/|aoe-search/|scripts/check-versions\.sh)' || true)
+
+if [ -n "$RELEVANT_FILES" ]; then
+    echo "📋 Relevant files changed, checking version consistency..."
+    echo "Modified files: $RELEVANT_FILES"
+    
+    if [ -f "scripts/check-versions.sh" ]; then
+        ./scripts/check-versions.sh
+        echo "✅ Version check passed"
+    else
+        echo "⚠️ Version check script not found, skipping"
+    fi
 else
-    echo "⚠️ Version check script not found, skipping"
+    echo "📋 No relevant files changed, skipping version check"
 fi
