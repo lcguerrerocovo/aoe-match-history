@@ -348,6 +348,34 @@ def upload_snapshot_to_gcs():
         logging.error(f"❌ Error uploading snapshot to GCS: {e}")
         return False
 
+def trigger_vm_restart():
+    """Trigger VM restart after successful indexing"""
+    logging.info("🔄 Triggering VM restart with latest snapshot...")
+    try:
+        # SSH to VM and run the wrapper script
+        result = subprocess.run([
+            'gcloud', 'compute', 'ssh', 'aoe-search', 
+            '--zone=us-central1-a', 
+            '--command=sudo bash /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh',
+            '--quiet'
+        ], capture_output=True, text=True, timeout=300)
+        
+        if result.returncode == 0:
+            logging.info("✅ VM restart completed successfully")
+            logging.info("🌐 Search service is now updated with latest data")
+        else:
+            logging.error(f"❌ VM restart failed: {result.stderr}")
+            logging.warning("⚠️ VM restart failed, but indexing was successful")
+            # Don't exit with error - restart failure shouldn't fail the job
+            
+    except subprocess.TimeoutExpired:
+        logging.error("❌ VM restart timed out after 5 minutes")
+        logging.warning("⚠️ VM restart timed out, but indexing was successful")
+    except Exception as e:
+        logging.error(f"❌ Failed to trigger VM restart: {e}")
+        logging.warning("⚠️ VM restart failed, but indexing was successful")
+        # Continue without failing the job
+
 def main():
     """Main function to read, process, and upload data."""
     
@@ -503,7 +531,11 @@ def main():
             else:
                 if upload_snapshot_to_gcs():
                     logging.info("✅ Snapshot uploaded to GCS successfully!")
-                    logging.info("✅ Job completed successfully! VM will handle hot-swap automatically.")
+                    
+                    # 7. Trigger VM restart with latest snapshot
+                    trigger_vm_restart()
+                    
+                    logging.info("✅ Job completed successfully!")
                     sys.exit(0)
                 else:
                     logging.error("❌ Failed to upload snapshot to GCS")
