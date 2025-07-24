@@ -11,6 +11,7 @@ import os
 import logging
 import meilisearch
 import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime, timezone
 import requests
