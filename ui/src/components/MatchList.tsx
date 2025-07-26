@@ -415,7 +415,6 @@ interface MatchListProps {
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
-  const theme = useTheme();
 
   // Detect if we're in search mode (single group with "Search Results" in the name)
   const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
