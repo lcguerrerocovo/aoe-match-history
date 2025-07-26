@@ -481,7 +481,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <AccordionButton>
                     <VStack flex="1" align="stretch" spacing={2}>
                       {/* Date Header */}
-                      <Box bg="brand.topbarBg" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic" boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)">
+                      <Box bg="brand.sessionHeaderBg" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.bronze" boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)">
                         {(() => {
                           const timingData = formatSessionTimingData(group.date, totalReal);
                           return (
@@ -590,29 +590,58 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
 
                     </VStack>
                     <Box
-                      w="22px"
-                      h="22px"
-                      bg={`linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`}
+                      w="24px"
+                      h="24px"
+                      bg={`
+                        linear-gradient(135deg, 
+                          #8B4513 0%,   /* Saddle brown */ 
+                          #A0522D 25%,  /* Sienna */
+                          #8B4513 100%  /* Saddle brown */
+                        ),
+                        repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px),
+                        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)
+                      `}
                       borderRadius="full"
                       display="flex"
                       alignItems="center"
                       justifyContent="center"
-                      color="brand.brightGold"
-                      fontSize="xl"
+                      color="#654321"
+                      fontSize="lg"
                       fontWeight="bold"
-                      border="1px solid"
-                      borderColor="brand.bronze"
-                      boxShadow="inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)"
+                      border="2px solid"
+                      borderColor="#654321"
+                      boxShadow="inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)"
                       transition="all 0.2s ease"
                       position="relative"
                       right="-8px"
                       _hover={{ 
-                        bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
-                        color: "brand.brightGold",
-                        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                        bg: `
+                          linear-gradient(135deg, 
+                            #A0522D 0%,   /* Sienna */ 
+                            #CD853F 25%,  /* Peru */
+                            #A0522D 100%  /* Sienna */
+                          ),
+                          repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
+                          radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                          radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)
+                        `,
+                        color: "#654321",
+                        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)"
                       }}
                     >
-                      {isOpen ? "−" : "+"}
+                      <Text
+                        fontSize="lg"
+                        fontWeight="bold"
+                        color="#654321"
+                        textShadow="
+                          1px 1px 0px rgba(255,255,255,0.8),
+                          -1px -1px 0px rgba(0,0,0,0.3)
+                        "
+                        lineHeight="1"
+                      >
+                        {isOpen ? "−" : "+"}
+                      </Text>
                     </Box>
                   </AccordionButton>
                 </h2>

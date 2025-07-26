@@ -27,7 +27,6 @@ echo "🚀 Starting SSH tunnel..."
 gcloud compute ssh "$VM_NAME" \
     --zone="$ZONE" \
     --project="$PROJECT_ID" \
-    --tunnel-through-iap \
     --ssh-flag="-L $LOCAL_PORT:localhost:$REMOTE_PORT" \
     --ssh-flag="-N" \
     --ssh-flag="-f" \

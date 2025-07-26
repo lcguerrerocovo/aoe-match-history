@@ -63,6 +63,12 @@ const lightColors = {
     landingBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
     landingBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
     
+    // Session header - subtle parchment with light texture
+    sessionHeaderBg: `
+      linear-gradient(135deg, #F8F3E6 0%, #F5F0E3 25%, #F2EBD8 50%, #F0E8D5 75%, #EDE5D2 100%),
+      repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.03) 0px, rgba(139, 90, 43, 0.03) 2px, transparent 2px, transparent 8px)
+    `,
+    
     // UI element backgrounds
     cardBg: '#ffffff',
     inputBg: '#ffffff',
@@ -155,6 +161,12 @@ const darkColors = {
     topbarBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
     landingBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
     landingBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
+    
+    // Session header - subtle parchment with light texture (dark mode)
+    sessionHeaderBg: `
+      linear-gradient(135deg, #2A1F18 0%, #322520 25%, #3A2B24 50%, #423128 75%, #4A372C 100%),
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)
+    `,
     
     // UI element backgrounds
     cardBg: '#2D3748',
