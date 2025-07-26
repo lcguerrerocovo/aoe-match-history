@@ -97,6 +97,36 @@ const lightColors = {
     // Session group card colors
     sessionCardBg: '#f4f4f6',
     sessionCardBorder: '#e0e0e6',
+    
+    // Stamp button colors
+    stampBg: `
+      linear-gradient(135deg, 
+        #8B4513 0%,   /* Saddle brown */ 
+        #A0522D 25%,  /* Sienna */
+        #8B4513 100%  /* Saddle brown */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)
+    `,
+    stampBgHover: `
+      linear-gradient(135deg, 
+        #A0522D 0%,   /* Sienna */ 
+        #CD853F 25%,  /* Peru */
+        #A0522D 100%  /* Sienna */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)
+    `,
+    stampBorder: '#654321',
+    stampText: '#654321',
+    stampTextShadow: `
+      1px 1px 0px rgba(255,255,255,0.8),
+      -1px -1px 0px rgba(0,0,0,0.3)
+    `,
+    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)',
+    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)',
     // Enhanced parchment texture: stronger vignette plus ultra-subtle grain for depth
     parchmentSurface: `
       radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%),
@@ -196,6 +226,36 @@ const darkColors = {
     // Session group card colors (dark mode)
     sessionCardBg: '#2D3748',
     sessionCardBorder: '#4A5568',
+    
+    // Stamp button colors (dark mode)
+    stampBg: `
+      linear-gradient(135deg, 
+        #5D3A1A 0%,   /* Darker saddle brown */ 
+        #7A4A2A 25%,  /* Darker sienna */
+        #5D3A1A 100%  /* Darker saddle brown */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)
+    `,
+    stampBgHover: `
+      linear-gradient(135deg, 
+        #7A4A2A 0%,   /* Darker sienna */ 
+        #9B6B3F 25%,  /* Darker peru */
+        #7A4A2A 100%  /* Darker sienna */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)
+    `,
+    stampBorder: '#4A2F1A',
+    stampText: '#F5DEB3',
+    stampTextShadow: `
+      1px 1px 0px rgba(0,0,0,0.8),
+      -1px -1px 0px rgba(255,255,255,0.2)
+    `,
+    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.05)',
+    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.08)',
     // Textured parchment for dark mode: deeper vignette plus faint cross-hatch grain
     parchmentSurface: `
       radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%),

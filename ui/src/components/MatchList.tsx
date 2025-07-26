@@ -415,6 +415,7 @@ interface MatchListProps {
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
+  const theme = useTheme();
 
   // Detect if we're in search mode (single group with "Search Results" in the name)
   const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
@@ -591,52 +592,31 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     <Box
                       w="24px"
                       h="24px"
-                      bg={`
-                        linear-gradient(135deg, 
-                          #8B4513 0%,   /* Saddle brown */ 
-                          #A0522D 25%,  /* Sienna */
-                          #8B4513 100%  /* Saddle brown */
-                        ),
-                        repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px),
-                        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)
-                      `}
+                      bg={theme.colors.brand.stampBg}
                       borderRadius="full"
                       display="flex"
                       alignItems="center"
                       justifyContent="center"
-                      color="#654321"
+                      color={theme.colors.brand.stampText}
                       fontSize="lg"
                       fontWeight="bold"
                       border="2px solid"
-                      borderColor="#654321"
-                      boxShadow="inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)"
+                      borderColor={theme.colors.brand.stampBorder}
+                      boxShadow={theme.colors.brand.stampShadow}
                       transition="all 0.2s ease"
                       position="relative"
                       right="-8px"
                       _hover={{ 
-                        bg: `
-                          linear-gradient(135deg, 
-                            #A0522D 0%,   /* Sienna */ 
-                            #CD853F 25%,  /* Peru */
-                            #A0522D 100%  /* Sienna */
-                          ),
-                          repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
-                          radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-                          radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)
-                        `,
-                        color: "#654321",
-                        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)"
+                        bg: theme.colors.brand.stampBgHover,
+                        color: theme.colors.brand.stampText,
+                        boxShadow: theme.colors.brand.stampShadowHover
                       }}
                     >
                       <Text
                         fontSize="lg"
                         fontWeight="bold"
-                        color="#654321"
-                        textShadow="
-                          1px 1px 0px rgba(255,255,255,0.8),
-                          -1px -1px 0px rgba(0,0,0,0.3)
-                        "
+                        color={theme.colors.brand.stampText}
+                        textShadow={theme.colors.brand.stampTextShadow}
                         lineHeight="1"
                       >
                         {isOpen ? "−" : "+"}
