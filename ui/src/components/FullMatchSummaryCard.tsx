@@ -328,10 +328,11 @@ function MatchDetails({ match }: { match: any }) {
     <Box
       w="100%"
       p={4}
-      bg="brand.topbarBg"
+      bg="brand.sessionHeaderBg"
       borderRadius="md"
       border="1px solid"
-      borderColor="brand.steel"
+      borderColor="brand.bronze"
+      boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)"
       data-testid="match-details"
     >
       <VStack spacing={3} align="stretch">
