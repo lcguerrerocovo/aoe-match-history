@@ -561,8 +561,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 {diplo}
                               </Text>
                               <Text as="span" color="brand.steel" mr={2} verticalAlign="middle">|</Text>
-                              <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
-                              <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
+                              <Text as="span" color="brand.darkWin" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.wins}W</Text>
+                              <Text as="span" color="brand.darkLoss" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
                                 <Text as="span" color="brand.steel" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
                               )}
@@ -575,7 +575,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                     minWidth={{ base: '30px', md: '35px' }}
                                     textAlign="right"
                                     fontFamily="mono"
-                                    color={rec.eloChange > 0 ? 'brand.brightGreen' : 'brand.brightRed'}
+                                    color={rec.eloChange > 0 ? 'brand.darkWin' : 'brand.darkLoss'}
                                     verticalAlign="middle"
                                   >
                                     {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}

@@ -63,10 +63,11 @@ const lightColors = {
     landingBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
     landingBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
     
-    // Session header - subtle parchment with light texture
+    // Session header - enhanced stone-like texture with subtle contrast for header prominence
     sessionHeaderBg: `
-      linear-gradient(135deg, #F8F3E6 0%, #F5F0E3 25%, #F2EBD8 50%, #F0E8D5 75%, #EDE5D2 100%),
-      repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.03) 0px, rgba(139, 90, 43, 0.03) 2px, transparent 2px, transparent 8px)
+      linear-gradient(135deg, #E8E5DA 0%, #E2DFD4 25%, #DCD9CE 50%, #D6D3C8 75%, #D0CDC2 100%),
+      repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.06) 0px, rgba(139, 90, 43, 0.06) 2px, transparent 2px, transparent 8px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)
     `,
     
     // UI element backgrounds
@@ -457,19 +458,23 @@ export function createTheme(isDark: boolean) {
       }),
       recordBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
-          color: isDark ? 'brand.midnightBlue' : 'white',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          bg: isDark ? 'brand.bronzeLight' : 'brand.bronzeLight',
+          color: isDark ? 'brand.black' : 'brand.black',
+          borderColor: isDark ? 'brand.bronze' : 'brand.bronze',
           borderWidth: '1px',
           borderRadius: 'lg',
-          boxShadow: 'md',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
           px: { base: 1, md: 3 },
           py: 1,
           fontSize: '0.8125rem',
-          fontWeight: 'semibold',
+          fontWeight: 'bold',
           flexDirection: 'row',
           alignItems: 'center',
-          transition: 'all 0.3s ease',
+          transition: 'all 0.2s ease',
+          _hover: {
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
+            transform: 'translateY(-1px)',
+          }
         },
         body: {
           padding: 0,
@@ -477,21 +482,25 @@ export function createTheme(isDark: boolean) {
       }),
       matchesCountBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
-          color: isDark ? 'brand.midnightBlue' : 'white',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          bg: isDark ? 'brand.bronzeLight' : 'brand.bronzeLight',
+          color: isDark ? 'brand.black' : 'brand.black',
+          borderColor: isDark ? 'brand.bronze' : 'brand.bronze',
           borderWidth: '1px',
           borderRadius: 'lg',
           px: { base: 1, md: 3 },
           minWidth: '80px',
           py: 1,
           fontSize: '0.8125rem',
-          fontWeight: 'bold',
+          fontWeight: 'extrabold',
           flexDirection: 'row',
           alignItems: 'center',
           gap: 0.5,
-          boxShadow: 'md',
-          transition: 'all 0.3s ease',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
+          transition: 'all 0.2s ease',
+          _hover: {
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
+            transform: 'translateY(-1px)',
+          }
         },
         body: {
           padding: 0,
