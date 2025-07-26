@@ -128,9 +128,9 @@ function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profile
           <Link 
             as={RouterLink}
             to={`/match/${match.match_id}`}
-            color="brand.zoolanderBlue"
+            color="brand.linkDefault"
             fontWeight="semibold"
-            _hover={{ color: "brand.gold" }}
+            _hover={{ color: "brand.linkHover", textDecoration: "underline" }}
           >
             {match.description}
           </Link>
@@ -481,7 +481,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <AccordionButton>
                     <VStack flex="1" align="stretch" spacing={2}>
                       {/* Date Header */}
-                      <Box bg="brand.topbarBg" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.heraldic" boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)">
+                      <Box bg="brand.sessionHeaderBg" p={1} borderRadius="md" borderWidth="1px" borderColor="brand.bronze" boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)">
                         {(() => {
                           const timingData = formatSessionTimingData(group.date, totalReal);
                           return (
@@ -561,8 +561,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 {diplo}
                               </Text>
                               <Text as="span" color="brand.steel" mr={2} verticalAlign="middle">|</Text>
-                              <Text as="span" color="brand.brightGreen" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.wins}W</Text>
-                              <Text as="span" color="brand.brightRed" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle">{rec.losses}L</Text>
+                              <Text as="span" color="brand.darkWin" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.wins}W</Text>
+                              <Text as="span" color="brand.darkLoss" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
                                 <Text as="span" color="brand.steel" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
                               )}
@@ -575,7 +575,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                     minWidth={{ base: '30px', md: '35px' }}
                                     textAlign="right"
                                     fontFamily="mono"
-                                    color={rec.eloChange > 0 ? 'brand.brightGreen' : 'brand.brightRed'}
+                                    color={rec.eloChange > 0 ? 'brand.darkWin' : 'brand.darkLoss'}
                                     verticalAlign="middle"
                                   >
                                     {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}
@@ -590,29 +590,37 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
 
                     </VStack>
                     <Box
-                      w="22px"
-                      h="22px"
-                      bg={`linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`}
+                      w="24px"
+                      h="24px"
+                      bg={theme.colors.brand.stampBg}
                       borderRadius="full"
                       display="flex"
                       alignItems="center"
                       justifyContent="center"
-                      color="brand.brightGold"
-                      fontSize="xl"
+                      color={theme.colors.brand.stampText}
+                      fontSize="lg"
                       fontWeight="bold"
-                      border="1px solid"
-                      borderColor="brand.bronze"
-                      boxShadow="inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)"
+                      border="2px solid"
+                      borderColor={theme.colors.brand.stampBorder}
+                      boxShadow={theme.colors.brand.stampShadow}
                       transition="all 0.2s ease"
                       position="relative"
                       right="-8px"
                       _hover={{ 
-                        bg: `linear-gradient(135deg, ${theme.colors.brand.gold} 0%, ${theme.colors.brand.bronze} 30%, ${theme.colors.brand.bronzeMedium} 70%, ${theme.colors.brand.bronzeDark} 100%)`,
-                        color: "brand.brightGold",
-                        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
+                        bg: theme.colors.brand.stampBgHover,
+                        color: theme.colors.brand.stampText,
+                        boxShadow: theme.colors.brand.stampShadowHover
                       }}
                     >
-                      {isOpen ? "−" : "+"}
+                      <Text
+                        fontSize="lg"
+                        fontWeight="bold"
+                        color={theme.colors.brand.stampText}
+                        textShadow={theme.colors.brand.stampTextShadow}
+                        lineHeight="1"
+                      >
+                        {isOpen ? "−" : "+"}
+                      </Text>
                     </Box>
                   </AccordionButton>
                 </h2>

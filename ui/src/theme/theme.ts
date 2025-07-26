@@ -63,6 +63,13 @@ const lightColors = {
     landingBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
     landingBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
     
+    // Session header - enhanced stone-like texture with subtle contrast for header prominence
+    sessionHeaderBg: `
+      linear-gradient(135deg, #E8E5DA 0%, #E2DFD4 25%, #DCD9CE 50%, #D6D3C8 75%, #D0CDC2 100%),
+      repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.06) 0px, rgba(139, 90, 43, 0.06) 2px, transparent 2px, transparent 8px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)
+    `,
+    
     // UI element backgrounds
     cardBg: '#ffffff',
     inputBg: '#ffffff',
@@ -91,6 +98,36 @@ const lightColors = {
     // Session group card colors
     sessionCardBg: '#f4f4f6',
     sessionCardBorder: '#e0e0e6',
+    
+    // Stamp button colors
+    stampBg: `
+      linear-gradient(135deg, 
+        #8B4513 0%,   /* Saddle brown */ 
+        #A0522D 25%,  /* Sienna */
+        #8B4513 100%  /* Saddle brown */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)
+    `,
+    stampBgHover: `
+      linear-gradient(135deg, 
+        #A0522D 0%,   /* Sienna */ 
+        #CD853F 25%,  /* Peru */
+        #A0522D 100%  /* Sienna */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)
+    `,
+    stampBorder: '#654321',
+    stampText: '#654321',
+    stampTextShadow: `
+      1px 1px 0px rgba(255,255,255,0.8),
+      -1px -1px 0px rgba(0,0,0,0.3)
+    `,
+    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)',
+    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)',
     // Enhanced parchment texture: stronger vignette plus ultra-subtle grain for depth
     parchmentSurface: `
       radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%),
@@ -104,6 +141,10 @@ const lightColors = {
       repeating-linear-gradient(45deg,  rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, transparent 2px, transparent 6px),
       #F8F3E6
     `,
+    
+    // Da Vinci-inspired link colors (light theme)
+    linkDefault: '#8B4513',       // Saddle Brown
+    linkHover: '#CD853F',         // Peru
   },
 };
 
@@ -134,6 +175,10 @@ const darkColors = {
     tableBorderOnLight: '#4A5568',
     modernTableBorder: '#90CDF4',
     
+    // Da Vinci-inspired link colors (dark theme)
+    linkDefault: '#90CDF4',       // Light blue (original heraldic)
+    linkHover: '#FFD700',         // Gold (original hover)
+    
     win: '#48BB78',
     loss: '#F56565', 
     same: '#90CDF4',
@@ -155,6 +200,12 @@ const darkColors = {
     topbarBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
     landingBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
     landingBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
+    
+    // Session header - dark slate with subtle texture (dark mode)
+    sessionHeaderBg: `
+      linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #171923 50%, #1A202C 75%, #2D3748 100%),
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)
+    `,
     
     // UI element backgrounds
     cardBg: '#2D3748',
@@ -184,6 +235,36 @@ const darkColors = {
     // Session group card colors (dark mode)
     sessionCardBg: '#2D3748',
     sessionCardBorder: '#4A5568',
+    
+    // Stamp button colors (dark mode)
+    stampBg: `
+      linear-gradient(135deg, 
+        #4A5568 0%,   /* Dark slate */ 
+        #2D3748 25%,  /* Darker slate */
+        #4A5568 100%  /* Dark slate */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)
+    `,
+    stampBgHover: `
+      linear-gradient(135deg, 
+        #2D3748 0%,   /* Darker slate */ 
+        #1A202C 25%,  /* Even darker slate */
+        #2D3748 100%  /* Darker slate */
+      ),
+      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)
+    `,
+    stampBorder: '#2D3748',
+    stampText: '#E2E8F0',
+    stampTextShadow: `
+      1px 1px 0px rgba(0,0,0,0.8),
+      -1px -1px 0px rgba(255,255,255,0.2)
+    `,
+    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.05)',
+    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.08)',
     // Textured parchment for dark mode: deeper vignette plus faint cross-hatch grain
     parchmentSurface: `
       radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%),
@@ -385,19 +466,23 @@ export function createTheme(isDark: boolean) {
       }),
       recordBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
-          color: isDark ? 'brand.midnightBlue' : 'white',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          bg: isDark ? 'brand.slateBlue' : 'brand.bronzeLight',
+          color: isDark ? 'brand.steel' : 'brand.black',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
           borderWidth: '1px',
           borderRadius: 'lg',
-          boxShadow: 'md',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
           px: { base: 1, md: 3 },
           py: 1,
           fontSize: '0.8125rem',
-          fontWeight: 'semibold',
+          fontWeight: 'bold',
           flexDirection: 'row',
           alignItems: 'center',
-          transition: 'all 0.3s ease',
+          transition: 'all 0.2s ease',
+          _hover: {
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
+            transform: 'translateY(-1px)',
+          }
         },
         body: {
           padding: 0,
@@ -405,21 +490,25 @@ export function createTheme(isDark: boolean) {
       }),
       matchesCountBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
-          color: isDark ? 'brand.midnightBlue' : 'white',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          bg: isDark ? 'brand.slateBlue' : 'brand.bronzeLight',
+          color: isDark ? 'brand.steel' : 'brand.black',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
           borderWidth: '1px',
           borderRadius: 'lg',
           px: { base: 1, md: 3 },
           minWidth: '80px',
           py: 1,
           fontSize: '0.8125rem',
-          fontWeight: 'bold',
+          fontWeight: 'extrabold',
           flexDirection: 'row',
           alignItems: 'center',
           gap: 0.5,
-          boxShadow: 'md',
-          transition: 'all 0.3s ease',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
+          transition: 'all 0.2s ease',
+          _hover: {
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
+            transform: 'translateY(-1px)',
+          }
         },
         body: {
           padding: 0,
@@ -512,9 +601,9 @@ export function createTheme(isDark: boolean) {
       },
       Link: {
         baseStyle: {
-          color: isDark ? 'brand.heraldic' : 'brand.heraldic',
+          color: isDark ? '#C44536' : '#8B4513',
           _hover: {
-            color: isDark ? 'brand.gold' : '#b78b2b',
+            color: isDark ? '#E74C3C' : '#A0522D',
           },
         },
       },
