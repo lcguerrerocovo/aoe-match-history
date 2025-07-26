@@ -128,9 +128,9 @@ function MatchSummaryCard({ match, profileId, groupOpen }: { match: any; profile
           <Link 
             as={RouterLink}
             to={`/match/${match.match_id}`}
-            color="brand.zoolanderBlue"
+            color="brand.linkDefault"
             fontWeight="semibold"
-            _hover={{ color: "brand.gold" }}
+            _hover={{ color: "brand.linkHover", textDecoration: "underline" }}
           >
             {match.description}
           </Link>
