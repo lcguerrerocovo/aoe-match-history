@@ -46,7 +46,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return getTextColorForBackground(backgroundColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack);
   };
 
-  const getTextShadowForTheme = (backgroundColor: string, textColor: string): string => {
+  const getTextShadowForTheme = (backgroundColor: string): string => {
     return getTextShadowForBackground(backgroundColor, isDark);
   };
 
@@ -125,7 +125,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
           const strokeColor = entry.color as string;
           const textColor = getOptimalTextColorForTheme(strokeColor);
-                      const textShadow = getTextShadowForTheme(strokeColor, textColor);
+                      const textShadow = getTextShadowForTheme(strokeColor);
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
@@ -294,7 +294,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                     isTruncated
                     color={inactive ? theme.colors.brand.midnightBlue : getOptimalTextColorForTheme(playerColor)}
                     style={{
-                      textShadow: inactive ? 'none' : getTextShadowForTheme(playerColor, getOptimalTextColorForTheme(playerColor))
+                      textShadow: inactive ? 'none' : getTextShadowForTheme(playerColor)
                     }}
                   >
                     {name}
