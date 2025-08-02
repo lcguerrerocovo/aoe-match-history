@@ -7,7 +7,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
@@ -128,31 +127,36 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     return 'none';
   };
 
-  // Create a mapping of action types to color indices for consistent colors
+  // Create a mapping of action types to color indices for consistent colors based on frequency
   const actionTypeColorMap = useMemo(() => {
     const map: Record<string, number> = {};
-    const allTypes = new Set<string>();
+    const actionTypeTotals: Record<string, number> = {};
     
-    // Collect all action types from all players
-    Object.values(apm?.players ?? {}).forEach(playerData => {
+    // Calculate total frequency for each action type for the current selected player only
+    if (selectedPlayerId && apm?.players?.[selectedPlayerId]) {
+      const playerData = apm.players[selectedPlayerId];
       if (Array.isArray(playerData)) {
         playerData.forEach(minuteData => {
           Object.keys(minuteData).forEach(key => {
             if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-              allTypes.add(key);
+              actionTypeTotals[key] = (actionTypeTotals[key] || 0) + (minuteData[key] || 0);
             }
           });
         });
       }
-    });
+    }
     
-    // Assign colors in order
-    Array.from(allTypes).forEach((actionType, index) => {
+    // Sort action types by total frequency (descending) and assign colors
+    const sortedActionTypes = Object.entries(actionTypeTotals)
+      .sort(([, a], [, b]) => b - a)
+      .map(([actionType]) => actionType);
+    
+    sortedActionTypes.forEach((actionType, index) => {
       map[actionType] = index;
     });
     
     return map;
-  }, [apm]);
+  }, [apm, selectedPlayerId]);
 
   // Update selected player when playerIds change
   React.useEffect(() => {
