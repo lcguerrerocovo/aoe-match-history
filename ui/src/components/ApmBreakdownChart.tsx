@@ -197,59 +197,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   const containerH = useBreakpointValue({ base: '600px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
 
-  if (!playerIds.length) return null;
-
-  // Custom tooltip for stacked bar chart
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const totalActions = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
-
-    return (
-      <Box 
-        bg={theme.colors.brand.parchment} 
-        border="1px solid" 
-        borderColor={theme.colors.brand.slateBorder} 
-        p={2} 
-        borderRadius="md" 
-        fontSize="sm" 
-        minW="200px"
-
-      >
-        <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>
-          Minute {label}
-        </Text>
-        <Text fontSize="xs" color={theme.colors.brand.midnightBlue} mb={1}>
-          Total: {totalActions} actions
-        </Text>
-        {payload.map((entry: any) => (
-          <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
-            <Text color={theme.colors.brand.midnightBlue} fontSize="xs">
-              {entry.dataKey}
-            </Text>
-            <Box
-              bg={entry.color}
-              border="1px solid"
-              borderColor="brand.steel"
-              borderRadius="sm"
-              w="32px"
-              h="18px"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="xs" fontWeight="bold" color={theme.colors.brand.white}>
-                {entry.value}
-              </Text>
-            </Box>
-          </Flex>
-        ))}
-      </Box>
-    );
-  };
-
-
-
   // Calculate average APM for each player
   const playerAverages = useMemo(() => {
     const averages: Record<string, number> = {};
@@ -322,6 +269,57 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       .sort((a, b) => b.total - a.total)
       .map((item) => item.actionType);
   }, [selectedPlayerId, apm]);
+
+  if (!playerIds.length) return null;
+
+  // Custom tooltip for stacked bar chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const totalActions = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
+
+    return (
+      <Box 
+        bg={theme.colors.brand.parchment} 
+        border="1px solid" 
+        borderColor={theme.colors.brand.slateBorder} 
+        p={2} 
+        borderRadius="md" 
+        fontSize="sm" 
+        minW="200px"
+
+      >
+        <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>
+          Minute {label}
+        </Text>
+        <Text fontSize="xs" color={theme.colors.brand.midnightBlue} mb={1}>
+          Total: {totalActions} actions
+        </Text>
+        {payload.map((entry: any) => (
+          <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
+            <Text color={theme.colors.brand.midnightBlue} fontSize="xs">
+              {entry.dataKey}
+            </Text>
+            <Box
+              bg={entry.color}
+              border="1px solid"
+              borderColor="brand.steel"
+              borderRadius="sm"
+              w="32px"
+              h="18px"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="xs" fontWeight="bold" color={theme.colors.brand.white}>
+                {entry.value}
+              </Text>
+            </Box>
+          </Flex>
+        ))}
+      </Box>
+    );
+  };
 
   return (
     <Box w="full">
@@ -411,7 +409,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                   <Text 
                     fontSize="xs" 
                     fontWeight="bold" 
-                    color="white"
+                    color={theme.colors.brand.white}
                   >
                     {playerAvg}
                   </Text>
