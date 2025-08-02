@@ -274,7 +274,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     return result;
   }, [apm, selectedPlayerId, activeActionTypes]);
 
-  const containerH = useBreakpointValue({ base: '600px', md: '500px' });
+  // Fixed height for chart area - reduced to account for player selector above
+  const chartAreaHeight = useBreakpointValue({ base: '450px', md: '400px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
 
   // Calculate average APM for each player
@@ -500,8 +501,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
 
 
 
-      {/* Chart */}
-      <Box h={containerH}>
+      {/* Chart Area - Fixed Height */}
+      <Box h={chartAreaHeight}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={chartData} 
@@ -544,76 +545,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               wrapperStyle={{ fontFamily: 'inherit' }}
               offset={30}
             />
-            <Legend
-              verticalAlign="bottom"
-              align="center"
-              content={() => {
-                
-
-                return (
-                  <Box mt={2} px={2} overflow="visible" minH="60px">
-                    <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
-                      {allActionTypes.map((actionType) => {
-                        const isActive = activeActionTypes.has(actionType);
-                        const actionStat = actionTypesWithStats.find(stat => stat.actionType === actionType);
-                        
-                        return (
-                          <Flex
-                            key={actionType}
-                            align="center"
-                            gap={2}
-                            px={2}
-                            py={1}
-                            flexShrink={0}
-                            minW="fit-content"
-                            bg={isActive ? theme.colors.brand.stoneLight : theme.colors.brand.fadedBlue}
-                            borderRadius="md"
-                            border="1px solid"
-                            borderColor={isActive ? theme.colors.brand.slateBorder : theme.colors.brand.lightSteel}
-                            opacity={isActive ? 1 : 0.6}
-                            cursor="pointer"
-                            onClick={() => toggleActionType(actionType)}
-                            _hover={{
-                              opacity: 1,
-                              bg: theme.colors.brand.stoneLight,
-                            }}
-                          >
-                            <Box
-                              bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
-                              w="16px"
-                              h="16px"
-                              borderRadius="sm"
-                              flexShrink={0}
-                            />
-                            <Text
-                              color={theme.colors.brand.midnightBlue}
-                              fontSize="sm"
-                              fontWeight="semibold"
-                              maxW="140px"
-                              isTruncated
-                              whiteSpace="nowrap"
-                              flexShrink={0}
-                            >
-                              {actionType}
-                            </Text>
-                            {actionStat && (
-                              <Text
-                                color={theme.colors.brand.midnightBlue}
-                                fontSize="xs"
-                                fontWeight="bold"
-                                flexShrink={0}
-                              >
-                                {actionStat.percentage}%
-                              </Text>
-                            )}
-                          </Flex>
-                        );
-                      })}
-                    </Flex>
-                  </Box>
-                );
-              }}
-            />
             {actionTypesWithStats.map((actionStat) => (
               <Bar
                 key={actionStat.actionType}
@@ -626,6 +557,68 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
             ))}
           </BarChart>
         </ResponsiveContainer>
+      </Box>
+      
+      {/* Legend Area - Dynamic Height */}
+      <Box mt={2} px={2} overflow="visible" minH="60px">
+        <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
+          {allActionTypes.map((actionType) => {
+            const isActive = activeActionTypes.has(actionType);
+            const actionStat = actionTypesWithStats.find(stat => stat.actionType === actionType);
+            
+            return (
+              <Flex
+                key={actionType}
+                align="center"
+                gap={2}
+                px={2}
+                py={1}
+                flexShrink={0}
+                minW="fit-content"
+                bg={isActive ? theme.colors.brand.stoneLight : theme.colors.brand.fadedBlue}
+                borderRadius="md"
+                border="1px solid"
+                borderColor={isActive ? theme.colors.brand.slateBorder : theme.colors.brand.lightSteel}
+                opacity={isActive ? 1 : 0.6}
+                cursor="pointer"
+                onClick={() => toggleActionType(actionType)}
+                _hover={{
+                  opacity: 1,
+                  bg: theme.colors.brand.stoneLight,
+                }}
+              >
+                <Box
+                  bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
+                  w="16px"
+                  h="16px"
+                  borderRadius="sm"
+                  flexShrink={0}
+                />
+                <Text
+                  color={theme.colors.brand.midnightBlue}
+                  fontSize="sm"
+                  fontWeight="semibold"
+                  maxW="140px"
+                  isTruncated
+                  whiteSpace="nowrap"
+                  flexShrink={0}
+                >
+                  {actionType}
+                </Text>
+                {actionStat && (
+                  <Text
+                    color={theme.colors.brand.midnightBlue}
+                    fontSize="xs"
+                    fontWeight="bold"
+                    flexShrink={0}
+                  >
+                    {actionStat.percentage}%
+                  </Text>
+                )}
+              </Flex>
+            );
+          })}
+        </Flex>
       </Box>
     </Box>
   );
