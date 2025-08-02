@@ -8,5 +8,8 @@ npm run lint
 # Run tests (including theme compliance)
 npm test
 
+# Run Cypress component tests
+npm run cy:run
+
 # Run type checking
 npm run type-check 
