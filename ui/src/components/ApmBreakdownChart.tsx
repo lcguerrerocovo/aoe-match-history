@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button, HStack } from '@chakra-ui/react';
+import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
 interface ApmActionData {
@@ -141,7 +141,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       });
       return transformed;
     });
-  }, [apm, selectedPlayerId]);
+  }, [apm, selectedPlayerId, activeActionTypes]);
 
   const actionTypesWithStats = useMemo(() => {
     if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
@@ -238,7 +238,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="xs" fontWeight="bold" color="white">
+              <Text fontSize="xs" fontWeight="bold" color={theme.colors.brand.white}>
                 {entry.value}
               </Text>
             </Box>
@@ -248,11 +248,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     );
   };
 
-  const selectedPlayerName = nameByProfile[selectedPlayerId] || selectedPlayerId;
-  const selectedPlayerColor = colorByProfile[selectedPlayerId];
-  const playerColor = selectedPlayerColor ? 
-    PLAYER_COLORS[selectedPlayerColor] || theme.colors.brand.zoolanderBlue : 
-    theme.colors.brand.zoolanderBlue;
+
 
   // Calculate average APM for each player
   const playerAverages = useMemo(() => {
@@ -295,6 +291,38 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     return averages;
   }, [playerIds, apm, activeActionTypes]);
 
+  // Get all action types for legend display
+  const allActionTypes = useMemo(() => {
+    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
+      return [];
+    }
+
+    const playerData = apm.players[selectedPlayerId];
+    if (!Array.isArray(playerData)) return [];
+
+    const types = new Set<string>();
+    playerData.forEach((minuteData) => {
+      Object.keys(minuteData).forEach((key) => {
+        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
+          types.add(key);
+        }
+      });
+    });
+
+    // Calculate totals for sorting
+    const actionTotals = Array.from(types).map((actionType) => {
+      const total = playerData.reduce((sum, minuteData) => {
+        return sum + (minuteData[actionType] || 0);
+      }, 0);
+      return { actionType, total };
+    });
+
+    // Sort by total count (descending) - most actions first
+    return actionTotals
+      .sort((a, b) => b.total - a.total)
+      .map((item) => item.actionType);
+  }, [selectedPlayerId, apm]);
+
   return (
     <Box w="full">
       {/* Player Selection */}
@@ -322,11 +350,11 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               variant={isSelected ? "solid" : "outline"}
               colorScheme="brand"
               bg={isSelected ? playerColor : "transparent"}
-              color={isSelected ? "white" : theme.colors.brand.midnightBlue}
+              color={isSelected ? theme.colors.brand.white : theme.colors.brand.midnightBlue}
               borderColor={playerColor}
               _hover={{
                 bg: isSelected ? playerColor : playerColor,
-                color: "white",
+                color: theme.colors.brand.white,
               }}
               onClick={() => setSelectedPlayerId(pid)}
               maxW="200px"
@@ -444,37 +472,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               verticalAlign="bottom"
               align="center"
               content={() => {
-                // Get all action types for legend display
-                const allActionTypes = useMemo(() => {
-                  if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
-                    return [];
-                  }
-
-                  const playerData = apm.players[selectedPlayerId];
-                  if (!Array.isArray(playerData)) return [];
-
-                  const types = new Set<string>();
-                  playerData.forEach((minuteData) => {
-                    Object.keys(minuteData).forEach((key) => {
-                      if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-                        types.add(key);
-                      }
-                    });
-                  });
-
-                  // Calculate totals for sorting
-                  const actionTotals = Array.from(types).map((actionType) => {
-                    const total = playerData.reduce((sum, minuteData) => {
-                      return sum + (minuteData[actionType] || 0);
-                    }, 0);
-                    return { actionType, total };
-                  });
-
-                  // Sort by total count (descending) - most actions first
-                  return actionTotals
-                    .sort((a, b) => b.total - a.total)
-                    .map((item) => item.actionType);
-                }, [selectedPlayerId, apm]);
+                
 
                 return (
                   <Box mt={2} px={2} overflow="visible" minH="60px">
