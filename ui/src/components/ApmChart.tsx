@@ -189,15 +189,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             verticalAlign="bottom"
             align="center"
             content={() => {
-              const computeIsLight = (hex: string) => {
-                const cleaned = hex.replace('#', '');
-                if (cleaned.length !== 6) return false;
-                const r = parseInt(cleaned.substr(0, 2), 16);
-                const g = parseInt(cleaned.substr(2, 2), 16);
-                const b = parseInt(cleaned.substr(4, 2), 16);
-                return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
-              };
-
               return (
                 <Box
                   mt={2}
