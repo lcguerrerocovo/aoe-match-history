@@ -72,8 +72,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   };
 
   const getOptimalTextColor = (backgroundColor: string): string => {
-    const whiteContrast = getContrastRatio(backgroundColor, '#FFFFFF');
-    const blackContrast = getContrastRatio(backgroundColor, '#000000');
+    const whiteContrast = getContrastRatio(backgroundColor, theme.colors.brand.white);
+    const blackContrast = getContrastRatio(backgroundColor, theme.colors.brand.pureBlack);
     
     // Always choose the higher contrast option for better readability
     return whiteContrast > blackContrast ? theme.colors.brand.white : theme.colors.brand.pureBlack;

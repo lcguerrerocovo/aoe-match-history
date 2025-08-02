@@ -105,8 +105,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   };
 
   const getOptimalTextColor = (backgroundColor: string): string => {
-    const whiteContrast = getContrastRatio(backgroundColor, '#FFFFFF');
-    const blackContrast = getContrastRatio(backgroundColor, '#000000');
+    const whiteContrast = getContrastRatio(backgroundColor, theme.colors.brand.white);
+    const blackContrast = getContrastRatio(backgroundColor, theme.colors.brand.pureBlack);
     
     // Always prefer the higher contrast option for better readability
     if (whiteContrast > blackContrast) {
