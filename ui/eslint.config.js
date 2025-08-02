@@ -58,6 +58,7 @@ export default [
   {
     files: ['**/*.test.{ts,tsx}'],
     languageOptions: {
+      ecmaVersion: 2020,
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -70,7 +71,21 @@ export default [
         afterAll: 'readonly',
         expect: 'readonly',
         vi: 'readonly'
+      },
+      parser: tsParser,
+      parserOptions: {
+        project: './tsconfig.app.json',
+        warnOnUnsupportedTypeScriptVersion: false
       }
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { args: 'after-used', ignoreRestSiblings: true, argsIgnorePattern: '^_' }
+      ]
     }
   }
 ]
