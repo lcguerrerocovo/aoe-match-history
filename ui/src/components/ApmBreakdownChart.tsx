@@ -61,6 +61,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
 
   const playerIds = Object.keys(apm?.players ?? {});
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(playerIds[0] || '');
+  const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
 
   // Update selected player when playerIds change
   React.useEffect(() => {
@@ -68,6 +69,44 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       setSelectedPlayerId(playerIds[0]);
     }
   }, [playerIds, selectedPlayerId]);
+
+  // Initialize active action types when player changes
+  React.useEffect(() => {
+    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
+      setActiveActionTypes(new Set());
+      return;
+    }
+
+    const playerData = apm.players[selectedPlayerId];
+    if (!Array.isArray(playerData)) {
+      setActiveActionTypes(new Set());
+      return;
+    }
+
+    const types = new Set<string>();
+    playerData.forEach((minuteData) => {
+      Object.keys(minuteData).forEach((key) => {
+        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
+          types.add(key);
+        }
+      });
+    });
+
+    setActiveActionTypes(types);
+  }, [selectedPlayerId, apm]);
+
+  // Toggle action type visibility - this state is isolated from ApmChart
+  const toggleActionType = (actionType: string) => {
+    setActiveActionTypes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(actionType)) {
+        newSet.delete(actionType);
+      } else {
+        newSet.add(actionType);
+      }
+      return newSet;
+    });
+  };
 
   const chartData = useMemo(() => {
     if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
@@ -92,11 +131,13 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       });
     });
 
-    // Transform data for the chart
+    // Transform data for the chart - only include active action types
     return playerData.map((minuteData) => {
       const transformed: any = { minute: minuteData.minute };
       actionTypes.forEach((actionType) => {
-        transformed[actionType] = minuteData[actionType] || 0;
+        if (activeActionTypes.has(actionType)) {
+          transformed[actionType] = minuteData[actionType] || 0;
+        }
       });
       return transformed;
     });
@@ -119,15 +160,17 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       });
     });
 
-    // Calculate totals and percentages
-    const actionStats = Array.from(types).map((actionType) => {
-      const total = playerData.reduce((sum, minuteData) => {
-        return sum + (minuteData[actionType] || 0);
-      }, 0);
-      return { actionType, total };
-    });
+    // Calculate totals and percentages - only for active action types
+    const actionStats = Array.from(types)
+      .filter(actionType => activeActionTypes.has(actionType))
+      .map((actionType) => {
+        const total = playerData.reduce((sum, minuteData) => {
+          return sum + (minuteData[actionType] || 0);
+        }, 0);
+        return { actionType, total };
+      });
 
-    // Calculate total actions for percentage - use the sum of all action types
+    // Calculate total actions for percentage - use the sum of active action types only
     const totalActions = actionStats.reduce((sum, stat) => sum + stat.total, 0);
 
     // Add percentage and sort by total count (descending)
@@ -149,7 +192,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     console.log('Total from data field:', totalFromData);
 
     return result;
-  }, [apm, selectedPlayerId]);
+  }, [apm, selectedPlayerId, activeActionTypes]);
 
   const containerH = useBreakpointValue({ base: '600px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
@@ -211,6 +254,47 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     PLAYER_COLORS[selectedPlayerColor] || theme.colors.brand.zoolanderBlue : 
     theme.colors.brand.zoolanderBlue;
 
+  // Calculate average APM for each player
+  const playerAverages = useMemo(() => {
+    const averages: Record<string, number> = {};
+    
+    playerIds.forEach((pid) => {
+      if (!apm?.players?.[pid]) {
+        averages[pid] = 0;
+        return;
+      }
+
+      const playerData = apm.players[pid];
+      if (!Array.isArray(playerData) || playerData.length === 0) {
+        averages[pid] = 0;
+        return;
+      }
+
+      // Use the same calculation method as ApmChart
+      const sum = playerData.reduce((acc, pt) => {
+        // If we have active action types, sum only those
+        if (activeActionTypes.size > 0) {
+          return acc + Object.entries(pt).reduce((a, [k, v]) => {
+            if (k !== 'minute' && k !== 'total' && typeof v === 'number' && activeActionTypes.has(k)) {
+              return a + v;
+            }
+            return a;
+          }, 0);
+        } else {
+          // If no active action types, use the same logic as ApmChart
+          const val = typeof pt.total === 'number'
+            ? pt.total
+            : Object.entries(pt).reduce((a, [k, v]) => (k !== 'minute' && k !== 'total' && typeof v === 'number' ? a + v : a), 0);
+          return acc + val;
+        }
+      }, 0);
+
+      averages[pid] = Math.round(sum / playerData.length);
+    });
+    
+    return averages;
+  }, [playerIds, apm, activeActionTypes]);
+
   return (
     <Box w="full">
       {/* Player Selection */}
@@ -229,6 +313,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
             PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : 
             theme.colors.brand.zoolanderBlue;
 
+          const playerAvg = playerAverages[pid] || 0;
+          
           return (
             <Button
               key={pid}
@@ -243,14 +329,72 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 color: "white",
               }}
               onClick={() => setSelectedPlayerId(pid)}
-              maxW="150px"
-              isTruncated
+              maxW="200px"
+              h="auto"
+              py={2}
+              px={3}
             >
-              {name}
+              <Flex align="center" justify="space-between" w="100%" gap={2}>
+                <Text 
+                  fontSize="xs" 
+                  fontWeight="semibold"
+                  flexShrink={0}
+                  maxW="120px"
+                  isTruncated
+                  color={isSelected ? (() => {
+                    const computeIsLight = (hex: string) => {
+                      const cleaned = hex.replace('#', '');
+                      if (cleaned.length !== 6) return false;
+                      const r = parseInt(cleaned.substr(0, 2), 16);
+                      const g = parseInt(cleaned.substr(2, 2), 16);
+                      const b = parseInt(cleaned.substr(4, 2), 16);
+                      return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                    };
+                    const isLightBg = computeIsLight(playerColor);
+                    return isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white;
+                  })() : theme.colors.brand.midnightBlue}
+                  style={{
+                    textShadow: isSelected ? (() => {
+                      const computeIsLight = (hex: string) => {
+                        const cleaned = hex.replace('#', '');
+                        if (cleaned.length !== 6) return false;
+                        const r = parseInt(cleaned.substr(0, 2), 16);
+                        const g = parseInt(cleaned.substr(2, 2), 16);
+                        const b = parseInt(cleaned.substr(4, 2), 16);
+                        return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                      };
+                      const isLightBg = computeIsLight(playerColor);
+                      const needsShadow = colorId === 4 || colorId === 5 || isLightBg;
+                      return needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
+                    })() : 'none'
+                  }}
+                >
+                  {name}
+                </Text>
+                <Box
+                  bg={isSelected ? "rgba(0,0,0,0.3)" : theme.colors.brand.stoneLight}
+                  border="1px solid"
+                  borderColor={isSelected ? "rgba(255,255,255,0.5)" : theme.colors.brand.slateBorder}
+                  borderRadius="sm"
+                  px={2}
+                  py={1}
+                  flexShrink={0}
+                >
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="bold" 
+                    color="white"
+                  >
+                    {playerAvg}
+                  </Text>
+                </Box>
+              </Flex>
             </Button>
           );
         })}
       </Flex>
+
+
 
       {/* Chart */}
       <Box h={containerH}>
@@ -299,54 +443,102 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
             <Legend
               verticalAlign="bottom"
               align="center"
-              content={() => (
-                <Box mt={2} px={2} overflow="visible" minH="60px">
-                  <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
-                    {actionTypesWithStats.map((actionStat) => (
-                      <Flex
-                        key={actionStat.actionType}
-                        align="center"
-                        gap={2}
-                        px={2}
-                        py={1}
-                        flexShrink={0}
-                        minW="fit-content"
-                        bg={theme.colors.brand.stoneLight}
-                        borderRadius="md"
-                        border="1px solid"
-                        borderColor={theme.colors.brand.slateBorder}
-                      >
-                        <Box
-                          bg={ACTION_COLORS[actionStat.actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
-                          w="16px"
-                          h="16px"
-                          borderRadius="sm"
-                          flexShrink={0}
-                        />
-                        <Text
-                          color={theme.colors.brand.midnightBlue}
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          maxW="140px"
-                          isTruncated
-                          whiteSpace="nowrap"
-                          flexShrink={0}
-                        >
-                          {actionStat.actionType}
-                        </Text>
-                        <Text
-                          color={theme.colors.brand.midnightBlue}
-                          fontSize="xs"
-                          fontWeight="bold"
-                          flexShrink={0}
-                        >
-                          {actionStat.percentage}%
-                        </Text>
-                      </Flex>
-                    ))}
-                  </Flex>
-                </Box>
-              )}
+              content={() => {
+                // Get all action types for legend display
+                const allActionTypes = useMemo(() => {
+                  if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
+                    return [];
+                  }
+
+                  const playerData = apm.players[selectedPlayerId];
+                  if (!Array.isArray(playerData)) return [];
+
+                  const types = new Set<string>();
+                  playerData.forEach((minuteData) => {
+                    Object.keys(minuteData).forEach((key) => {
+                      if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
+                        types.add(key);
+                      }
+                    });
+                  });
+
+                  // Calculate totals for sorting
+                  const actionTotals = Array.from(types).map((actionType) => {
+                    const total = playerData.reduce((sum, minuteData) => {
+                      return sum + (minuteData[actionType] || 0);
+                    }, 0);
+                    return { actionType, total };
+                  });
+
+                  // Sort by total count (descending) - most actions first
+                  return actionTotals
+                    .sort((a, b) => b.total - a.total)
+                    .map((item) => item.actionType);
+                }, [selectedPlayerId, apm]);
+
+                return (
+                  <Box mt={2} px={2} overflow="visible" minH="60px">
+                    <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
+                      {allActionTypes.map((actionType) => {
+                        const isActive = activeActionTypes.has(actionType);
+                        const actionStat = actionTypesWithStats.find(stat => stat.actionType === actionType);
+                        
+                        return (
+                          <Flex
+                            key={actionType}
+                            align="center"
+                            gap={2}
+                            px={2}
+                            py={1}
+                            flexShrink={0}
+                            minW="fit-content"
+                            bg={isActive ? theme.colors.brand.stoneLight : theme.colors.brand.fadedBlue}
+                            borderRadius="md"
+                            border="1px solid"
+                            borderColor={isActive ? theme.colors.brand.slateBorder : theme.colors.brand.lightSteel}
+                            opacity={isActive ? 1 : 0.6}
+                            cursor="pointer"
+                            onClick={() => toggleActionType(actionType)}
+                            _hover={{
+                              opacity: 1,
+                              bg: theme.colors.brand.stoneLight,
+                            }}
+                          >
+                            <Box
+                              bg={ACTION_COLORS[actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
+                              w="16px"
+                              h="16px"
+                              borderRadius="sm"
+                              flexShrink={0}
+                            />
+                            <Text
+                              color={theme.colors.brand.midnightBlue}
+                              fontSize="sm"
+                              fontWeight="semibold"
+                              maxW="140px"
+                              isTruncated
+                              whiteSpace="nowrap"
+                              flexShrink={0}
+                            >
+                              {actionType}
+                            </Text>
+                            {actionStat && (
+                              <Text
+                                color={theme.colors.brand.midnightBlue}
+                                fontSize="xs"
+                                fontWeight="bold"
+                                flexShrink={0}
+                              >
+                                {actionStat.percentage}%
+                              </Text>
+                            )}
+                          </Flex>
+                        );
+                      })}
+                    </Flex>
+                  </Box>
+                );
+              }}
             />
             {actionTypesWithStats.map((actionStat) => (
               <Bar

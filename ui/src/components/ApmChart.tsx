@@ -76,9 +76,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   const playerIds = Object.keys(apm?.players ?? {});
   const visibleIds = activePids ?? playerIds;
 
-  // Average APM per player (prefer backend-provided)
+  // Average APM per player (always calculate our own)
   const averages = React.useMemo(() => {
-    if (apm?.averages) return apm.averages;
     const avg: Record<string, number> = {};
     Object.entries(apm?.players ?? {}).forEach(([pid, series]) => {
       if (!Array.isArray(series) || !series.length) return;
@@ -89,6 +88,12 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
         return acc + val;
       }, 0);
       avg[pid] = Math.round(sum / series.length);
+      
+      // Debug: Log the calculation for comparison
+      console.log('ApmChart - Player:', pid);
+      console.log('ApmChart - Total sum:', sum);
+      console.log('ApmChart - Series length:', series.length);
+      console.log('ApmChart - Calculated average:', avg[pid]);
     });
     return avg;
   }, [apm]);
