@@ -18,6 +18,10 @@ if [ -n "$UI_FILES" ]; then
   echo "🎨 Running theme compliance check..."
   npm test -- theme-compliance.test.ts
 
+  # Run Cypress component tests
+  echo "🧪 Running Cypress component tests..."
+  npm run cy:run
+
   # Run lint and type-check
   echo "🔍 Running lint and type-check..."
   npm run lint && npm run type-check
