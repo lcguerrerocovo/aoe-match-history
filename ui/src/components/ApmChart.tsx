@@ -41,6 +41,56 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
 
+  // Utility functions for color contrast and readability (WCAG-compliant)
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const cleaned = hex.replace('#', '');
+    const r = parseInt(cleaned.substr(0, 2), 16);
+    const g = parseInt(cleaned.substr(2, 2), 16);
+    const b = parseInt(cleaned.substr(4, 2), 16);
+    return [r, g, b];
+  };
+
+  const getLuminance = (r: number, g: number, b: number): number => {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  const getContrastRatio = (color1: string, color2: string): number => {
+    const [r1, g1, b1] = hexToRgb(color1);
+    const [r2, g2, b2] = hexToRgb(color2);
+    
+    const lum1 = getLuminance(r1, g1, b1);
+    const lum2 = getLuminance(r2, g2, b2);
+    
+    const brightest = Math.max(lum1, lum2);
+    const darkest = Math.min(lum1, lum2);
+    
+    return (brightest + 0.05) / (darkest + 0.05);
+  };
+
+  const getOptimalTextColor = (backgroundColor: string): string => {
+    const whiteContrast = getContrastRatio(backgroundColor, '#FFFFFF');
+    const blackContrast = getContrastRatio(backgroundColor, '#000000');
+    
+    // Always choose the higher contrast option for better readability
+    return whiteContrast > blackContrast ? theme.colors.brand.white : theme.colors.brand.pureBlack;
+  };
+
+  const getTextShadow = (backgroundColor: string, textColor: string): string => {
+    const contrast = getContrastRatio(backgroundColor, textColor);
+    
+    // More aggressive shadow application for better readability
+    if (contrast < 8) { // Lowered threshold for more shadows
+      const shadowColor = textColor === theme.colors.brand.white ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+      return `0 1px 3px ${shadowColor}`; // Stronger shadow
+    }
+    
+    return 'none';
+  };
+
   const data = useMemo(() => {
     const players = apm?.players ?? {};
     // Determine max minute value
@@ -126,10 +176,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
         {[...new Map(sortedPayload.map((entry: any) => [entry.dataKey, entry])).values()].map((entry: any) => {
           const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
           const strokeColor = entry.color as string;
-          const isLightBg = computeIsLight(strokeColor);
-          const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
-          const needsShadow = !isDark && (entry.dataKey === '4' || entry.dataKey === '5' || isLightBg);
-          const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
+          const textColor = getOptimalTextColor(strokeColor);
+          const textShadow = getTextShadow(strokeColor, textColor);
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
@@ -144,7 +192,14 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                 justifyContent="center"
                 alignItems="center"
               >
-                <Text fontSize="xs" fontWeight="bold" color={textColor} style={{ textShadow }}>{entry.value}</Text>
+                <Text 
+                  fontSize="xs" 
+                  fontWeight="bold" 
+                  color={textColor} 
+                  style={{ textShadow }}
+                >
+                  {entry.value}
+                </Text>
               </Box>
             </Flex>
           );

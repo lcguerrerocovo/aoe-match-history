@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
@@ -28,26 +29,36 @@ interface ApmBreakdownChartProps {
   colorByProfile?: Record<string, number | undefined>;
 }
 
-// Action type colors - using more distinguishable colors
-const ACTION_COLORS = {
-  MOVE: '#1f77b4', // Distinct blue
-  ORDER: '#ff7f0e', // Distinct orange
-  DE_QUEUE: '#2ca02c', // Distinct green
-  BUILD: '#d62728', // Distinct red
-  GATHER_POINT: '#9467bd', // Distinct purple
-  PATROL: '#8c564b', // Distinct brown
-  SPECIAL: '#e377c2', // Distinct pink
-  STANCE: '#7f7f7f', // Distinct gray
-  UNGARRISON: '#bcbd22', // Distinct olive
-  STOP: '#17becf', // Distinct cyan
-  RESEARCH: '#ff9896', // Light red
-  SELL: '#98df8a', // Light green
-  DE_MULTI_GATHERPOINT: '#ffbb78', // Light orange
-  BUY: '#c5b0d5', // Light purple
-  FORMATION: '#c49c94', // Light brown
-  WALL: '#f7b6d2', // Light pink
-  DE_ATTACK_MOVE: '#dbdb8d', // Light yellow
-  DELETE: '#9edae5', // Light cyan
+// Tried-and-true 20-color palette (Tableau / D3 "Tab 20")
+// Widely used & battle-tested: classic Tableau/Matplotlib categorical set
+// Pairs of dark + light shades make stacked segments easy to decode
+// Color-blind robust and print-friendly
+const COLOR_PALETTE = [
+  '#1f77b4', // blue 1
+  '#aec7e8', // blue 1 – light tint
+  '#ff7f0e', // orange 1
+  '#ffbb78', // orange 1 – light tint
+  '#2ca02c', // green 1
+  '#98df8a', // green 1 – light tint
+  '#d62728', // red 1
+  '#ff9896', // red 1 – light tint
+  '#9467bd', // purple 1
+  '#c5b0d5', // purple 1 – light tint
+  '#8c564b', // brown 1
+  '#c49c94', // brown 1 – light tint
+  '#e377c2', // pink 1
+  '#f7b6d2', // pink 1 – light tint
+  '#7f7f7f', // gray 1
+  '#c7c7c7', // gray 1 – light tint
+  '#bcbd22', // olive 1
+  '#dbdb8d', // olive 1 – light tint
+  '#17becf', // teal 1
+  '#9edae5'  // teal 1 – light tint
+];
+
+// Function to get color by index, cycling through the palette
+const getColorByIndex = (index: number): string => {
+  return COLOR_PALETTE[index % COLOR_PALETTE.length];
 };
 
 export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({ 
@@ -62,6 +73,89 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   const playerIds = Object.keys(apm?.players ?? {});
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(playerIds[0] || '');
   const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
+
+  // Utility functions for color contrast and readability
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const cleaned = hex.replace('#', '');
+    const r = parseInt(cleaned.substr(0, 2), 16);
+    const g = parseInt(cleaned.substr(2, 2), 16);
+    const b = parseInt(cleaned.substr(4, 2), 16);
+    return [r, g, b];
+  };
+
+  const getLuminance = (r: number, g: number, b: number): number => {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  const getContrastRatio = (color1: string, color2: string): number => {
+    const [r1, g1, b1] = hexToRgb(color1);
+    const [r2, g2, b2] = hexToRgb(color2);
+    
+    const lum1 = getLuminance(r1, g1, b1);
+    const lum2 = getLuminance(r2, g2, b2);
+    
+    const brightest = Math.max(lum1, lum2);
+    const darkest = Math.min(lum1, lum2);
+    
+    return (brightest + 0.05) / (darkest + 0.05);
+  };
+
+  const getOptimalTextColor = (backgroundColor: string): string => {
+    const whiteContrast = getContrastRatio(backgroundColor, '#FFFFFF');
+    const blackContrast = getContrastRatio(backgroundColor, '#000000');
+    
+    // More aggressive contrast threshold for better readability
+    const minContrast = 3.0; // Lowered from 4.5 for better visibility
+    
+    // Always prefer the higher contrast option, regardless of threshold
+    if (whiteContrast > blackContrast) {
+      return theme.colors.brand.white;
+    } else {
+      return theme.colors.brand.pureBlack;
+    }
+  };
+
+  const getTextShadow = (backgroundColor: string, textColor: string): string => {
+    const contrast = getContrastRatio(backgroundColor, textColor);
+    
+    // More aggressive shadow application for better readability
+    if (contrast < 8) { // Lowered threshold for more shadows
+      const shadowColor = textColor === theme.colors.brand.white ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+      return `0 1px 3px ${shadowColor}`; // Stronger shadow
+    }
+    
+    return 'none';
+  };
+
+  // Create a mapping of action types to color indices for consistent colors
+  const actionTypeColorMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    const allTypes = new Set<string>();
+    
+    // Collect all action types from all players
+    Object.values(apm?.players ?? {}).forEach(playerData => {
+      if (Array.isArray(playerData)) {
+        playerData.forEach(minuteData => {
+          Object.keys(minuteData).forEach(key => {
+            if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
+              allTypes.add(key);
+            }
+          });
+        });
+      }
+    });
+    
+    // Assign colors in order
+    Array.from(allTypes).forEach((actionType, index) => {
+      map[actionType] = index;
+    });
+    
+    return map;
+  }, [apm]);
 
   // Update selected player when playerIds change
   React.useEffect(() => {
@@ -272,6 +366,15 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
 
   if (!playerIds.length) return null;
 
+  // Sort player IDs by average APM (descending)
+  const sortedPlayerIds = useMemo(() => {
+    return [...playerIds].sort((a, b) => {
+      const avgA = playerAverages[a] || 0;
+      const avgB = playerAverages[b] || 0;
+      return avgB - avgA; // Descending order (highest APM first)
+    });
+  }, [playerIds, playerAverages]);
+
   // Custom tooltip for stacked bar chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
@@ -311,7 +414,14 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="xs" fontWeight="bold" color={theme.colors.brand.white}>
+              <Text 
+                fontSize="xs" 
+                fontWeight="bold" 
+                color={getOptimalTextColor(entry.color)}
+                style={{
+                  textShadow: getTextShadow(entry.color, getOptimalTextColor(entry.color))
+                }}
+              >
                 {entry.value}
               </Text>
             </Box>
@@ -331,7 +441,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
         gap={2}
         px={2}
       >
-        {playerIds.map((pid) => {
+        {sortedPlayerIds.map((pid) => {
           const name = nameByProfile[pid] || pid;
           const isSelected = pid === selectedPlayerId;
           const colorId = colorByProfile[pid];
@@ -367,32 +477,9 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                   flexShrink={0}
                   maxW="120px"
                   isTruncated
-                  color={isSelected ? (() => {
-                    const computeIsLight = (hex: string) => {
-                      const cleaned = hex.replace('#', '');
-                      if (cleaned.length !== 6) return false;
-                      const r = parseInt(cleaned.substr(0, 2), 16);
-                      const g = parseInt(cleaned.substr(2, 2), 16);
-                      const b = parseInt(cleaned.substr(4, 2), 16);
-                      return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
-                    };
-                    const isLightBg = computeIsLight(playerColor);
-                    return isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white;
-                  })() : theme.colors.brand.midnightBlue}
+                  color={isSelected ? getOptimalTextColor(playerColor) : theme.colors.brand.midnightBlue}
                   style={{
-                    textShadow: isSelected ? (() => {
-                      const computeIsLight = (hex: string) => {
-                        const cleaned = hex.replace('#', '');
-                        if (cleaned.length !== 6) return false;
-                        const r = parseInt(cleaned.substr(0, 2), 16);
-                        const g = parseInt(cleaned.substr(2, 2), 16);
-                        const b = parseInt(cleaned.substr(4, 2), 16);
-                        return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
-                      };
-                      const isLightBg = computeIsLight(playerColor);
-                      const needsShadow = colorId === 4 || colorId === 5 || isLightBg;
-                      return needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
-                    })() : 'none'
+                    textShadow: isSelected ? getTextShadow(playerColor, getOptimalTextColor(playerColor)) : 'none'
                   }}
                 >
                   {name}
@@ -410,7 +497,10 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                     <Text 
                       fontSize="xs" 
                       fontWeight="bold" 
-                      color={theme.colors.brand.midnightBlue}
+                      color={getOptimalTextColor(theme.colors.brand.stoneLight)}
+                      style={{
+                        textShadow: getTextShadow(theme.colors.brand.stoneLight, getOptimalTextColor(theme.colors.brand.stoneLight))
+                      }}
                     >
                       {playerAvg}
                     </Text>
@@ -503,7 +593,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                             }}
                           >
                             <Box
-                              bg={ACTION_COLORS[actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
+                              bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
                               w="16px"
                               h="16px"
                               borderRadius="sm"
@@ -543,7 +633,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 key={actionStat.actionType}
                 dataKey={actionStat.actionType}
                 stackId="a"
-                fill={ACTION_COLORS[actionStat.actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
+                fill={getColorByIndex(actionTypeColorMap[actionStat.actionType] || 0)}
                 stroke={theme.colors.brand.steel}
                 strokeWidth={1}
               />
