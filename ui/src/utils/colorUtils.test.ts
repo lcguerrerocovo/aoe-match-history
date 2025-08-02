@@ -1,3 +1,5 @@
+/* eslint-env node */
+import { describe, it, expect } from 'vitest';
 import { 
   hexToRgb, 
   getLuminance, 
