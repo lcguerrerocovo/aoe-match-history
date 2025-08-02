@@ -397,23 +397,25 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 >
                   {name}
                 </Text>
-                <Box
-                  bg={isSelected ? "rgba(0,0,0,0.3)" : theme.colors.brand.stoneLight}
-                  border="1px solid"
-                  borderColor={isSelected ? "rgba(255,255,255,0.5)" : theme.colors.brand.slateBorder}
-                  borderRadius="sm"
-                  px={2}
-                  py={1}
-                  flexShrink={0}
-                >
-                  <Text 
-                    fontSize="xs" 
-                    fontWeight="bold" 
-                    color={theme.colors.brand.white}
+                {isSelected && (
+                  <Box
+                    bg={theme.colors.brand.stoneLight}
+                    border="1px solid"
+                    borderColor={theme.colors.brand.slateBorder}
+                    borderRadius="sm"
+                    px={2}
+                    py={1}
+                    flexShrink={0}
                   >
-                    {playerAvg}
-                  </Text>
-                </Box>
+                    <Text 
+                      fontSize="xs" 
+                      fontWeight="bold" 
+                      color={theme.colors.brand.midnightBlue}
+                    >
+                      {playerAvg}
+                    </Text>
+                  </Box>
+                )}
               </Flex>
             </Button>
           );

@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode } from '@chakra-ui/react';
+import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 
 interface ApmPlayerSeries {
@@ -216,53 +216,109 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       const name = nameByProfile[pid] ?? pid;
                       const avg = averages[pid];
                       const colorId = colorByProfile[pid];
-                      const strokeColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
-                      const isLightBg = computeIsLight(strokeColor);
-                      const textColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
-                      const needsShadow = !isDark && (colorId === 4 || colorId === 5 || isLightBg);
-                      const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
+                      const playerColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
                       const inactive = !visibleIds.includes(pid);
+                      
                       return (
-                        <Flex
+                        <Button
                           key={pid}
-                          align="center"
-                          gap={1}
-                          px={1}
-                          py={0.5}
-                          opacity={inactive ? 0.4 : 1}
-                          cursor="pointer"
+                          size="sm"
+                          variant={inactive ? "outline" : "solid"}
+                          colorScheme="brand"
+                          bg={inactive ? "transparent" : playerColor}
+                          color={inactive ? theme.colors.brand.midnightBlue : (() => {
+                            const computeIsLight = (hex: string) => {
+                              const cleaned = hex.replace('#', '');
+                              if (cleaned.length !== 6) return false;
+                              const r = parseInt(cleaned.substr(0, 2), 16);
+                              const g = parseInt(cleaned.substr(2, 2), 16);
+                              const b = parseInt(cleaned.substr(4, 2), 16);
+                              return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                            };
+                            const isLightBg = computeIsLight(playerColor);
+                            return isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white;
+                          })()}
+                          borderColor={playerColor}
+                          _hover={{
+                            bg: inactive ? playerColor : playerColor,
+                            color: (() => {
+                              const computeIsLight = (hex: string) => {
+                                const cleaned = hex.replace('#', '');
+                                if (cleaned.length !== 6) return false;
+                                const r = parseInt(cleaned.substr(0, 2), 16);
+                                const g = parseInt(cleaned.substr(2, 2), 16);
+                                const b = parseInt(cleaned.substr(4, 2), 16);
+                                return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                              };
+                              const isLightBg = computeIsLight(playerColor);
+                              return isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white;
+                            })()
+                          }}
                           onClick={() => onToggle?.(pid)}
-                          flexShrink={0}
-                          minW="fit-content"
+                          maxW="180px"
+                          h="auto"
+                          py={1.5}
+                          px={2}
+                          opacity={inactive ? 0.5 : 1}
                         >
-                          <Text
-                            color={theme.colors.brand.midnightBlue}
-                            fontSize="xs"
-                            maxW="80px"
-                            isTruncated
-                            whiteSpace="nowrap"
-                            flexShrink={0}
-                          >
-                            {name}
-                          </Text>
-                          {avg !== undefined && avg !== null && (
-                            <Box
-                              bg={strokeColor}
-                              border="1px solid"
-                              borderColor="brand.steel"
-                              borderRadius="sm"
-                              w="32px"
-                              h="18px"
-                              boxShadow="sm"
-                              display="flex"
-                              justifyContent="center"
-                              alignItems="center"
+                          <Flex align="center" justify="space-between" w="100%" gap={2}>
+                            <Text 
+                              fontSize="xs" 
+                              fontWeight="medium"
                               flexShrink={0}
+                              maxW="100px"
+                              isTruncated
+                              color={inactive ? theme.colors.brand.midnightBlue : (() => {
+                                const computeIsLight = (hex: string) => {
+                                  const cleaned = hex.replace('#', '');
+                                  if (cleaned.length !== 6) return false;
+                                  const r = parseInt(cleaned.substr(0, 2), 16);
+                                  const g = parseInt(cleaned.substr(2, 2), 16);
+                                  const b = parseInt(cleaned.substr(4, 2), 16);
+                                  return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                                };
+                                const isLightBg = computeIsLight(playerColor);
+                                return isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white;
+                              })()}
+                              style={{
+                                textShadow: inactive ? 'none' : (() => {
+                                  const computeIsLight = (hex: string) => {
+                                    const cleaned = hex.replace('#', '');
+                                    if (cleaned.length !== 6) return false;
+                                    const r = parseInt(cleaned.substr(0, 2), 16);
+                                    const g = parseInt(cleaned.substr(2, 2), 16);
+                                    const b = parseInt(cleaned.substr(4, 2), 16);
+                                    return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
+                                  };
+                                  const isLightBg = computeIsLight(playerColor);
+                                  const needsShadow = colorId === 4 || colorId === 5 || isLightBg;
+                                  return needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
+                                })()
+                              }}
                             >
-                              <Text fontSize="xs" fontWeight="bold" color={textColor} style={{ textShadow }}>{avg}</Text>
-                            </Box>
-                          )}
-                        </Flex>
+                              {name}
+                            </Text>
+                            {avg !== undefined && avg !== null && (
+                              <Box
+                                bg={inactive ? "rgba(0,0,0,0.3)" : theme.colors.brand.stoneLight}
+                                border="1px solid"
+                                borderColor={inactive ? "rgba(255,255,255,0.5)" : theme.colors.brand.slateBorder}
+                                borderRadius="sm"
+                                px={1.5}
+                                py={0.5}
+                                flexShrink={0}
+                              >
+                                <Text 
+                                  fontSize="xs" 
+                                  fontWeight="bold" 
+                                  color={theme.colors.brand.midnightBlue}
+                                >
+                                  {avg}
+                                </Text>
+                              </Box>
+                            )}
+                          </Flex>
+                        </Button>
                       );
                     })}
                   </Flex>
