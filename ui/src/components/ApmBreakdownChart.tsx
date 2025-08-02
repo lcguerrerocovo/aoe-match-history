@@ -11,6 +11,7 @@ import {
 
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
+import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 
 interface ApmActionData {
   minute: number;
@@ -55,9 +56,38 @@ const COLOR_PALETTE = [
   '#9edae5'  // teal 1 – light tint
 ];
 
-// Function to get color by index, cycling through the palette
+// Utility functions
 const getColorByIndex = (index: number): string => {
   return COLOR_PALETTE[index % COLOR_PALETTE.length];
+};
+
+const extractActionTypes = (playerData: ApmActionData[]): string[] => {
+  const types = new Set<string>();
+  playerData.forEach((minuteData) => {
+    Object.keys(minuteData).forEach((key) => {
+      if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
+        types.add(key);
+      }
+    });
+  });
+  return Array.from(types);
+};
+
+const calculateActionTypeTotals = (playerData: ApmActionData[], actionTypes: string[]): Record<string, number> => {
+  const totals: Record<string, number> = {};
+  actionTypes.forEach(actionType => {
+    totals[actionType] = playerData.reduce((sum, minuteData) => {
+      return sum + (minuteData[actionType] || 0);
+    }, 0);
+  });
+  return totals;
+};
+
+const getPlayerColor = (colorId: number | undefined, theme: any): string => {
+  if (colorId !== undefined) {
+    return PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue;
+  }
+  return theme.colors.brand.zoolanderBlue;
 };
 
 export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({ 
@@ -73,90 +103,43 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(playerIds[0] || '');
   const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
 
-  // Utility functions for color contrast and readability
-  const hexToRgb = (hex: string): [number, number, number] => {
-    const cleaned = hex.replace('#', '');
-    const r = parseInt(cleaned.substr(0, 2), 16);
-    const g = parseInt(cleaned.substr(2, 2), 16);
-    const b = parseInt(cleaned.substr(4, 2), 16);
-    return [r, g, b];
-  };
 
-  const getLuminance = (r: number, g: number, b: number): number => {
-    const [rs, gs, bs] = [r, g, b].map(c => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  };
 
-  const getContrastRatio = (color1: string, color2: string): number => {
-    const [r1, g1, b1] = hexToRgb(color1);
-    const [r2, g2, b2] = hexToRgb(color2);
-    
-    const lum1 = getLuminance(r1, g1, b1);
-    const lum2 = getLuminance(r2, g2, b2);
-    
-    const brightest = Math.max(lum1, lum2);
-    const darkest = Math.min(lum1, lum2);
-    
-    return (brightest + 0.05) / (darkest + 0.05);
-  };
 
-  const getOptimalTextColor = (backgroundColor: string): string => {
-    const whiteContrast = getContrastRatio(backgroundColor, theme.colors.brand.white);
-    const blackContrast = getContrastRatio(backgroundColor, theme.colors.brand.pureBlack);
-    
-    // Always prefer the higher contrast option for better readability
-    if (whiteContrast > blackContrast) {
-      return theme.colors.brand.white;
-    } else {
-      return theme.colors.brand.pureBlack;
+
+  // Get current player data
+  const currentPlayerData = useMemo(() => {
+    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
+      return null;
     }
-  };
+    const data = apm.players[selectedPlayerId];
+    return Array.isArray(data) ? data : null;
+  }, [apm, selectedPlayerId]);
 
-  const getTextShadow = (backgroundColor: string, textColor: string): string => {
-    const contrast = getContrastRatio(backgroundColor, textColor);
-    
-    // More aggressive shadow application for better readability
-    if (contrast < 8) { // Lowered threshold for more shadows
-      const shadowColor = textColor === theme.colors.brand.white ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
-      return `0 1px 3px ${shadowColor}`; // Stronger shadow
-    }
-    
-    return 'none';
-  };
+  // Extract action types for current player
+  const allActionTypes = useMemo(() => {
+    if (!currentPlayerData) return [];
+    return extractActionTypes(currentPlayerData);
+  }, [currentPlayerData]);
 
-  // Create a mapping of action types to color indices for consistent colors based on frequency
+  // Calculate action type totals and create color mapping
   const actionTypeColorMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    const actionTypeTotals: Record<string, number> = {};
+    if (!currentPlayerData) return {};
     
-    // Calculate total frequency for each action type for the current selected player only
-    if (selectedPlayerId && apm?.players?.[selectedPlayerId]) {
-      const playerData = apm.players[selectedPlayerId];
-      if (Array.isArray(playerData)) {
-        playerData.forEach(minuteData => {
-          Object.keys(minuteData).forEach(key => {
-            if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-              actionTypeTotals[key] = (actionTypeTotals[key] || 0) + (minuteData[key] || 0);
-            }
-          });
-        });
-      }
-    }
+    const totals = calculateActionTypeTotals(currentPlayerData, allActionTypes);
     
     // Sort action types by total frequency (descending) and assign colors
-    const sortedActionTypes = Object.entries(actionTypeTotals)
+    const sortedActionTypes = Object.entries(totals)
       .sort(([, a], [, b]) => b - a)
       .map(([actionType]) => actionType);
     
+    const map: Record<string, number> = {};
     sortedActionTypes.forEach((actionType, index) => {
       map[actionType] = index;
     });
     
     return map;
-  }, [apm, selectedPlayerId]);
+  }, [currentPlayerData, allActionTypes]);
 
   // Update selected player when playerIds change
   React.useEffect(() => {
@@ -167,30 +150,10 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
 
   // Initialize active action types when player changes
   React.useEffect(() => {
-    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
-      setActiveActionTypes(new Set());
-      return;
-    }
+    setActiveActionTypes(new Set(allActionTypes));
+  }, [allActionTypes]);
 
-    const playerData = apm.players[selectedPlayerId];
-    if (!Array.isArray(playerData)) {
-      setActiveActionTypes(new Set());
-      return;
-    }
-
-    const types = new Set<string>();
-    playerData.forEach((minuteData) => {
-      Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-          types.add(key);
-        }
-      });
-    });
-
-    setActiveActionTypes(types);
-  }, [selectedPlayerId, apm]);
-
-  // Toggle action type visibility - this state is isolated from ApmChart
+  // Toggle action type visibility
   const toggleActionType = (actionType: string) => {
     setActiveActionTypes((prev) => {
       const newSet = new Set(prev);
@@ -203,104 +166,54 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     });
   };
 
+  // Transform data for the chart
   const chartData = useMemo(() => {
-    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
-      return [];
-    }
+    if (!currentPlayerData) return [];
 
-    const playerData = apm.players[selectedPlayerId];
-    if (!Array.isArray(playerData)) return [];
-
-
-
-    // Get all unique action types from the data
-    const actionTypes = new Set<string>();
-    playerData.forEach((minuteData) => {
-      Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-          actionTypes.add(key);
-        }
-      });
-    });
-
-    // Transform data for the chart - only include active action types
-    return playerData.map((minuteData) => {
+    return currentPlayerData.map((minuteData) => {
       const transformed: any = { minute: minuteData.minute };
-      actionTypes.forEach((actionType) => {
+      allActionTypes.forEach((actionType) => {
         if (activeActionTypes.has(actionType)) {
           transformed[actionType] = minuteData[actionType] || 0;
         }
       });
       return transformed;
     });
-  }, [apm, selectedPlayerId, activeActionTypes]);
+  }, [currentPlayerData, allActionTypes, activeActionTypes]);
 
+  // Calculate action type statistics
   const actionTypesWithStats = useMemo(() => {
-    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
-      return [];
-    }
+    if (!currentPlayerData) return [];
 
-    const playerData = apm.players[selectedPlayerId];
-    if (!Array.isArray(playerData)) return [];
+    const totals = calculateActionTypeTotals(currentPlayerData, allActionTypes);
+    
+    // Filter to active action types and calculate percentages
+    const activeTotals = Object.entries(totals)
+      .filter(([actionType]) => activeActionTypes.has(actionType))
+      .map(([actionType, total]) => ({ actionType, total }));
 
-    const types = new Set<string>();
-    playerData.forEach((minuteData) => {
-      Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-          types.add(key);
-        }
-      });
-    });
+    const totalActions = activeTotals.reduce((sum, stat) => sum + stat.total, 0);
 
-    // Calculate totals and percentages - only for active action types
-    const actionStats = Array.from(types)
-      .filter(actionType => activeActionTypes.has(actionType))
-      .map((actionType) => {
-        const total = playerData.reduce((sum, minuteData) => {
-          return sum + (minuteData[actionType] || 0);
-        }, 0);
-        return { actionType, total };
-      });
-
-    // Calculate total actions for percentage - use the sum of active action types only
-    const totalActions = actionStats.reduce((sum, stat) => sum + stat.total, 0);
-
-    // Add percentage and sort by total count (descending)
-    const result = actionStats
+    return activeTotals
       .map((stat) => ({
         ...stat,
         percentage: totalActions > 0 ? Math.round((stat.total / totalActions) * 100) : 0
       }))
       .sort((a, b) => b.total - a.total);
-
-
-
-    return result;
-  }, [apm, selectedPlayerId, activeActionTypes]);
-
-  // Fixed height for chart area - reduced to account for player selector above
-  const chartAreaHeight = useBreakpointValue({ base: '450px', md: '400px' });
-  const showAxisLabel = useBreakpointValue({ base: false, md: true });
+  }, [currentPlayerData, allActionTypes, activeActionTypes]);
 
   // Calculate average APM for each player
   const playerAverages = useMemo(() => {
     const averages: Record<string, number> = {};
     
     playerIds.forEach((pid) => {
-      if (!apm?.players?.[pid]) {
-        averages[pid] = 0;
-        return;
-      }
-
-      const playerData = apm.players[pid];
+      const playerData = apm?.players?.[pid];
       if (!Array.isArray(playerData) || playerData.length === 0) {
         averages[pid] = 0;
         return;
       }
 
-      // Use the same calculation method as ApmChart
       const sum = playerData.reduce((acc, pt) => {
-        // If we have active action types, sum only those
         if (activeActionTypes.size > 0) {
           return acc + Object.entries(pt).reduce((a, [k, v]) => {
             if (k !== 'minute' && k !== 'total' && typeof v === 'number' && activeActionTypes.has(k)) {
@@ -309,7 +222,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
             return a;
           }, 0);
         } else {
-          // If no active action types, use the same logic as ApmChart
           const val = typeof pt.total === 'number'
             ? pt.total
             : Object.entries(pt).reduce((a, [k, v]) => (k !== 'minute' && k !== 'total' && typeof v === 'number' ? a + v : a), 0);
@@ -323,46 +235,18 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     return averages;
   }, [playerIds, apm, activeActionTypes]);
 
-  // Get all action types for legend display
-  const allActionTypes = useMemo(() => {
-    if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
-      return [];
-    }
-
-    const playerData = apm.players[selectedPlayerId];
-    if (!Array.isArray(playerData)) return [];
-
-    const types = new Set<string>();
-    playerData.forEach((minuteData) => {
-      Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
-          types.add(key);
-        }
-      });
-    });
-
-    // Calculate totals for sorting
-    const actionTotals = Array.from(types).map((actionType) => {
-      const total = playerData.reduce((sum, minuteData) => {
-        return sum + (minuteData[actionType] || 0);
-      }, 0);
-      return { actionType, total };
-    });
-
-    // Sort by total count (descending) - most actions first
-    return actionTotals
-      .sort((a, b) => b.total - a.total)
-      .map((item) => item.actionType);
-  }, [selectedPlayerId, apm]);
-
   // Sort player IDs by average APM (descending)
   const sortedPlayerIds = useMemo(() => {
     return [...playerIds].sort((a, b) => {
       const avgA = playerAverages[a] || 0;
       const avgB = playerAverages[b] || 0;
-      return avgB - avgA; // Descending order (highest APM first)
+      return avgB - avgA;
     });
   }, [playerIds, playerAverages]);
+
+  // Responsive values
+  const chartAreaHeight = useBreakpointValue({ base: '450px', md: '400px' });
+  const showAxisLabel = useBreakpointValue({ base: false, md: true });
 
   if (!playerIds.length) return null;
 
@@ -381,7 +265,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
         borderRadius="md" 
         fontSize="sm" 
         minW="200px"
-
       >
         <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>
           Minute {label}
@@ -408,10 +291,16 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               <Text 
                 fontSize="xs" 
                 fontWeight="bold" 
-                color={getOptimalTextColor(entry.color)}
+                color={getTextColorForBackground(entry.color, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack)}
                 style={{
-                  textShadow: getTextShadow(entry.color, getOptimalTextColor(entry.color))
+                  textShadow: getTextShadowForBackground(entry.color, isDark)
                 }}
+                sx={{ color: getTextColorForBackground(entry.color, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack) }}
+                                  onClick={() => {
+                    const textColor = getTextColorForBackground(entry.color, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack);
+                    console.log(`Text color for ${entry.color}: ${textColor}`);
+                    console.log(`Applied color:`, textColor);
+                  }}
               >
                 {entry.value}
               </Text>
@@ -436,10 +325,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
           const name = nameByProfile[pid] || pid;
           const isSelected = pid === selectedPlayerId;
           const colorId = colorByProfile[pid];
-          const playerColor = colorId ? 
-            PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : 
-            theme.colors.brand.zoolanderBlue;
-
+          const playerColor = getPlayerColor(colorId, theme);
           const playerAvg = playerAverages[pid] || 0;
           
           return (
@@ -449,12 +335,12 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               variant={isSelected ? "solid" : "outline"}
               colorScheme="brand"
               bg={isSelected ? playerColor : "transparent"}
-              color={isSelected ? theme.colors.brand.white : theme.colors.brand.midnightBlue}
+              color={isSelected ? getTextColorForBackground(playerColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack) : theme.colors.brand.midnightBlue}
               borderColor={playerColor}
-              _hover={{
-                bg: isSelected ? playerColor : playerColor,
-                color: theme.colors.brand.white,
-              }}
+                              _hover={{
+                  bg: isSelected ? playerColor : playerColor,
+                  color: getTextColorForBackground(playerColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack),
+                }}
               onClick={() => setSelectedPlayerId(pid)}
               maxW="200px"
               h="auto"
@@ -468,9 +354,9 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                   flexShrink={0}
                   maxW="120px"
                   isTruncated
-                  color={isSelected ? getOptimalTextColor(playerColor) : theme.colors.brand.midnightBlue}
+                  color={isSelected ? getTextColorForBackground(playerColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack) : theme.colors.brand.midnightBlue}
                   style={{
-                    textShadow: isSelected ? getTextShadow(playerColor, getOptimalTextColor(playerColor)) : 'none'
+                    textShadow: isSelected ? getTextShadowForBackground(playerColor, isDark) : 'none'
                   }}
                 >
                   {name}
@@ -488,9 +374,9 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                     <Text 
                       fontSize="xs" 
                       fontWeight="bold" 
-                      color={getOptimalTextColor(theme.colors.brand.stoneLight)}
+                      color={getTextColorForBackground(theme.colors.brand.stoneLight, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack)}
                       style={{
-                        textShadow: getTextShadow(theme.colors.brand.stoneLight, getOptimalTextColor(theme.colors.brand.stoneLight))
+                        textShadow: getTextShadowForBackground(theme.colors.brand.stoneLight, isDark)
                       }}
                     >
                       {playerAvg}
@@ -502,8 +388,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
           );
         })}
       </Flex>
-
-
 
       {/* Chart Area - Fixed Height */}
       <Box h={chartAreaHeight}>

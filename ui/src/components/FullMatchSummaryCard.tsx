@@ -7,6 +7,7 @@ import { formatDuration, parseDuration } from '../utils/timeUtils';
 import { assetManager } from '../utils/assetManager';
 import { PLAYER_COLORS } from './playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
+import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 
 interface FullMatchSummaryCardProps {
   match: any;
@@ -68,25 +69,10 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
   // Determine background and foreground colors for the player number rectangle
   const bgColor = PLAYER_COLORS[player.color_id] || theme.colors.brand.steel;
 
-  const computeIsLight = (hex: string) => {
-    const cleaned = hex.replace('#', '');
-    if (cleaned.length !== 6) return false;
-    const r = parseInt(cleaned.substr(0, 2), 16);
-    const g = parseInt(cleaned.substr(2, 2), 16);
-    const b = parseInt(cleaned.substr(4, 2), 16);
-    // Perceptive luminance formula (lower threshold to match APM pill logic)
-    return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
-  };
-
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
-  const isLightBg = computeIsLight(bgColor);
-  // In dark mode, always use white for the number text
-  // In light mode, use dark text for light backgrounds, white for dark backgrounds
-  const numberTextColor = isDark ? theme.colors.brand.white : (isLightBg ? theme.colors.brand.pureBlack : theme.colors.brand.white);
-  // Only add text shadow for yellow/cyan in light mode
-  const needsShadow = !isDark && (player.color_id === 4 || player.color_id === 5 || isLightBg);
-  const textShadow = needsShadow ? '0 1px 1.5px rgba(0,0,0,0.18)' : 'none';
+  const numberTextColor = getTextColorForBackground(bgColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack);
+  const textShadow = getTextShadowForBackground(bgColor, isDark);
 
   return (
     <Box position="relative" w="full">
