@@ -70,7 +70,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return rows;
   }, [apm]);
 
-  const containerH = useBreakpointValue({ base: '500px', md: '400px' });
+  const containerH = useBreakpointValue({ base: '600px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
 
   const playerIds = Object.keys(apm?.players ?? {});

@@ -28,26 +28,26 @@ interface ApmBreakdownChartProps {
   colorByProfile?: Record<string, number | undefined>;
 }
 
-// Action type colors - using distinct colors for different action types
+// Action type colors - using more distinguishable colors
 const ACTION_COLORS = {
-  MOVE: '#3182CE', // Blue
-  ORDER: '#DD6B20', // Orange
-  DE_QUEUE: '#38A169', // Green
-  BUILD: '#E53E3E', // Red
-  GATHER_POINT: '#805AD5', // Purple
-  PATROL: '#D69E2E', // Yellow
-  SPECIAL: '#D53F8C', // Pink
-  STANCE: '#B794F4', // Light Purple
-  UNGARRISON: '#2F855A', // Dark Green
-  STOP: '#63B3ED', // Light Blue
-  RESEARCH: '#F6AD55', // Light Orange
-  SELL: '#90CDF4', // Light Blue-Grey
-  DE_MULTI_GATHERPOINT: '#68D391', // Light Green
-  BUY: '#FBB6CE', // Light Pink
-  FORMATION: '#F6E05E', // Light Yellow
-  WALL: '#CBD5E0', // Light Grey
-  DE_ATTACK_MOVE: '#4A5568', // Dark Grey
-  DELETE: '#A0AEC0', // Grey
+  MOVE: '#1f77b4', // Distinct blue
+  ORDER: '#ff7f0e', // Distinct orange
+  DE_QUEUE: '#2ca02c', // Distinct green
+  BUILD: '#d62728', // Distinct red
+  GATHER_POINT: '#9467bd', // Distinct purple
+  PATROL: '#8c564b', // Distinct brown
+  SPECIAL: '#e377c2', // Distinct pink
+  STANCE: '#7f7f7f', // Distinct gray
+  UNGARRISON: '#bcbd22', // Distinct olive
+  STOP: '#17becf', // Distinct cyan
+  RESEARCH: '#ff9896', // Light red
+  SELL: '#98df8a', // Light green
+  DE_MULTI_GATHERPOINT: '#ffbb78', // Light orange
+  BUY: '#c5b0d5', // Light purple
+  FORMATION: '#c49c94', // Light brown
+  WALL: '#f7b6d2', // Light pink
+  DE_ATTACK_MOVE: '#dbdb8d', // Light yellow
+  DELETE: '#9edae5', // Light cyan
 };
 
 export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({ 
@@ -77,11 +77,16 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     const playerData = apm.players[selectedPlayerId];
     if (!Array.isArray(playerData)) return [];
 
+    // Debug: Log the first minute data to see structure
+    if (playerData.length > 0) {
+      console.log('First minute data structure:', playerData[0]);
+    }
+
     // Get all unique action types from the data
     const actionTypes = new Set<string>();
     playerData.forEach((minuteData) => {
       Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && typeof minuteData[key] === 'number') {
+        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
           actionTypes.add(key);
         }
       });
@@ -97,7 +102,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     });
   }, [apm, selectedPlayerId]);
 
-  const actionTypes = useMemo(() => {
+  const actionTypesWithStats = useMemo(() => {
     if (!selectedPlayerId || !apm?.players?.[selectedPlayerId]) {
       return [];
     }
@@ -108,26 +113,45 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     const types = new Set<string>();
     playerData.forEach((minuteData) => {
       Object.keys(minuteData).forEach((key) => {
-        if (key !== 'minute' && typeof minuteData[key] === 'number') {
+        if (key !== 'minute' && key !== 'total' && typeof minuteData[key] === 'number') {
           types.add(key);
         }
       });
     });
 
-    // Sort action types by total count (descending)
-    const actionTotals = Array.from(types).map((actionType) => {
+    // Calculate totals and percentages
+    const actionStats = Array.from(types).map((actionType) => {
       const total = playerData.reduce((sum, minuteData) => {
         return sum + (minuteData[actionType] || 0);
       }, 0);
       return { actionType, total };
     });
 
-    return actionTotals
-      .sort((a, b) => b.total - a.total)
-      .map((item) => item.actionType);
+    // Calculate total actions for percentage - use the sum of all action types
+    const totalActions = actionStats.reduce((sum, stat) => sum + stat.total, 0);
+
+    // Add percentage and sort by total count (descending)
+    const result = actionStats
+      .map((stat) => ({
+        ...stat,
+        percentage: totalActions > 0 ? Math.round((stat.total / totalActions) * 100) : 0
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    // Debug: Log action stats
+    console.log('Action stats:', result);
+    console.log('Total actions calculated:', totalActions);
+
+    // Check if there's a total field to compare against
+    const totalFromData = playerData.reduce((sum, minuteData) => {
+      return sum + (minuteData.total || 0);
+    }, 0);
+    console.log('Total from data field:', totalFromData);
+
+    return result;
   }, [apm, selectedPlayerId]);
 
-  const containerH = useBreakpointValue({ base: '500px', md: '400px' });
+  const containerH = useBreakpointValue({ base: '600px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
 
   if (!playerIds.length) return null;
@@ -147,6 +171,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
         borderRadius="md" 
         fontSize="sm" 
         minW="200px"
+
       >
         <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>
           Minute {label}
@@ -266,39 +291,56 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 fontWeight: 'bold',
               } : undefined}
             />
-            <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
+            <Tooltip 
+              content={<CustomTooltip />} 
+              wrapperStyle={{ fontFamily: 'inherit' }}
+              offset={30}
+            />
             <Legend
               verticalAlign="bottom"
               align="center"
               content={() => (
-                <Box mt={2} px={2} overflow="visible" minH="40px">
-                  <Flex wrap="wrap" justify="center" align="center" gap={1} w="100%">
-                    {actionTypes.map((actionType) => (
+                <Box mt={2} px={2} overflow="visible" minH="60px">
+                  <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
+                    {actionTypesWithStats.map((actionStat) => (
                       <Flex
-                        key={actionType}
+                        key={actionStat.actionType}
                         align="center"
-                        gap={1}
-                        px={1}
-                        py={0.5}
+                        gap={2}
+                        px={2}
+                        py={1}
                         flexShrink={0}
                         minW="fit-content"
+                        bg={theme.colors.brand.stoneLight}
+                        borderRadius="md"
+                        border="1px solid"
+                        borderColor={theme.colors.brand.slateBorder}
                       >
                         <Box
-                          bg={ACTION_COLORS[actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
-                          w="12px"
-                          h="12px"
+                          bg={ACTION_COLORS[actionStat.actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
+                          w="16px"
+                          h="16px"
                           borderRadius="sm"
                           flexShrink={0}
                         />
                         <Text
                           color={theme.colors.brand.midnightBlue}
-                          fontSize="xs"
-                          maxW="80px"
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          maxW="140px"
                           isTruncated
                           whiteSpace="nowrap"
                           flexShrink={0}
                         >
-                          {actionType}
+                          {actionStat.actionType}
+                        </Text>
+                        <Text
+                          color={theme.colors.brand.midnightBlue}
+                          fontSize="xs"
+                          fontWeight="bold"
+                          flexShrink={0}
+                        >
+                          {actionStat.percentage}%
                         </Text>
                       </Flex>
                     ))}
@@ -306,12 +348,12 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 </Box>
               )}
             />
-            {actionTypes.map((actionType) => (
+            {actionTypesWithStats.map((actionStat) => (
               <Bar
-                key={actionType}
-                dataKey={actionType}
+                key={actionStat.actionType}
+                dataKey={actionStat.actionType}
                 stackId="a"
-                fill={ACTION_COLORS[actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
+                fill={ACTION_COLORS[actionStat.actionType as keyof typeof ACTION_COLORS] || theme.colors.brand.zoolanderBlue}
                 stroke={theme.colors.brand.steel}
                 strokeWidth={1}
               />
