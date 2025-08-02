@@ -138,12 +138,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
         return acc + val;
       }, 0);
       avg[pid] = Math.round(sum / series.length);
-      
-      // Debug: Log the calculation for comparison
-      console.log('ApmChart - Player:', pid);
-      console.log('ApmChart - Total sum:', sum);
-      console.log('ApmChart - Series length:', series.length);
-      console.log('ApmChart - Calculated average:', avg[pid]);
     });
     return avg;
   }, [apm]);
@@ -158,14 +152,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   // Custom tooltip separates alias (uniform blue) and metric (stroke color)
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
-    const computeIsLight = (hex: string) => {
-      const cleaned = hex.replace('#', '');
-      if (cleaned.length !== 6) return false;
-      const r = parseInt(cleaned.substr(0, 2), 16);
-      const g = parseInt(cleaned.substr(2, 2), 16);
-      const b = parseInt(cleaned.substr(4, 2), 16);
-      return (0.299 * r + 0.587 * g + 0.114 * b) > 130;
-    };
 
     // Sort payload by value (APM at this minute), highest first
     const sortedPayload = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));

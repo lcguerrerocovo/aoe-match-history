@@ -108,10 +108,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     const whiteContrast = getContrastRatio(backgroundColor, '#FFFFFF');
     const blackContrast = getContrastRatio(backgroundColor, '#000000');
     
-    // More aggressive contrast threshold for better readability
-    const minContrast = 3.0; // Lowered from 4.5 for better visibility
-    
-    // Always prefer the higher contrast option, regardless of threshold
+    // Always prefer the higher contrast option for better readability
     if (whiteContrast > blackContrast) {
       return theme.colors.brand.white;
     } else {
@@ -210,10 +207,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     const playerData = apm.players[selectedPlayerId];
     if (!Array.isArray(playerData)) return [];
 
-    // Debug: Log the first minute data to see structure
-    if (playerData.length > 0) {
-      console.log('First minute data structure:', playerData[0]);
-    }
+
 
     // Get all unique action types from the data
     const actionTypes = new Set<string>();
@@ -275,15 +269,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       }))
       .sort((a, b) => b.total - a.total);
 
-    // Debug: Log action stats
-    console.log('Action stats:', result);
-    console.log('Total actions calculated:', totalActions);
 
-    // Check if there's a total field to compare against
-    const totalFromData = playerData.reduce((sum, minuteData) => {
-      return sum + (minuteData.total || 0);
-    }, 0);
-    console.log('Total from data field:', totalFromData);
 
     return result;
   }, [apm, selectedPlayerId, activeActionTypes]);
@@ -364,8 +350,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       .map((item) => item.actionType);
   }, [selectedPlayerId, apm]);
 
-  if (!playerIds.length) return null;
-
   // Sort player IDs by average APM (descending)
   const sortedPlayerIds = useMemo(() => {
     return [...playerIds].sort((a, b) => {
@@ -374,6 +358,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       return avgB - avgA; // Descending order (highest APM first)
     });
   }, [playerIds, playerAverages]);
+
+  if (!playerIds.length) return null;
 
   // Custom tooltip for stacked bar chart
   const CustomTooltip = ({ active, payload, label }: any) => {
