@@ -1,5 +1,4 @@
 /* eslint-env node */
-/* global global */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { mockPersonalStats, mockSteamProfile } from '../test/mocks';
 
