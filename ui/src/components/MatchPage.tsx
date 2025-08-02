@@ -7,6 +7,7 @@ import { FullMatchSummaryCard } from './FullMatchSummaryCard.tsx';
 import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
 import { ApmChart } from './ApmChart';
+import { ApmBreakdownChart } from './ApmBreakdownChart';
 import { APMGenerator } from './APMGenerator';
 
 export function MatchPage() {
@@ -226,6 +227,20 @@ export function MatchPage() {
                   >
                     APM
                   </Tab>
+                  <Tab
+                    fontWeight="bold"
+                    w={{ base: '100px', md: '120px' }}
+                    color={tabText}
+                    _selected={{
+                      color: tabSelectedText,
+                      bg: tabSelectedBg,
+                      border: '1px solid',
+                      borderColor: tabBorder,
+                      borderBottomColor: tabBorder,
+                    }}
+                  >
+                    Actions
+                  </Tab>
                 </TabList>
                 <TabPanels>
                   <TabPanel p={0} id="apm">
@@ -258,6 +273,39 @@ export function MatchPage() {
                           APM (Game Time)
                         </Text>
                         <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
+                      </APMGenerator>
+                    )}
+                  </TabPanel>
+                  <TabPanel p={0} id="actions">
+                    {hasApm ? (
+                      <>
+                        <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                          Actions Breakdown
+                        </Text>
+                        <ApmBreakdownChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />
+                      </>
+                    ) : (
+                      <APMGenerator 
+                        matchId={matchId!} 
+                        profileId={match.players?.[0]?.user_id?.toString() || ''} 
+                        variant="card"
+                        skipBronzeState={true}
+                        onStatusChange={async (status) => {
+                          // Refresh match data when APM becomes available
+                          if (status?.state === 'bronzeStatus') {
+                            try {
+                              const updatedMatch = await getMatch(matchId!);
+                              setMatch(updatedMatch);
+                            } catch (err) {
+                              console.error('Failed to refresh match data:', err);
+                            }
+                          }
+                        }}
+                      >
+                        <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                          Actions Breakdown
+                        </Text>
+                        <ApmBreakdownChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />
                       </APMGenerator>
                     )}
                   </TabPanel>
