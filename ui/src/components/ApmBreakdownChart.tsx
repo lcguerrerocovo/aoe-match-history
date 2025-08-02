@@ -450,9 +450,9 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       {/* Legend Area - Dynamic Height */}
       <Box mt={2} px={2} overflow="visible" minH="60px">
         <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
-          {allActionTypes.map((actionType) => {
+          {actionTypesWithStats.map((actionStat) => {
+            const actionType = actionStat.actionType;
             const isActive = activeActionTypes.has(actionType);
-            const actionStat = actionTypesWithStats.find(stat => stat.actionType === actionType);
             
             return (
               <Flex
@@ -493,16 +493,14 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                 >
                   {actionType}
                 </Text>
-                {actionStat && (
-                  <Text
-                    color={theme.colors.brand.midnightBlue}
-                    fontSize="xs"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    {actionStat.percentage}%
-                  </Text>
-                )}
+                <Text
+                  color={theme.colors.brand.midnightBlue}
+                  fontSize="xs"
+                  fontWeight="bold"
+                  flexShrink={0}
+                >
+                  {actionStat.percentage}%
+                </Text>
               </Flex>
             );
           })}
