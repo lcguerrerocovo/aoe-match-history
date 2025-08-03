@@ -39,12 +39,12 @@ describe('App Responsive Layout', () => {
 
     // Test mobile view
     cy.viewport(400, 600);
-    cy.get('[data-testid="floating-box-container"]').should('not.have.css', 'background-color', 'rgb(25, 33, 78)'); // midnightBlue
-    cy.get('body').should('not.have.css', 'background-color', 'rgb(25, 33, 78)');
+    cy.get('[data-testid="floating-box-container"]').should('not.have.css', 'background-color', 'rgb(44, 62, 80)'); // charcoal
+    cy.get('body').should('not.have.css', 'background-color', 'rgb(44, 62, 80)');
 
     // Test desktop view
     cy.viewport(1400, 900);
-    cy.get('body').should('have.css', 'background-color', 'rgb(25, 33, 78)');
+    cy.get('body').should('have.css', 'background-color', 'rgb(44, 62, 80)'); // charcoal
     cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
     cy.get('[data-testid="floating-box-container"]').should('have.css', 'border-color', 'rgb(212, 175, 55)'); // gold
   });
