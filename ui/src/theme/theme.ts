@@ -14,6 +14,11 @@ const playerStatsAnatomy = anatomy('playerStats').parts(
 );
 const { definePartsStyle: definePlayerStatsPartsStyle, defineMultiStyleConfig: definePlayerStatsMultiStyleConfig } = createMultiStyleConfigHelpers(playerStatsAnatomy.keys);
 
+const rankingCardAnatomy = anatomy('rankingCard').parts(
+  'container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'
+);
+const { definePartsStyle: defineRankingCardPartsStyle, defineMultiStyleConfig: defineRankingCardMultiStyleConfig } = createMultiStyleConfigHelpers(rankingCardAnatomy.keys);
+
 // Light theme colors
 const lightColors = {
   brand: {
@@ -35,8 +40,8 @@ const lightColors = {
     pureBlack: '#111', // Pure black for semantic use
     
     // High-contrast colors for light backgrounds
-    darkWin: '#226844',      // Darker green for wins on light backgrounds
-    darkLoss: '#A52D2D',     // Darker red for losses on light backgrounds
+    darkWin: '#2E7D32',      // Better green for wins on light backgrounds
+    darkLoss: '#D32F2F',     // Better red for losses on light backgrounds
     tableBorderOnLight: '#8894A2', // Table border for light steel bg
     modernTableBorder: '#4A5D9E', // Lighter blue for modern theme table
 
@@ -521,49 +526,130 @@ export function createTheme(isDark: boolean) {
   const dynamicPlayerStatsTheme = definePlayerStatsMultiStyleConfig({
     baseStyle: definePlayerStatsPartsStyle({
       container: {
-        bg: isDark ? 'brand.lightSteel' : 'brand.slateBlue',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+        bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
         borderRadius: 'lg',
         padding: '1rem',
-        boxShadow: 'md',
+        boxShadow: isDark ? 'md' : '0 2px 8px rgba(139, 90, 43, 0.15)',
         borderWidth: '1px',
         transition: 'all 0.3s ease',
       },
       statsTable: {
         th: {
-          color: isDark ? 'brand.steel' : 'white',
+          color: isDark ? 'brand.steel' : 'brand.midnightBlue',
           textTransform: 'uppercase',
           whiteSpace: 'nowrap',
           fontSize: '2xs',
           fontWeight: 'bold',
+          padding: '0.35rem 0.15rem',
         },
         td: {
-          color: isDark ? 'brand.midnightBlue' : 'white',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          color: isDark ? 'brand.midnightBlue' : 'brand.black',
+          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
           fontSize: 'xs',
           whiteSpace: 'nowrap',
           textOverflow: 'ellipsis',
           overflow: 'hidden',
+          padding: '0.35rem 0.15rem',
         },
         '.rank': {
-          color: isDark ? 'brand.zoolanderBlue' : 'white',
+          color: isDark ? 'brand.zoolanderBlue' : 'brand.midnightBlue',
           fontWeight: '700',
         },
         '.percentile': {
-          color: isDark ? 'brand.midnightBlue' : 'white',
+          color: isDark ? 'brand.midnightBlue' : 'brand.black',
           fontSize: 'xs',
           fontWeight: 'bold',
         },
         '.win': {
-          color: isDark ? 'brand.brightGreen' : 'brand.brightGreen',
+          color: isDark ? 'brand.brightGreen' : 'brand.darkWin',
+          fontWeight: 'bold',
         },
         '.loss': {
-          color: isDark ? 'brand.brightRed' : 'brand.brightRed',
+          color: isDark ? 'brand.brightRed' : 'brand.darkLoss',
           fontWeight: 'bold',
         },
         '.streak': {
-          color: isDark ? 'brand.brightGreen' : 'brand.brightGreen',
+          color: isDark ? 'brand.brightGreen' : 'brand.darkWin',
+          fontWeight: 'bold',
         },
+        'tr:last-child td': {
+          borderBottom: 'none',
+        },
+      },
+    }),
+  });
+
+  // Dynamic RankingCard theme
+  const dynamicRankingCardTheme = defineRankingCardMultiStyleConfig({
+    baseStyle: defineRankingCardPartsStyle({
+      container: {
+        bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
+        borderRadius: 'lg',
+        padding: '0.3rem',
+        boxShadow: isDark ? 'md' : '0 2px 8px rgba(139, 90, 43, 0.15)',
+        borderWidth: '1px',
+        transition: 'all 0.3s ease',
+        minW: { base: '100%', md: '220px' },
+        maxW: { base: '100%', md: '240px' },
+      },
+      rankingRow: {
+        padding: '0.25rem 0.5rem',
+        borderRadius: 'md',
+        borderWidth: '1px',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
+        bg: isDark ? 'brand.slateBlue' : 'brand.stoneLight',
+        transition: 'all 0.2s ease',
+        _hover: {
+          bg: isDark ? 'brand.slateBorder' : 'brand.stone',
+          transform: 'translateY(-1px)',
+          boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(139, 90, 43, 0.1)',
+        },
+      },
+      leaderboardName: {
+        color: isDark ? 'brand.steel' : 'brand.midnightBlue',
+        fontSize: '2xs',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+      },
+      rankText: {
+        fontSize: 'xs',
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap',
+      },
+      percentileText: {
+        color: isDark ? 'brand.steel' : 'brand.steel',
+        fontSize: 'xs',
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap',
+      },
+      rankingTable: {
+        borderCollapse: 'collapse',
+        w: '100%',
+      },
+      tableHeader: {
+        color: isDark ? 'brand.steel' : 'brand.midnightBlue',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap',
+        fontSize: '2xs',
+        fontWeight: 'bold',
+        textAlign: 'left',
+        padding: '0.5rem',
+        borderBottom: '1px solid',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
+      },
+      tableRow: {
+        borderBottom: '1px solid',
+        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
+        _last: {
+          borderBottom: 'none',
+        },
+      },
+      tableCell: {
+        padding: '0.5rem',
+        verticalAlign: 'middle',
       },
     }),
   });
@@ -635,6 +721,7 @@ export function createTheme(isDark: boolean) {
       Card: dynamicCardTheme,
       ProfileHeader: profileHeaderTheme,
       PlayerStats: dynamicPlayerStatsTheme,
+      RankingCard: dynamicRankingCardTheme,
       Input: {
         variants: {
           filled: {

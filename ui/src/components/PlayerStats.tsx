@@ -26,61 +26,10 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
     typeof stat.rank === 'number'
   );
 
-  const rankingColumns = [
+  const combinedColumns = [
     {
       header: 'Board',
       render: (stat: LeaderboardStats) => getLeaderboardName(stat.leaderboard_id)
-    },
-    {
-      header: 'Rank',
-      isNumeric: true,
-      render: (stat: LeaderboardStats) => {
-        const tier = getTier(stat.rating, stat.rank);
-
-        const textProps = (() => {
-          if (!tier) return { color: 'brand.midnightBlue' };
-          if (tier.gradient) {
-            return {
-              bgGradient: tier.name === 'Gold' ? 'linear(to-b, brand.brightGold, brand.gold)' :
-                         tier.name === 'Silver' ? 'linear(to-b, brand.brightSilver, brand.steel)' :
-                         'linear(to-b, brand.brightBronze, brand.bronze)',
-              bgClip: 'text' as const,
-            };
-          }
-          return { color: tier.color };
-        })();
-
-        return (
-          <Text fontWeight="bold" {...textProps}>
-            {stat.rank === -1 ? '' : stat.rank}
-          </Text>
-        );
-      }
-    },
-    {
-      header: 'Top %',
-      isNumeric: true,
-      render: (stat: LeaderboardStats) => {
-        const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
-        const tier = getTier(stat.rating, stat.rank);
-
-        return (
-          <HStack spacing={1.5} justify="flex-end">
-            <Text className="percentile" fontWeight="900">{stat.rank === -1 ? '' : percentile}</Text>
-            {tier && tier.showCrown && stat.rank !== -1 && (
-              <Tooltip label={tier.explainer} fontSize="xs">
-                <Box as="span" data-testid="tier-crown">
-                  <Icon
-                    as={FaCrown}
-                    color={tier.name === 'Gold' ? 'brand.brightGold' : tier.name === 'Silver' ? 'brand.brightSilver' : 'brand.brightBronze'}
-                    boxSize="11px"
-                  />
-                </Box>
-              </Tooltip>
-            )}
-          </HStack>
-        );
-      }
     },
     {
       header: 'Rating',
@@ -103,13 +52,6 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
           <Text as="span" className="loss">-{Math.abs(stat.highestrating - stat.rating)}</Text>
         );
       }
-    }
-  ];
-
-  const performanceColumns = [
-    {
-      header: 'Board',
-      render: (stat: LeaderboardStats) => getLeaderboardName(stat.leaderboard_id)
     },
     {
       header: 'Games',
@@ -141,10 +83,9 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
 
   return (
     <Box sx={styles.container}>
-      <VStack spacing={theme.spacing.component.statsSpacing} align="stretch" sx={styles.statsTable}>
-        <StatsTable data={validLeaderboardStats} columns={rankingColumns} />
-        <StatsTable data={validLeaderboardStats} columns={performanceColumns} />
-      </VStack>
+      <Box sx={styles.statsTable}>
+        <StatsTable data={validLeaderboardStats} columns={combinedColumns} />
+      </Box>
     </Box>
   );
 } 

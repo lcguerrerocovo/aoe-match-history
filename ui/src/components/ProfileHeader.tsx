@@ -1,6 +1,7 @@
-import { Box, Divider, useMultiStyleConfig, Flex, useBreakpointValue } from '@chakra-ui/react';
+import { Box, Divider, useMultiStyleConfig, Flex, useBreakpointValue, VStack } from '@chakra-ui/react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerStats } from './PlayerStats';
+import { RankingCard } from './RankingCard';
 import type { PersonalStats } from '../types/stats';
 import { useLayoutConfig } from '../theme/breakpoints';
 
@@ -29,16 +30,21 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         data-testid="profile-header-stack"
       >
         <Flex flex={1} justify="center">
-            <PlayerProfile 
-                profileId={profileId}
-                profile={profile}
-                isLoading={isLoading}
-            />
+            <VStack spacing={4} align="center" w="100%">
+                <PlayerProfile 
+                    profileId={profileId}
+                    profile={profile}
+                    isLoading={isLoading}
+                />
+                {stats?.leaderboardStats && (
+                    <RankingCard stats={stats.leaderboardStats} />
+                )}
+            </VStack>
         </Flex>
 
         {isLargeScreen && <Divider orientation="vertical" height="150px" />}
 
-        <Box minW={{ md: '420px', lg: '450px'}}>
+        <Box minW={{ md: '420px', lg: '450px'}} w={{ base: '100%', md: 'auto' }}>
             <PlayerStats stats={stats} />
         </Box>
       </Flex>
