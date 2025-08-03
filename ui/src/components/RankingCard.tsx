@@ -1,5 +1,4 @@
-import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Icon, HStack } from '@chakra-ui/react';
-import { FaCrown } from 'react-icons/fa';
+import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Image, HStack } from '@chakra-ui/react';
 import type { LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { getTier } from '../utils/gameUtils';
@@ -89,16 +88,27 @@ export function RankingCard({ stats }: RankingCardProps) {
                 <Text sx={styles.percentileText} textAlign="right">
                   Top {percentile}%
                 </Text>
-                {tier && tier.showCrown && stat.rank !== -1 && (
+                                {tier && tier.showCrown && stat.rank !== -1 && (
                   <Tooltip label={tier.explainer} fontSize="xs">
-                    <Box as="span" data-testid="tier-crown">
-                                              <Icon
-                          as={FaCrown}
-                          color={tier.name === 'Gold' ? (isDark ? 'brand.tierGoldDark' : 'brand.tierGoldLight') : 
-                                tier.name === 'Silver' ? (isDark ? 'brand.tierSilverDark' : 'brand.tierSilverLight') : 
-                                (isDark ? 'brand.tierBronzeDark' : 'brand.tierBronzeLight')}
-                          boxSize="14px"
-                        />
+                    <Box 
+                      as="span" 
+                      data-testid="tier-medal"
+                      position="relative"
+                      display="flex"
+                      alignItems="center"
+                      minW="32px"
+                      h="100%"
+                    >
+                      <Image
+                        src={`/src/assets/medals/${tier.name.toLowerCase()}.png`}
+                        alt={`${tier.name} medal`}
+                        boxSize="28px"
+                        objectFit="contain"
+                        position="absolute"
+                        right="0px"
+                        top="40%"
+                        transform="translateY(-40%)"
+                      />
                     </Box>
                   </Tooltip>
                 )}

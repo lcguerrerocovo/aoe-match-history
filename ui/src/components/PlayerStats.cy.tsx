@@ -43,58 +43,57 @@ const createMockLeaderboardStat = (rating: number, rank: number): LeaderboardSta
   rank_country: 1,
 });
 
-describe('<PlayerStats /> Tiers', () => {
-  it('should render Gold tier correctly', () => {
+describe('<PlayerStats /> Performance Stats', () => {
+  it('should render rating and performance data correctly', () => {
     const stats = createMockStats([createMockLeaderboardStat(1700, 100)]);
     mount(
       <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
-    cy.contains('100').should('have.css', 'background-image', 'linear-gradient(rgb(255, 215, 0), rgb(212, 175, 55))');
-    cy.get('[data-testid="tier-crown"]').should('exist');
+    
+    // Check that the combined table structure is present
+    cy.contains('BOARD').should('exist');
+    cy.contains('RATING').should('exist');
+    cy.contains('MAX').should('exist');
+    cy.contains('DIFF').should('exist');
+    cy.contains('GAMES').should('exist');
+    cy.contains('WON').should('exist');
+    cy.contains('STREAK').should('exist');
+    
+    // Check that the data is displayed
+    cy.contains('1700').should('exist'); // Rating
+    cy.contains('1700').should('exist'); // Max rating
+    cy.contains('1').should('exist'); // Games (wins + losses)
+    cy.contains('100.00%').should('exist'); // Win rate
+    cy.contains('+1').should('exist'); // Streak
   });
 
-  it('should render Silver tier correctly', () => {
-    const stats = createMockStats([createMockLeaderboardStat(1400, 500)]);
+  it('should handle multiple leaderboards', () => {
+    const stats = createMockStats([
+      createMockLeaderboardStat(1700, 100),
+      createMockLeaderboardStat(1400, 500)
+    ]);
     mount(
       <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
-    cy.contains('500').should('have.css', 'background-image', 'linear-gradient(rgb(208, 208, 208), rgb(90, 100, 120))');
-    cy.get('[data-testid="tier-crown"]').should('exist');
+    
+    // Should show both leaderboards
+    cy.contains('1700').should('exist');
+    cy.contains('1400').should('exist');
   });
 
-  it('should render Bronze tier correctly', () => {
-    const stats = createMockStats([createMockLeaderboardStat(1100, 1000)]);
+  it('should not show tier-specific styling (moved to RankingCard)', () => {
+    const stats = createMockStats([createMockLeaderboardStat(1700, 100)]);
     mount(
       <ChakraProvider theme={lightTheme}>
         <PlayerStats stats={stats} />
       </ChakraProvider>
     );
-    cy.contains('1000').should('have.css', 'background-image', 'linear-gradient(rgb(205, 127, 50), rgb(179, 122, 62))');
-    cy.get('[data-testid="tier-crown"]').should('exist');
-  });
-
-  it('should render Iron tier correctly (no crown)', () => {
-    const stats = createMockStats([createMockLeaderboardStat(800, 5000)]);
-    mount(
-      <ChakraProvider theme={lightTheme}>
-        <PlayerStats stats={stats} />
-      </ChakraProvider>
-    );
-    cy.contains('5000').should('have.css', 'color', 'rgb(255, 255, 255)');
-    cy.get('[data-testid="tier-crown"]').should('not.exist');
-  });
-
-  it('should not show a crown for unranked players', () => {
-    const stats = createMockStats([createMockLeaderboardStat(1700, -1)]);
-    mount(
-      <ChakraProvider theme={lightTheme}>
-        <PlayerStats stats={stats} />
-      </ChakraProvider>
-    );
+    
+    // Should not have tier crowns (moved to RankingCard)
     cy.get('[data-testid="tier-crown"]').should('not.exist');
   });
 });
