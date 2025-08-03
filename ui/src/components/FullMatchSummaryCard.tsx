@@ -16,11 +16,9 @@ interface FullMatchSummaryCardProps {
 interface PlayerAvatarProps {
   player: any;
   matchId: string;
-  active?: boolean;
-  onToggle?: (pid: string) => void;
 }
 
-const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, onToggle }) => {
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
   const theme = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [replayAvailable, setReplayAvailable] = useState<boolean | null>(null); // null = loading, true/false = result
