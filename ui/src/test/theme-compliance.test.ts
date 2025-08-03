@@ -149,10 +149,10 @@ function findHardcodedColors(content: string, filePath: string): Array<{ line: n
         if (!ALLOWED_EXCEPTIONS.includes(colorName.toLowerCase()) && 
             !line.includes('brand.') && 
             !line.includes('//') &&
-            // Skip tier name comparisons
-            !line.includes(`tier.name === '${colorName}'`) &&
-            !line.includes(`tier.name === "${colorName}"`) &&
-            !line.includes(`tier.name === \`${colorName}\``)) {
+            // Skip tier name comparisons (case insensitive)
+            !line.toLowerCase().includes(`tier.name === '${colorName.toLowerCase()}'`) &&
+            !line.toLowerCase().includes(`tier.name === "${colorName.toLowerCase()}"`) &&
+            !line.toLowerCase().includes(`tier.name === \`${colorName.toLowerCase()}\``)) {
           issues.push({
             line: lineNumber,
             color: colorName,
