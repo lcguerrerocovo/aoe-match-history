@@ -1,4 +1,4 @@
-import { Box, Text, VStack, useMultiStyleConfig, Tooltip, Image, HStack } from '@chakra-ui/react';
+import { Box, Text, VStack, useMultiStyleConfig, Tooltip, Image, HStack, useTheme } from '@chakra-ui/react';
 import type { LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { getTier } from '../utils/gameUtils';
@@ -11,6 +11,7 @@ interface RankingCardProps {
 export function RankingCard({ stats }: RankingCardProps) {
   const styles = useMultiStyleConfig('RankingCard', {});
   const { isDark } = useThemeMode();
+  const theme = useTheme();
 
   // Create a map of existing stats by leaderboard_id
   const statsMap = new Map(
@@ -38,16 +39,28 @@ export function RankingCard({ stats }: RankingCardProps) {
           const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
           
           const textProps = (() => {
-            if (!tier) return { color: 'brand.midnightBlue' };
+            // Always use tier colors for rank text, even if no tier (use default colors)
+            if (!tier) {
+              return { color: isDark ? '#CD853F' : '#8B4513' };
+            }
             if (tier.gradient) {
-              return {
-                bgGradient: tier.name === 'Gold' ? 
-                  (isDark ? `linear(to-b, brand.tierGoldDark, brand.tierGoldGradientDark)` : `linear(to-b, brand.tierGoldLight, brand.tierGoldGradientLight)`) :
-                  tier.name === 'Silver' ? 
-                  (isDark ? `linear(to-b, brand.tierSilverDark, brand.tierSilverGradientDark)` : `linear(to-b, brand.tierSilverLight, brand.tierSilverGradientLight)`) :
-                  (isDark ? `linear(to-b, brand.tierBronzeDark, brand.tierBronzeGradientDark)` : `linear(to-b, brand.tierBronzeLight, brand.tierBronzeGradientLight)`),
-                bgClip: 'text' as const,
-              };
+              // Use solid colors for better visibility in dark mode
+              if (isDark) {
+                return {
+                  color: tier.name === 'Gold' ? '#FFD700' :
+                         tier.name === 'Silver' ? '#C0C0C0' :
+                         '#CD853F'
+                };
+              } else {
+                return {
+                  bgGradient: tier.name === 'Gold' ? 
+                    `linear(to-b, #D4AF37, #B8860B)` :
+                    tier.name === 'Silver' ? 
+                    `linear(to-b, #696969, #808080)` :
+                    `linear(to-b, #8B4513, #A0522D)`,
+                  bgClip: 'text' as const,
+                };
+              }
             }
             return { color: tier.color };
           })();
@@ -66,7 +79,7 @@ export function RankingCard({ stats }: RankingCardProps) {
           const ordinalRank = `${stat.rank}${getOrdinalSuffix(stat.rank)}`;
 
           return (
-            <Box key={index} sx={styles.rankingRow}>
+            <Box key={index} sx={styles.rankingRow} position="relative" pr="60px">
               <HStack justify="space-between" align="center" spacing={3}>
                 <Text sx={styles.leaderboardName} flex={1}>
                   {getLeaderboardName(stat.leaderboard_id)}
@@ -74,34 +87,25 @@ export function RankingCard({ stats }: RankingCardProps) {
                 <Text sx={styles.rankText} fontWeight="bold" textAlign="right" {...textProps}>
                   {ordinalRank}
                 </Text>
-                <Text sx={styles.percentileText} textAlign="right">
+                <Text sx={styles.percentileText} textAlign="right" pr="40px">
                   Top {percentile}%
                 </Text>
-                                {tier && tier.showCrown && stat.rank !== -1 && (
-                  <Tooltip label={tier.explainer} fontSize="xs">
-                    <Box 
-                      as="span" 
-                      data-testid="tier-medal"
-                      position="relative"
-                      display="flex"
-                      alignItems="center"
-                      minW="32px"
-                      h="100%"
-                    >
-                      <Image
-                        src={`/src/assets/medals/${tier.name.toLowerCase()}.png`}
-                        alt={`${tier.name} medal`}
-                        boxSize="28px"
-                        objectFit="contain"
-                        position="absolute"
-                        right="0px"
-                        top="40%"
-                        transform="translateY(-40%)"
-                      />
-                    </Box>
-                  </Tooltip>
-                )}
               </HStack>
+              {tier && tier.showCrown && stat.rank !== -1 && (
+                <Tooltip label={tier.explainer} fontSize="xs">
+                  <Image
+                    src={`/src/assets/medals/${tier.name.toLowerCase()}.png`}
+                    alt={`${tier.name} medal`}
+                    boxSize="28px"
+                    objectFit="contain"
+                    position="absolute"
+                    right="12px"
+                    top="60%"
+                    transform="translateY(-50%)"
+                    data-testid="tier-medal"
+                  />
+                </Tooltip>
+              )}
             </Box>
           );
         })}
