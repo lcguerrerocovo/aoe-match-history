@@ -52,16 +52,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
     });
   });
 
-  afterEach(() => {
-    // Clean up any mounted components
-    cy.get('body').then($body => {
-      if ($body.find('[data-cy-root]').length) {
-        cy.get('[data-cy-root]').then($root => {
-          $root.remove();
-        });
-      }
-    });
-  });
+
 
   describe('Layout Direction Changes', () => {
     it('should display correct layout for different viewports', () => {
