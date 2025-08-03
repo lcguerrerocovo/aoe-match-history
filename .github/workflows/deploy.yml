@@ -48,7 +48,7 @@ jobs:
       
       - name: Install Cypress dependencies
         run: |
-          apt-get update && apt-get install -y \
+          apt-get update && apt-get install -y --no-install-recommends \
             libgtk2.0-0 \
             libgtk-3-0 \
             libgbm-dev \
@@ -70,9 +70,17 @@ jobs:
           restore-keys: |
             cypress-cache-${{ runner.os }}-
       
+      - name: Cache Proxy Function dependencies
+        uses: actions/cache@v3
+        with:
+          path: functions/proxy/node_modules
+          key: ${{ runner.os }}-proxy-node-${{ hashFiles('functions/proxy/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-proxy-node-
+      
       - name: Install Proxy Function dependencies
         working-directory: functions/proxy
-        run: npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
+        run: npm ci --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
       
       - name: Lint UI
         working-directory: ui
@@ -85,6 +93,14 @@ jobs:
           cd ui && find src -name '*.cy.tsx' | xargs -P 4 -I {} cypress run --config-file cypress.config.mts --component --headless --spec {} &
           cd functions/proxy && npm test &
           wait
+      
+      - name: Cache build output
+        uses: actions/cache@v3
+        with:
+          path: ui/dist
+          key: ${{ runner.os }}-build-${{ hashFiles('ui/src/**/*') }}-${{ hashFiles('ui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
       
       - name: Build UI
         working-directory: ui
