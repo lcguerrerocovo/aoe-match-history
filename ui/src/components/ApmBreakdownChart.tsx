@@ -421,7 +421,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       </Flex>
 
       {/* Chart Area - Fixed Height with Horizontal Scroll */}
-      <Box h={chartAreaHeight} overflowX="auto" overflowY="hidden" data-testid="chart-container">
+      <Box h={chartAreaHeight} minH="500px" overflowX="auto" overflowY="hidden" data-testid="chart-container">
         <Box minW={`${chartWidth}px`} h="100%">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
