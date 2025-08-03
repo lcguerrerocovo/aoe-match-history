@@ -211,7 +211,7 @@ export function MatchPage() {
             
             {/* Additional Details Section */}
             <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
-              <Tabs variant="enclosed" colorScheme="brand">
+              <Tabs variant="enclosed" colorScheme="brand" isLazy>
                 <TabList mb={4} justifyContent="flex-start">
                   <Tab
                     fontWeight="bold"
