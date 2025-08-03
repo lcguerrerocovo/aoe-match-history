@@ -22,7 +22,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     container:
-      image: node:20.11.1-slim
+      image: cypress/included:14.5.0-node20.11.1
     steps:
       - uses: actions/checkout@v4
       
@@ -49,30 +49,6 @@ jobs:
           npm rebuild rollup
           # Ensure all optional dependencies are properly installed
           npm install --no-save rollup
-      
-      - name: Install Cypress dependencies
-        run: |
-          apt-get update && apt-get install -y --no-install-recommends \
-            libgtk2.0-0 \
-            libgtk-3-0 \
-            libgbm-dev \
-            libnotify-dev \
-            libgconf-2-4 \
-            libnss3 \
-            libxss1 \
-            libasound2 \
-            libxtst6 \
-            xauth \
-            xvfb \
-            && apt-get clean && rm -rf /var/lib/apt/lists/*
-      
-      - name: Cache Cypress
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-cache-${{ runner.os }}-${{ hashFiles('ui/package-lock.json') }}
-          restore-keys: |
-            cypress-cache-${{ runner.os }}-
       
       - name: Cache Proxy Function dependencies
         uses: actions/cache@v3
