@@ -1,4 +1,3 @@
-import React from 'react';
 import { mount } from 'cypress/react';
 import { ApmBreakdownChart } from './ApmBreakdownChart';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
