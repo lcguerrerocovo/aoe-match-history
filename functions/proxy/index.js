@@ -66,37 +66,12 @@ let mapMap = null;
 // Duration of artificial latency in milliseconds (set via env or default 1500ms)
 const SIMULATE_LATENCY_MS = process.env.SIMULATE_LATENCY_MS ? parseInt(process.env.SIMULATE_LATENCY_MS, 10) : 1500;
 
-// Load action type descriptions from frontend assets
-let ACTION_TYPE_DESCRIPTIONS = {};
 
-async function loadActionTypeDescriptions() {
-  // Try localhost first in development
-  const urls = [
-    'http://localhost:5173/assets/action_type_descriptions.json',
-    'https://aoe2.site/assets/action_type_descriptions.json'
-  ];
-  
-  for (const url of urls) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        ACTION_TYPE_DESCRIPTIONS = await response.json();
-        log.info(`Loaded action type descriptions from ${url}`);
-        return;
-      }
-    } catch (error) {
-      log.warn(`Failed to load action type descriptions from ${url}:`, error.message);
-    }
-  }
-  
-  // If we can't load the descriptions, log error and leave empty
-  log.error('Failed to load action type descriptions from any source');
-}
 
 function categorize(cmd) {
   // mgz-parser exposes cmd.type (string) for DE, or cmd.op numeric. Use whichever available.
-  if (typeof cmd.type === 'string' && ACTION_TYPE_DESCRIPTIONS[cmd.type]) return cmd.type;
-  if (cmd.action && ACTION_TYPE_DESCRIPTIONS[cmd.action]) return cmd.action;
+  if (typeof cmd.type === 'string') return cmd.type;
+  if (cmd.action) return cmd.action;
   return 'OTHER';
 }
 
@@ -1466,10 +1441,7 @@ if (process.env.NODE_ENV === 'test') {
   exports.__resetPlayerService = () => { playerService = null; };
 }
 
-// Initialize action type descriptions on module load
-loadActionTypeDescriptions().catch(error => {
-  log.error('Failed to initialize action type descriptions:', error);
-});
+
 
 module.exports = {
   proxy: exports.proxy,

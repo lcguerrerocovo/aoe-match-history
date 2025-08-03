@@ -250,6 +250,10 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   // Responsive values
   const chartAreaHeight = useBreakpointValue({ base: '450px', md: '400px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
+  
+  // Viewport configuration for horizontal scrolling
+  const minBarWidth = 20; // Minimum width per minute in pixels
+  const chartWidth = Math.max(800, chartData.length * minBarWidth); // Minimum 800px, or minutes * minBarWidth
 
   if (!playerIds.length) return null;
 
@@ -392,18 +396,19 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
         })}
       </Flex>
 
-      {/* Chart Area - Fixed Height */}
-      <Box h={chartAreaHeight}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart 
-            data={chartData} 
-            margin={{ 
-              top: 5, 
-              right: 0, 
-              bottom: showAxisLabel ? 45 : 20, 
-              left: showAxisLabel ? 0 : -20 
-            }}
-          >
+      {/* Chart Area - Fixed Height with Horizontal Scroll */}
+      <Box h={chartAreaHeight} overflowX="auto" overflowY="hidden" data-testid="chart-container">
+        <Box minW={`${chartWidth}px`} h="100%">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={chartData} 
+              margin={{ 
+                top: 5, 
+                right: 0, 
+                bottom: showAxisLabel ? 45 : 20, 
+                left: showAxisLabel ? 0 : -20 
+              }}
+            >
             <CartesianGrid 
               strokeDasharray="3 3" 
               stroke={theme.colors.brand.steel}
@@ -448,6 +453,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
             ))}
           </BarChart>
         </ResponsiveContainer>
+        </Box>
       </Box>
       
       {/* Legend Area - Dynamic Height */}
