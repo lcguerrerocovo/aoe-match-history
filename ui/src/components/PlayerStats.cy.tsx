@@ -53,13 +53,13 @@ describe('<PlayerStats /> Performance Stats', () => {
     );
     
     // Check that the combined table structure is present
-    cy.contains('BOARD').should('exist');
-    cy.contains('RATING').should('exist');
-    cy.contains('MAX').should('exist');
-    cy.contains('DIFF').should('exist');
-    cy.contains('GAMES').should('exist');
-    cy.contains('WON').should('exist');
-    cy.contains('STREAK').should('exist');
+    cy.contains('Board').should('exist');
+    cy.contains('Rating').should('exist');
+    cy.contains('Max').should('exist');
+    cy.contains('Diff').should('exist');
+    cy.contains('Games').should('exist');
+    cy.contains('Won').should('exist');
+    cy.contains('Streak').should('exist');
     
     // Check that the data is displayed
     cy.contains('1700').should('exist'); // Rating
