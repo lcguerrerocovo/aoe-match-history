@@ -86,7 +86,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
   
   // Viewport configuration for horizontal scrolling (same as breakdown chart)
-  const visibleMinutes = useBreakpointValue({ base: 10, md: 15, lg: 20 }) || 15;
   const minBarWidth = 20; // Minimum width per minute in pixels
   const chartWidth = Math.max(800, data.length * minBarWidth); // Minimum 800px, or minutes * minBarWidth
 

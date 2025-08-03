@@ -1441,10 +1441,7 @@ if (process.env.NODE_ENV === 'test') {
   exports.__resetPlayerService = () => { playerService = null; };
 }
 
-// Initialize action type descriptions on module load
-loadActionTypeDescriptions().catch(error => {
-  log.error('Failed to initialize action type descriptions:', error);
-});
+
 
 module.exports = {
   proxy: exports.proxy,
