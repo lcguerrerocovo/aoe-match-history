@@ -62,6 +62,22 @@ const lightColors = {
     brightRed: '#FF8282',   // Bright red for dark background losses
     contrastRed: '#FF6B94', // High contrast pinkish-red for very dark backgrounds
     
+    // Tier ranking colors
+    tierGoldDark: '#FFD700',      // Bright gold for dark theme
+    tierGoldLight: '#D4AF37',     // Lustrous gold for light theme
+    tierGoldGradientDark: '#FFB347', // Gold gradient end for dark theme
+    tierGoldGradientLight: '#B8860B', // Gold gradient end for light theme
+    
+    tierSilverDark: '#F5F5F5',    // Bright silver for dark theme
+    tierSilverLight: '#696969',   // Dark silver for light theme
+    tierSilverGradientDark: '#D3D3D3', // Silver gradient end for dark theme
+    tierSilverGradientLight: '#808080', // Silver gradient end for light theme
+    
+    tierBronzeDark: '#CD853F',    // Bright bronze for dark theme
+    tierBronzeLight: '#8B4513',   // Dark bronze for light theme
+    tierBronzeGradientDark: '#D2691E', // Bronze gradient end for dark theme
+    tierBronzeGradientLight: '#A0522D', // Bronze gradient end for light theme
+    
     // UI component backgrounds
     topbarBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
     topbarBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",

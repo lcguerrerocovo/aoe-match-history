@@ -54,10 +54,10 @@ export function RankingCard({ stats }: RankingCardProps) {
             if (tier.gradient) {
               return {
                 bgGradient: tier.name === 'Gold' ? 
-                  (isDark ? 'linear(to-b, #FFD700, #FFB347)' : 'linear(to-b, #D4AF37, #B8860B)') :
+                  (isDark ? `linear(to-b, brand.tierGoldDark, brand.tierGoldGradientDark)` : `linear(to-b, brand.tierGoldLight, brand.tierGoldGradientLight)`) :
                   tier.name === 'Silver' ? 
-                  (isDark ? 'linear(to-b, #F5F5F5, #D3D3D3)' : 'linear(to-b, #696969, #808080)') :
-                  (isDark ? 'linear(to-b, #CD853F, #D2691E)' : 'linear(to-b, #8B4513, #A0522D)'),
+                  (isDark ? `linear(to-b, brand.tierSilverDark, brand.tierSilverGradientDark)` : `linear(to-b, brand.tierSilverLight, brand.tierSilverGradientLight)`) :
+                  (isDark ? `linear(to-b, brand.tierBronzeDark, brand.tierBronzeGradientDark)` : `linear(to-b, brand.tierBronzeLight, brand.tierBronzeGradientLight)`),
                 bgClip: 'text' as const,
               };
             }
@@ -94,9 +94,9 @@ export function RankingCard({ stats }: RankingCardProps) {
                     <Box as="span" data-testid="tier-crown">
                                               <Icon
                           as={FaCrown}
-                          color={tier.name === 'Gold' ? (isDark ? '#FFD700' : '#D4AF37') : 
-                                tier.name === 'Silver' ? (isDark ? '#F5F5F5' : '#696969') : 
-                                (isDark ? '#CD853F' : '#8B4513')}
+                          color={tier.name === 'Gold' ? (isDark ? 'brand.tierGoldDark' : 'brand.tierGoldLight') : 
+                                tier.name === 'Silver' ? (isDark ? 'brand.tierSilverDark' : 'brand.tierSilverLight') : 
+                                (isDark ? 'brand.tierBronzeDark' : 'brand.tierBronzeLight')}
                           boxSize="14px"
                         />
                     </Box>
