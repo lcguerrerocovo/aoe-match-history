@@ -45,6 +45,10 @@ jobs:
         working-directory: ui
         run: |
           npm ci --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
+          # Fix Rollup optional dependencies issue
+          npm rebuild rollup
+          # Ensure all optional dependencies are properly installed
+          npm install --no-save rollup
       
       - name: Install Cypress dependencies
         run: |
@@ -90,7 +94,7 @@ jobs:
         run: |
           # Run UI tests (Vitest and Cypress) and proxy function tests in parallel
           cd ui && npm run test:ci &
-          cd ui && find src -name '*.cy.tsx' | xargs -P 4 -I {} cypress run --config-file cypress.config.mts --component --headless --spec {} &
+          cd ui && find src -name '*.cy.tsx' | xargs -P 4 -I {} npx cypress run --config-file cypress.config.mts --component --headless --spec {} &
           cd functions/proxy && npm test &
           wait
       
