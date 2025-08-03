@@ -69,17 +69,13 @@ jobs:
         working-directory: ui
         run: npm run lint
       
-      - name: Run tests in parallel
-        working-directory: ui
+      - name: Run all tests in parallel
         run: |
-          # Run Vitest and Cypress in parallel using CI-optimized scripts
-          npm run test:ci &
-          npm run cy:run:ci &
+          # Run UI tests (Vitest and Cypress) and proxy function tests in parallel
+          cd ui && npm run test:ci &
+          cd ui && find src -name '*.cy.tsx' | xargs -P 4 -I {} cypress run --config-file cypress.config.mts --component --headless --spec {} &
+          cd functions/proxy && npm test &
           wait
-      
-      - name: Run Proxy Function tests
-        working-directory: functions/proxy
-        run: npm test
       
       - name: Build UI
         working-directory: ui

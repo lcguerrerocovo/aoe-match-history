@@ -29,7 +29,7 @@
     "cy:run": "cypress run --config-file cypress.config.mts --component",
     "cy:run:parallel": "cypress run --config-file cypress.config.mts --component --parallel --record",
     "test:ci": "VITE_AOE_API_URL=/api vitest run --reporter=verbose",
-    "cy:run:ci": "cypress run --config-file cypress.config.mts --component --headless --no-video --no-screenshot",
+    "cy:run:ci": "cypress run --config-file cypress.config.mts --component --headless",
     "clean": "rm -rf dist node_modules && npx cypress cache clear",
     "prepare": "husky"
   },
