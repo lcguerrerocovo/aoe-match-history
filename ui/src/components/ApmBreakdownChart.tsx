@@ -12,7 +12,7 @@ import {
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button, Tooltip as ChakraTooltip } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
-import actionTypeDescriptions from '../assets/action_type_descriptions.json';
+import actionTypeDescriptions from '../data/action_type_descriptions.json';
 
 interface ApmActionData {
   minute: number;

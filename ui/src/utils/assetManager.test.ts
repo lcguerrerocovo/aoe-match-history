@@ -113,6 +113,16 @@ describe('assetManager', () => {
       expect(url).toContain('maps/rm_unknown_map_name.png');
     });
 
+    it('should handle map names with .rms extensions', () => {
+      const url = assetManager.getMapImage('rm_enclosed.rms');
+      expect(url).toContain('maps/rm_rm_enclosed.png');
+    });
+
+    it('should handle map names with .rms2 extensions', () => {
+      const url = assetManager.getMapImage('rm_goldenpit.rms2');
+      expect(url).toContain('maps/rm_rm_goldenpit.png');
+    });
+
     it('should return generic map for empty/invalid names', () => {
       const testCases = ['', '   ', null as any, undefined as any];
       

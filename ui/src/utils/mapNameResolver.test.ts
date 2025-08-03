@@ -42,6 +42,20 @@ describe('mapNameResolver', () => {
       expect(result).toContain('my_map.png');
       expect(result).toContain('my-map.png');
     });
+
+    it('should strip .rms extension from map names', () => {
+      const result = resolveMapFilename('rm_enclosed.rms');
+      expect(result).toContain('rm_rm_enclosed.png');
+      expect(result).toContain('rm_enclosed.png');
+      expect(result).not.toContain('rm_enclosed.rms.png');
+    });
+
+    it('should handle .rms2 extensions', () => {
+      const result = resolveMapFilename('rm_goldenpit.rms2');
+      expect(result).toContain('rm_rm_goldenpit.png');
+      expect(result).toContain('rm_goldenpit.png');
+      expect(result).not.toContain('rm_goldenpit.rms2.png');
+    });
   });
 
   describe('getMostLikelyMapFilename', () => {

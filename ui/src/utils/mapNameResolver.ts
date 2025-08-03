@@ -16,8 +16,11 @@ export interface MapNameMapping {
 export function resolveMapFilename(apiName: string): string[] {
   const patterns: string[] = [];
   
+  // Strip .rms and .rms2 extensions if present (common in API responses)
+  const cleanName = apiName.replace(/\.rms2?$/i, '');
+  
   // Handle space-separated names (like "my map")
-  if (apiName.includes(' ')) {
+  if (cleanName.includes(' ')) {
     const nameLower = apiName.toLowerCase();
     const nameUnderscore = apiName.replace(/\s+/g, '_').toLowerCase();
     const nameHyphen = apiName.replace(/\s+/g, '-').toLowerCase();
@@ -35,9 +38,9 @@ export function resolveMapFilename(apiName: string): string[] {
   }
   
   // Convert camelCase to different formats
-  const nameLower = apiName.toLowerCase();
-  const nameUnderscore = apiName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-  const nameHyphen = apiName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+  const nameLower = cleanName.toLowerCase();
+  const nameUnderscore = cleanName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+  const nameHyphen = cleanName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
   
   // Common CDN patterns
   patterns.push(
@@ -82,8 +85,8 @@ export function resolveMapFilename(apiName: string): string[] {
     'AmazonTunnel': ['rm_amazon_tunnels.png', 'rm_amazon_tunnel.png', 'amazon_tunnels.png', 'amazon_tunnel.png'], // Handle plural filename
   };
   
-  if (specialCases[apiName]) {
-    patterns.unshift(...specialCases[apiName]);
+  if (specialCases[cleanName]) {
+    patterns.unshift(...specialCases[cleanName]);
   }
   
   // Remove duplicates while preserving order
@@ -99,7 +102,9 @@ export function getMostLikelyMapFilename(apiName: string): string {
     return 'cm_generic.png';
   }
   
-  const patterns = resolveMapFilename(apiName);
+  // Strip .rms and .rms2 extensions if present
+  const cleanName = apiName.replace(/\.rms2?$/i, '');
+  const patterns = resolveMapFilename(cleanName);
   
   // Prioritize rm_ patterns as they're most common
   const rmPattern = patterns.find(p => p.startsWith('rm_'));
