@@ -78,6 +78,14 @@ class AssetManager {
   }
 
   /**
+   * Get medal image URL
+   */
+  getMedal(tierName: string): string {
+    const normalizedName = tierName.toLowerCase();
+    return this.buildAssetUrl(`medals/${normalizedName}.png`);
+  }
+
+  /**
    * Get any asset by path
    */
   getAsset(path: string): string {

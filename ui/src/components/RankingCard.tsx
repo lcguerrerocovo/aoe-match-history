@@ -3,6 +3,7 @@ import type { LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { getTier } from '../utils/gameUtils';
 import { useThemeMode } from '../theme/ThemeProvider';
+import { assetManager } from '../utils/assetManager';
 
 interface RankingCardProps {
   stats: LeaderboardStats[];
@@ -39,9 +40,9 @@ export function RankingCard({ stats }: RankingCardProps) {
           const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
           
           const textProps = (() => {
-            // Always use tier colors for rank text, even if no tier (use default colors)
-            if (!tier) {
-              return { color: isDark ? theme.colors.brand.tierBronzeDark : theme.colors.brand.tierBronzeLight };
+            // Use tier colors for medaled players, default colors for unmedaled players
+            if (!tier.showCrown) {
+              return { color: isDark ? 'white' : theme.colors.brand.midnightBlue };
             }
             if (tier.gradient) {
               // Use solid colors for better visibility in dark mode
@@ -93,17 +94,17 @@ export function RankingCard({ stats }: RankingCardProps) {
               </HStack>
               {tier && tier.showCrown && stat.rank !== -1 && (
                 <Tooltip label={tier.explainer} fontSize="xs">
-                  <Image
-                    src={`/src/assets/medals/${tier.name.toLowerCase()}.png`}
-                    alt={`${tier.name} medal`}
-                    boxSize="28px"
-                    objectFit="contain"
-                    position="absolute"
-                    right="12px"
-                    top="60%"
-                    transform="translateY(-50%)"
-                    data-testid="tier-medal"
-                  />
+                                        <Image
+                        src={assetManager.getMedal(tier.name)}
+                        alt={`${tier.name} medal`}
+                        boxSize="28px"
+                        objectFit="contain"
+                        position="absolute"
+                        right="12px"
+                        top="60%"
+                        transform="translateY(-50%)"
+                        data-testid="tier-medal"
+                      />
                 </Tooltip>
               )}
             </Box>
