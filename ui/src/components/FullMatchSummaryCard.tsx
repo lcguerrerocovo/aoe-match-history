@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { formatDateTime } from '../utils/matchUtils';
 import { formatDuration, parseDuration } from '../utils/timeUtils';
 import { assetManager } from '../utils/assetManager';
-import { PLAYER_COLORS } from './playerColors';
+import { PLAYER_COLORS } from '../utils/playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../services/matchService';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 

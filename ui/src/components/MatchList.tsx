@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import type { MatchGroup, Player } from '../types/match';
 import { TimeIcon, CalendarIcon } from '@chakra-ui/icons';
 import { GiBroadsword } from 'react-icons/gi';
-import { PLAYER_COLORS } from './playerColors';
+import { PLAYER_COLORS } from '../utils/playerColors';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { parseDuration } from '../utils/timeUtils';
 import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatSessionTimingData } from '../utils/matchUtils';

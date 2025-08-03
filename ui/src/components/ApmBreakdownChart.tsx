@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button, Tooltip as ChakraTooltip } from '@chakra-ui/react';
-import { PLAYER_COLORS } from './playerColors';
+import { PLAYER_COLORS } from '../utils/playerColors';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 import actionTypeDescriptions from '../data/action_type_descriptions.json';
 

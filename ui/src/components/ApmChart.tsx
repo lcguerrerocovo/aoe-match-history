@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
-import { PLAYER_COLORS } from './playerColors';
+import { PLAYER_COLORS } from '../utils/playerColors';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 
 interface ApmPlayerSeries {

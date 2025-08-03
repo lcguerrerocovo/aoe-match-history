@@ -118,7 +118,7 @@ export function LandingPage() {
             textAlign="center"
             lineHeight="1.4"
           >
-            Your complete Age of Empires II match history at a glance
+            Your recent Age of Empires 2 matches with detailed analytics at a glance.
           </Text>
           {/* Separator */}
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
@@ -135,10 +135,10 @@ export function LandingPage() {
               color="brand.midnightBlue"
               lineHeight="1.6"
             >
-              Analyze your ranked ladder performance with detailed match breakdowns, 
-              win/loss tracking, rating progression, and player statistics. View match 
-              timelines, civilization picks, and map performance in an elegant interface 
-              designed for serious Age of Empires II players.
+              Analyze your recent Age of Empires II ranked match history with detailed performance 
+              metrics. View player statistics and performance, as well as detailed match APM insights 
+              broken down by action types from your latest games in a clean, competitive-focused interface. 
+              <br /> <br /> More features coming soon!
             </Text>
           </Box>
         </VStack>

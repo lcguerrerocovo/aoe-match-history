@@ -8,4 +8,4 @@ export const PLAYER_COLORS: Record<number, string> = {
   7: '#808080', // Gray
   8: '#FFA500', // Orange
   // Add more if needed for custom scenarios
-};
+}; 
