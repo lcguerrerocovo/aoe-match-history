@@ -1,8 +1,6 @@
-import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Icon, HStack } from '@chakra-ui/react';
-import { FaCrown } from 'react-icons/fa';
+import { Box, Text, useMultiStyleConfig } from '@chakra-ui/react';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
-import { getTier } from '../utils/gameUtils';
 import { StatsTable } from './StatsTable';
 
 interface PlayerStatsProps {
@@ -11,7 +9,6 @@ interface PlayerStatsProps {
 
 export function PlayerStats({ stats }: PlayerStatsProps) {
   const styles = useMultiStyleConfig('PlayerStats', {});
-  const theme = useTheme();
 
   if (!stats?.statGroups?.[0]?.members?.[0]) {
     return null;

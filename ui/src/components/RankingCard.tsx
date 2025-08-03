@@ -1,4 +1,4 @@
-import { Box, Text, VStack, useMultiStyleConfig, useTheme, Tooltip, Image, HStack } from '@chakra-ui/react';
+import { Box, Text, VStack, useMultiStyleConfig, Tooltip, Image, HStack } from '@chakra-ui/react';
 import type { LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { getTier } from '../utils/gameUtils';
@@ -10,18 +10,7 @@ interface RankingCardProps {
 
 export function RankingCard({ stats }: RankingCardProps) {
   const styles = useMultiStyleConfig('RankingCard', {});
-  const theme = useTheme();
   const { isDark } = useThemeMode();
-
-  // Define all available leaderboards
-  const allLeaderboards = [
-    { id: 3, name: 'RM 1v1' },
-    { id: 4, name: 'RM Team' },
-    { id: 1, name: 'DM 1v1' },
-    { id: 2, name: 'DM Team' },
-    { id: 13, name: 'EW 1v1' },
-    { id: 14, name: 'EW Team' }
-  ];
 
   // Create a map of existing stats by leaderboard_id
   const statsMap = new Map(

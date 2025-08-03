@@ -1,7 +1,6 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { ProfileHeader } from './ProfileHeader';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { mockProfileHeaderProps } from '../test/mocks';
