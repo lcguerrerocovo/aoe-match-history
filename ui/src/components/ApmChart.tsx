@@ -163,7 +163,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   return (
     <Box w="full">
       {/* Chart Area - Fixed Height with Horizontal Scroll */}
-      <Box h={chartAreaHeight} overflowX="auto" overflowY="hidden">
+      <Box h={chartAreaHeight} overflowX="auto" overflowY="hidden" data-testid="chart-container">
         <Box minW={`${chartWidth}px`} h="100%">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
