@@ -2,6 +2,7 @@
 import time
 import io
 import json
+import os
 from datetime import datetime, timezone
 import requests
 import logging
@@ -10,73 +11,28 @@ from mgz.model import parse_match, serialize  # imported here to avoid cost if n
 # Configure root logger to display info-level logs with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
-# Comprehensive AoE II action descriptions (truncated for brevity)
-ACTION_TYPE_DESCRIPTIONS = {
-  "ERROR": 'Error or unknown action.',
-  "ORDER": 'Generic order issued to a unit (e.g., patrol, guard, gather, attack-move).',
-  "STOP": 'Orders a unit to halt its current action.',
-  "WORK": 'Villager or unit performs a work action (e.g., gather, build, repair).',
-  "MOVE": 'Orders a unit to move to a location.',
-  "CREATE": 'Creates a new unit.',
-  "ADD_ATTRIBUTE": 'Adds an attribute to a unit or object.',
-  "GIVE_ATTRIBUTE": 'Transfers an attribute (e.g., resource) to a unit or object.',
-  "AI_ORDER": 'Order issued by the AI.',
-  "RESIGN": 'Player resigns from the game.',
-  "SPECTATE": 'Spectator action.',
-  "ADD_WAYPOINT": 'Adds a waypoint for a unit or group.',
-  "STANCE": 'Changes the stance of a unit...',
-  "GUARD": 'Orders a unit to guard another unit or building.',
-  "FOLLOW": 'Orders a unit to follow another unit.',
-  "PATROL": 'Orders a unit to patrol between two points.',
-  "FORMATION": 'Changes formation.',
-  "SAVE": 'Save game action.',
-  "GROUP_MULTI_WAYPOINTS": 'Group movement with multiple waypoints.',
-  "CHAPTER": 'Campaign chapter action.',
-  "DE_ATTACK_MOVE": 'DE attack move command.',
-  "HD_UNKNOWN_34": 'Unknown action type (HD Edition).',
-  "DE_RETREAT": 'DE Retreat command.',
-  "DE_UNKNOWN_37": 'Unknown action type (DE).',
-  "DE_AUTOSCOUT": 'DE Auto-scout.',
-  "DE_UNKNOWN_39": 'Unknown action type (DE).',
-  "DE_UNKNOWN_40": 'Unknown action type (DE).',
-  "DE_TRANSFORM": 'DE Transform.',
-  "RATHA_ABILITY": 'DE Ratha ability.',
-  "DE_107_A": 'Unknown action type (DE).',
-  "DE_MULTI_GATHERPOINT": 'DE multiple gather points.',
-  "AI_COMMAND": 'AI command.',
-  "DE_UNKNOWN_80": 'Unknown action type (DE).',
-  "MAKE": 'Orders a building to produce a unit.',
-  "RESEARCH": 'Initiates research.',
-  "BUILD": 'Orders a villager to construct.',
-  "GAME": 'Game command.',
-  "WALL": 'Orders wall segment.',
-  "DELETE": 'Deletes unit/building.',
-  "ATTACK_GROUND": 'Attack ground.',
-  "TRIBUTE": 'Sends resources.',
-  "DE_UNKNOWN_109": 'Unknown action type (DE).',
-  "REPAIR": 'Repair action.',
-  "UNGARRISON": 'Ungarrison.',
-  "MULTIQUEUE": 'Multi-queue.',
-  "GATE": 'Build gate.',
-  "FLARE": 'Map flare.',
-  "SPECIAL": 'Special order.',
-  "QUEUE": 'Queue unit/tech.',
-  "GATHER_POINT": 'Set rally point.',
-  "SELL": 'Sells resources.',
-  "BUY": 'Buys resources.',
-  "DROP_RELIC": 'Drops relic.',
-  "TOWN_BELL": 'Town bell.',
-  "BACK_TO_WORK": 'Back to work.',
-  "DE_QUEUE": 'DE cancel queue.',
-  "DE_UNKNOWN_130": 'Unknown.',
-  "DE_UNKNOWN_131": 'Unknown.',
-  "DE_UNKNOWN_135": 'Unknown.',
-  "DE_UNKNOWN_136": 'Unknown.',
-  "DE_UNKNOWN_138": 'Unknown.',
-  "DE_107_B": 'Unknown.',
-  "DE_TRIBUTE": 'DE tribute.',
-  "POSTGAME": 'Postgame action.'
-}
+def load_action_type_descriptions():
+    """Load action type descriptions from the frontend assets"""
+    urls = [
+        'http://localhost:5173/assets/action_type_descriptions.json',
+        'https://aoe2.site/assets/action_type_descriptions.json'
+    ]
+    
+    for url in urls:
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                logging.info(f"Loaded action type descriptions from {url}")
+                return response.json()
+        except Exception as e:
+            logging.warning(f"Failed to load action type descriptions from {url}: {e}")
+    
+    # If we can't load the descriptions, return empty dict
+    logging.error("Failed to load action type descriptions from any source")
+    return {}
+
+# Load action type descriptions
+ACTION_TYPE_DESCRIPTIONS = load_action_type_descriptions()
 
 
 def _categorize(cmd):

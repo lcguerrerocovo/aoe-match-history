@@ -9,9 +9,10 @@ import {
   Tooltip,
 } from 'recharts';
 
-import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
+import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button, Tooltip as ChakraTooltip } from '@chakra-ui/react';
 import { PLAYER_COLORS } from './playerColors';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
+import actionTypeDescriptions from '../assets/action_type_descriptions.json';
 
 interface ApmActionData {
   minute: number;
@@ -102,6 +103,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   const playerIds = Object.keys(apm?.players ?? {});
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(playerIds[0] || '');
   const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
+
+
 
 
 
@@ -453,55 +456,70 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
           {actionTypesWithStats.map((actionStat) => {
             const actionType = actionStat.actionType;
             const isActive = activeActionTypes.has(actionType);
+            const description = actionTypeDescriptions[actionType as keyof typeof actionTypeDescriptions] || 'No description available.';
             
             return (
-              <Flex
+              <ChakraTooltip
                 key={actionType}
-                align="center"
-                gap={2}
-                px={2}
-                py={1}
-                flexShrink={0}
-                minW="fit-content"
-                bg={isActive ? theme.colors.brand.stoneLight : theme.colors.brand.fadedBlue}
-                borderRadius="md"
+                label={description}
+                placement="top"
+                hasArrow
+                bg={theme.colors.brand.parchment}
+                color={theme.colors.brand.midnightBlue}
                 border="1px solid"
-                borderColor={isActive ? theme.colors.brand.slateBorder : theme.colors.brand.lightSteel}
-                opacity={isActive ? 1 : 0.6}
-                cursor="pointer"
-                onClick={() => toggleActionType(actionType)}
-                _hover={{
-                  opacity: 1,
-                  bg: theme.colors.brand.stoneLight,
-                }}
+                borderColor={theme.colors.brand.slateBorder}
+                borderRadius="md"
+                p={2}
+                fontSize="sm"
+                maxW="300px"
               >
-                <Box
-                  bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
-                  w="16px"
-                  h="16px"
-                  borderRadius="sm"
+                <Flex
+                  align="center"
+                  gap={2}
+                  px={2}
+                  py={1}
                   flexShrink={0}
-                />
-                <Text
-                  color={theme.colors.brand.midnightBlue}
-                  fontSize="sm"
-                  fontWeight="semibold"
-                  maxW="140px"
-                  isTruncated
-                  whiteSpace="nowrap"
-                  flexShrink={0}
+                  minW="fit-content"
+                  bg={isActive ? theme.colors.brand.stoneLight : theme.colors.brand.fadedBlue}
+                  borderRadius="md"
+                  border="1px solid"
+                  borderColor={isActive ? theme.colors.brand.slateBorder : theme.colors.brand.lightSteel}
+                  opacity={isActive ? 1 : 0.6}
+                  cursor="pointer"
+                  onClick={() => toggleActionType(actionType)}
+                  _hover={{
+                    opacity: 1,
+                    bg: theme.colors.brand.stoneLight,
+                  }}
                 >
-                  {actionType}
-                </Text>
-                <Text
-                  color={theme.colors.brand.midnightBlue}
-                  fontSize="xs"
-                  fontWeight="bold"
-                  flexShrink={0}
-                >
-                  {actionStat.percentage}%
-                </Text>
-              </Flex>
+                  <Box
+                    bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
+                    w="16px"
+                    h="16px"
+                    borderRadius="sm"
+                    flexShrink={0}
+                  />
+                  <Text
+                    color={theme.colors.brand.midnightBlue}
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    maxW="140px"
+                    isTruncated
+                    whiteSpace="nowrap"
+                    flexShrink={0}
+                  >
+                    {actionType}
+                  </Text>
+                  <Text
+                    color={theme.colors.brand.midnightBlue}
+                    fontSize="xs"
+                    fontWeight="bold"
+                    flexShrink={0}
+                  >
+                    {actionStat.percentage}%
+                  </Text>
+                </Flex>
+              </ChakraTooltip>
             );
           })}
         </Flex>

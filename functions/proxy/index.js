@@ -66,73 +66,32 @@ let mapMap = null;
 // Duration of artificial latency in milliseconds (set via env or default 1500ms)
 const SIMULATE_LATENCY_MS = process.env.SIMULATE_LATENCY_MS ? parseInt(process.env.SIMULATE_LATENCY_MS, 10) : 1500;
 
-// Detailed AoE2 action type descriptions
-const ACTION_TYPE_DESCRIPTIONS = {
-  ERROR: 'Error or unknown action.',
-  ORDER: 'Generic order issued to a unit (e.g., patrol, guard, gather, attack-move).',
-  STOP: 'Orders a unit to halt its current action.',
-  WORK: 'Villager or unit performs a work action (e.g., gather, build, repair).',
-  MOVE: 'Orders a unit to move to a location.',
-  CREATE: 'Creates a new unit.',
-  ADD_ATTRIBUTE: 'Adds an attribute to a unit or object.',
-  GIVE_ATTRIBUTE: 'Transfers an attribute (e.g., resource) to a unit or object.',
-  AI_ORDER: 'Order issued by the AI.',
-  RESIGN: 'Player resigns from the game.',
-  SPECTATE: 'Spectator action.',
-  ADD_WAYPOINT: 'Adds a waypoint for a unit or group.',
-  STANCE: 'Changes the stance of a unit...',
-  GUARD: 'Orders a unit to guard another unit or building.',
-  FOLLOW: 'Orders a unit to follow another unit.',
-  PATROL: 'Orders a unit to patrol between two points.',
-  FORMATION: 'Changes formation.',
-  SAVE: 'Save game action.',
-  GROUP_MULTI_WAYPOINTS: 'Group movement with multiple waypoints.',
-  CHAPTER: 'Campaign chapter action.',
-  DE_ATTACK_MOVE: 'DE attack move command.',
-  HD_UNKNOWN_34: 'Unknown action type (HD Edition).',
-  DE_RETREAT: 'DE Retreat command.',
-  DE_UNKNOWN_37: 'Unknown action type (DE).',
-  DE_AUTOSCOUT: 'DE Auto-scout.',
-  DE_UNKNOWN_39: 'Unknown action type (DE).',
-  DE_UNKNOWN_40: 'Unknown action type (DE).',
-  DE_TRANSFORM: 'DE Transform.',
-  RATHA_ABILITY: 'DE Ratha ability.',
-  DE_107_A: 'Unknown action type (DE).',
-  DE_MULTI_GATHERPOINT: 'DE multiple gather points.',
-  AI_COMMAND: 'AI command.',
-  DE_UNKNOWN_80: 'Unknown action type (DE).',
-  MAKE: 'Orders a building to produce a unit.',
-  RESEARCH: 'Initiates research.',
-  BUILD: 'Orders a villager to construct.',
-  GAME: 'Game command.',
-  WALL: 'Orders wall segment.',
-  DELETE: 'Deletes unit/building.',
-  ATTACK_GROUND: 'Attack ground.',
-  TRIBUTE: 'Sends resources.',
-  DE_UNKNOWN_109: 'Unknown action type (DE).',
-  REPAIR: 'Repair action.',
-  UNGARRISON: 'Ungarrison.',
-  MULTIQUEUE: 'Multi-queue.',
-  GATE: 'Build gate.',
-  FLARE: 'Map flare.',
-  SPECIAL: 'Special order.',
-  QUEUE: 'Queue unit/tech.',
-  GATHER_POINT: 'Set rally point.',
-  SELL: 'Sells resources.',
-  BUY: 'Buys resources.',
-  DROP_RELIC: 'Drops relic.',
-  TOWN_BELL: 'Town bell.',
-  BACK_TO_WORK: 'Back to work.',
-  DE_QUEUE: 'DE cancel queue.',
-  DE_UNKNOWN_130: 'Unknown.',
-  DE_UNKNOWN_131: 'Unknown.',
-  DE_UNKNOWN_135: 'Unknown.',
-  DE_UNKNOWN_136: 'Unknown.',
-  DE_UNKNOWN_138: 'Unknown.',
-  DE_107_B: 'Unknown.',
-  DE_TRIBUTE: 'DE tribute.',
-  POSTGAME: 'Postgame action.'
-};
+// Load action type descriptions from frontend assets
+let ACTION_TYPE_DESCRIPTIONS = {};
+
+async function loadActionTypeDescriptions() {
+  // Try localhost first in development
+  const urls = [
+    'http://localhost:5173/assets/action_type_descriptions.json',
+    'https://aoe2.site/assets/action_type_descriptions.json'
+  ];
+  
+  for (const url of urls) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        ACTION_TYPE_DESCRIPTIONS = await response.json();
+        log.info(`Loaded action type descriptions from ${url}`);
+        return;
+      }
+    } catch (error) {
+      log.warn(`Failed to load action type descriptions from ${url}:`, error.message);
+    }
+  }
+  
+  // If we can't load the descriptions, log error and leave empty
+  log.error('Failed to load action type descriptions from any source');
+}
 
 function categorize(cmd) {
   // mgz-parser exposes cmd.type (string) for DE, or cmd.op numeric. Use whichever available.
@@ -1447,6 +1406,7 @@ const routes = [
       };
     }
   },
+
   {
     pattern: /^\/api\/player-search(\?.*)?$/,
     handler: (req, res) => {
@@ -1505,6 +1465,11 @@ if (process.env.NODE_ENV === 'test') {
   exports.__setPlayerService = (svc) => { playerService = svc; };
   exports.__resetPlayerService = () => { playerService = null; };
 }
+
+// Initialize action type descriptions on module load
+loadActionTypeDescriptions().catch(error => {
+  log.error('Failed to initialize action type descriptions:', error);
+});
 
 module.exports = {
   proxy: exports.proxy,
