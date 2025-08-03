@@ -27,6 +27,9 @@
     "test:all": "concurrently --kill-others-on-fail \"VITE_AOE_API_URL=/api vitest run\" \"npm run cy:run\" \"cd ../functions/proxy && npm test\"",
     "cy:open": "cypress open --config-file cypress.config.mts --component",
     "cy:run": "cypress run --config-file cypress.config.mts --component",
+    "cy:run:parallel": "cypress run --config-file cypress.config.mts --component --parallel --record",
+    "test:ci": "VITE_AOE_API_URL=/api vitest run --reporter=verbose",
+    "cy:run:ci": "cypress run --config-file cypress.config.mts --component --headless --no-video --no-screenshot",
     "clean": "rm -rf dist node_modules && npx cypress cache clear",
     "prepare": "husky"
   },

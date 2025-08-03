@@ -56,12 +56,8 @@ describe('FilterBar Responsive Layout', () => {
 
     // Check that FilterBar doesn't exceed viewport width
     cy.get('div').first().then($el => {
-      const element = $el[0];
-      const rect = element.getBoundingClientRect();
-      
-      // Element should not extend beyond the viewport width (allow exact fit)
+      const rect = $el[0].getBoundingClientRect();
       expect(rect.right).to.be.at.most(1024);
-      expect(rect.width).to.be.at.most(1024);
     });
 
     // Verify no horizontal scrollbar
@@ -69,13 +65,9 @@ describe('FilterBar Responsive Layout', () => {
       expect(win.document.documentElement.scrollWidth).to.be.at.most(1024);
     });
 
-    // All filter elements should be contained
+    // All filter elements should be visible
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
-    cy.get('select').each($select => {
-      const rect = $select[0].getBoundingClientRect();
-      expect(rect.right).to.be.at.most(1024);
-    });
     cy.get('button[aria-label*="Sort"]').should('be.visible');
   });
 

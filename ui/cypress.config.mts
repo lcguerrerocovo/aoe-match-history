@@ -17,11 +17,19 @@ export default defineConfig({
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: false,
     // Reduce timeouts for faster test execution
-    defaultCommandTimeout: 4000,
-    requestTimeout: 5000,
-    responseTimeout: 5000,
+    defaultCommandTimeout: 2000,
+    requestTimeout: 3000,
+    responseTimeout: 3000,
     // Disable video recording and screenshots for faster runs
     video: false,
-    screenshotOnRunFailure: false
+    screenshotOnRunFailure: false,
+    // Disable animations for faster rendering
+    animationDistanceThreshold: 0,
+    // Optimize for speed
+    watchForFileChanges: false,
+    retries: {
+      runMode: 0,
+      openMode: 0
+    }
   },
 }) 

@@ -53,6 +53,14 @@ jobs:
             xvfb \
             && apt-get clean && rm -rf /var/lib/apt/lists/*
       
+      - name: Cache Cypress
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-cache-${{ runner.os }}-${{ hashFiles('ui/package-lock.json') }}
+          restore-keys: |
+            cypress-cache-${{ runner.os }}-
+      
       - name: Install Proxy Function dependencies
         working-directory: functions/proxy
         run: npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
@@ -61,9 +69,17 @@ jobs:
         working-directory: ui
         run: npm run lint
       
-      - name: Run all tests
+      - name: Run tests in parallel
         working-directory: ui
-        run: npm run test:all
+        run: |
+          # Run Vitest and Cypress in parallel using CI-optimized scripts
+          npm run test:ci &
+          npm run cy:run:ci &
+          wait
+      
+      - name: Run Proxy Function tests
+        working-directory: functions/proxy
+        run: npm test
       
       - name: Build UI
         working-directory: ui
@@ -136,6 +152,8 @@ jobs:
           gsutil -m cp ui/_redirects gs://aoe2.site/_redirects
           # Set ACL for public access
           gsutil -m acl ch -r -u AllUsers:R gs://aoe2.site/assets/ gs://aoe2.site/data/ gs://aoe2.site/_redirects
+
+
 
   deploy-proxy-function:
     runs-on: ubuntu-latest

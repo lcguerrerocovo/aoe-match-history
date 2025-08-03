@@ -21,21 +21,20 @@ const createMockMatch = (numTeams: number = 2) => ({
   diplomacy: { type: 'RM Team', team_size: numTeams.toString() },
   map: 'Kawasan',
   options: '',
-  duration: 1456, // 24:16
+  duration: 1456,
   winning_team: 1,
   winning_teams: [1],
   teams: Array.from({ length: numTeams }, (_, teamIndex) => 
     Array.from({ length: teamIndex === 0 ? 2 : 1 }, (_, playerIndex) => ({
       name: `Player${teamIndex + 1}-${playerIndex + 1}`,
-      original_name: `/steam/76561198144754${teamIndex}${playerIndex}`,
-      civ: ['Britons', 'Franks', 'Goths', 'Huns'][teamIndex + playerIndex],
+      civ: ['Britons', 'Franks'][teamIndex + playerIndex],
       number: teamIndex * 2 + playerIndex + 1,
       color_id: teamIndex * 2 + playerIndex,
       user_id: (teamIndex * 2 + playerIndex + 1).toString(),
       winner: teamIndex === 0,
-      rating: 1200 + (teamIndex * 100) + (playerIndex * 50),
+      rating: 1200 + (teamIndex * 100),
       rating_change: teamIndex === 0 ? 15 : -15,
-      save_game_size: 1024 * 50, // 50KB
+      save_game_size: 1024 * 50,
     }))
   ),
 });
@@ -50,6 +49,17 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         ok: true,
         json: () => Promise.resolve({ avatarfull: 'https://example.com/avatar.jpg' }),
       });
+    });
+  });
+
+  afterEach(() => {
+    // Clean up any mounted components
+    cy.get('body').then($body => {
+      if ($body.find('[data-cy-root]').length) {
+        cy.get('[data-cy-root]').then($root => {
+          $root.remove();
+        });
+      }
     });
   });
 
@@ -127,12 +137,11 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.wait(50);
 
       // Player name should be truncated
-      cy.get('[data-testid="player-name"]').should('have.css', 'text-overflow', 'ellipsis');
-      cy.get('[data-testid="player-name"]').should('have.css', 'white-space', 'nowrap');
-      cy.get('[data-testid="player-name"]').should('have.css', 'overflow', 'hidden');
-      
-      // Should have tooltip with full name
-      cy.get('[data-testid="player-name"]').should('have.attr', 'title', 'VeryLongPlayerNameThatShouldBeTruncated');
+      cy.get('[data-testid="player-name"]').should('have.css', {
+        'text-overflow': 'ellipsis',
+        'white-space': 'nowrap',
+        'overflow': 'hidden'
+      }).and('have.attr', 'title', 'VeryLongPlayerNameThatShouldBeTruncated');
     });
   });
 
@@ -179,14 +188,10 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.viewport(1200, 800);
       cy.wait(50);
 
-      // Player names should use larger font size
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'font-size', '14px'); // sm
-      
-      // Rating should use larger font size
-      cy.get('[data-testid="player-rating"]').first().should('have.css', 'font-size', '14px'); // sm
-      
-      // Details should use larger font size
-      cy.get('[data-testid="match-detail-value"]').first().should('have.css', 'font-size', '16px'); // md
+      // Check font sizes for desktop
+      cy.get('[data-testid="player-name"]').first().should('have.css', 'font-size', '14px');
+      cy.get('[data-testid="player-rating"]').first().should('have.css', 'font-size', '14px');
+      cy.get('[data-testid="match-detail-value"]').first().should('have.css', 'font-size', '16px');
     });
   });
 
