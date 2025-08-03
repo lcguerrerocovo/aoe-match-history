@@ -184,8 +184,8 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
     });
   }, [currentPlayerData, allActionTypes, activeActionTypes]);
 
-  // Calculate action type statistics
-  const actionTypesWithStats = useMemo(() => {
+  // Calculate action type statistics for active types (used in chart)
+  const activeActionTypesWithStats = useMemo(() => {
     if (!currentPlayerData) return [];
 
     const totals = calculateActionTypeTotals(currentPlayerData, allActionTypes);
@@ -201,6 +201,30 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       .map((stat) => ({
         ...stat,
         percentage: totalActions > 0 ? Math.round((stat.total / totalActions) * 100) : 0
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [currentPlayerData, allActionTypes, activeActionTypes]);
+
+  // Calculate action type statistics for all types (used in legend)
+  const allActionTypesWithStats = useMemo(() => {
+    if (!currentPlayerData) return [];
+
+    const totals = calculateActionTypeTotals(currentPlayerData, allActionTypes);
+    
+    // Include all action types
+    const allTotals = Object.entries(totals)
+      .map(([actionType, total]) => ({ actionType, total }));
+
+    // Calculate percentages only for active action types
+    const activeTotals = allTotals.filter((stat) => activeActionTypes.has(stat.actionType));
+    const totalActiveActions = activeTotals.reduce((sum, stat) => sum + stat.total, 0);
+
+    return allTotals
+      .map((stat) => ({
+        ...stat,
+        percentage: activeActionTypes.has(stat.actionType) && totalActiveActions > 0 
+          ? Math.round((stat.total / totalActiveActions) * 100) 
+          : null
       }))
       .sort((a, b) => b.total - a.total);
   }, [currentPlayerData, allActionTypes, activeActionTypes]);
@@ -441,7 +465,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
               wrapperStyle={{ fontFamily: 'inherit' }}
               offset={30}
             />
-            {actionTypesWithStats.map((actionStat) => (
+            {activeActionTypesWithStats.map((actionStat) => (
               <Bar
                 key={actionStat.actionType}
                 dataKey={actionStat.actionType}
@@ -459,7 +483,7 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       {/* Legend Area - Dynamic Height */}
       <Box mt={2} px={2} overflow="visible" minH="60px">
         <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
-          {actionTypesWithStats.map((actionStat) => {
+          {allActionTypesWithStats.map((actionStat) => {
             const actionType = actionStat.actionType;
             const isActive = activeActionTypes.has(actionType);
             const description = actionTypeDescriptions[actionType as keyof typeof actionTypeDescriptions] || 'No description available.';
@@ -516,14 +540,16 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
                   >
                     {actionType}
                   </Text>
-                  <Text
-                    color={theme.colors.brand.midnightBlue}
-                    fontSize="xs"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    {actionStat.percentage}%
-                  </Text>
+                  {actionStat.percentage !== null && (
+                    <Text
+                      color={theme.colors.brand.midnightBlue}
+                      fontSize="xs"
+                      fontWeight="bold"
+                      flexShrink={0}
+                    >
+                      {actionStat.percentage}%
+                    </Text>
+                  )}
                 </Flex>
               </ChakraTooltip>
             );
