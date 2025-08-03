@@ -31,11 +31,20 @@ jobs:
           apt-get update && apt-get install -y libc6 && \
           apt-get clean && rm -rf /var/lib/apt/lists/*
       
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ui/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('ui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
       - name: Install UI dependencies
         working-directory: ui
         run: |
-          rm -f package-lock.json && \
-          npm install --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
+          npm ci --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-audit --no-fund
       
       - name: Install Cypress dependencies
         run: |
