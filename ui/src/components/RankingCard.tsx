@@ -41,23 +41,23 @@ export function RankingCard({ stats }: RankingCardProps) {
           const textProps = (() => {
             // Always use tier colors for rank text, even if no tier (use default colors)
             if (!tier) {
-              return { color: isDark ? '#CD853F' : '#8B4513' };
+              return { color: isDark ? theme.colors.brand.tierBronzeDark : theme.colors.brand.tierBronzeLight };
             }
             if (tier.gradient) {
               // Use solid colors for better visibility in dark mode
               if (isDark) {
                 return {
-                  color: tier.name === 'Gold' ? '#FFD700' :
-                         tier.name === 'Silver' ? '#C0C0C0' :
-                         '#CD853F'
+                  color: tier.name === 'Gold' ? theme.colors.brand.tierGoldGradientDark :
+                         tier.name === 'Silver' ? theme.colors.brand.tierSilverGradientDark :
+                         theme.colors.brand.tierBronzeDark
                 };
               } else {
                 return {
                   bgGradient: tier.name === 'Gold' ? 
-                    `linear(to-b, #D4AF37, #B8860B)` :
+                    `linear(to-b, ${theme.colors.brand.tierGoldLight}, ${theme.colors.brand.tierGoldGradientLight})` :
                     tier.name === 'Silver' ? 
-                    `linear(to-b, #696969, #808080)` :
-                    `linear(to-b, #8B4513, #A0522D)`,
+                    `linear(to-b, ${theme.colors.brand.tierSilverLight}, ${theme.colors.brand.tierSilverGradientLight})` :
+                    `linear(to-b, ${theme.colors.brand.tierBronzeLight}, ${theme.colors.brand.tierBronzeGradientLight})`,
                   bgClip: 'text' as const,
                 };
               }

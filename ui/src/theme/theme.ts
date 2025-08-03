@@ -68,7 +68,7 @@ const lightColors = {
     tierGoldGradientDark: '#FFB347', // Gold gradient end for dark theme
     tierGoldGradientLight: '#B8860B', // Gold gradient end for light theme
     
-    tierSilverDark: '#F5F5F5',    // Bright silver for dark theme
+    tierSilverDark: '#C0C0C0',    // Bright silver for dark theme
     tierSilverLight: '#696969',   // Dark silver for light theme
     tierSilverGradientDark: '#D3D3D3', // Silver gradient end for dark theme
     tierSilverGradientLight: '#808080', // Silver gradient end for light theme
@@ -215,6 +215,22 @@ const darkColors = {
     brightGreen: '#48BB78',
     brightRed: '#F56565',
     contrastRed: '#F56565',
+    
+    // Tier ranking colors for dark theme
+    tierGoldDark: '#FFD700',      // Bright gold for dark theme
+    tierGoldLight: '#D4AF37',     // Lustrous gold for light theme
+    tierGoldGradientDark: '#FFB347', // Gold gradient end for dark theme
+    tierGoldGradientLight: '#B8860B', // Gold gradient end for light theme
+    
+    tierSilverDark: '#C0C0C0',    // Bright silver for dark theme
+    tierSilverLight: '#696969',   // Dark silver for light theme
+    tierSilverGradientDark: '#D3D3D3', // Silver gradient end for dark theme
+    tierSilverGradientLight: '#808080', // Silver gradient end for light theme
+    
+    tierBronzeDark: '#CD853F',    // Bright bronze for dark theme
+    tierBronzeLight: '#8B4513',   // Dark bronze for light theme
+    tierBronzeGradientDark: '#D2691E', // Bronze gradient end for dark theme
+    tierBronzeGradientLight: '#A0522D', // Bronze gradient end for light theme
     
     // UI component backgrounds
     topbarBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
