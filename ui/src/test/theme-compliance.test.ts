@@ -32,7 +32,9 @@ const ALLOWED_EXCEPTIONS = [
   // CSS gradient keywords
   'to', 'from', 'at', 'circle', 'ellipse', 'linear', 'radial',
   // Positioning keywords
-  'center', 'top', 'bottom', 'left', 'right'
+  'center', 'top', 'bottom', 'left', 'right',
+  // Tier names (not colors)
+  'Gold', 'Silver', 'Bronze'
 ];
 
 // Patterns that should be ignored (not colors)
