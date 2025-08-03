@@ -207,7 +207,7 @@ export function MatchPage() {
             spacing={6}
           >
             {/* Enlarged Match Card */}
-            <FullMatchSummaryCard match={match} activePids={activePids} onToggle={togglePid} />
+            <FullMatchSummaryCard match={match} />
             
             {/* Additional Details Section */}
             <Card variant="match" w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">

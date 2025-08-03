@@ -11,15 +11,13 @@ import { getTextColorForBackground, getTextShadowForBackground } from '../utils/
 
 interface FullMatchSummaryCardProps {
   match: any;
-  activePids?: string[];
-  onToggle?: (pid: string) => void;
 }
 
 interface PlayerAvatarProps {
   player: any;
   matchId: string;
-  active: boolean;
-  onToggle: (pid: string) => void;
+  active?: boolean;
+  onToggle?: (pid: string) => void;
 }
 
 const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, onToggle }) => {
@@ -99,9 +97,6 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, active, on
           {/* Player Color Indicator with Index */}
           <HStack spacing={0} align="center" w="full">
             <Box
-              onClick={() => onToggle(String(player.user_id))}
-              cursor="pointer"
-              opacity={active ? 1 : 0.4}
               w={{ base: '75px', md: '75px' }}
               h={{ base: "16px", md: "18px" }}
               bg={bgColor}
@@ -388,7 +383,7 @@ function MatchDetails({ match }: { match: any }) {
   );
 }
 
-export function FullMatchSummaryCard({ match, activePids, onToggle }: FullMatchSummaryCardProps) {
+export function FullMatchSummaryCard({ match }: FullMatchSummaryCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
@@ -466,7 +461,7 @@ export function FullMatchSummaryCard({ match, activePids, onToggle }: FullMatchS
                                 py={2}
                                 px={1}
                               >
-                                <PlayerAvatar player={player} matchId={match.match_id} active={activePids ? activePids.includes(String(player.user_id)) : true} onToggle={onToggle ?? (()=>{})} />
+                                <PlayerAvatar player={player} matchId={match.match_id} />
                               </Box>
                             </Box>
                           );
