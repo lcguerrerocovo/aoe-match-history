@@ -148,7 +148,11 @@ function findHardcodedColors(content: string, filePath: string): Array<{ line: n
         // Skip if it's an allowed exception or part of theme reference
         if (!ALLOWED_EXCEPTIONS.includes(colorName.toLowerCase()) && 
             !line.includes('brand.') && 
-            !line.includes('//')) {
+            !line.includes('//') &&
+            // Skip tier name comparisons
+            !line.includes(`tier.name === '${colorName}'`) &&
+            !line.includes(`tier.name === "${colorName}"`) &&
+            !line.includes(`tier.name === \`${colorName}\``)) {
           issues.push({
             line: lineNumber,
             color: colorName,
