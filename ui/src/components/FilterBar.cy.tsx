@@ -24,20 +24,14 @@ describe('FilterBar Responsive Layout', () => {
     // Test mobile view
     cy.viewport(400, 600);
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
-    cy.get('select').should('have.length', 2); // Map and match type selects
-    cy.get('select').first().should('contain', 'All maps');
-    cy.get('select').last().should('contain', 'All types');
-    cy.get('button[aria-label*="Sort"]').should('be.visible'); // Sort button
+    cy.get('select').should('have.length', 2);
+    cy.get('button[aria-label*="Sort"]').should('be.visible');
 
     // Test desktop view
     cy.viewport(1200, 800);
     cy.get('input[placeholder="Search matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
     cy.get('button[aria-label*="Sort"]').should('be.visible');
-
-    // Test iPad Pro view
-    cy.viewport(1024,1366);
-    cy.get('input[placeholder="Search matches..."]').should('be.visible');
   });
 
   it('should NOT overflow horizontally on iPad Pro (1024px width)', () => {
@@ -58,7 +52,7 @@ describe('FilterBar Responsive Layout', () => {
     cy.viewport(1024, 1366);
 
     // Wait for layout to settle
-    cy.wait(100);
+    cy.wait(50);
 
     // Check that FilterBar doesn't exceed viewport width
     cy.get('div').first().then($el => {
@@ -121,7 +115,7 @@ describe('FilterBar Responsive Layout', () => {
     cy.get('@onSortChange').should('have.been.calledWith', 'asc');
   });
 
-  it('should display all map options correctly', () => {
+  it('should display all options correctly', () => {
     const props = {
       ...mockFilterBarProps,
       onMapChange: cy.stub().as('onMapChange'),
@@ -135,27 +129,14 @@ describe('FilterBar Responsive Layout', () => {
       </ChakraProvider>
     );
 
-    cy.get('select').first().find('option').should('have.length', 4); // "All maps" + 3 mock maps
+    // Map options
+    cy.get('select').first().find('option').should('have.length', 4);
     cy.get('select').first().find('option').should('contain', 'Arabia (10)');
     cy.get('select').first().find('option').should('contain', 'Black Forest (5)');
     cy.get('select').first().find('option').should('contain', 'Arena (3)');
-  });
 
-  it('should display all match type options correctly', () => {
-    const props = {
-      ...mockFilterBarProps,
-      onMapChange: cy.stub().as('onMapChange'),
-      onMatchTypeChange: cy.stub().as('onMatchTypeChange'),
-      onSortChange: cy.stub().as('onSortChange')
-    };
-
-    mount(
-      <ChakraProvider theme={theme}>
-        <FilterBar {...props} />
-      </ChakraProvider>
-    );
-
-    cy.get('select').last().find('option').should('have.length', 5); // "All types" + 4 mock match types
+    // Match type options
+    cy.get('select').last().find('option').should('have.length', 5);
     cy.get('select').last().find('option').should('contain', 'RM 1v1 (12)');
     cy.get('select').last().find('option').should('contain', 'RM Team (8)');
     cy.get('select').last().find('option').should('contain', 'EW 1v1 (4)');

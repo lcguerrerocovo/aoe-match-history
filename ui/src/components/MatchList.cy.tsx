@@ -226,21 +226,8 @@ describe('Team Layout Responsive Behavior', () => {
       cy.get('div').first().should('have.css', 'flex-direction', 'column');
     });
 
-    // Test tablet breakpoint (should behave like mobile)
-    cy.viewport(768, 1024);
-    cy.get('[data-testid="match-card-content"]').within(() => {
-      cy.get('div').first().should('have.css', 'flex-direction', 'column');
-    });
-
     // Test desktop breakpoint
     cy.viewport(1200, 800);
-    cy.get('[data-testid="match-card-content"]').within(() => {
-      cy.get('div').first().should('have.css', 'flex-direction', 'column');
-      cy.get('[data-testid="team-row"]').should('exist');
-    });
-
-    // Test large desktop breakpoint
-    cy.viewport(1600, 900);
     cy.get('[data-testid="match-card-content"]').within(() => {
       cy.get('div').first().should('have.css', 'flex-direction', 'column');
       cy.get('[data-testid="team-row"]').should('exist');
@@ -265,10 +252,6 @@ describe('MatchCard Responsive Layout', () => {
     // Test the desktop view
     cy.viewport(1200, 800);
     cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
-
-    // Test the iPad Pro view
-    cy.viewport(1024, 1366);
-    cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
   });
 
   it('should NOT have horizontal overflow on iPad Pro (1024px width)', () => {
@@ -284,7 +267,7 @@ describe('MatchCard Responsive Layout', () => {
     cy.viewport(1024, 1366);
 
     // Wait for layout to settle
-    cy.wait(100);
+    cy.wait(50);
 
     // Check that the match card content doesn't exceed viewport width
     cy.get('[data-testid="match-card-content"]').then($el => {

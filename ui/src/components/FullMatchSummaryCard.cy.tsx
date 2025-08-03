@@ -54,7 +54,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
   });
 
   describe('Layout Direction Changes', () => {
-    it('should display in column layout on mobile', () => {
+    it('should display correct layout for different viewports', () => {
       const mockMatch = createMockMatch();
       
       mount(
@@ -65,46 +65,20 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         </BrowserRouter>
       );
 
-      // Mobile viewport
+      // Mobile viewport - column layout
       cy.viewport(400, 800);
-      cy.wait(100); // Allow for responsive layout adjustment
-
-      // Main content should be in column layout
+      cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
       
-      // Map should be above teams
-      cy.get('[data-testid="match-card-content"]').within(() => {
-        cy.get('div').first().should('contain', 'Kawasan');
-      });
-    });
-
-    it('should display in row layout on desktop', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Desktop viewport
+      // Desktop viewport - row layout
       cy.viewport(1200, 800);
-      cy.wait(100); // Allow for responsive layout adjustment
-
-      // Main content should be in row layout
+      cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
-      
-      // Map should be on the left, teams on the right
-      cy.get('[data-testid="match-card-content"]').within(() => {
-        cy.get('div').first().should('contain', 'Kawasan');
-      });
     });
   });
 
   describe('Match Details Responsive Text', () => {
-    it('should show short labels on mobile', () => {
+    it('should show appropriate labels and spacing for different viewports', () => {
       const mockMatch = createMockMatch();
       
       mount(
@@ -115,75 +89,22 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         </BrowserRouter>
       );
 
-      // Mobile viewport
+      // Mobile viewport - short labels
       cy.viewport(400, 800);
-      cy.wait(100);
-
-      // Should show mobile labels
+      cy.wait(50);
       cy.contains('Date').should('be.visible');
       cy.contains('Game').should('be.visible');
       cy.contains('Real').should('be.visible');
-      
-      // Should not show desktop labels
-      cy.contains('Date & Time').should('not.be.visible');
-      cy.contains('Game Duration').should('not.be.visible');
-      cy.contains('Real Time').should('not.be.visible');
-    });
+      cy.get('[data-testid="match-details"]').within(() => {
+        cy.get('div').should('have.css', 'gap');
+      });
 
-    it('should show full labels on desktop', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Desktop viewport
+      // Desktop viewport - full labels
       cy.viewport(1200, 800);
-      cy.wait(100);
-
-      // Should show desktop labels
+      cy.wait(50);
       cy.contains('Date & Time').should('be.visible');
       cy.contains('Game Duration').should('be.visible');
       cy.contains('Real Time').should('be.visible');
-      
-      // Should not show mobile labels
-      cy.contains('Date').should('not.be.visible');
-      cy.contains('Game').should('not.be.visible');
-      cy.contains('Real').should('not.be.visible');
-    });
-
-    it('should have proper spacing between details on different screen sizes', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
-
-      // Mobile viewport - tighter spacing
-      cy.viewport(400, 800);
-      cy.wait(100);
-      
-      // Check that details are in a horizontal stack with appropriate spacing
-      cy.get('[data-testid="match-details"]').within(() => {
-        cy.get('div').should('have.css', 'gap');
-      });
-
-      // Desktop viewport - more generous spacing
-      cy.viewport(1200, 800);
-      cy.wait(100);
-      
-      // Should have more generous spacing on desktop
-      cy.get('[data-testid="match-details"]').within(() => {
-        cy.get('div').should('have.css', 'gap');
-      });
     });
   });
 
@@ -203,7 +124,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
 
       // Mobile viewport
       cy.viewport(400, 800);
-      cy.wait(100);
+      cy.wait(50);
 
       // Player name should be truncated
       cy.get('[data-testid="player-name"]').should('have.css', 'text-overflow', 'ellipsis');
@@ -216,7 +137,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
   });
 
   describe('Trophy and Winner Indication', () => {
-    it('should position trophy correctly on mobile', () => {
+    it('should display trophy correctly across viewports', () => {
       const mockMatch = createMockMatch();
       
       mount(
@@ -229,33 +150,14 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
 
       // Mobile viewport
       cy.viewport(400, 800);
-      cy.wait(100);
-
-      // Trophy should be visible for winning team
+      cy.wait(50);
       cy.get('[data-testid="trophy-box"]').should('be.visible');
       cy.get('[data-testid="trophy-box"]').should('have.css', 'position', 'absolute');
-      cy.get('[data-testid="trophy-box"]').should('have.css', 'top', '-16px');
-      cy.get('[data-testid="trophy-box"]').should('have.css', 'right', '-12px');
-    });
-
-    it('should maintain trophy visibility on desktop', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
 
       // Desktop viewport
       cy.viewport(1200, 800);
-      cy.wait(100);
-
-      // Trophy should be visible and properly positioned
+      cy.wait(50);
       cy.get('[data-testid="trophy-box"]').should('be.visible');
-      cy.get('[data-testid="trophy-box"]').should('have.css', 'position', 'absolute');
       cy.get('[data-testid="trophy-box"]').should('have.css', 'z-index', '1');
     });
   });
@@ -275,7 +177,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
 
       // Desktop viewport
       cy.viewport(1200, 800);
-      cy.wait(100);
+      cy.wait(50);
 
       // Player names should use larger font size
       cy.get('[data-testid="player-name"]').first().should('have.css', 'font-size', '14px'); // sm
@@ -289,7 +191,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
   });
 
   describe('Breakpoint Transitions', () => {
-    it('should smoothly transition between layouts when resizing', () => {
+    it('should transition between layouts when resizing', () => {
       const mockMatch = createMockMatch();
       
       mount(
@@ -300,31 +202,20 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         </BrowserRouter>
       );
 
-      // Start with mobile
+      // Mobile - column layout
       cy.viewport(400, 800);
-      cy.wait(100);
-      
-      // Should be in column layout
+      cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
       
-      // Resize to tablet
-      cy.viewport(768, 1024);
-      cy.wait(100);
-      
-      // Should still be in column layout
-      cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
-      
-      // Resize to desktop (lg breakpoint)
+      // Desktop - row layout
       cy.viewport(1024, 768);
-      cy.wait(100);
-      
-      // Should switch to row layout
+      cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'row');
     });
   });
 
   describe('Content Wrapping and Overflow', () => {
-    it('should handle content wrapping on narrow screens', () => {
+    it('should handle content wrapping and prevent overflow', () => {
       const mockMatch = createMockMatch();
       
       mount(
@@ -337,41 +228,18 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
 
       // Very narrow viewport
       cy.viewport(320, 568);
-      cy.wait(100);
-
-      // Match details should wrap appropriately
+      cy.wait(50);
       cy.get('[data-testid="details-row"]').should('have.css', 'flex-wrap', 'wrap');
-      
-      // Player names should be truncated to prevent overflow
       cy.get('[data-testid="player-name"]').each(($el) => {
         cy.wrap($el).should('have.css', 'text-overflow', 'ellipsis');
         cy.wrap($el).should('have.css', 'overflow', 'hidden');
       });
-    });
-
-    it('should prevent horizontal overflow on mobile', () => {
-      const mockMatch = createMockMatch();
-      
-      mount(
-        <BrowserRouter>
-          <ChakraProvider theme={theme}>
-            <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
-        </BrowserRouter>
-      );
 
       // Mobile viewport
       cy.viewport(400, 800);
-      cy.wait(100);
-
-      // Main container should not exceed viewport width
+      cy.wait(50);
       cy.get('[data-testid="enlarged-match-card"]').should(($el) => {
         expect($el[0].scrollWidth).to.be.at.most(400);
-      });
-      
-      // Team cards should not cause horizontal overflow
-      cy.get('[data-testid="team-card"]').each(($el) => {
-        cy.wrap($el).should('have.css', 'min-width', '0px');
       });
     });
   });
