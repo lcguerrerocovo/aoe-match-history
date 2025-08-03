@@ -30,6 +30,7 @@ const lightColors = {
     bronzeDark: '#6B4423',      // Dark bronze for gradients
     bronzeDarkest: '#5A3A20',   // Darkest bronze for gradients
     black: '#1C1C1C',        // Rich charcoal for high legibility
+    charcoal: '#2C3E50',     // Da Vinci charcoal background
     parchment: '#F8F3E6',    // Elegant parchment backdrop
     steel: '#5A6478',        // Cool steel grey for outlines
     lightSteel: '#A9B4C2',   // Lighter steel for backgrounds
@@ -692,7 +693,7 @@ export function createTheme(isDark: boolean) {
     styles: {
       global: {
         body: {
-          bg: isDark ? '#0F0F0F' : { base: 'brand.parchment', md: 'brand.midnightBlue' },
+          bg: isDark ? '#0F0F0F' : { base: 'brand.parchment', md: 'brand.charcoal' },
           color: isDark ? 'brand.black' : 'brand.black',
           fontFamily: "'Lora', serif",
           fontSize: '15px',
