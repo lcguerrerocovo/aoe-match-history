@@ -3,53 +3,48 @@
 import { mount } from '@cypress/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { ProfileHeader } from './ProfileHeader';
-import theme from '../theme/theme';
+import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { mockProfileHeaderProps } from '../test/mocks';
 
 describe('ProfileHeader Responsive Layout', () => {
   it('should display profile information correctly on different screen sizes', () => {
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <ProfileHeader {...mockProfileHeaderProps} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     // Test mobile view
     cy.viewport(400, 600);
     cy.contains('TestPlayer').should('be.visible');
     cy.contains('ID: 12345').should('be.visible');
-    cy.get('table').should('have.length', 2); // Two tables: ratings and stats
+    cy.get('table').should('have.length', 1); // One table: combined stats
 
     // Test desktop view
     cy.viewport(1200, 800);
     cy.contains('TestPlayer').should('be.visible');
     cy.contains('ID: 12345').should('be.visible');
-    cy.get('table').should('have.length', 2);
+    cy.get('table').should('have.length', 1);
 
     // iPad Pro
     cy.viewport(1024,1366);
     cy.contains('TestPlayer').should('be.visible');
-    cy.get('table').should('have.length', 2);
+    cy.get('table').should('have.length', 1);
   });
 
   it('should display leaderboard stats correctly', () => {
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <ProfileHeader {...mockProfileHeaderProps} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
-    // Check first table (ratings)
-    cy.get('table').first().within(() => {
+    // Check the combined stats table
+    cy.get('table').within(() => {
       cy.contains('RM 1v1').should('be.visible');
-      cy.contains('1200').should('be.visible');
-      cy.contains('1250').should('be.visible');
+      cy.contains('1200').should('be.visible'); // Rating
+      cy.contains('1250').should('be.visible'); // Max rating
       cy.contains('-50').should('be.visible'); // Rating difference
-    });
-
-    // Check second table (stats)
-    cy.get('table').last().within(() => {
-      cy.contains('RM 1v1').should('be.visible');
       cy.contains('80').should('be.visible'); // Total games (45 + 35)
       cy.contains('56.25%').should('be.visible'); // Win rate
       cy.contains('+3').should('be.visible'); // Streak
@@ -65,9 +60,9 @@ describe('ProfileHeader Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <ProfileHeader {...loadingProps} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     cy.contains('Loading...').should('be.visible');
@@ -82,9 +77,9 @@ describe('ProfileHeader Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <ProfileHeader {...noProfileProps} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     cy.contains('12345').should('be.visible'); // Should show profileId as name
@@ -93,9 +88,9 @@ describe('ProfileHeader Responsive Layout', () => {
 
   it('should display avatar placeholder when no avatar URL', () => {
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <ProfileHeader {...mockProfileHeaderProps} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     // Should show user icon placeholder (the only SVG in the component)
