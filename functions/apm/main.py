@@ -11,28 +11,7 @@ from mgz.model import parse_match, serialize  # imported here to avoid cost if n
 # Configure root logger to display info-level logs with timestamps
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
-def load_action_type_descriptions():
-    """Load action type descriptions from the frontend assets"""
-    urls = [
-        'http://localhost:5173/assets/action_type_descriptions.json',
-        'https://aoe2.site/assets/action_type_descriptions.json'
-    ]
-    
-    for url in urls:
-        try:
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                logging.info(f"Loaded action type descriptions from {url}")
-                return response.json()
-        except Exception as e:
-            logging.warning(f"Failed to load action type descriptions from {url}: {e}")
-    
-    # If we can't load the descriptions, return empty dict
-    logging.error("Failed to load action type descriptions from any source")
-    return {}
 
-# Load action type descriptions
-ACTION_TYPE_DESCRIPTIONS = load_action_type_descriptions()
 
 
 def _categorize(cmd):
@@ -52,7 +31,7 @@ def _categorize(cmd):
         # Enum or unknown object – try `.name`, else str()
         key = getattr(raw, "name", str(raw))
 
-    return key if key in ACTION_TYPE_DESCRIPTIONS else "OTHER"
+    return key
 
 
 def apm_handler(request):

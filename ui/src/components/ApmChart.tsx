@@ -84,6 +84,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   // Fixed height for chart area - will be matched by breakdown chart
   const chartAreaHeight = useBreakpointValue({ base: '550px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
+  
+  // Viewport configuration for horizontal scrolling (same as breakdown chart)
+  const visibleMinutes = useBreakpointValue({ base: 10, md: 15, lg: 20 }) || 15;
+  const minBarWidth = 20; // Minimum width per minute in pixels
+  const chartWidth = Math.max(800, data.length * minBarWidth); // Minimum 800px, or minutes * minBarWidth
 
   const playerIds = Object.keys(apm?.players ?? {});
   const visibleIds = activePids ?? playerIds;
@@ -158,10 +163,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
 
   return (
     <Box w="full">
-      {/* Chart Area - Fixed Height */}
-      <Box h={chartAreaHeight}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
+      {/* Chart Area - Fixed Height with Horizontal Scroll */}
+      <Box h={chartAreaHeight} overflowX="auto" overflowY="hidden">
+        <Box minW={`${chartWidth}px`} h="100%">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid 
             strokeDasharray="3 3" 
             stroke={theme.colors.brand.steel}
@@ -246,6 +252,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           })}
         </LineChart>
       </ResponsiveContainer>
+        </Box>
       </Box>
       
       {/* Legend Area - Dynamic Height */}
