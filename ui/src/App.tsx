@@ -190,15 +190,7 @@ function App() {
           boxShadow={{ md: 'xl' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderTopWidth={{ base: 0, md: '4px' }}
-          borderColor="brand.sealBorder"
-          borderStyle="solid"
-          sx={{
-            '@media (min-width: 768px)': {
-              borderImage: 'brand.sealBorderGradient',
-              borderImageSlice: '1',
-              boxShadow: 'brand.sealBorderShadow, xl'
-            }
-          }}
+          borderColor={{ base: 'transparent', md: 'brand.gold' }}
           data-testid="floating-box-container"
         >
           {profileId && 
