@@ -523,6 +523,7 @@ export function createTheme(isDark: boolean) {
           fontWeight: 'bold',
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'center',
           transition: 'all 0.3s ease',
           position: 'relative',
           _before: isDark ? {} : {
@@ -563,12 +564,13 @@ export function createTheme(isDark: boolean) {
             radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
           `,
           px: { base: 1, md: 3 },
-          minWidth: '80px',
+          width: '80px',
           py: 1,
           fontSize: '0.8125rem',
           fontWeight: 'extrabold',
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 0.5,
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
           transition: 'all 0.3s ease',

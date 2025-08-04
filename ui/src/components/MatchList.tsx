@@ -10,6 +10,7 @@ import { sumDurations, countByDiplomacy, formatDuration, formatDateTime, formatS
 import { assetManager } from '../utils/assetManager';
 import { useState } from 'react';
 import { APMGenerator } from './APMGenerator';
+import { shortenMatchTypeName } from '../utils/gameUtils';
 
 function PlayerRating({ player }: { player: Player }) {
   const { rating, rating_change: ratingChange } = player;
@@ -416,9 +417,8 @@ interface MatchListProps {
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
   const theme = useTheme();
-
-  // Detect if we're in search mode (single group with "Search Results" in the name)
-  const isSearchMode = matchGroups.length === 1 && matchGroups[0].date.includes('Search Results');
+  const isSearchMode = matchGroups.length === 1 && matchGroups[0].date === 'search';
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Render matches for a group
   const renderMatches = (matches: any[], groupOpen: boolean) => (
@@ -557,8 +557,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                         <HStack spacing={2} wrap="wrap" justify="flex-end">
                           {Object.entries(byDiplo).map(([diplo, rec]) => (
                             <Card key={diplo} variant="recordBubble">
-                              <Text as="span" fontWeight="bold" mr={2} display="inline-block" minWidth={{ base: '50px', md: '70px' }} maxWidth={{ base: '60px', md: '120px' }} isTruncated verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                                {diplo}
+                              <Text as="span" fontWeight="bold" mr={2} display="inline-block" width={{ base: '60px', md: '120px' }} textAlign="center" verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                                {isMobile ? shortenMatchTypeName(diplo) : diplo}
                               </Text>
                               <Text as="span" color="brand.steel" mr={2} verticalAlign="middle">|</Text>
                               <Text as="span" color="brand.darkWin" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.wins}W</Text>

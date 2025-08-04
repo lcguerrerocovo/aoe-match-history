@@ -28,6 +28,27 @@ export function matchTypeIdToLeaderboardId(matchTypeId: number): string | null {
   return null;
 }
 
+export function shortenMatchTypeName(name: string): string {
+  const shortenMap: Record<string, string> = {
+    'Quick Match EW': 'QM EW',
+    'Quick Match EW Team': 'QM EW Team',
+    'Quick Match RM': 'QM RM',
+    'Quick Match RM Team': 'QM RM Team',
+    'Quick Match BR FFA': 'QM BR FFA',
+    'Battle Royale': 'BR',
+    'Unranked': 'UNR',
+    'Unknown': 'UNK',
+    'DM 1v1': 'DM 1v1',
+    'DM Team': 'DM Team',
+    'RM 1v1': 'RM 1v1',
+    'RM Team': 'RM Team',
+    'EW 1v1': 'EW 1v1',
+    'EW Team': 'EW Team'
+  };
+  
+  return shortenMap[name] || name;
+}
+
 export const getGameType = (gameMode: number): string | null => {
   return matchTypeIdToLeaderboardId(gameMode);
 };
