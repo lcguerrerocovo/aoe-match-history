@@ -50,6 +50,8 @@ This project provides a modern React-based website for viewing **Age of Empires 
 
 📖 **[UI Development Guide](ui/README.md)** - Component architecture, responsive design system, and frontend development guidelines
 
+🎨 **[Style Guide](STYLE_GUIDE.md)** - DaVinci-inspired theme elements, color palette, and design principles
+
 📋 **Infrastructure Guide** (below) - API proxy deployment and Cloud infrastructure
 
 ## Quick Start

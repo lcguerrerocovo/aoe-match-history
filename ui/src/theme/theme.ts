@@ -504,35 +504,64 @@ export function createTheme(isDark: boolean) {
       }),
       recordBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.slateBlue' : 'brand.bronzeLight',
+          bg: isDark ? 'brand.slateBlue' : '#f0e6d2', // Warmer, more aged parchment
           color: isDark ? 'brand.steel' : 'brand.black',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
-          borderWidth: '1px',
-          borderRadius: 'lg',
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
+          borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
+          borderWidth: '2px',
+          borderRadius: '12px',
+          backgroundImage: isDark ? 'none' : `
+            linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
+            repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
+            repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
+            radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+            radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
+          `,
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
           px: { base: 1, md: 3 },
           py: 1,
           fontSize: '0.8125rem',
           fontWeight: 'bold',
           flexDirection: 'row',
           alignItems: 'center',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          _before: isDark ? {} : {
+            content: '""',
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            bottom: '2px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
+            pointerEvents: 'none',
+            zIndex: 0
+          },
           _hover: {
-            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
-            transform: 'translateY(-1px)',
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+            transform: 'translateY(-2px)',
           }
         },
         body: {
           padding: 0,
+          position: 'relative',
+          zIndex: 1
         }
       }),
       matchesCountBubble: defineCardPartsStyle({
         container: {
-          bg: isDark ? 'brand.slateBlue' : 'brand.bronzeLight',
+          bg: isDark ? 'brand.slateBlue' : '#f0e6d2', // Warmer, more aged parchment
           color: isDark ? 'brand.steel' : 'brand.black',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
-          borderWidth: '1px',
-          borderRadius: 'lg',
+          borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
+          borderWidth: '2px',
+          borderRadius: '12px',
+          backgroundImage: isDark ? 'none' : `
+            linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
+            repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
+            repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
+            radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+            radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
+          `,
           px: { base: 1, md: 3 },
           minWidth: '80px',
           py: 1,
@@ -541,15 +570,30 @@ export function createTheme(isDark: boolean) {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 0.5,
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(139, 90, 43, 0.15)',
-          transition: 'all 0.2s ease',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          _before: isDark ? {} : {
+            content: '""',
+            position: 'absolute',
+            top: '2px',
+            left: '2px',
+            right: '2px',
+            bottom: '2px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
+            pointerEvents: 'none',
+            zIndex: 0
+          },
           _hover: {
-            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(139, 90, 43, 0.2)',
-            transform: 'translateY(-1px)',
+            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+            transform: 'translateY(-2px)',
           }
         },
         body: {
           padding: 0,
+          position: 'relative',
+          zIndex: 1
         }
       }),
     },
