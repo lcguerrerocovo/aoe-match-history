@@ -508,7 +508,7 @@ export function createTheme(isDark: boolean) {
           color: isDark ? 'brand.steel' : 'brand.black',
           borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
           borderWidth: '2px',
-          borderRadius: '12px',
+          borderRadius: 'md',
           backgroundImage: isDark ? 'none' : `
             linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
             repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
@@ -532,7 +532,7 @@ export function createTheme(isDark: boolean) {
             left: '2px',
             right: '2px',
             bottom: '2px',
-            borderRadius: '10px',
+            borderRadius: '6px',
             background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
             pointerEvents: 'none',
             zIndex: 0
@@ -554,7 +554,7 @@ export function createTheme(isDark: boolean) {
           color: isDark ? 'brand.steel' : 'brand.black',
           borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
           borderWidth: '2px',
-          borderRadius: '12px',
+          borderRadius: 'md',
           backgroundImage: isDark ? 'none' : `
             linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
             repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
@@ -580,7 +580,7 @@ export function createTheme(isDark: boolean) {
             left: '2px',
             right: '2px',
             bottom: '2px',
-            borderRadius: '10px',
+            borderRadius: '6px',
             background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
             pointerEvents: 'none',
             zIndex: 0
