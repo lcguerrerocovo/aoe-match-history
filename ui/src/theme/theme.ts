@@ -605,15 +605,41 @@ export function createTheme(isDark: boolean) {
   const dynamicPlayerStatsTheme = definePlayerStatsMultiStyleConfig({
     baseStyle: definePlayerStatsPartsStyle({
       container: {
-        bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
+        bg: isDark ? 'brand.slateBlue' : '#f6ecd8',
+        borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
         borderRadius: 'lg',
         padding: '1rem',
-        boxShadow: isDark ? 'md' : '0 2px 8px rgba(139, 90, 43, 0.15)',
-        borderWidth: '1px',
+        borderWidth: '2px',
+        backgroundImage: isDark ? 'none' : `
+          linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
+          repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
+          repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
+          radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
+        `,
+        boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
         transition: 'all 0.3s ease',
+        position: 'relative',
+        _before: isDark ? {} : {
+          content: '""',
+          position: 'absolute',
+          top: '2px',
+          left: '2px',
+          right: '2px',
+          bottom: '2px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        },
+        _hover: {
+          boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+          transform: 'translateY(-1px)',
+        }
       },
       statsTable: {
+        position: 'relative',
+        zIndex: 1,
         th: {
           color: isDark ? 'brand.steel' : 'brand.midnightBlue',
           textTransform: 'uppercase',
@@ -663,25 +689,56 @@ export function createTheme(isDark: boolean) {
   const dynamicRankingCardTheme = defineRankingCardMultiStyleConfig({
     baseStyle: defineRankingCardPartsStyle({
       container: {
-        bg: isDark ? 'brand.lightSteel' : 'brand.parchment',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronze',
+        bg: isDark ? 'brand.slateBlue' : '#f6ecd8',
+        borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
         borderRadius: 'lg',
         padding: '0.3rem',
-        boxShadow: isDark ? 'md' : '0 2px 8px rgba(139, 90, 43, 0.15)',
-        borderWidth: '1px',
+        borderWidth: '2px',
+        backgroundImage: isDark ? 'none' : `
+          linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
+          repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
+          repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
+          radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
+        `,
+        boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
         transition: 'all 0.3s ease',
         minW: { base: '100%', md: '220px' },
         maxW: { base: '100%', md: '240px' },
+        position: 'relative',
+        _before: isDark ? {} : {
+          content: '""',
+          position: 'absolute',
+          top: '2px',
+          left: '2px',
+          right: '2px',
+          bottom: '2px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        },
+        _hover: {
+          boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+          transform: 'translateY(-1px)',
+        }
       },
       rankingRow: {
         padding: '0.25rem 0.5rem',
         borderRadius: 'md',
-        borderWidth: '1px',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
-        bg: isDark ? 'brand.slateBlue' : 'brand.stoneLight',
+        borderWidth: '0px',
+        borderColor: 'transparent',
+        bg: 'transparent',
         transition: 'all 0.2s ease',
+        position: 'relative',
+        zIndex: 1,
+        borderBottom: '1px solid',
+        borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(139, 90, 43, 0.1)',
+        _last: {
+          borderBottom: 'none',
+        },
         _hover: {
-          bg: isDark ? 'brand.slateBorder' : 'brand.stone',
+          bg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(139, 90, 43, 0.03)',
           transform: 'translateY(-1px)',
           boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(139, 90, 43, 0.1)',
         },
