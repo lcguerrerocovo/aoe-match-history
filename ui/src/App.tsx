@@ -185,12 +185,20 @@ function App() {
           py={{ base: 4, lg: 6 }} 
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
-          bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
+          bg="brand.parchmentSurface"
           borderRadius={{ base: '0 0 1rem 1rem', md: 'xl' }}
           boxShadow={{ md: 'xl' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderTopWidth={{ base: 0, md: '4px' }}
-          borderColor="brand.gold"
+          borderColor="brand.sealBorder"
+          borderStyle="solid"
+          sx={{
+            '@media (min-width: 768px)': {
+              borderImage: 'brand.sealBorderGradient',
+              borderImageSlice: '1',
+              boxShadow: 'brand.sealBorderShadow, xl'
+            }
+          }}
           data-testid="floating-box-container"
         >
           {profileId && 
