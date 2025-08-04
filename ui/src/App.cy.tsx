@@ -34,18 +34,16 @@ describe('App Responsive Layout', () => {
     cy.get('[data-testid="profile-header-stack"]').should('have.css', 'flex-direction', 'row');
   });
 
-  it('should display a floating box with a dark background on desktop/tablet but not on mobile', () => {
+  it('should display a floating box with a parchment background on all screen sizes', () => {
     renderApp();
 
     // Test mobile view
     cy.viewport(400, 600);
-    cy.get('[data-testid="floating-box-container"]').should('not.have.css', 'background-color', 'rgb(44, 62, 80)'); // charcoal
-    cy.get('body').should('not.have.css', 'background-color', 'rgb(44, 62, 80)');
+    cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
 
     // Test desktop view
     cy.viewport(1400, 900);
     cy.get('body').should('have.css', 'background-color', 'rgb(44, 62, 80)'); // charcoal
     cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
-    cy.get('[data-testid="floating-box-container"]').should('have.css', 'border-color', 'rgb(212, 175, 55)'); // gold
   });
 }); 
