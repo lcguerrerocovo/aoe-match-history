@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url';
+import { uiReviewPlugin } from './plugins/vite-plugin-ui-review'
 
 // Modern equivalent for __dirname in ES Modules
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -12,6 +13,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export default defineConfig({
   plugins: [
     react(),
+    uiReviewPlugin(),
     {
       name: 'serve-assets-directory',
       configureServer(server) {

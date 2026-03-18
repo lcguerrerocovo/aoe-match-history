@@ -84,6 +84,8 @@ See `functions/proxy/CLAUDE.md` for proxy-specific vars. UI uses:
 - Use `theme.ts` color tokens — never hardcode colors
 - Assets (maps, civ_icons, logos) are gitignored — served from GCS/CDN, not the repo
 - Pre-commit hooks run relevant tests based on changed files
+- When adding or removing routes in the router config (`ui/src/main.tsx`), update the view mapping in `.claude/commands/ui-review.md`
+- The dev overlay depends on `@vitejs/plugin-react` (Babel transform) for component `displayName`s. Do not switch to `@vitejs/plugin-react-swc` without verifying the overlay still resolves component names.
 
 ## Gotchas
 

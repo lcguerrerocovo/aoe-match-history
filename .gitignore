@@ -114,6 +114,9 @@ ui/src/assets/
 # Worktrees
 .worktrees/
 
+# UI Review annotations (dev tool)
+.ui-review/
+
 # Environment files
 .env
 !.env.example
