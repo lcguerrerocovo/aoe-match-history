@@ -1,11 +1,11 @@
-// New utility for common decode helpers
-const { inflateSync } = require('zlib');
+import { inflateSync } from 'zlib';
+import type { DecodedOptions, PlayerMetadata, SlotInfoPlayer } from './types';
 
 /**
  * Decode Relic "options" string (double base64 with zlib layer).
  * Returns object mapping numeric keys to raw values.
  */
-function decodeOptions(encoded) {
+export function decodeOptions(encoded: string): DecodedOptions {
   try {
     if (!encoded || typeof encoded !== 'string') return {};
 
@@ -21,7 +21,7 @@ function decodeOptions(encoded) {
     const rawText = raw.toString();
 
     const pairs = rawText.match(/(\d+):([0-9A-Za-z+/=]+)/g) || [];
-    return pairs.reduce((acc, pair) => {
+    return pairs.reduce<DecodedOptions>((acc, pair) => {
       const [key, value] = pair.split(':');
       acc[key] = value;
       return acc;
@@ -34,7 +34,7 @@ function decodeOptions(encoded) {
 /**
  * Double base64 decode helper (outer b64 may include quotes).
  */
-function doubleBase64Decode(str) {
+export function doubleBase64Decode(str: string): string {
   try {
     let inner = Buffer.from(str, 'base64').toString('utf8');
     if (inner.startsWith('"') && inner.endsWith('"')) inner = inner.slice(1, -1);
@@ -44,19 +44,17 @@ function doubleBase64Decode(str) {
   }
 }
 
-module.exports = { decodeOptions, doubleBase64Decode, decodeSlotInfo, decompressZlib };
-
 // ---------------- SlotInfo decoder -----------------
-function parseColor(color) {
+function parseColor(color: string): number | null {
   if (color === '4294967295') return null;
   return parseInt(color, 10) + 1;
 }
 
-function parsePlayerMetadata(meta) {
+function parsePlayerMetadata(meta: string): PlayerMetadata | null {
   if (!meta) return null;
   // Replace control chars with '-' then compress dashes
-  meta = meta.split('').map(ch => ch.charCodeAt(0) < 32 ? '-' : ch).join('').replace(/-+/g, '-');
-  const parts = meta.split('-');
+  const cleaned = meta.split('').map(ch => ch.charCodeAt(0) < 32 ? '-' : ch).join('').replace(/-+/g, '-');
+  const parts = cleaned.split('-');
   return {
     unknown1: parts[1],
     civId: parts[2],
@@ -65,30 +63,28 @@ function parsePlayerMetadata(meta) {
   };
 }
 
-function base64DecodeSafe(str) {
+function base64DecodeSafe(str: string): string {
   try { return Buffer.from(str, 'base64').toString('utf8'); } catch { return str; }
 }
 
-function decompressZlib(b64) {
+export function decompressZlib(b64: string): string {
   const buf = Buffer.from(b64, 'base64');
   return inflateSync(buf).toString();
 }
 
-function decodeSlotInfo(str) {
+export function decodeSlotInfo(str: string): SlotInfoPlayer[] {
   const block = decompressZlib(str);
   const commaIdx = block.indexOf(',');
   if (commaIdx < 0) return [];
   const jsonPart = block.slice(commaIdx + 1).replace(/\u0000$/, '');
-  let players = [];
+  let players: SlotInfoPlayer[] = [];
   try { players = JSON.parse(jsonPart); } catch { return []; }
   // Decode metadata
   players.forEach(p => {
-    if (p.metaData && p.metaData.length > 0) {
+    if (p.metaData && typeof p.metaData === 'string' && p.metaData.length > 0) {
       const metaDecoded = base64DecodeSafe(base64DecodeSafe(p.metaData));
       p.metaData = parsePlayerMetadata(metaDecoded);
     }
   });
   return players;
 }
-
-module.exports.decodeSlotInfo = decodeSlotInfo; 
