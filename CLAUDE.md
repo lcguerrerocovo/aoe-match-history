@@ -1,0 +1,94 @@
+# AoE2 Match History — aoe2.site
+
+Personal project: Age of Empires 2 match history viewer. Live at **https://aoe2.site**.
+
+## Architecture
+
+```
+ui/                  React frontend (Vite + TypeScript + Chakra UI)
+functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore)
+functions/apm/       Python Cloud Function — replay parsing for APM stats (mgz library)
+data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json)
+indexing-job/        Cloud Run Job — collects players from Relic API, indexes to Meilisearch
+aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
+scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup)
+```
+
+**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, Firestore for session/match caching.
+
+## Commands
+
+### UI (from `ui/`)
+```bash
+npm run dev              # Vite dev server
+npm run dev:all          # UI + proxy + firestore emulator + APM function
+npm run build            # Production build (tsc + vite)
+npm run lint             # ESLint
+npm run lint:fix         # ESLint autofix
+npm run type-check       # TypeScript check
+npm test                 # Vitest (non-interactive)
+npm run test:watch       # Vitest watch mode
+npm run cy:run           # Cypress component tests (headless)
+npm run cy:open          # Cypress interactive
+npm run test:all         # Vitest + Cypress + proxy tests in parallel
+```
+
+### Proxy (from `functions/proxy/`)
+```bash
+npm run build            # TypeScript compile to dist/
+npm run dev              # Build + local dev on :8080
+npm test                 # Jest tests (ts-jest, no build needed)
+```
+
+### APM Function (from `functions/apm/`)
+```bash
+python -m functions_framework --target=aoe2_apm_processor --port=5001
+pytest test_main.py -v           # Run APM tests
+```
+
+### Local Dev (full stack)
+```bash
+# Terminal 1: SSH tunnel to Meilisearch VM
+bash scripts/tunnel-meilisearch.sh
+
+# Terminal 2: Everything else
+cd ui && npm run dev:all
+```
+
+## Deployment
+
+Push to `master` triggers GitHub Actions (`deploy.yml`). Three parallel jobs:
+1. **build-and-deploy** — lint, test (vitest + cypress + proxy jest), build, upload assets + data to GCS
+2. **deploy-proxy-function** — deploy Cloud Run service with secrets
+3. **deploy-apm-function** — pytest, deploy Cloud Function Gen2
+
+Post-deploy: selective Cloudflare cache purge based on changed paths.
+
+## Key Data Files
+
+- `data/rl_api_mappings.json` — Civ ID → name, map ID → name mappings for the Relic API. Updated manually when new civs/maps are added to the game.
+- `data/100.json` — Reference/leaderboard data
+
+## Environment Variables
+
+See `functions/proxy/CLAUDE.md` for proxy-specific vars. UI uses:
+- `VITE_AOE_API_URL` — API base URL (`/api` in tests, `https://api.aoe2.site` in prod)
+
+## Conventions
+
+- Node 20 (see `.nvmrc`), Python 3.11 for cloud functions
+- UI tests: Vitest for units, Cypress for component integration
+- Proxy tests: Jest with ts-jest (test files stay as `.js`)
+- APM tests: pytest
+- Use `ui/src/theme/breakpoints.ts` + `useLayoutConfig()` for responsive layouts
+- Use `theme.ts` color tokens — never hardcode colors
+- Assets (maps, civ_icons, logos) are gitignored — served from GCS/CDN, not the repo
+- Pre-commit hooks run relevant tests based on changed files
+
+## Gotchas
+
+- Relic API responses use `[statusCode, data]` arrays, not standard HTTP status codes
+- Options and SlotInfo in match data are double-base64 + zlib encoded
+- Single shared Relic auth session stored in Firestore — not multi-tenant
+- Meilisearch version (1.7.3) pinned across 3 files — use `scripts/check-versions.sh` to verify
+- `ui/src/assets/` is gitignored — assets live in GCS bucket, not the repo

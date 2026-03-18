@@ -1,288 +1,109 @@
-# AoE2 Match History - Frontend Documentation
+# AoE2 Match History - Frontend
 
-A responsive React application for displaying Age of Empires II match history with a medieval-themed design system. Built with TypeScript, Vite, and Chakra UI.
+A responsive React application for Age of Empires II match history with a medieval-themed design system. Built with TypeScript, Vite, and Chakra UI.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 npm install
 npm run dev        # Development server at http://localhost:5173
 npm run test       # Run unit tests
-npm run cy:open    # Open Cypress for testing
+npm run cy:run     # Run Cypress component tests (headless)
 npm run build      # Production build
 ```
 
-## 🎯 Project Overview
-
-This UI provides an elegant, responsive interface for viewing AoE2 match history with:
-
-- **Medieval-themed design** with authentic color palette and typography
-- **Responsive breakpoints** optimized for mobile, tablet (iPad Pro), and desktop
-- **Interactive match timeline** with detailed player statistics
-- **Professional landing page** with AoE2 branding
-- **Comprehensive test coverage** preventing responsive design regressions
-
-# Age of Empires II Match History - UI Documentation
-
-A responsive React application for tracking and analyzing Age of Empires II match history with a medieval-themed design system.
-
-## 🏗️ Component Architecture
+## Component Architecture
 
 ### Main Application Structure
 
 ```
 <App />
 ├── <ProfileHeader />          // Fixed sidebar with player stats
-├── <FilterBar />             // Search and filter controls  
-└── <MatchList />             // Main content area
+├── <FilterBar />              // Search and filter controls
+└── <MatchList />              // Main content area
     └── <Accordion />
-        └── <MatchGroup />    // Grouped by date
-            └── <MatchCard /> // Individual match
+        └── <MatchGroup />     // Grouped by date
+            └── <MatchCard />  // Individual match
 ```
 
 ### MatchCard Component Hierarchy
 
 ```
 <MatchCard />                    // Main container with "match" theme variant
-├── <MatchSummaryCard />        // Always visible: match info & link to aoe2.site
-└── <Box data-testid="match-card-content">  // Responsive layout container
-    ├── <MapCard />             // Map preview with diamond styling
-    └── <TeamCard />            // Player teams and statistics
+├── <MatchSummaryCard />         // Always visible: match info & link
+└── <Box>                        // Responsive layout container
+    ├── <MapCard />              // Map preview with diamond styling
+    └── <TeamCard />             // Player teams and statistics
         └── <Card variant="winner|loser">  // Individual team cards
-            └── <VStack />      // Player list
-                └── <PlayerBox />  // Individual player row
-                    ├── <ColorBar />      // Player color indicator
-                    ├── <CivIcon />       // Civilization preview
-                    ├── <PlayerName />    // Clickable player link
-                    └── <Rating />        // Rating (1v1 only)
+            └── <VStack />       // Player list with rating, civ icon, color bar
 ```
+
+### Extracted Subdirectories
+
+Three large components were extracted into subdirectories with barrel exports (`index.ts`):
+
+- **`MatchList/`** — Session grouping, accordion, match cards, team layout, player ratings, APM button
+- **`FullMatchSummaryCard/`** — Single match detail view (used by MatchPage): teams, players, avatars, map card, match metadata
+- **`ApmBreakdownChart/`** — APM chart with player selector, Recharts area chart, action type legend
+
+See `ui/CLAUDE.md` for the full file-level hierarchy.
 
 ### Landing Page Structure
 
 ```
 <LandingPage />                 // Root route "/"
-├── <BackgroundPattern />      // Subtle medieval texture
-├── <Logo />                   // Clickable AoE2 logo
-├── <SiteBranding />          // "aoe2.site" text
-├── <CallToAction />          // "View My Matches" button
-└── <DescriptionCard />       // Feature explanation
+├── <BackgroundPattern />       // Subtle medieval texture
+├── <Logo />                    // Clickable AoE2 logo
+├── <SiteBranding />            // "aoe2.site" text
+├── <CallToAction />            // "View My Matches" button
+└── <DescriptionCard />         // Feature explanation
 ```
 
-## 🎨 Design System
+## Design System
 
 ### Theme Structure
 
-Located in `src/theme/theme.ts`:
+Located in `src/theme/theme.ts` — `createTheme(isDark)` generates complete light/dark themes.
 
-```
-Theme
-├── Colors (Medieval Palette)
-│   ├── brand.midnightBlue    // Deep noble blue
-│   ├── brand.gold            // Lustrous medieval gold  
-│   ├── brand.bronze          // Authentic bronze accent
-│   ├── brand.parchment       // Elegant backdrop
-│   └── brand.steel           // Cool grey outlines
-├── Card Variants
-│   ├── match                 // Main match container
-│   ├── winner/loser          // Team result styling
-│   └── filter                // Filter bar styling
-└── ProfileHeader Components
-    ├── container             // Main profile layout
-    ├── avatar                // Player avatar styling
-    └── statsTable            // Statistics display
-```
-
-## 🌙 Dark/Light Theme System
-
-- **Centralized themes**: Use `createTheme(isDark)` function generates complete light/dark themes
-- **Semantic tokens**: Always use `brand.midnightBlue`, `brand.steel`, `brand.cardBg` - never hardcode `gray.400`, `blue.500`
-- **Component usage**: `<Text color="brand.midnightBlue">` or `theme.colors.brand.zoolanderBlue` for inline styles
+- **Semantic tokens**: Always use `brand.midnightBlue`, `brand.steel`, `brand.cardBg` — never hardcode colors
+- **Component usage**: `<Text color="brand.midnightBlue">` or `theme.colors.brand.zoolanderBlue`
 - **Theme compliance**: `npm test` enforces no hardcoded colors (violations fail CI)
+
+Card variants: `match`, `winner`/`loser`, `filter`.
 
 ### Responsive Breakpoints
 
-Located in `src/theme/breakpoints.ts`:
-
-```
-Breakpoints
-├── base/sm      // Mobile (default)
-├── md          // Tablet (uses lg config)  
-├── lg          // iPad Pro (1024px) - CRITICAL for overflow prevention
-├── xl/2xl      // Desktop (uses desktop config)
-└── Configuration
-    ├── matchCard     // Flex direction, gaps, alignment
-    ├── teamCard      // Player box sizing, spacing
-    ├── mapCard       // Map preview dimensions
-    ├── profileHeader // Sidebar positioning
-    ├── filterBar     // Control widths
-    └── matchList     // Container constraints
-```
-
-## 📱 Responsive Design Strategy
-
-### Layout Behavior by Breakpoint
+Located in `src/theme/breakpoints.ts` — use `useLayoutConfig()` hook.
 
 | Breakpoint | MatchCard Layout | ProfileHeader | Key Constraint |
 |------------|------------------|---------------|----------------|
 | **Mobile** | Column (stacked) | Relative, full-width | 100vw |
-| **iPad Pro** | Row (side-by-side) | Fixed sidebar | **520px accordion, 480px match** |
+| **iPad Pro** | Row (side-by-side) | Fixed sidebar | 520px accordion, 480px match |
 | **Desktop** | Row (spacious) | Fixed sidebar | 740px content |
 
-### Critical iPad Pro Configuration
+All layout values configured in `breakpoints.ts` — no hardcoded values in components.
 
-```typescript
-// lg breakpoint - prevents horizontal overflow
-matchList: {
-  width: '540px',           // Accordion container
-  accordionWidth: '540px',  // Accordion itself  
-  matchWidth: '500px',      // Individual match container (KEY!)
-}
-```
+## Testing Strategy
 
-**Why 480px?** Provides 40px buffer within the 520px accordion for padding and margins.
+- **Vitest**: unit tests for utils/ and services/ — `npm test`
+- **Cypress**: component tests (`*.cy.tsx`) for responsive layouts and UI interactions — `npm run cy:run`
+- Test setup: `src/test/setup.ts`, mock data in `src/test/mocks.ts`
 
-## 🧪 Testing Strategy
+Key Cypress coverage: responsive layout direction changes, iPad Pro overflow prevention, accordion bounds compliance.
 
-### Responsive Protection Tests
+## Key Files
 
-Located in `*.cy.tsx` files:
+- **`src/theme/breakpoints.ts`** — All responsive configuration
+- **`src/theme/theme.ts`** — Colors, card variants, styling
+- **`src/components/MatchList/`** — Core match display (via barrel export)
+- **`src/components/FullMatchSummaryCard/`** — Single match detail view
+- **`src/components/ApmBreakdownChart/`** — APM visualization
+- **`src/components/LandingPage.tsx`** — Homepage with logo
+- **`*.cy.tsx`** — Responsive protection tests
 
-```
-Cypress Tests
-├── MatchList
-│   ├── Layout direction changes (mobile → desktop)
-│   ├── iPad Pro overflow prevention ⭐
-│   └── Accordion bounds compliance
-├── FilterBar  
-│   └── Element containment on iPad Pro
-└── ProfileHeader
-    └── Table overflow prevention
-```
+## Maintenance Guidelines
 
-### Key Test: iPad Pro Overflow Prevention
-
-```typescript
-// Critical test in MatchList.cy.tsx
-it('should NOT have horizontal overflow on iPad Pro (1024px width)', () => {
-  cy.viewport(1024, 1366);
-  cy.get('[data-testid="match-card-content"]').then($el => {
-    const rect = $el[0].getBoundingClientRect();
-    expect(rect.right).to.be.lessThan(1024);
-  });
-});
-```
-
-## ⚙️ Configuration System
-
-### Centralized Sizing
-
-All layout values are configured in `breakpoints.ts` - **NO hardcoded values in components!**
-
-```typescript
-// ✅ Correct: Component reads from config
-minW={layout?.teamCard.playerBoxMinWidth}
-
-// ❌ Wrong: Hardcoded value  
-minW="100px"
-```
-
-### Making Layout Changes
-
-1. **Edit values** in `src/theme/breakpoints.ts`
-2. **Run tests** to ensure no overflow: `npm run test:e2e`
-3. **Test manually** on iPad Pro viewport (1024px)
-
-### Adding New Responsive Properties
-
-1. Add to interface in `breakpoints.ts`:
-```typescript
-interface LayoutConfig {
-  teamCard: {
-    newProperty?: string;
-  }
-}
-```
-
-2. Add to all breakpoint configs:
-```typescript
-const sharedValues = {
-  base: { teamCard: { newProperty: 'value' } },
-  lg: { teamCard: { newProperty: 'value' } },
-  desktop: { teamCard: { newProperty: 'value' } }
-}
-```
-
-3. Use in component:
-```typescript
-<Box someProperty={layout?.teamCard.newProperty}>
-```
-
-## 🚀 Development Workflow
-
-### Running the Application
-
-```bash
-# Development server
-npm run dev
-
-# Run responsive tests
-npm run test:e2e
-
-# Build for production
-npm run build
-```
-
-### Key Files to Know
-
-- **`src/theme/breakpoints.ts`** - All responsive configuration
-- **`src/theme/theme.ts`** - Colors, card variants, styling
-- **`src/components/MatchList.tsx`** - Core match display logic
-- **`src/components/LandingPage.tsx`** - Homepage with logo
-- **`*.cy.tsx`** - Responsive protection tests
-
-## 🛡️ Maintenance Guidelines
-
-### Before Making Layout Changes
-
-1. **Understand the breakpoint system** - don't hardcode values
-2. **Run iPad Pro tests** - prevent overflow regressions
-3. **Test on actual devices** - or browser dev tools
-4. **Update tests** if you change responsive behavior
-
-### Common Issues
-
-- **iPad overflow** → Check `matchWidth` in lg breakpoint
-- **Hardcoded values** → Move to `breakpoints.ts`
-- **Test failures** → Verify breakpoint values match expectations
-- **Mobile layout broken** → Check base/sm configurations
-
----
-
-## 🎯 Architecture Decisions
-
-This UI was refactored with these principles:
-
-- **Responsive-first**: Every size value configured per breakpoint
-- **Test-protected**: Critical layouts have regression protection  
-- **Maintainable**: One config file controls all layout behavior
-- **Type-safe**: TypeScript interfaces prevent configuration errors
-- **Medieval elegance**: Cohesive design system throughout
-
-## Responsive Design & Theming
-- All responsive logic is centralized in [`src/theme/breakpoints.ts`](src/theme/breakpoints.ts) and accessed via the `useLayoutConfig()` hook.
-- All theme, color, and spacing values are defined in [`src/theme/theme.ts`](src/theme/theme.ts). Use theme tokens—never hardcode values in components.
-- Do not use inline responsive styles or hardcoded theme values in components.
-
-## Asset Management
-- Static assets (civ icons, maps, logos) are served from a Google Cloud Storage bucket and referenced via the asset manager utility.
-- In development, assets are served locally via Vite middleware; in production, they are served from the CDN URL (`https://aoe2.site/assets`).
-
-## Testing
-- Cypress component tests are in `src/components/*.cy.tsx`.
-- Tests cover responsive layouts, team card wrapping, and visual correctness.
-- To run Cypress tests:
-  ```sh
-  npm run cypress:open
-  # or
-  npm run cypress:run
-  ```
+- **Understand the breakpoint system** — don't hardcode values
+- **Run iPad Pro tests** — prevent overflow regressions (`npm run cy:run`)
+- **Edit layout values** in `src/theme/breakpoints.ts`, not in components
+- **Common issues**: iPad overflow → check `matchWidth` in lg breakpoint; mobile layout → check base/sm config

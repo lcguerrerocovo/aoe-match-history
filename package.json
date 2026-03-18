@@ -1,6 +1,2 @@
 {
-  "dependencies": {
-    "steam-session": "^1.9.3",
-    "steam-user": "^5.2.3"
-  }
 }

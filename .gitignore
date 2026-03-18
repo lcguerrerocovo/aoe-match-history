@@ -111,5 +111,9 @@ venv/*
 # Assets - Excluded from version control, managed via GCS/CloudFront
 ui/src/assets/
 
-# Functions
-functions/proxy/.env
+# Worktrees
+.worktrees/
+
+# Environment files
+.env
+!.env.example
