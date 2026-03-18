@@ -38,7 +38,7 @@ jest.mock('@google-cloud/firestore', () => ({
 jest.mock('pino', () => () => ({ child: () => ({ info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() }) }));
 jest.mock('cors', () => () => (req, res, callback) => callback());
 const mockFetch = jest.fn();
-jest.mock('node-fetch', () => mockFetch);
+global.fetch = mockFetch;
 jest.mock('zlib', () => ({
   inflateSync: jest.fn(() => Buffer.from('0,[]')) // Return "0,[]" so decodeSlotInfo gets "[]" after comma
 }));
@@ -51,14 +51,14 @@ let proxy;
 beforeEach(() => {
   jest.clearAllMocks();
   jest.resetModules();
-  
+
   // Reset Firestore mocks
   mockFirestoreQuery.where.mockReturnThis();
   mockFirestoreQuery.orderBy.mockReturnThis();
   mockFirestoreQuery.limit.mockReturnThis();
   mockFirestoreCollection.where.mockReturnValue(mockFirestoreQuery);
   mockFirestore.collection.mockReturnValue(mockFirestoreCollection);
-  
+
   proxy = require('./index');
   proxy.__resetPlayerService && proxy.__resetPlayerService();
 });
@@ -208,7 +208,7 @@ describe('Proxy API', () => {
         ]
       };
 
-      // Mock fetch calls in order: 
+      // Mock fetch calls in order:
       // 1. Raw match history from external API
       // 2. Mappings for civs/maps
       // 3. Replay availability checks
@@ -288,4 +288,4 @@ describe('Proxy API', () => {
       expect(res.set).toHaveBeenCalledWith('Cache-Control', 'public, max-age=1800');
     });
   });
-}); 
+});
