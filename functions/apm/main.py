@@ -55,23 +55,34 @@ def apm_handler(request):
     except Exception:
         return (json.dumps({"error": "Invalid JSON"}), 400, {'Content-Type': 'application/json'})
 
-    match_id = str(data.get("gameId"))
-    profile_id = str(data.get("profileId"))
+    match_id = data.get("gameId")
+    profile_id = data.get("profileId")
+    replay_data_b64 = data.get("replayData")
     if not match_id or not profile_id:
         return (json.dumps({"error": "Missing gameId or profileId"}), 400, {'Content-Type': 'application/json'})
+    match_id = str(match_id)
+    profile_id = str(profile_id)
 
-    logging.info("APM request received", extra={"gameId": match_id, "profileId": profile_id})
+    logging.info("APM request received", extra={"gameId": match_id, "profileId": profile_id, "hasReplayData": bool(replay_data_b64)})
 
-    url = f"https://aoe.ms/replay/?gameId={match_id}&profileId={profile_id}"
-    logging.info("Downloading replay", extra={"url": url})
-
-    try:
-        resp = requests.get(url, timeout=15)
-        if resp.status_code != 200:
-            return (json.dumps({"error": f"Replay fetch status {resp.status_code}"}), 404, {'Content-Type': 'application/json'})
-        raw = resp.content
-    except Exception as exc:
-        return (json.dumps({"error": f"Failed to fetch replay: {exc}"}), 502, {'Content-Type': 'application/json'})
+    if replay_data_b64:
+        # Use provided replay data (base64-encoded) — no need to re-download
+        import base64
+        try:
+            raw = base64.b64decode(replay_data_b64)
+        except Exception as exc:
+            return (json.dumps({"error": f"Invalid base64 replayData: {exc}"}), 400, {'Content-Type': 'application/json'})
+    else:
+        # Fallback: download replay from aoe.ms (backwards compatibility)
+        url = f"https://aoe.ms/replay/?gameId={match_id}&profileId={profile_id}"
+        logging.info("Downloading replay (no replayData provided)", extra={"url": url})
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                return (json.dumps({"error": f"Replay fetch status {resp.status_code}"}), 404, {'Content-Type': 'application/json'})
+            raw = resp.content
+        except Exception as exc:
+            return (json.dumps({"error": f"Failed to fetch replay: {exc}"}), 502, {'Content-Type': 'application/json'})
 
     try:
         # Some AoE2 services wrap the replay in a .zip container. If the payload
