@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
-import { type ThemeConfig } from '@chakra-ui/react';
-import { createTheme } from './theme';
+import React, { createContext, useContext } from 'react';
+import { ChakraProvider } from '@chakra-ui/react';
+import { ThemeProvider, useTheme } from 'next-themes';
+import { system } from './theme';
 
 interface ThemeContextType {
   isDark: boolean;
@@ -19,40 +19,29 @@ export const useThemeMode = () => {
   return context;
 };
 
-const config: ThemeConfig = {
-  initialColorMode: 'light',
-  useSystemColorMode: false,
-};
+// Bridge component: reads next-themes state and exposes our useThemeMode API
+function ThemeBridge({ children }: { children: React.ReactNode }) {
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
 
 interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
 export function CustomThemeProvider({ children }: ThemeProviderProps) {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('theme-mode');
-    if (stored) {
-      setIsDark(stored === 'dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newMode = !isDark;
-    setIsDark(newMode);
-    localStorage.setItem('theme-mode', newMode ? 'dark' : 'light');
-  };
-
-  // Create theme based on current mode - all logic centralized in theme.ts
-  const dynamicTheme = createTheme(isDark);
-
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      <ChakraProvider theme={dynamicTheme}>
-        <ColorModeScript initialColorMode={config.initialColorMode} />
-        {children}
+    <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange={false}>
+      <ChakraProvider value={system}>
+        <ThemeBridge>{children}</ThemeBridge>
       </ChakraProvider>
-    </ThemeContext.Provider>
+    </ThemeProvider>
   );
-} 
+}

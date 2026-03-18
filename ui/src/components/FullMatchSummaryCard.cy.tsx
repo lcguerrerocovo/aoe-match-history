@@ -1,10 +1,9 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
 import { FullMatchSummaryCard } from './FullMatchSummaryCard';
-import { createTheme } from '../theme/theme';
+import { CustomThemeProvider } from '../theme/ThemeProvider';
 
 // Mock the services module
 before(() => {
@@ -14,17 +13,8 @@ before(() => {
   });
 });
 
-const createMockMatch = (numTeams: number = 2) => ({
-  match_id: '404309454',
-  start_time: '2025-07-05T15:34:00.000Z',
-  description: 'RM Team',
-  diplomacy: { type: 'RM Team', team_size: numTeams.toString() },
-  map: 'Kawasan',
-  options: '',
-  duration: 1456,
-  winning_team: 1,
-  winning_teams: [1],
-  teams: Array.from({ length: numTeams }, (_, teamIndex) => 
+const createMockMatch = (numTeams: number = 2) => {
+  const teams = Array.from({ length: numTeams }, (_, teamIndex) =>
     Array.from({ length: teamIndex === 0 ? 2 : 1 }, (_, playerIndex) => ({
       name: `Player${teamIndex + 1}-${playerIndex + 1}`,
       civ: ['Britons', 'Franks'][teamIndex + playerIndex],
@@ -36,10 +26,21 @@ const createMockMatch = (numTeams: number = 2) => ({
       rating_change: teamIndex === 0 ? 15 : -15,
       save_game_size: 1024 * 50,
     }))
-  ),
-});
-
-const theme = createTheme(false);
+  );
+  return {
+    match_id: '404309454',
+    start_time: '2025-07-05T15:34:00.000Z',
+    description: 'RM Team',
+    diplomacy: { type: 'RM Team', team_size: numTeams.toString() },
+    map: 'Kawasan',
+    options: '',
+    duration: 1456,
+    winning_team: 1,
+    winning_teams: [1],
+    teams,
+    players: teams.flat(),
+  };
+};
 
 describe('FullMatchSummaryCard Responsive Tests', () => {
   beforeEach(() => {
@@ -60,9 +61,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -84,9 +85,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -117,9 +118,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -142,9 +143,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -169,9 +170,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -192,9 +193,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 
@@ -216,9 +217,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       
       mount(
         <BrowserRouter>
-          <ChakraProvider theme={theme}>
+          <CustomThemeProvider>
             <FullMatchSummaryCard match={mockMatch} />
-          </ChakraProvider>
+          </CustomThemeProvider>
         </BrowserRouter>
       );
 

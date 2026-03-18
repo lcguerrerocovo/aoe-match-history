@@ -1,5 +1,6 @@
-import { Box, Flex, Text, useTheme } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { useLayoutConfig } from "../theme/breakpoints";
+import { system } from "../theme/theme";
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
@@ -9,7 +10,6 @@ import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
 
 const TopBar = () => {
-  const theme = useTheme();
   const layout = useLayoutConfig();
   const contentMaxWidth = layout?.matchList?.width || '100%';
   const navigate = useNavigate();
@@ -28,8 +28,8 @@ const TopBar = () => {
         base: "brand.topbarBg",
         md: "brand.topbarBgMd"
       }}
-      px={theme.space[4]}
-      py={theme.space[2]}
+      px={4}
+      py={2}
       boxShadow={{ md: 'xl' }}
       zIndex={10}
       borderBottomWidth={{ base: '0px', md: '4px' }}
@@ -44,7 +44,7 @@ const TopBar = () => {
         left={0}
         right={0}
         height="8px"
-        bgGradient={`linear(to-r, ${theme.colors.brand.heroGradientStart}, ${theme.colors.brand.heroGradientEnd})`}
+        bgGradient={`linear(to-r, ${system.token('colors.brand.heroGradientStart', '')}, ${system.token('colors.brand.heroGradientEnd', '')})`}
         borderTopRadius="md"
         pointerEvents="none"
         zIndex={1}
@@ -68,22 +68,18 @@ const TopBar = () => {
             color="brand.midnightBlue"
             fontSize="2xl"
             letterSpacing="wide"
-            textShadow={`0 1px 0 ${theme.colors.brand.textShadowLight}, 0 2px 4px ${theme.colors.brand.textShadowAlpha}`}
+            textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}
             display="flex"
             alignItems="center"
             gap={0.5}
-            as={RouterLink}
-            to="/"
             cursor="pointer"
             _hover={{ textDecoration: 'none', filter: 'brightness(1.15)' }}
             data-testid="desktop-title"
-          >
-            aoe2
-            <Box as="span" display="inline-flex" alignItems="center">
-              <FaGlobe size={14} color="inherit" style={{ verticalAlign: 'middle' }} />
-            </Box>
-            site
-          </Text>
+            asChild><RouterLink to="/">aoe2
+                          <Box as="span" display="inline-flex" alignItems="center">
+                <FaGlobe size={14} color="inherit" style={{ verticalAlign: 'middle' }} />
+              </Box>site
+                        </RouterLink></Text>
 
           {/* Right: Search bar */}
           <Box w="220px" ref={searchContainerRef}>
@@ -106,22 +102,18 @@ const TopBar = () => {
             color="brand.midnightBlue"
             fontSize="xl"
             letterSpacing="wide"
-            textShadow={`0 1px 0 ${theme.colors.brand.textShadowLight}, 0 2px 4px ${theme.colors.brand.textShadowAlpha}`}
+            textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}
             display="flex"
             alignItems="center"
             gap={0.5}
-            as={RouterLink}
-            to="/"
             cursor="pointer"
             _hover={{ textDecoration: 'none', filter: 'brightness(1.15)' }}
             data-testid="mobile-title"
-          >
-            aoe2
-            <Box as="span" display="inline-flex" alignItems="center">
-              <FaGlobe size={12} color="inherit" style={{ verticalAlign: 'middle' }} />
-            </Box>
-            site
-          </Text>
+            asChild><RouterLink to="/">aoe2
+                          <Box as="span" display="inline-flex" alignItems="center">
+                <FaGlobe size={12} color="inherit" style={{ verticalAlign: 'middle' }} />
+              </Box>site
+                        </RouterLink></Text>
 
           {/* Mobile toggle - positioned at same level as title */}
           <Box
@@ -144,11 +136,10 @@ const TopBar = () => {
           <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
         </Box>
       </Box>
-
       {/* Theme toggle - always at absolute far right */}
       <Box
         position="absolute"
-        right={theme.space[4]}
+        right={4}
         top="50%"
         transform="translateY(-50%)"
         zIndex={3}

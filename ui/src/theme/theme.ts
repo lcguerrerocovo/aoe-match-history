@@ -1,450 +1,242 @@
-import { extendTheme } from '@chakra-ui/react';
-import { cardAnatomy, anatomy } from '@chakra-ui/anatomy';
-import { createMultiStyleConfigHelpers } from '@chakra-ui/react';
+import { createSystem, defaultConfig, defineConfig, defineSlotRecipe, defineRecipe } from '@chakra-ui/react';
 
-const { definePartsStyle: defineCardPartsStyle, defineMultiStyleConfig: defineCardMultiStyleConfig } = createMultiStyleConfigHelpers(cardAnatomy.keys);
+// ============================================================
+// Section 1: Semantic color tokens (light/dark mode pairs)
+// base = light mode, _dark = dark mode override
+// ============================================================
 
-const profileHeaderAnatomy = anatomy('profileHeader').parts(
-  'container', 'avatar', 'name', 'id', 'statsTable'
-);
-const { definePartsStyle: defineProfileHeaderPartsStyle, defineMultiStyleConfig: defineProfileHeaderMultiStyleConfig } = createMultiStyleConfigHelpers(profileHeaderAnatomy.keys);
-
-const playerStatsAnatomy = anatomy('playerStats').parts(
-  'container', 'statsTable'
-);
-const { definePartsStyle: definePlayerStatsPartsStyle, defineMultiStyleConfig: definePlayerStatsMultiStyleConfig } = createMultiStyleConfigHelpers(playerStatsAnatomy.keys);
-
-const rankingCardAnatomy = anatomy('rankingCard').parts(
-  'container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'
-);
-const { definePartsStyle: defineRankingCardPartsStyle, defineMultiStyleConfig: defineRankingCardMultiStyleConfig } = createMultiStyleConfigHelpers(rankingCardAnatomy.keys);
-
-// Light theme colors
-const lightColors = {
+const semanticColors = {
   brand: {
-    midnightBlue: '#19214E', // Deep noble blue
-    gold: '#D4AF37',         // Lustrous medieval gold
-    bronzeLight: '#C8A26B',   // Lighter bronze accent
-    bronze: '#B37A3E',       // Authentic bronze accent
-    bronzeMedium: '#8B5A2B',    // Medium bronze for gradients
-    bronzeDark: '#6B4423',      // Dark bronze for gradients
-    bronzeDarkest: '#5A3A20',   // Darkest bronze for gradients
-    black: '#1C1C1C',        // Rich charcoal for high legibility
-    charcoal: '#2C3E50',     // Da Vinci charcoal background
-    parchment: '#F8F3E6',    // Elegant parchment backdrop
-    steel: '#5A6478',        // Cool steel grey for outlines
-    lightSteel: '#A9B4C2',   // Lighter steel for backgrounds
-    heraldic: '#243773',     // Royal heraldic blue
-    slateBlue: '#4A5B7B',    // Muted blue for modern theme
-    slateBorder: '#64728A',  // Border for slate blue theme
-    white: '#fff', // Pure white for semantic use
-    pureBlack: '#111', // Pure black for semantic use
-    
-    // High-contrast colors for light backgrounds
-    darkWin: '#2E7D32',      // Better green for wins on light backgrounds
-    darkLoss: '#D32F2F',     // Better red for losses on light backgrounds
-    tableBorderOnLight: '#8894A2', // Table border for light steel bg
-    modernTableBorder: '#4A5D9E', // Lighter blue for modern theme table
+    // Core palette
+    midnightBlue: { value: { base: '#19214E', _dark: '#F7FAFC' } },
+    gold: { value: { base: '#D4AF37', _dark: '#FFD700' } },
+    bronzeLight: { value: { base: '#C8A26B', _dark: '#CFA46B' } },
+    bronze: { value: { base: '#B37A3E', _dark: '#CD7F32' } },
+    bronzeMedium: { value: '#8B5A2B' },
+    bronzeDark: { value: '#6B4423' },
+    bronzeDarkest: { value: '#5A3A20' },
+    black: { value: { base: '#1C1C1C', _dark: '#F7FAFC' } },
+    charcoal: { value: '#2C3E50' },
+    parchment: { value: { base: '#F8F3E6', _dark: '#1A1A1A' } },
+    steel: { value: { base: '#5A6478', _dark: '#CBD5E0' } },
+    lightSteel: { value: { base: '#A9B4C2', _dark: '#2D3748' } },
+    heraldic: { value: { base: '#243773', _dark: '#90CDF4' } },
+    slateBlue: { value: { base: '#4A5B7B', _dark: '#2D3748' } },
+    slateBorder: { value: { base: '#64728A', _dark: '#4A5568' } },
+    white: { value: '#fff' },
+    pureBlack: { value: '#111' },
 
-    // Thematic status colors from user feedback
-    win: '#3AA76D',          // Bright victory green
-    loss: '#D64545',         // Clear defeat red
-    same: '#2B6CB0',         // Neutral status blue (unchanged)
-    zoolanderBlue: '#1E4BB8',// Heroic highlight blue
-    stone: '#E6E3D8',        // Light stone for subtle surfaces
-    stoneLight: '#F2F0EA',   // Extra-light stone for zebra stripes
-    fadedBlue: '#D1DFF7',    // Gentle faded blue
-    
-    // Dark background optimized colors
-    brightGold: '#FFD700',   // Bolder gold for dark backgrounds
-    brightSilver: '#D0D0D0', // Bright silver for dark backgrounds
-    brightBronze: '#CD7F32', // Vibrant bronze for dark backgrounds
-    brightGreen: '#4AE374', // Bright green for dark background wins
-    brightRed: '#FF8282',   // Bright red for dark background losses
-    contrastRed: '#FF6B94', // High contrast pinkish-red for very dark backgrounds
-    
+    // Status colors
+    darkWin: { value: { base: '#2E7D32', _dark: '#48BB78' } },
+    darkLoss: { value: { base: '#D32F2F', _dark: '#F56565' } },
+    tableBorderOnLight: { value: { base: '#8894A2', _dark: '#4A5568' } },
+    modernTableBorder: { value: { base: '#4A5D9E', _dark: '#90CDF4' } },
+    win: { value: { base: '#3AA76D', _dark: '#48BB78' } },
+    loss: { value: { base: '#D64545', _dark: '#F56565' } },
+    same: { value: { base: '#2B6CB0', _dark: '#90CDF4' } },
+    zoolanderBlue: { value: { base: '#1E4BB8', _dark: '#90CDF4' } },
+    stone: { value: { base: '#E6E3D8', _dark: '#2D3748' } },
+    stoneLight: { value: { base: '#F2F0EA', _dark: '#1A202C' } },
+    fadedBlue: { value: { base: '#D1DFF7', _dark: '#2A4A6B' } },
+
+    // Dark background optimized
+    brightGold: { value: '#FFD700' },
+    brightSilver: { value: { base: '#D0D0D0', _dark: '#E2E8F0' } },
+    brightBronze: { value: '#CD7F32' },
+    brightGreen: { value: { base: '#4AE374', _dark: '#48BB78' } },
+    brightRed: { value: { base: '#FF8282', _dark: '#F56565' } },
+    contrastRed: { value: { base: '#FF6B94', _dark: '#F56565' } },
+
     // Tier ranking colors
-    tierGoldDark: '#FFD700',      // Bright gold for dark theme
-    tierGoldLight: '#D4AF37',     // Lustrous gold for light theme
-    tierGoldGradientDark: '#FFB347', // Gold gradient end for dark theme
-    tierGoldGradientLight: '#B8860B', // Gold gradient end for light theme
-    
-    tierSilverDark: '#C0C0C0',    // Bright silver for dark theme
-    tierSilverLight: '#696969',   // Dark silver for light theme
-    tierSilverGradientDark: '#D3D3D3', // Silver gradient end for dark theme
-    tierSilverGradientLight: '#808080', // Silver gradient end for light theme
-    
-    tierBronzeDark: '#CD853F',    // Bright bronze for dark theme
-    tierBronzeLight: '#8B4513',   // Dark bronze for light theme
-    tierBronzeGradientDark: '#D2691E', // Bronze gradient end for dark theme
-    tierBronzeGradientLight: '#A0522D', // Bronze gradient end for light theme
-    
-    // UI component backgrounds
-    topbarBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
-    topbarBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
-    landingBg: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)",
-    landingBgMd: "linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)",
-    
-    // Session header - enhanced stone-like texture with subtle contrast for header prominence
-    sessionHeaderBg: `
-      linear-gradient(135deg, #E8E5DA 0%, #E2DFD4 25%, #DCD9CE 50%, #D6D3C8 75%, #D0CDC2 100%),
-      repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.06) 0px, rgba(139, 90, 43, 0.06) 2px, transparent 2px, transparent 8px),
-      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)
-    `,
-    
+    tierGoldDark: { value: '#FFD700' },
+    tierGoldLight: { value: '#D4AF37' },
+    tierGoldGradientDark: { value: '#FFB347' },
+    tierGoldGradientLight: { value: '#B8860B' },
+    tierSilverDark: { value: '#C0C0C0' },
+    tierSilverLight: { value: '#696969' },
+    tierSilverGradientDark: { value: '#D3D3D3' },
+    tierSilverGradientLight: { value: '#808080' },
+    tierBronzeDark: { value: '#CD853F' },
+    tierBronzeLight: { value: '#8B4513' },
+    tierBronzeGradientDark: { value: '#D2691E' },
+    tierBronzeGradientLight: { value: '#A0522D' },
+
+    // UI component backgrounds (gradients as strings)
+    topbarBg: {
+      value: {
+        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)',
+        _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
+      },
+    },
+    topbarBgMd: {
+      value: {
+        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)',
+        _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
+      },
+    },
+    landingBg: {
+      value: {
+        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)',
+        _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
+      },
+    },
+    landingBgMd: {
+      value: {
+        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)',
+        _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
+      },
+    },
+
+    // Session header
+    sessionHeaderBg: {
+      value: {
+        base: `linear-gradient(135deg, #E8E5DA 0%, #E2DFD4 25%, #DCD9CE 50%, #D6D3C8 75%, #D0CDC2 100%), repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.06) 0px, rgba(139, 90, 43, 0.06) 2px, transparent 2px, transparent 8px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)`,
+        _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #171923 50%, #1A202C 75%, #2D3748 100%), repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)`,
+      },
+    },
+
     // UI element backgrounds
-    cardBg: '#ffffff',
-    inputBg: '#ffffff',
-    
+    cardBg: { value: { base: '#ffffff', _dark: '#2D3748' } },
+    inputBg: { value: { base: '#ffffff', _dark: '#2D3748' } },
+
     // Gradient colors for UI elements
-    heroGradientStart: 'rgba(255,255,255,0.7)',
-    heroGradientEnd: 'rgba(255,255,255,0.1)',
-    
+    heroGradientStart: { value: { base: 'rgba(255,255,255,0.7)', _dark: 'rgba(45,55,72,0.9)' } },
+    heroGradientEnd: { value: { base: 'rgba(255,255,255,0.1)', _dark: 'rgba(45,55,72,0.3)' } },
+
     // Shadow and border colors
-    shadowLight: 'rgba(0,0,0,0.05)',
-    shadowMedium: 'rgba(0,0,0,0.07)',
-    shadowGold: 'rgba(212,175,55,0.4)',
-    borderLight: '#eee',
-    textShadowLight: '#fff',
-    textShadowAlpha: 'rgba(0,0,0,0.04)',
-    
+    shadowLight: { value: { base: 'rgba(0,0,0,0.05)', _dark: 'rgba(0,0,0,0.3)' } },
+    shadowMedium: { value: { base: 'rgba(0,0,0,0.07)', _dark: 'rgba(0,0,0,0.4)' } },
+    shadowGold: { value: { base: 'rgba(212,175,55,0.4)', _dark: 'rgba(255,215,0,0.4)' } },
+    borderLight: { value: { base: '#eee', _dark: '#4A5568' } },
+    textShadowLight: { value: { base: '#fff', _dark: 'rgba(0,0,0,0.8)' } },
+    textShadowAlpha: { value: { base: 'rgba(0,0,0,0.04)', _dark: 'rgba(255,255,255,0.1)' } },
+
     // Animation glow colors
-    sunGlow: 'rgba(255, 215, 0, 0.3)',
-    sunGlowBright: 'rgba(255, 215, 0, 0.6)',
-    sunGlowDim: 'rgba(255, 215, 0, 0.2)',
-    sunColor: '#D4AF37',
-    sunBg: 'rgba(255, 215, 0, 0.1)',
-    sunBorder: 'rgba(212, 175, 55, 0.3)',
-    sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent 70%)',
-    sunRadialGradientBg: 'radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%)',
+    sunGlow: { value: { base: 'rgba(255, 215, 0, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
+    sunGlowBright: { value: { base: 'rgba(255, 215, 0, 0.6)', _dark: 'rgba(147, 197, 253, 0.6)' } },
+    sunGlowDim: { value: { base: 'rgba(255, 215, 0, 0.2)', _dark: 'rgba(147, 197, 253, 0.2)' } },
+    sunColor: { value: { base: '#D4AF37', _dark: '#93C5FD' } },
+    sunBg: { value: { base: 'rgba(255, 215, 0, 0.1)', _dark: 'rgba(147, 197, 253, 0.1)' } },
+    sunBorder: { value: { base: 'rgba(212, 175, 55, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
+    sunRadialGradient: {
+      value: {
+        base: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent 70%)',
+        _dark: 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.1), transparent 70%)',
+      },
+    },
+    sunRadialGradientBg: {
+      value: {
+        base: 'radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%)',
+        _dark: 'radial-gradient(circle, rgba(147, 197, 253, 0.05) 0%, transparent 70%)',
+      },
+    },
+
     // Session group card colors
-    sessionCardBg: '#f4f4f6',
-    sessionCardBorder: '#e0e0e6',
-    
+    sessionCardBg: { value: { base: '#f4f4f6', _dark: '#2D3748' } },
+    sessionCardBorder: { value: { base: '#e0e0e6', _dark: '#4A5568' } },
+
     // Stamp button colors
-    stampBg: `
-      linear-gradient(135deg, 
-        #8B4513 0%,   /* Saddle brown */ 
-        #A0522D 25%,  /* Sienna */
-        #8B4513 100%  /* Saddle brown */
-      ),
-      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px),
-      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)
-    `,
-    stampBgHover: `
-      linear-gradient(135deg, 
-        #A0522D 0%,   /* Sienna */ 
-        #CD853F 25%,  /* Peru */
-        #A0522D 100%  /* Sienna */
-      ),
-      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
-      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)
-    `,
-    stampBorder: '#654321',
-    stampText: '#654321',
-    stampTextShadow: `
-      1px 1px 0px rgba(255,255,255,0.8),
-      -1px -1px 0px rgba(0,0,0,0.3)
-    `,
-    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)',
-    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)',
-    // Enhanced parchment texture: stronger vignette plus ultra-subtle grain for depth
-    parchmentSurface: `
-      radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%),
-      repeating-linear-gradient(135deg,  rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 6px),
-      repeating-linear-gradient(45deg,   rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 6px),
-      #F8F3E6
-    `,
-    // Alternate parchment without central glow – ideal for small list items
-    parchmentSurfaceItem: `
-      repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 5px),
-      repeating-linear-gradient(45deg,  rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, transparent 2px, transparent 6px),
-      #F8F3E6
-    `,
-    
-    // Da Vinci-inspired link colors (light theme)
-    linkDefault: '#8B4513',       // Saddle Brown
-    linkHover: '#CD853F',         // Peru
+    stampBg: {
+      value: {
+        base: `linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)`,
+        _dark: `linear-gradient(135deg, #4A5568 0%, #2D3748 25%, #4A5568 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)`,
+      },
+    },
+    stampBgHover: {
+      value: {
+        base: `linear-gradient(135deg, #A0522D 0%, #CD853F 25%, #A0522D 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)`,
+        _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #2D3748 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)`,
+      },
+    },
+    stampBorder: { value: { base: '#654321', _dark: '#2D3748' } },
+    stampText: { value: { base: '#654321', _dark: '#E2E8F0' } },
+    stampTextShadow: {
+      value: {
+        base: '1px 1px 0px rgba(255,255,255,0.8), -1px -1px 0px rgba(0,0,0,0.3)',
+        _dark: '1px 1px 0px rgba(0,0,0,0.8), -1px -1px 0px rgba(255,255,255,0.2)',
+      },
+    },
+    stampShadow: {
+      value: {
+        base: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)',
+        _dark: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.05)',
+      },
+    },
+    stampShadowHover: {
+      value: {
+        base: 'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)',
+        _dark: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.08)',
+      },
+    },
+
+    // Parchment textures
+    parchmentSurface: {
+      value: {
+        base: `radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%), repeating-linear-gradient(135deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 6px), #F8F3E6`,
+        _dark: `radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%), repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 6px), #1A1A1A`,
+      },
+    },
+    parchmentSurfaceItem: {
+      value: {
+        base: `repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 5px), repeating-linear-gradient(45deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, transparent 2px, transparent 6px), #F8F3E6`,
+        _dark: `repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px), #1A1A1A`,
+      },
+    },
+
+    // Link colors
+    linkDefault: { value: { base: '#8B4513', _dark: '#90CDF4' } },
+    linkHover: { value: { base: '#CD853F', _dark: '#FFD700' } },
   },
 };
 
-// Dark theme colors
-const darkColors = {
-  brand: {
-    // Core background/surface colors
-    midnightBlue: '#F7FAFC',      // Light text on dark bg
-    gold: '#FFD700',              // Brighter gold for dark bg
-    bronzeLight: '#CFA46B',      // Lighter bronze accent (dark mode)
-    bronze: '#CD7F32',            // Keep bronze vibrant
-    bronzeMedium: '#8B5A2B',      // Medium bronze for gradients
-    bronzeDark: '#6B4423',        // Dark bronze for gradients
-    bronzeDarkest: '#5A3A20',     // Darkest bronze for gradients
-    black: '#F7FAFC',             // Light text
-    parchment: '#1A1A1A',         // Dark background
-    steel: '#CBD5E0',             // Lighter steel for dark bg
-    lightSteel: '#2D3748',        // Darker for cards/surfaces
-    heraldic: '#90CDF4',          // Light blue
-    slateBlue: '#2D3748',         // Dark slate for cards
-    slateBorder: '#4A5568',       // Darker border
-    white: '#fff', // Pure white for semantic use
-    pureBlack: '#111', // Pure black for semantic use
-    
-    // Status colors (keep vibrant for contrast)
-    darkWin: '#48BB78',           // Brighter green
-    darkLoss: '#F56565',          // Brighter red
-    tableBorderOnLight: '#4A5568',
-    modernTableBorder: '#90CDF4',
-    
-    // Da Vinci-inspired link colors (dark theme)
-    linkDefault: '#90CDF4',       // Light blue (original heraldic)
-    linkHover: '#FFD700',         // Gold (original hover)
-    
-    win: '#48BB78',
-    loss: '#F56565', 
-    same: '#90CDF4',
-    zoolanderBlue: '#90CDF4',
-    stone: '#2D3748',             // Dark stone
-    stoneLight: '#1A202C',        // Darker stone
-    fadedBlue: '#2A4A6B',         // Darker faded blue
-    
-    // Dark optimized colors
-    brightGold: '#FFD700',
-    brightSilver: '#E2E8F0',
-    brightBronze: '#CD7F32', 
-    brightGreen: '#48BB78',
-    brightRed: '#F56565',
-    contrastRed: '#F56565',
-    
-    // Tier ranking colors for dark theme
-    tierGoldDark: '#FFD700',      // Bright gold for dark theme
-    tierGoldLight: '#D4AF37',     // Lustrous gold for light theme
-    tierGoldGradientDark: '#FFB347', // Gold gradient end for dark theme
-    tierGoldGradientLight: '#B8860B', // Gold gradient end for light theme
-    
-    tierSilverDark: '#C0C0C0',    // Bright silver for dark theme
-    tierSilverLight: '#696969',   // Dark silver for light theme
-    tierSilverGradientDark: '#D3D3D3', // Silver gradient end for dark theme
-    tierSilverGradientLight: '#808080', // Silver gradient end for light theme
-    
-    tierBronzeDark: '#CD853F',    // Bright bronze for dark theme
-    tierBronzeLight: '#8B4513',   // Dark bronze for light theme
-    tierBronzeGradientDark: '#D2691E', // Bronze gradient end for dark theme
-    tierBronzeGradientLight: '#A0522D', // Bronze gradient end for light theme
-    
-    // UI component backgrounds
-    topbarBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
-    topbarBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
-    landingBg: "linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)",
-    landingBgMd: "linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)",
-    
-    // Session header - dark slate with subtle texture (dark mode)
-    sessionHeaderBg: `
-      linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #171923 50%, #1A202C 75%, #2D3748 100%),
-      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)
-    `,
-    
-    // UI element backgrounds
-    cardBg: '#2D3748',
-    inputBg: '#2D3748',
-    
-    // Gradient colors for UI elements
-    heroGradientStart: 'rgba(45,55,72,0.9)',
-    heroGradientEnd: 'rgba(45,55,72,0.3)',
-    
-    // Shadow and border colors
-    shadowLight: 'rgba(0,0,0,0.3)',
-    shadowMedium: 'rgba(0,0,0,0.4)',
-    shadowGold: 'rgba(255,215,0,0.4)',
-    borderLight: '#4A5568',
-    textShadowLight: 'rgba(0,0,0,0.8)',
-    textShadowAlpha: 'rgba(255,255,255,0.1)',
-    
-    // Animation glow colors (moon theme)
-    sunGlow: 'rgba(147, 197, 253, 0.3)',
-    sunGlowBright: 'rgba(147, 197, 253, 0.6)',
-    sunGlowDim: 'rgba(147, 197, 253, 0.2)',
-    sunColor: '#93C5FD',
-    sunBg: 'rgba(147, 197, 253, 0.1)',
-    sunBorder: 'rgba(147, 197, 253, 0.3)',
-    sunRadialGradient: 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.1), transparent 70%)',
-    sunRadialGradientBg: 'radial-gradient(circle, rgba(147, 197, 253, 0.05) 0%, transparent 70%)',
-    // Session group card colors (dark mode)
-    sessionCardBg: '#2D3748',
-    sessionCardBorder: '#4A5568',
-    
-    // Stamp button colors (dark mode)
-    stampBg: `
-      linear-gradient(135deg, 
-        #4A5568 0%,   /* Dark slate */ 
-        #2D3748 25%,  /* Darker slate */
-        #4A5568 100%  /* Dark slate */
-      ),
-      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px),
-      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)
-    `,
-    stampBgHover: `
-      linear-gradient(135deg, 
-        #2D3748 0%,   /* Darker slate */ 
-        #1A202C 25%,  /* Even darker slate */
-        #2D3748 100%  /* Darker slate */
-      ),
-      repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px),
-      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)
-    `,
-    stampBorder: '#2D3748',
-    stampText: '#E2E8F0',
-    stampTextShadow: `
-      1px 1px 0px rgba(0,0,0,0.8),
-      -1px -1px 0px rgba(255,255,255,0.2)
-    `,
-    stampShadow: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.05)',
-    stampShadowHover: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.08)',
-    // Textured parchment for dark mode: deeper vignette plus faint cross-hatch grain
-    parchmentSurface: `
-      radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%),
-      repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 6px),
-      repeating-linear-gradient(45deg,  rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 6px),
-      #1A1A1A
-    `,
-    // Dark-mode list-item parchment without bright center
-    parchmentSurfaceItem: `
-      repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px),
-      repeating-linear-gradient(45deg,  rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px),
-      #1A1A1A
-    `,
-  },
+// ============================================================
+// Section 2: Spacing tokens (exported for direct import by components)
+// ============================================================
+
+export const componentSpacing = {
+  profileSpacing: '0.5rem',
+  statsSpacing: '0.5rem',
+  cardSpacing: '1rem',
+  sectionSpacing: '1.5rem',
 };
 
-// Centralized spacing constants
-const spacing = {
-  xs: '0.25rem',    // 4px
-  sm: '0.5rem',     // 8px
-  md: '1rem',       // 16px
-  lg: '1.5rem',     // 24px
-  xl: '2rem',       // 32px
-  '2xl': '3rem',    // 48px
-  
-  // Component-specific spacing
-  component: {
-    profileSpacing: '0.5rem',      // 8px - spacing between profile elements
-    statsSpacing: '0.5rem',        // 8px - spacing between stats elements
-    cardSpacing: '1rem',           // 16px - spacing between cards
-    sectionSpacing: '1.5rem',      // 24px - spacing between major sections
-  },
-  
-  // Responsive spacing patterns
-  responsive: {
-    landingSpacing: { base: '0.25rem', md: '1rem' },     // Landing page main spacing
-    landingPadding: { base: '0.5rem', md: '2rem' },      // Landing page padding
-    sectionSpacing: { base: '2rem', md: '3rem' },        // Major section spacing
-  }
+export const responsiveSpacing = {
+  landingSpacing: { base: '0.25rem', md: '1rem' },
+  landingPadding: { base: '0.5rem', md: '2rem' },
+  sectionSpacing: { base: '2rem', md: '3rem' },
 };
 
-// Recreate the reusable style objects from breakpoints.ts for card layout
+const spacingTokens = {
+  xs: { value: '0.25rem' },
+  sm: { value: '0.5rem' },
+  md: { value: '1rem' },
+  lg: { value: '1.5rem' },
+  xl: { value: '2rem' },
+  '2xl': { value: '3rem' },
+};
+
+// ============================================================
+// Section 3: Slot recipes (multipart components)
+// ============================================================
+
 const matchCardStyles = {
-  base: {
-    padding: '0.5rem',
-    marginBottom: '0.5rem',
-  },
-  lg: {
-    padding: '0.5rem',
-    marginBottom: '0.5rem',
-  },
-  desktop: {
-    padding: '0.75rem',
-    marginBottom: '0.75rem',
-  },
+  base: { padding: '0.5rem', marginBottom: '0.5rem' },
+  lg: { padding: '0.5rem', marginBottom: '0.5rem' },
+  desktop: { padding: '0.75rem', marginBottom: '0.75rem' },
 };
 
-const profileHeaderTheme = defineProfileHeaderMultiStyleConfig({
-  baseStyle: defineProfileHeaderPartsStyle({
-    container: {
-      width: '100%',
-      height: 'auto',
-      padding: { base: '0.5rem', md: '1rem', lg: '1.25rem' },
-      position: 'relative',
-    },
-    avatar: {
-      bg: 'white',
-      border: '2px solid',
-      borderColor: 'brand.gold',
-      width: '100px',
-      height: '100px',
-      '@media (min-width: 768px)': {
-        width: '110px',
-        height: '110px',
-      },
-      '@media (min-width: 1280px)': {
-        width: '120px',
-        height: '120px',
-      }
-    },
-    name: {
-      color: 'brand.midnightBlue',
-      fontWeight: 'bold',
-      fontSize: 'lg',
-      '@media (min-width: 768px)': {
-        fontSize: 'xl',
-      },
-    },
-    id: {
-      color: 'brand.steel',
-      fontSize: 'xs',
-    },
-    statsTable: {
-      th: {
-        color: 'brand.midnightBlue',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-        fontSize: '2xs',
-      },
-      td: {
-        color: 'brand.black',
-        fontSize: 'xs',
-        whiteSpace: 'nowrap',
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-      },
-      '.rank': {
-        color: 'brand.zoolanderBlue',
-        fontWeight: '900',
-      },
-      '.percentile': {
-        color: 'brand.steel',
-        fontSize: 'xs',
-        fontWeight: 'bold',
-      },
-      '.win': {
-        color: 'brand.win',
-      },
-      '.loss': {
-        color: 'brand.loss',
-      },
-      '.streak': {
-        color: 'brand.win',
-      }
-    },
-    }),
-});
-
-// Function to create theme based on dark mode
-export function createTheme(isDark: boolean) {
-  const colors = isDark ? darkColors : lightColors;
-  
-  // Dynamic card theme based on mode
-  const dynamicCardTheme = defineCardMultiStyleConfig({
-    variants: {
-      match: defineCardPartsStyle({
-        container: {
-          backgroundColor: isDark ? 'brand.lightSteel' : 'white',
+const cardSlotRecipe = defineSlotRecipe({
+  className: 'card',
+  slots: ['root', 'body', 'header', 'footer', 'title', 'description'],
+  variants: {
+    variant: {
+      match: {
+        root: {
+          backgroundColor: { base: 'white', _dark: '{colors.brand.lightSteel}' },
           borderWidth: '1px',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
+          borderColor: '{colors.brand.slateBorder}',
           borderRadius: 'lg',
-          boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.04)',
+          boxShadow: { base: '0 2px 4px rgba(0,0,0,0.04)', _dark: '0 2px 4px rgba(0,0,0,0.3)' },
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
@@ -459,66 +251,62 @@ export function createTheme(isDark: boolean) {
             xl: matchCardStyles.desktop.marginBottom,
           },
           transition: 'all 0.3s ease',
-        }
-      }),
-      summary: defineCardPartsStyle({
-        container: {
-          backgroundColor: isDark ? 'brand.lightSteel' : 'brand.stone',
+        },
+      },
+      summary: {
+        root: {
+          backgroundColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.lightSteel}' },
           borderWidth: '1px',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+          borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.slateBorder}' },
           borderRadius: 'md',
           transition: 'all 0.3s ease',
-        }
-      }),
-      winner: defineCardPartsStyle({
-        container: {
-          bg:  isDark ? 'brand.stoneLight' : 'brand.stoneLight',
-          borderColor: 'brand.gold',
+        },
+      },
+      winner: {
+        root: {
+          bg: '{colors.brand.stoneLight}',
+          borderColor: '{colors.brand.gold}',
           boxShadow: '0 0 8px rgba(212,175,55,0.6)',
           borderWidth: '2px',
           borderRadius: 'md',
-          p: 1,
+          p: '1',
           transition: 'all 0.3s ease',
-        }
-      }),
-      loser: defineCardPartsStyle({
-        container: {
-          bg: isDark ? 'brand.stoneLight' : 'brand.stoneLight',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
+        },
+      },
+      loser: {
+        root: {
+          bg: '{colors.brand.stoneLight}',
+          borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.slateBorder}' },
           borderWidth: '1px',
           borderRadius: 'md',
-          boxShadow: isDark ? '0 0 4px rgba(0,0,0,0.4)' : '0 0 6px rgba(0,0,0,0.06)',
-          p: 1,
+          boxShadow: { base: '0 0 6px rgba(0,0,0,0.06)', _dark: '0 0 4px rgba(0,0,0,0.4)' },
+          p: '1',
           transition: 'all 0.3s ease',
-        }
-      }),
-      filter: defineCardPartsStyle({
-        container: {
-          bg: 'brand.sessionCardBg',
+        },
+      },
+      filter: {
+        root: {
+          bg: '{colors.brand.sessionCardBg}',
           borderWidth: '1px',
-          borderColor: 'brand.slateBorder',
+          borderColor: '{colors.brand.slateBorder}',
           borderRadius: 'lg',
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.06)',
+          boxShadow: { base: '0 1px 3px rgba(0,0,0,0.06)', _dark: '0 1px 3px rgba(0,0,0,0.3)' },
           transition: 'all 0.3s ease',
-        }
-      }),
-      recordBubble: defineCardPartsStyle({
-        container: {
-          bg: isDark ? 'brand.slateBlue' : '#f0e6d2', // Warmer, more aged parchment
-          color: isDark ? 'brand.steel' : 'brand.black',
-          borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
+        },
+      },
+      recordBubble: {
+        root: {
+          bg: { base: '#f0e6d2', _dark: '{colors.brand.slateBlue}' },
+          color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
           borderWidth: '2px',
           borderRadius: 'md',
-          backgroundImage: isDark ? 'none' : `
-            linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
-            repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
-            repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
-            radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-            radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
-          `,
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
-          px: { base: 1, md: 3 },
-          py: 1,
+          boxShadow: {
+            base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+            _dark: '0 1px 3px rgba(0,0,0,0.3)',
+          },
+          px: { base: '1', md: '3' },
+          py: '1',
           fontSize: '0.8125rem',
           fontWeight: 'bold',
           flexDirection: 'row',
@@ -526,422 +314,370 @@ export function createTheme(isDark: boolean) {
           justifyContent: 'center',
           transition: 'all 0.3s ease',
           position: 'relative',
-          _before: isDark ? {} : {
-            content: '""',
-            position: 'absolute',
-            top: '2px',
-            left: '2px',
-            right: '2px',
-            bottom: '2px',
-            borderRadius: '6px',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            pointerEvents: 'none',
-            zIndex: 0
-          },
           _hover: {
-            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+            boxShadow: {
+              base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+              _dark: '0 2px 6px rgba(0,0,0,0.4)',
+            },
             transform: 'translateY(-2px)',
-          }
+          },
         },
         body: {
-          padding: 0,
+          padding: '0',
           position: 'relative',
-          zIndex: 1
-        }
-      }),
-      matchesCountBubble: defineCardPartsStyle({
-        container: {
-          bg: isDark ? 'brand.slateBlue' : '#f0e6d2', // Warmer, more aged parchment
-          color: isDark ? 'brand.steel' : 'brand.black',
-          borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
+          zIndex: 1,
+        },
+      },
+      matchesCountBubble: {
+        root: {
+          bg: { base: '#f0e6d2', _dark: '{colors.brand.slateBlue}' },
+          color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
           borderWidth: '2px',
           borderRadius: 'md',
-          backgroundImage: isDark ? 'none' : `
-            linear-gradient(135deg, #f0e6d2 0%, #e8dcc8 25%, #e0d2be 50%, #d8c8b4 75%, #d0bcaa 100%),
-            repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
-            repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
-            radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-            radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
-          `,
-          px: { base: 1, md: 3 },
+          px: { base: '1', md: '3' },
           width: '80px',
-          py: 1,
+          py: '1',
           fontSize: '0.8125rem',
           fontWeight: 'extrabold',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 0.5,
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+          gap: '0.5',
+          boxShadow: {
+            base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+            _dark: '0 1px 3px rgba(0,0,0,0.3)',
+          },
           transition: 'all 0.3s ease',
           position: 'relative',
-          _before: isDark ? {} : {
-            content: '""',
-            position: 'absolute',
-            top: '2px',
-            left: '2px',
-            right: '2px',
-            bottom: '2px',
-            borderRadius: '6px',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            pointerEvents: 'none',
-            zIndex: 0
-          },
           _hover: {
-            boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+            boxShadow: {
+              base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+              _dark: '0 2px 6px rgba(0,0,0,0.4)',
+            },
             transform: 'translateY(-2px)',
-          }
+          },
         },
         body: {
-          padding: 0,
+          padding: '0',
           position: 'relative',
-          zIndex: 1
-        }
-      }),
+          zIndex: 1,
+        },
+      },
     },
-  });
+  },
+});
 
-  // Dynamic PlayerStats theme
-  const dynamicPlayerStatsTheme = definePlayerStatsMultiStyleConfig({
-    baseStyle: definePlayerStatsPartsStyle({
-      container: {
-        bg: isDark ? 'brand.slateBlue' : '#f6ecd8',
-        borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
-        borderRadius: 'lg',
-        padding: '1rem',
-        borderWidth: '2px',
-        backgroundImage: isDark ? 'none' : `
-          linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
+const profileHeaderSlotRecipe = defineSlotRecipe({
+  className: 'profile-header',
+  slots: ['container', 'avatar', 'name', 'id', 'statsTable'],
+  base: {
+    container: {
+      width: '100%',
+      height: 'auto',
+      padding: { base: '0.5rem', md: '1rem', lg: '1.25rem' },
+      position: 'relative',
+    },
+    avatar: {
+      bg: 'white',
+      border: '2px solid',
+      borderColor: '{colors.brand.gold}',
+      width: '100px',
+      height: '100px',
+    },
+    name: {
+      color: '{colors.brand.midnightBlue}',
+      fontWeight: 'bold',
+      fontSize: 'lg',
+    },
+    id: {
+      color: '{colors.brand.steel}',
+      fontSize: 'xs',
+    },
+    statsTable: {},
+  },
+});
+
+const playerStatsSlotRecipe = defineSlotRecipe({
+  className: 'player-stats',
+  slots: ['container', 'statsTable'],
+  base: {
+    container: {
+      bg: { base: '#f6ecd8', _dark: '{colors.brand.slateBlue}' },
+      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+      borderRadius: 'lg',
+      padding: '1rem',
+      borderWidth: '2px',
+      backgroundImage: {
+        base: `linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
           repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
           repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
           radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
-        `,
-        boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
-        transition: 'all 0.3s ease',
-        position: 'relative',
-        _before: isDark ? {} : {
-          content: '""',
-          position: 'absolute',
-          top: '2px',
-          left: '2px',
-          right: '2px',
-          bottom: '2px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-          pointerEvents: 'none',
-          zIndex: 0
-        },
-        _hover: {
-          boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
-          transform: 'translateY(-1px)',
-        }
+          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)`,
+        _dark: 'none',
       },
-      statsTable: {
-        position: 'relative',
-        zIndex: 1,
-        th: {
-          color: isDark ? 'brand.steel' : 'brand.midnightBlue',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-          fontSize: '2xs',
-          fontWeight: 'bold',
-          padding: '0.35rem 0.15rem',
-        },
-        td: {
-          color: isDark ? 'brand.midnightBlue' : 'brand.black',
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
-          fontSize: 'xs',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          padding: '0.35rem 0.15rem',
-        },
-        '.rank': {
-          color: isDark ? 'brand.zoolanderBlue' : 'brand.midnightBlue',
-          fontWeight: '700',
-        },
-        '.percentile': {
-          color: isDark ? 'brand.midnightBlue' : 'brand.black',
-          fontSize: 'xs',
-          fontWeight: 'bold',
-        },
-        '.win': {
-          color: isDark ? 'brand.brightGreen' : 'brand.darkWin',
-          fontWeight: 'bold',
-        },
-        '.loss': {
-          color: isDark ? 'brand.brightRed' : 'brand.darkLoss',
-          fontWeight: 'bold',
-        },
-        '.streak': {
-          color: isDark ? 'brand.brightGreen' : 'brand.darkWin',
-          fontWeight: 'bold',
-        },
-        'tr:last-child td': {
-          borderBottom: 'none',
-        },
+      boxShadow: {
+        base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+        _dark: '0 1px 3px rgba(0,0,0,0.3)',
       },
-    }),
-  });
+      transition: 'all 0.3s ease',
+      position: 'relative',
+      _before: {
+        content: '""',
+        position: 'absolute',
+        top: '2px',
+        left: '2px',
+        right: '2px',
+        bottom: '2px',
+        borderRadius: '10px',
+        background: { base: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)', _dark: 'none' },
+        pointerEvents: 'none',
+        zIndex: 0,
+      },
+      _hover: {
+        boxShadow: {
+          base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+          _dark: '0 2px 6px rgba(0,0,0,0.4)',
+        },
+        transform: 'translateY(-1px)',
+      },
+    },
+    statsTable: {
+      position: 'relative',
+      zIndex: 1,
+    },
+  },
+});
 
-  // Dynamic RankingCard theme
-  const dynamicRankingCardTheme = defineRankingCardMultiStyleConfig({
-    baseStyle: defineRankingCardPartsStyle({
-      container: {
-        bg: isDark ? 'brand.slateBlue' : '#f6ecd8',
-        borderColor: isDark ? 'brand.slateBorder' : 'rgba(139, 90, 43, 0.3)',
-        borderRadius: 'lg',
-        padding: '0.3rem',
-        borderWidth: '2px',
-        backgroundImage: isDark ? 'none' : `
-          linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
+const rankingCardSlotRecipe = defineSlotRecipe({
+  className: 'ranking-card',
+  slots: ['container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'],
+  base: {
+    container: {
+      bg: { base: '#f6ecd8', _dark: '{colors.brand.slateBlue}' },
+      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+      borderRadius: 'lg',
+      padding: '0.3rem',
+      borderWidth: '2px',
+      backgroundImage: {
+        base: `linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
           repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
           repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
           radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)
-        `,
-        boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
-        transition: 'all 0.3s ease',
-        minW: { base: '100%', md: '220px' },
-        maxW: { base: '100%', md: '240px' },
-        position: 'relative',
-        _before: isDark ? {} : {
-          content: '""',
-          position: 'absolute',
-          top: '2px',
-          left: '2px',
-          right: '2px',
-          bottom: '2px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-          pointerEvents: 'none',
-          zIndex: 0
+          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)`,
+        _dark: 'none',
+      },
+      boxShadow: {
+        base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
+        _dark: '0 1px 3px rgba(0,0,0,0.3)',
+      },
+      transition: 'all 0.3s ease',
+      minW: { base: '100%', md: '220px' },
+      maxW: { base: '100%', md: '240px' },
+      position: 'relative',
+      _before: {
+        content: '""',
+        position: 'absolute',
+        top: '2px',
+        left: '2px',
+        right: '2px',
+        bottom: '2px',
+        borderRadius: '10px',
+        background: { base: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)', _dark: 'none' },
+        pointerEvents: 'none',
+        zIndex: 0,
+      },
+      _hover: {
+        boxShadow: {
+          base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
+          _dark: '0 2px 6px rgba(0,0,0,0.4)',
         },
-        _hover: {
-          boxShadow: isDark ? '0 2px 6px rgba(0,0,0,0.4)' : '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
-          transform: 'translateY(-1px)',
-        }
+        transform: 'translateY(-1px)',
       },
-      rankingRow: {
-        padding: '0.25rem 0.5rem',
-        borderRadius: 'md',
-        borderWidth: '0px',
-        borderColor: 'transparent',
-        bg: 'transparent',
-        transition: 'all 0.2s ease',
-        position: 'relative',
-        zIndex: 1,
-        borderBottom: '1px solid',
-        borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(139, 90, 43, 0.1)',
-        _last: {
-          borderBottom: 'none',
-        },
-        _hover: {
-          bg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(139, 90, 43, 0.03)',
-          transform: 'translateY(-1px)',
-          boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.2)' : '0 2px 4px rgba(139, 90, 43, 0.1)',
-        },
+    },
+    rankingRow: {
+      padding: '0.25rem 0.5rem',
+      borderRadius: 'md',
+      borderWidth: '0px',
+      borderColor: 'transparent',
+      bg: 'transparent',
+      transition: 'all 0.2s ease',
+      position: 'relative',
+      zIndex: 1,
+      borderBottom: '1px solid',
+      borderBottomColor: { base: 'rgba(139, 90, 43, 0.1)', _dark: 'rgba(255,255,255,0.1)' },
+      _last: { borderBottom: 'none' },
+      _hover: {
+        bg: { base: 'rgba(139, 90, 43, 0.03)', _dark: 'rgba(255,255,255,0.05)' },
+        transform: 'translateY(-1px)',
+        boxShadow: { base: '0 2px 4px rgba(139, 90, 43, 0.1)', _dark: '0 2px 4px rgba(0,0,0,0.2)' },
       },
-      leaderboardName: {
-        color: isDark ? 'brand.steel' : 'brand.midnightBlue',
-        fontSize: '2xs',
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-      },
-      rankText: {
-        fontSize: 'xs',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-      },
-      percentileText: {
-        color: isDark ? 'brand.steel' : 'brand.steel',
-        fontSize: 'xs',
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-      },
-      rankingTable: {
-        borderCollapse: 'collapse',
-        w: '100%',
-      },
-      tableHeader: {
-        color: isDark ? 'brand.steel' : 'brand.midnightBlue',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-        fontSize: '2xs',
-        fontWeight: 'bold',
-        textAlign: 'left',
-        padding: '0.5rem',
-        borderBottom: '1px solid',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
-      },
-      tableRow: {
-        borderBottom: '1px solid',
-        borderColor: isDark ? 'brand.slateBorder' : 'brand.bronzeLight',
-        _last: {
-          borderBottom: 'none',
-        },
-      },
-      tableCell: {
-        padding: '0.5rem',
-        verticalAlign: 'middle',
-      },
-    }),
-  });
+    },
+    leaderboardName: {
+      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.steel}' },
+      fontSize: '2xs',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      whiteSpace: 'nowrap',
+    },
+    rankText: {
+      fontSize: 'xs',
+      fontWeight: 'bold',
+      whiteSpace: 'nowrap',
+    },
+    percentileText: {
+      color: '{colors.brand.steel}',
+      fontSize: 'xs',
+      fontWeight: 'bold',
+      whiteSpace: 'nowrap',
+    },
+    rankingTable: {
+      borderCollapse: 'collapse',
+      w: '100%',
+    },
+    tableHeader: {
+      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.steel}' },
+      textTransform: 'uppercase',
+      whiteSpace: 'nowrap',
+      fontSize: '2xs',
+      fontWeight: 'bold',
+      textAlign: 'left',
+      padding: '0.5rem',
+      borderBottom: '1px solid',
+      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.slateBorder}' },
+    },
+    tableRow: {
+      borderBottom: '1px solid',
+      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.slateBorder}' },
+      _last: { borderBottom: 'none' },
+    },
+    tableCell: {
+      padding: '0.5rem',
+      verticalAlign: 'middle',
+    },
+  },
+});
 
-  return extendTheme({
-    colors,
-    spacing,
-    styles: {
-      global: {
-        body: {
-          bg: isDark ? '#0F0F0F' : { base: 'brand.parchment', md: 'brand.charcoal' },
-          color: isDark ? 'brand.black' : 'brand.black',
-          fontFamily: "'Lora', serif",
-          fontSize: '15px',
-          transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+// ============================================================
+// Section 4: Component recipes
+// ============================================================
+
+const headingRecipe = defineRecipe({
+  className: 'heading',
+  base: {
+    color: '{colors.brand.midnightBlue}',
+    fontWeight: '600',
+  },
+});
+
+const linkRecipe = defineRecipe({
+  className: 'link',
+  base: {
+    color: { base: '#8B4513', _dark: '#C44536' },
+    _hover: {
+      color: { base: '#A0522D', _dark: '#E74C3C' },
+    },
+  },
+});
+
+const buttonRecipe = defineRecipe({
+  className: 'button',
+  variants: {
+    variant: {
+      solid: {
+        bg: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.lightSteel}' },
+        color: { base: 'white', _dark: '{colors.brand.midnightBlue}' },
+        _hover: {
+          bg: { base: '{colors.brand.heraldic}', _dark: '{colors.brand.slateBlue}' },
         },
-        'a, button': {
-          transition: 'all 0.2s ease-in-out',
-        },
-        '*, *::before, &::after': {
-          borderColor: isDark ? 'brand.lightSteel' : 'brand.steel',
-        },
-        // Smooth transitions for all elements
-        '*': {
-          transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+      },
+      outline: {
+        borderColor: '{colors.brand.gold}',
+        color: '{colors.brand.midnightBlue}',
+        _hover: {
+          bg: { base: '#b78b2b', _dark: '{colors.brand.gold}' },
+          color: { base: 'white', _dark: '{colors.brand.black}' },
         },
       },
     },
-    components: {
-      Heading: {
-        baseStyle: {
-          color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
-          fontWeight: 600,
-        },
-      },
-      Link: {
-        baseStyle: {
-          color: isDark ? '#C44536' : '#8B4513',
-          _hover: {
-            color: isDark ? '#E74C3C' : '#A0522D',
-          },
-        },
-      },
-      Button: {
-        variants: {
-          solid: {
-            bg: isDark ? 'brand.lightSteel' : 'brand.midnightBlue',
-            color: isDark ? 'brand.midnightBlue' : 'white',
-            _hover: { 
-              bg: isDark ? 'brand.slateBlue' : 'brand.heraldic' 
-            },
-          },
-          outline: {
-            borderColor: 'brand.gold',
-            color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
-            _hover: { 
-              bg: isDark ? 'brand.gold' : '#b78b2b', 
-              color: isDark ? 'brand.black' : 'white' 
-            },
-          },
-        },
-      },
-      Divider: {
-        baseStyle: {
-          borderColor: isDark ? 'brand.slateBorder' : 'brand.stone',
-          opacity: 0.4,
-        },
-      },
-      Card: dynamicCardTheme,
-      ProfileHeader: profileHeaderTheme,
-      PlayerStats: dynamicPlayerStatsTheme,
-      RankingCard: dynamicRankingCardTheme,
-      Input: {
-        variants: {
-          filled: {
-            field: {
-              bg: 'brand.inputBg',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
-              borderRadius: 'md',
-              color: isDark ? 'brand.midnightBlue' : 'brand.black',
-              _hover: { borderColor: 'brand.gold' },
-              _focus: {
-                borderColor: 'brand.gold',
-                boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
-              },
-            },
-          },
-        },
-      },
-      Select: {
-        variants: {
-          filled: {
-            field: {
-              bg: 'brand.inputBg',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.slateBorder',
-              borderRadius: 'md',
-              color: isDark ? 'brand.midnightBlue' : 'brand.black',
-              _hover: { borderColor: 'brand.gold' },
-              _focus: {
-                borderColor: 'brand.gold',
-                boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.6)',
-              },
-            },
-          },
-        },
-      },
-      Table: {
-        variants: {
-          simple: {
-            th: {
-              borderBottom: '2px solid',
-              borderColor: isDark ? 'brand.slateBorder' : 'brand.steel',
-              color: isDark ? 'brand.midnightBlue' : 'brand.midnightBlue',
-              fontWeight: 'bold',
-            },
-            td: {
-              borderBottom: '1px solid',
-              borderColor: isDark ? 'brand.slateBorder' : 'gray.200',
-              color: isDark ? 'brand.midnightBlue' : 'brand.black',
-            },
-          },
-        },
-      },
-      Accordion: {
-        variants: {
-          filled: {
-            container: {
-              borderWidth: '1px',
-              borderColor: 'brand.slateBorder',
-              boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0, 51, 102, 0.1)',
-              borderRadius: 'lg',
-              overflow: 'hidden',
-              bg: 'brand.sessionCardBg',
-              transition: 'all 0.3s ease',
-            },
-            button: {
-              bg: 'brand.sessionCardBg',
-              color: isDark ? 'brand.midnightBlue' : 'brand.black',
-              _hover: {
-                bg: isDark ? 'brand.slateBlue' : 'gray.50',
-              },
-              borderRadius: 'lg',
-              borderBottomRadius: 'none',
-            },
-            panel: {
-              bg: 'brand.sessionCardBg',
-              color: isDark ? 'brand.midnightBlue' : 'brand.black',
-              padding: 4,
-            },
-          },
-        },
+  },
+});
+
+const separatorRecipe = defineRecipe({
+  className: 'separator',
+  base: {
+    borderColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.slateBorder}' },
+    opacity: 0.4,
+  },
+});
+
+// ============================================================
+// Section 5: System config + global CSS
+// ============================================================
+
+const config = defineConfig({
+  globalCss: {
+    body: {
+      bg: { base: '{colors.brand.parchment}', _dark: '#0F0F0F' },
+      color: '{colors.brand.black}',
+      fontFamily: "'Lora', serif",
+      fontSize: '15px',
+      transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    },
+    // Responsive body bg: on md+, light mode uses charcoal
+    '@media screen and (min-width: 768px)': {
+      '& body': {
+        bg: { base: '{colors.brand.charcoal}', _dark: '#0F0F0F' },
       },
     },
-  });
-}
+    'a, button': {
+      transition: 'all 0.2s ease-in-out',
+    },
+    '*, *::before, *::after': {
+      borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.lightSteel}' },
+    },
+    '*': {
+      transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
+    },
+    '.rank': {
+      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.zoolanderBlue}' },
+      fontWeight: '700',
+    },
+    '.loss': {
+      color: { base: '{colors.brand.darkLoss}', _dark: '{colors.brand.brightRed}' },
+      fontWeight: 'bold',
+    },
+    '.streak': {
+      color: { base: '{colors.brand.darkWin}', _dark: '{colors.brand.brightGreen}' },
+      fontWeight: 'bold',
+    },
+  },
+  theme: {
+    tokens: {
+      spacing: spacingTokens,
+    },
+    semanticTokens: {
+      colors: semanticColors,
+    },
+    recipes: {
+      heading: headingRecipe,
+      link: linkRecipe,
+      button: buttonRecipe,
+      separator: separatorRecipe,
+    },
+    slotRecipes: {
+      card: cardSlotRecipe,
+      profileHeader: profileHeaderSlotRecipe,
+      playerStats: playerStatsSlotRecipe,
+      rankingCard: rankingCardSlotRecipe,
+    },
+  },
+});
 
-// Export default light theme for backward compatibility
-const theme = createTheme(false);
-export default theme;
+// ============================================================
+// Section 6: System creation + exports
+// ============================================================
+
+export const system = createSystem(defaultConfig, config);
+
+export default system;

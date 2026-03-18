@@ -179,7 +179,7 @@ function App() {
       <TopBar />
       <Box py={{ md: 8 }}>
         <VStack 
-          spacing={1} 
+          gap={1} 
           mx="auto" 
           px={{ base: 2, lg: 4 }} 
           py={{ base: 4, lg: 6 }} 

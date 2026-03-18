@@ -1,10 +1,9 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
 import { MatchCard, MatchList } from './MatchList';
-import theme from '../theme/theme';
+import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { mockMatch, mockMatchGroup } from '../test/mocks';
 import type { MatchGroup } from '../types/match';
 
@@ -46,9 +45,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -75,9 +74,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -109,9 +108,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -135,9 +134,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -160,9 +159,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -193,9 +192,9 @@ describe('Team Layout Responsive Behavior', () => {
   it('should handle 1v1 matches correctly (no wrapping needed)', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -214,9 +213,9 @@ describe('Team Layout Responsive Behavior', () => {
     
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={multiTeamMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -239,9 +238,9 @@ describe('MatchCard Responsive Layout', () => {
   it('should stack vertically on mobile and horizontally on desktop', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -257,9 +256,9 @@ describe('MatchCard Responsive Layout', () => {
   it('should NOT have horizontal overflow on iPad Pro (1024px width)', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -290,11 +289,11 @@ describe('MatchCard Responsive Layout', () => {
   it('should contain all match elements within the viewport on iPad', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <div style={{ width: '100%', border: '1px solid red' }}>
             <MatchCard match={mockMatch} profileId="test" groupOpen={false} />
           </div>
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -313,14 +312,14 @@ describe('Session Header Alignment', () => {
   it('should align content correctly on desktop', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchList 
             matchGroups={mockMatchGroups} 
             openDates={['2024-01-01']} 
             onOpenDatesChange={() => {}} 
             profileId="123" 
           />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 
@@ -340,14 +339,14 @@ describe('Session Header Alignment', () => {
   it('should handle mobile layout correctly', () => {
     mount(
       <BrowserRouter>
-        <ChakraProvider theme={theme}>
+        <CustomThemeProvider>
           <MatchList 
             matchGroups={mockMatchGroups} 
             openDates={['2024-01-01']} 
             onOpenDatesChange={() => {}} 
             profileId="123" 
           />
-        </ChakraProvider>
+        </CustomThemeProvider>
       </BrowserRouter>
     );
 

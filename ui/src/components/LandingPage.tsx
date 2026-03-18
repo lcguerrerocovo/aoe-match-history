@@ -1,4 +1,4 @@
-import { Box, VStack, Text, useTheme } from '@chakra-ui/react';
+import { Box, VStack, Text } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
@@ -6,9 +6,9 @@ import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { responsiveSpacing } from '../theme/theme';
 
 export function LandingPage() {
-  const theme = useTheme();
   const navigate = useNavigate();
 
   function handlePlayerSelect(player: PlayerSearchResult) {
@@ -34,11 +34,11 @@ export function LandingPage() {
       >
         <ThemeToggle />
       </Box>
-      <VStack 
-        spacing={{ base: '1.5rem', md: theme.spacing.responsive.landingSpacing }} 
-        align="center" 
-        textAlign="center" 
-        p={{ base: '1rem', md: theme.spacing.responsive.landingPadding }}
+      <VStack
+        gap={responsiveSpacing.landingSpacing}
+        align="center"
+        textAlign="center"
+        p={responsiveSpacing.landingPadding}
         w="100%"
         minH={{ base: '100vh', md: 'auto' }}
         justifyContent="center"
@@ -61,8 +61,8 @@ export function LandingPage() {
           left={0}
           right={0}
           height="8px"
-          bgGradient={`linear(to-r, ${theme.colors.brand.heroGradientStart}, ${theme.colors.brand.heroGradientEnd})`}
-                    borderTopRadius="md"
+          bg="brand.heroGradientStart"
+          borderTopRadius="md"
           pointerEvents="none"
           zIndex={1}
         />
@@ -78,12 +78,12 @@ export function LandingPage() {
           backgroundSize="200px"
           zIndex="0"
         />
-        {/* Logo - simplified without problematic positioning */}
+        {/* Logo */}
         <Box
           cursor="pointer"
           transition="all 0.3s ease"
           _hover={{
-            filter: `drop-shadow(0 10px 20px ${theme.colors.brand.shadowGold}) brightness(1.05)`
+            filter: 'brightness(1.05)'
           }}
         >
           <RouterLink to="#">
@@ -92,7 +92,6 @@ export function LandingPage() {
               color="brand.midnightBlue"
               fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
               letterSpacing="wide"
-              textShadow={`0 1px 0 ${theme.colors.brand.textShadowLight}, 0 2px 4px ${theme.colors.brand.textShadowAlpha}`}
               display="flex"
               alignItems="center"
               gap={1}
@@ -105,12 +104,12 @@ export function LandingPage() {
             </Text>
           </RouterLink>
         </Box>
-        {/* Player Search Component - moved outside all stacking contexts */}
+        {/* Player Search Component */}
         <Box w="100%" maxW="400px">
           <PlayerSearch onSelect={handlePlayerSelect} context="landing" searchFn={searchPlayers} />
         </Box>
         {/* Description */}
-        <VStack spacing={{ base: '1rem', md: theme.spacing.xl }} maxW="600px" align="stretch">
+        <VStack gap={{ base: '1rem', md: '2rem' }} maxW="600px" align="stretch">
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"
@@ -120,24 +119,22 @@ export function LandingPage() {
           >
             Your recent Age of Empires 2 matches with detailed analytics at a glance.
           </Text>
-          {/* Separator */}
           <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
           <Box
-            p={theme.spacing.md}
+            p="1rem"
             bg="brand.parchmentSurface"
             borderRadius="md"
             borderLeft="4px solid"
             borderColor="brand.gold"
-            boxShadow={`0 2px 8px ${theme.colors.brand.shadowLight}`}
           >
             <Text
               fontSize={{ base: 'sm', md: 'md' }}
               color="brand.midnightBlue"
               lineHeight="1.6"
             >
-              Analyze your recent Age of Empires II ranked match history with detailed performance 
-              metrics. View player statistics and performance, as well as detailed match APM insights 
-              broken down by action types from your latest games in a clean, competitive-focused interface. 
+              Analyze your recent Age of Empires II ranked match history with detailed performance
+              metrics. View player statistics and performance, as well as detailed match APM insights
+              broken down by action types from your latest games in a clean, competitive-focused interface.
               <br /> <br /> More features coming soon!
             </Text>
           </Box>
@@ -145,4 +142,4 @@ export function LandingPage() {
       </VStack>
     </Box>
   );
-} 
+}

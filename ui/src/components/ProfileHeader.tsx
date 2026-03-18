@@ -1,4 +1,4 @@
-import { Box, Divider, useMultiStyleConfig, Flex, useBreakpointValue, VStack } from '@chakra-ui/react';
+import { Box, Flex, useBreakpointValue, VStack, Separator, useSlotRecipe } from '@chakra-ui/react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerStats } from './PlayerStats';
 import { RankingCard } from './RankingCard';
@@ -13,12 +13,13 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
-  const styles = useMultiStyleConfig('ProfileHeader', {});
+  const recipe = useSlotRecipe({ key: 'profileHeader' });
+  const styles = recipe();
   const layout = useLayoutConfig();
   const isLargeScreen = useBreakpointValue({ base: false, md: true });
   
   return (
-    <Box sx={styles.container}>
+    <Box css={styles.container}>
       <Flex 
         direction={{ base: 'column', md: 'row' }} 
         align={{ base: 'stretch', md: 'center' }}
@@ -30,7 +31,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         data-testid="profile-header-stack"
       >
         <Flex flex={1} justify="center">
-            <VStack spacing={4} align="center" w="100%">
+            <VStack gap={4} align="center" w="100%">
                 <PlayerProfile 
                     profileId={profileId}
                     profile={profile}
@@ -42,7 +43,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
             </VStack>
         </Flex>
 
-        {isLargeScreen && <Divider orientation="vertical" height="150px" />}
+        {isLargeScreen && <Separator orientation="vertical" height="150px" />}
 
         <Box minW={{ md: '420px', lg: '450px'}} w={{ base: '100%', md: 'auto' }}>
             <PlayerStats stats={stats} />

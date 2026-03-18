@@ -6,6 +6,11 @@ import App from './App';
 import { CustomThemeProvider } from './theme/ThemeProvider';
 
 describe('App Responsive Layout', () => {
+  beforeEach(() => {
+    cy.intercept('GET', '**/match-history/*', { statusCode: 200, body: { matches: [], name: 'TestPlayer' } });
+    cy.intercept('GET', '**/personal-stats/*', { statusCode: 200, body: { statGroups: [], leaderboardStats: [] } });
+  });
+
   const renderApp = () => {
     mount(
       <MemoryRouter initialEntries={['/profile_id/12345']}>

@@ -1,9 +1,8 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { FilterBar } from './FilterBar';
-import theme from '../theme/theme';
+import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { mockFilterBarProps } from '../test/mocks';
 
 describe('FilterBar Responsive Layout', () => {
@@ -16,9 +15,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     // Test mobile view
@@ -43,9 +42,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     // Test iPad Pro viewport specifically
@@ -80,9 +79,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     cy.get('select').first().select('Arabia');
@@ -98,9 +97,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     cy.get('button[aria-label*="Sort"]').click();
@@ -116,9 +115,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     // Map options
@@ -144,9 +143,9 @@ describe('FilterBar Responsive Layout', () => {
     };
 
     mount(
-      <ChakraProvider theme={theme}>
+      <CustomThemeProvider>
         <FilterBar {...props} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
 
     cy.get('select').last().select('RM 1v1');

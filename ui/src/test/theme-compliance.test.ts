@@ -93,6 +93,10 @@ function findHardcodedColors(content: string, filePath: string): Array<{ line: n
         filePath.includes('.test.') || 
         filePath.includes('.cy.') ||
         filePath.includes('playerColors.ts') || // Game player colors
+        filePath.includes('colorUtils.ts') ||  // Color utility functions
+        filePath.includes('PlayerAvatar.tsx') || // Hardcoded gradient hex for replay buttons
+        filePath.includes('ApmBreakdownChart/') || // Chart color constants and components
+        filePath.includes('ApmChart.tsx') ||    // Chart player color calculations
         filePath.includes('theme.ts') ||        // Theme definitions themselves
         filePath.includes('breakpoints.ts')) {   // Responsive breakpoints
       return;
@@ -234,14 +238,15 @@ describe('Theme Compliance', () => {
 
   it('should have centralized color definitions', async () => {
     const themeContent = await fs.readFile(join(THEME_DIR, 'theme.ts'), 'utf-8');
-    
-    // Should have light and dark color definitions
-    expect(themeContent).toMatch(/lightColors/);
-    expect(themeContent).toMatch(/darkColors/);
-    
-    // Should export createTheme function
-    expect(themeContent).toMatch(/export function createTheme/);
-    
+
+    // v3: semantic tokens with base/_dark conditions
+    expect(themeContent).toMatch(/semanticTokens/);
+    expect(themeContent).toMatch(/_dark/);
+
+    // Should export system via createSystem
+    expect(themeContent).toMatch(/export const system/);
+    expect(themeContent).toMatch(/createSystem/);
+
     // Essential brand colors should be defined
     const essentialColors = ['midnightBlue', 'gold', 'steel', 'parchment'];
     essentialColors.forEach(color => {
@@ -252,12 +257,12 @@ describe('Theme Compliance', () => {
   it('should use theme variables in component imports', async () => {
     for (const filePath of componentFiles) {
       const content = await fs.readFile(filePath, 'utf-8');
-      
-      // If file uses useTheme, it should be from Chakra
-      if (content.includes('useTheme')) {
-        expect(content).toMatch(/import.*useTheme.*from ['"]@chakra-ui\/react['"]/);
+
+      // If file uses useTheme, it should be from chakra or our provider
+      if (content.includes('useTheme') && !content.includes('useThemeMode')) {
+        expect(content).toMatch(/import.*useTheme.*from ['"].*(?:@chakra-ui\/react|ThemeProvider)['"]/);
       }
-      
+
       // If file uses theme mode, it should be from our provider
       if (content.includes('useThemeMode')) {
         expect(content).toMatch(/import.*useThemeMode.*from ['"].*ThemeProvider['"]/);

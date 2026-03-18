@@ -1,4 +1,5 @@
-import { HStack, Input, Select, Card, Box, Text, IconButton } from '@chakra-ui/react';
+import { HStack, Input, NativeSelect, Card, Box, Text, IconButton } from '@chakra-ui/react';
+import { cardVariant } from '../types/chakra-overrides';
 import { FaSortAmountDown, FaSortAmountUpAlt } from 'react-icons/fa';
 import type { Map, MatchType, SortDirection } from '../types/match';
 import { useLayoutConfig } from '../theme/breakpoints';
@@ -78,8 +79,8 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
 
   return (
     <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth}>
-      <Card
-        variant="filter"
+      <Card.Root
+        variant={cardVariant('filter')}
         w="100%"
         p={layout?.filterBar.padding}
         mb={layout?.filterBar.marginBottom}
@@ -97,7 +98,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
             <Input
               placeholder={getSearchPlaceholder()}
               w="100%"
-              variant="filled"
+              variant="outline"
               fontSize={{ base: 'xs', md: 'sm' }}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -154,69 +155,72 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
 
           {/* Right: Filter Controls */}
           <HStack gap={layout?.filterBar.gap}>
-            <Select
-              value={selectedMap}
-              onChange={(e) => {
-                setSelectedMap(e.target.value);
-                onMapChange(e.target.value);
-              }}
+            <NativeSelect.Root
               w={{ base: '90px', md: layout?.filterBar.selectWidth }}
-              variant="filled"
-              fontSize={{ base: 'xs', md: 'sm' }}
-              bg="brand.inputBg"
-              borderWidth="1px"
-              borderColor="brand.slateBorder"
-              _focus={{
-                borderColor: 'brand.gold',
-                borderWidth: '1px',
-                bg: 'brand.inputBg'
-              }}
             >
-              <option key="all-maps" value="">All maps</option>
-              {maps
-                .filter(({ name }) => name && name.trim().length > 0)
-                .map(({ name, count }, index) => (
-                  <option key={`${name}-${index}`} value={name}>
-                    {name} ({count || 0})
-                  </option>
-                ))}
-            </Select>
-            <Select
-              value={selectedMatchType}
-              onChange={(e) => {
-                setSelectedMatchType(e.target.value);
-                onMatchTypeChange(e.target.value);
-              }}
+              <NativeSelect.Field
+                value={selectedMap}
+                onChange={(e) => {
+                  setSelectedMap(e.target.value);
+                  onMapChange(e.target.value);
+                }}
+                fontSize={{ base: 'xs', md: 'sm' }}
+                bg="brand.inputBg"
+                borderWidth="1px"
+                borderColor="brand.slateBorder"
+                _focus={{
+                  borderColor: 'brand.gold',
+                  borderWidth: '1px',
+                  bg: 'brand.inputBg'
+                }}
+              >
+                <option key="all-maps" value="">All maps</option>
+                {maps
+                  .filter(({ name }) => name && name.trim().length > 0)
+                  .map(({ name, count }, index) => (
+                    <option key={`${name}-${index}`} value={name}>
+                      {name} ({count || 0})
+                    </option>
+                  ))}
+              </NativeSelect.Field>
+            </NativeSelect.Root>
+            <NativeSelect.Root
               w={{ base: '85px', md: layout?.filterBar.selectWidth }}
-              variant="filled"
-              fontSize={{ base: 'xs', md: 'sm' }}
-              bg="brand.inputBg"
-              borderWidth="1px"
-              borderColor="brand.slateBorder"
-              _focus={{
-                borderColor: 'brand.gold',
-                borderWidth: '1px',
-                bg: 'brand.inputBg'
-              }}
             >
-              <option key="all-match-types" value="">All types</option>
-              {matchTypes
-                .filter(({ name }) => name && name.trim().length > 0)
-                .map(({ name, count }, index) => (
-                  <option key={`${name}-${index}`} value={name}>
-                    {name} ({count || 0})
-                  </option>
-                ))}
-            </Select>
+              <NativeSelect.Field
+                value={selectedMatchType}
+                onChange={(e) => {
+                  setSelectedMatchType(e.target.value);
+                  onMatchTypeChange(e.target.value);
+                }}
+                fontSize={{ base: 'xs', md: 'sm' }}
+                bg="brand.inputBg"
+                borderWidth="1px"
+                borderColor="brand.slateBorder"
+                _focus={{
+                  borderColor: 'brand.gold',
+                  borderWidth: '1px',
+                  bg: 'brand.inputBg'
+                }}
+              >
+                <option key="all-match-types" value="">All types</option>
+                {matchTypes
+                  .filter(({ name }) => name && name.trim().length > 0)
+                  .map(({ name, count }, index) => (
+                    <option key={`${name}-${index}`} value={name}>
+                      {name} ({count || 0})
+                    </option>
+                  ))}
+              </NativeSelect.Field>
+            </NativeSelect.Root>
             <IconButton
               aria-label={`Sort ${sortDirection === 'desc' ? 'oldest first' : 'newest first'}`}
-              icon={sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
               onClick={() => {
                 const newDirection = sortDirection === 'desc' ? 'asc' : 'desc';
                 setSortDirection(newDirection);
                 onSortChange(newDirection);
               }}
-              variant="filled"
+              variant="solid"
               size="md"
               bg="brand.inputBg"
               borderWidth="1px"
@@ -224,10 +228,12 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               color="brand.midnightBlue"
               _hover={{ bg: 'brand.stone', borderColor: 'brand.gold' }}
               borderRadius="md"
-            />
+            >
+              {sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
+            </IconButton>
           </HStack>
         </HStack>
-      </Card>
+      </Card.Root>
     </Box>
   );
 };

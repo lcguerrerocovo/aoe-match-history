@@ -1,5 +1,6 @@
 import { useBreakpointValue } from '@chakra-ui/react';
-import type { ResponsiveValue } from '@chakra-ui/react';
+// ResponsiveValue type removed in v3 — define locally
+type ResponsiveValue<T> = T | Partial<Record<'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', T>>;
 
 export type Breakpoint = 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 

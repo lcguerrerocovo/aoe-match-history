@@ -1,18 +1,20 @@
-import { Box, Text, VStack, useMultiStyleConfig, Tooltip, Image, HStack, useTheme } from '@chakra-ui/react';
+import { Box, Text, VStack, Image, HStack, useSlotRecipe } from '@chakra-ui/react';
+import { Tooltip } from './ui/tooltip';
 import type { LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { getTier } from '../utils/gameUtils';
 import { useThemeMode } from '../theme/ThemeProvider';
 import { assetManager } from '../utils/assetManager';
+import { system } from '../theme/theme';
 
 interface RankingCardProps {
   stats: LeaderboardStats[];
 }
 
 export function RankingCard({ stats }: RankingCardProps) {
-  const styles = useMultiStyleConfig('RankingCard', {});
+  const recipe = useSlotRecipe({ key: 'rankingCard' });
+  const styles = recipe();
   const { isDark } = useThemeMode();
-  const theme = useTheme();
 
   // Create a map of existing stats by leaderboard_id
   const statsMap = new Map(
@@ -33,8 +35,8 @@ export function RankingCard({ stats }: RankingCardProps) {
   }
 
   return (
-    <Box sx={styles.container}>
-      <VStack spacing={2} align="stretch">
+    <Box css={styles.container}>
+      <VStack gap={2} align="stretch">
         {rankedStats.map((stat: LeaderboardStats, index: number) => {
           const tier = getTier(stat.rating, stat.rank);
           const percentile = stat.rank === -1 ? 0 : (stat.rank / stat.ranktotal * 100).toFixed(1);
@@ -42,24 +44,26 @@ export function RankingCard({ stats }: RankingCardProps) {
           const textProps = (() => {
             // Use tier colors for medaled players, default colors for unmedaled players
             if (!tier.showCrown) {
-              return { color: isDark ? 'white' : theme.colors.brand.midnightBlue };
+              return { color: isDark ? 'white' : 'brand.midnightBlue' };
             }
             if (tier.gradient) {
               // Use solid colors for better visibility in dark mode
               if (isDark) {
                 return {
-                  color: tier.name === 'Gold' ? theme.colors.brand.tierGoldGradientDark :
-                         tier.name === 'Silver' ? theme.colors.brand.tierSilverGradientDark :
-                         theme.colors.brand.tierBronzeDark
+                  color: tier.name === 'Gold' ? system.token('colors.brand.tierGoldGradientDark', '') :
+                         tier.name === 'Silver' ? system.token('colors.brand.tierSilverGradientDark', '') :
+                         system.token('colors.brand.tierBronzeDark', '')
                 };
               } else {
+                const gradientColors = tier.name === 'Gold' ?
+                  [system.token('colors.brand.tierGoldLight', ''), system.token('colors.brand.tierGoldGradientLight', '')] :
+                  tier.name === 'Silver' ?
+                  [system.token('colors.brand.tierSilverLight', ''), system.token('colors.brand.tierSilverGradientLight', '')] :
+                  [system.token('colors.brand.tierBronzeLight', ''), system.token('colors.brand.tierBronzeGradientLight', '')];
                 return {
-                  bgGradient: tier.name === 'Gold' ? 
-                    `linear(to-b, ${theme.colors.brand.tierGoldLight}, ${theme.colors.brand.tierGoldGradientLight})` :
-                    tier.name === 'Silver' ? 
-                    `linear(to-b, ${theme.colors.brand.tierSilverLight}, ${theme.colors.brand.tierSilverGradientLight})` :
-                    `linear(to-b, ${theme.colors.brand.tierBronzeLight}, ${theme.colors.brand.tierBronzeGradientLight})`,
-                  bgClip: 'text' as const,
+                  backgroundImage: `linear-gradient(to bottom, ${gradientColors[0]}, ${gradientColors[1]})`,
+                  backgroundClip: 'text',
+                  color: 'transparent',
                 };
               }
             }
@@ -80,27 +84,27 @@ export function RankingCard({ stats }: RankingCardProps) {
           const ordinalRank = `${stat.rank}${getOrdinalSuffix(stat.rank)}`;
 
           return (
-            <Box key={index} sx={styles.rankingRow} position="relative" pr="60px">
-              <HStack justify="space-between" align="center" spacing={3}>
-                <Text sx={styles.leaderboardName} flex={1}>
+            <Box key={index} css={styles.rankingRow} position="relative" pr="60px">
+              <HStack align="center" gap={3}>
+                <Text css={styles.leaderboardName} minW="65px">
                   {getLeaderboardName(stat.leaderboard_id)}
                 </Text>
-                <Text sx={styles.rankText} fontWeight="bold" textAlign="right" {...textProps}>
+                <Text css={styles.rankText} fontWeight="bold" {...textProps}>
                   {ordinalRank}
                 </Text>
-                <Text sx={styles.percentileText} textAlign="right" pr="40px">
+                <Text css={styles.percentileText}>
                   Top {percentile}%
                 </Text>
               </HStack>
               {tier && tier.showCrown && stat.rank !== -1 && (
-                <Tooltip label={tier.explainer} fontSize="xs">
+                <Tooltip content={tier.explainer} fontSize="xs">
                                         <Image
                         src={assetManager.getMedal(tier.name)}
                         alt={`${tier.name} medal`}
                         boxSize="28px"
                         objectFit="contain"
                         position="absolute"
-                        right="12px"
+                        right="4px"
                         top="60%"
                         transform="translateY(-50%)"
                         data-testid="tier-medal"

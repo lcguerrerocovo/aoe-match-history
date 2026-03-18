@@ -1,4 +1,4 @@
-import { Box, Text, useMultiStyleConfig } from '@chakra-ui/react';
+import { Box, Text, useSlotRecipe } from '@chakra-ui/react';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { StatsTable } from './StatsTable';
@@ -8,7 +8,8 @@ interface PlayerStatsProps {
 }
 
 export function PlayerStats({ stats }: PlayerStatsProps) {
-  const styles = useMultiStyleConfig('PlayerStats', {});
+  const recipe = useSlotRecipe({ key: 'playerStats' });
+  const styles = recipe();
 
   if (!stats?.statGroups?.[0]?.members?.[0]) {
     return null;
@@ -79,8 +80,8 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
   ];
 
   return (
-    <Box sx={styles.container}>
-      <Box sx={styles.statsTable}>
+    <Box css={styles.container}>
+      <Box css={styles.statsTable}>
         <StatsTable data={validLeaderboardStats} columns={combinedColumns} />
       </Box>
     </Box>

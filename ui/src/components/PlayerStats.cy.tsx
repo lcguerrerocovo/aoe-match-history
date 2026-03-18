@@ -1,11 +1,8 @@
 /// <reference types="cypress" />
 import { mount } from '@cypress/react';
-import { ChakraProvider } from '@chakra-ui/react';
 import { PlayerStats } from './PlayerStats';
 import { type PersonalStats, type LeaderboardStats } from '../types/stats';
-import { createTheme } from '../theme/theme';
-
-const lightTheme = createTheme(false); // Use light theme for tests
+import { CustomThemeProvider } from '../theme/ThemeProvider';
 
 const createMockStats = (leaderboardStats: LeaderboardStats[]): PersonalStats => ({
   result: { code: 200, message: 'OK' },
@@ -47,9 +44,9 @@ describe('<PlayerStats /> Performance Stats', () => {
   it('should render rating and performance data correctly', () => {
     const stats = createMockStats([createMockLeaderboardStat(1700, 100)]);
     mount(
-      <ChakraProvider theme={lightTheme}>
+      <CustomThemeProvider>
         <PlayerStats stats={stats} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
     
     // Check that the combined table structure is present
@@ -75,9 +72,9 @@ describe('<PlayerStats /> Performance Stats', () => {
       createMockLeaderboardStat(1400, 500)
     ]);
     mount(
-      <ChakraProvider theme={lightTheme}>
+      <CustomThemeProvider>
         <PlayerStats stats={stats} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
     
     // Should show both leaderboards
@@ -88,9 +85,9 @@ describe('<PlayerStats /> Performance Stats', () => {
   it('should not show tier-specific styling (moved to RankingCard)', () => {
     const stats = createMockStats([createMockLeaderboardStat(1700, 100)]);
     mount(
-      <ChakraProvider theme={lightTheme}>
+      <CustomThemeProvider>
         <PlayerStats stats={stats} />
-      </ChakraProvider>
+      </CustomThemeProvider>
     );
     
     // Should not have tier crowns (moved to RankingCard)
