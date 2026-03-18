@@ -52,7 +52,7 @@ export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
   return sessions;
 }
 
-export function sumDurations(matches: any[]): { totalGame: number; totalReal: number } {
+export function sumDurations(matches: Match[]): { totalGame: number; totalReal: number } {
   let totalGame = 0;
   let totalReal = 0;
   for (const match of matches) {
@@ -63,7 +63,7 @@ export function sumDurations(matches: any[]): { totalGame: number; totalReal: nu
   return { totalGame, totalReal };
 }
 
-export function countByDiplomacy(matches: any[], profileId: string): Record<string, { matches: number; wins: number; losses: number; uncategorized: number; eloChange: number }> {
+export function countByDiplomacy(matches: Match[], profileId: string): Record<string, { matches: number; wins: number; losses: number; uncategorized: number; eloChange: number }> {
   const byDiplo: Record<string, { matches: number; wins: number; losses: number; uncategorized: number; eloChange: number }> = {};
   for (const match of matches) {
     const diplo = match.diplomacy?.type || 'Unknown';
@@ -257,7 +257,7 @@ export function formatSessionStart(sessionId: string): string {
   return formatSessionStartWithTiming(sessionId, 0);
 }
 
-export function calculateSessionDuration(matches: any[]): number {
+export function calculateSessionDuration(matches: Match[]): number {
   if (matches.length === 0) {
     return 0;
   }

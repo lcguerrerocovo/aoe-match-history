@@ -1,6 +1,7 @@
-import { Box, Text, VStack, HStack, Icon, Avatar, useMultiStyleConfig, useTheme } from '@chakra-ui/react';
+import { Box, Text, VStack, HStack, Icon, Avatar, useSlotRecipe } from '@chakra-ui/react';
 import { FaUser, FaFlag } from 'react-icons/fa';
 import ReactCountryFlag from 'react-country-flag';
+import { componentSpacing } from '../theme/theme';
 
 interface PlayerProfileProps {
   profileId: string;
@@ -10,13 +11,13 @@ interface PlayerProfileProps {
 
 export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfileProps) {
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
-  const styles = useMultiStyleConfig('ProfileHeader', {});
-  const theme = useTheme();
+  const recipe = useSlotRecipe({ key: 'profileHeader' });
+  const styles = recipe();
 
   return (
-    <VStack spacing={theme.spacing.component.profileSpacing} align="center">
+    <VStack gap={componentSpacing.profileSpacing} align="center">
       <Box
-        sx={styles.avatar}
+        css={styles.avatar}
         borderRadius="full"
         display="flex"
         alignItems="center"
@@ -24,28 +25,25 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
         overflow="hidden"
       >
         {profile?.avatarUrl ? (
-          <Avatar
-            size="full"
-            src={profile.avatarUrl}
-          />
+          <Avatar.Root size="full"><Avatar.Fallback /><Avatar.Image src={profile.avatarUrl} /></Avatar.Root>
         ) : (
-          <Icon as={FaUser} w="50%" h="50%" />
+          <Icon w="50%" h="50%" asChild><FaUser /></Icon>
         )}
       </Box>
-      <VStack spacing={theme.spacing.xs}>
-        <Text sx={styles.name} textAlign="center" noOfLines={2}>{playerName}</Text>
-        <VStack spacing={1} align="center">
-          <HStack spacing={theme.spacing.sm} align="center">
+      <VStack gap="0.25rem">
+        <Text css={styles.name} textAlign="center" lineClamp={2}>{playerName}</Text>
+        <VStack gap={1} align="center">
+          <HStack gap="0.5rem" align="center">
             {profile?.country ? (
               <ReactCountryFlag countryCode={profile.country} svg style={{ width: '1em', height: '1em' }} />
             ) : (
-              <Icon as={FaFlag} w={3} h={3} color="brand.steel" />
+              <Icon w={3} h={3} color="brand.steel" asChild><FaFlag /></Icon>
             )}
             {profile?.clanlist_name && (
               <Text fontSize="xs" color="brand.steel">Clan: {profile.clanlist_name}</Text>
             )}
           </HStack>
-          <Text sx={styles.id}>ID: {profileId}</Text>
+          <Text css={styles.id}>ID: {profileId}</Text>
         </VStack>
       </VStack>
     </VStack>

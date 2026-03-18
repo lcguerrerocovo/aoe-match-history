@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { Box, Card, Input, Spinner, HStack, Text, Portal, useTheme } from '@chakra-ui/react';
+import { Box, Card, Input, Spinner, HStack, Text, Portal } from '@chakra-ui/react';
+import { system } from '../theme/theme';
+import { cardVariant } from '../types/chakra-overrides';
 import ReactCountryFlag from 'react-country-flag';
 
 function useDebouncedValue(value: string, delay: number) {
@@ -102,7 +104,6 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
 };
 
 export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, placeholder = 'Search players...', size = 'md', context }) => {
-  const theme = useTheme();
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -167,13 +168,13 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
 
   return (
     <Box position="relative" w="100%" ref={inputBoxRef}>
-      <Card variant="filter" p={0} w="100%">
+      <Card.Root variant={cardVariant('filter')} p={0} w="100%">
         <Box position="relative">
           <Input
             ref={inputRef}
             placeholder={placeholder}
             width="100%"
-            variant="filled"
+            variant="outline"
             fontSize={size === 'sm' ? 'sm' : { base: 'md', md: 'lg' }}
             borderRadius="lg"
             borderWidth={0}
@@ -204,21 +205,21 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
             </Box>
           )}
         </Box>
-      </Card>
+      </Card.Root>
       <PlayerSearchDropdown
         anchorRef={inputRef}
         show={shouldShowDropdown}
       >
         {loading ? (
           <Box display="flex" alignItems="center" justifyContent="center" py={4}>
-            <Spinner size="sm" color="brand.gold" thickness="3px" />
+            <Spinner size="sm" color="brand.gold" borderWidth="3px" />
           </Box>
         ) : results.length > 0 ? (
           results
             .slice()
             .sort((a, b) => b.matches - a.matches)
             .map((player) => (
-              <Card
+              <Card.Root
                 key={player.id + player.name}
                 py={context === 'topbar' ? { base: 2.5, md: 2 } : { base: 3, md: 3 }}
                 px={size === 'sm' ? 1.5 : 2}
@@ -234,25 +235,24 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
                 mb={1}
                 onMouseDown={() => handleSelect(player)}
               >
-                <HStack spacing={size === 'sm' ? 1 : 2} align="center">
+                <HStack gap={size === 'sm' ? 1 : 2} align="center">
                   {player.country && player.country.length === 2 && (
-                    <Box
-                      as={ReactCountryFlag}
+                    <ReactCountryFlag
                       countryCode={player.country.toUpperCase()}
                       svg
                       style={{
                         width: size === 'sm' ? '1em' : '1.3em',
                         height: size === 'sm' ? '1em' : '1.3em',
                         borderRadius: '6px',
-                        border: `1.5px solid ${theme.colors.brand.borderLight}`,
-                        boxShadow: `0 1px 3px ${theme.colors.brand.shadowMedium}`
+                        border: `1.5px solid ${system.token('colors.brand.borderLight', '')}`,
+                        boxShadow: `0 1px 3px ${system.token('colors.brand.shadowMedium', '')}`
                       }}
                     />
                   )}
                   <Text fontWeight="bold" color="brand.midnightBlue" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
                 </HStack>
                 <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches}</Text>
-              </Card>
+              </Card.Root>
             ))
         ) : (
           <Text color="brand.steel" fontSize="sm" textAlign="center" py={2}>No players found</Text>

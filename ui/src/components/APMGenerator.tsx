@@ -1,5 +1,7 @@
 import React from 'react';
-import { Box, Text, Spinner, useTheme, Tooltip } from '@chakra-ui/react';
+import { Box, Text, Spinner } from '@chakra-ui/react';
+import { Tooltip } from './ui/tooltip';
+import { system } from '../theme/theme';
 import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
@@ -8,6 +10,7 @@ interface APMStatus {
   hasSaveGame: boolean;
   isProcessed: boolean;
   state: 'greyStatus' | 'silverStatus' | 'bronzeStatus';
+  profileId?: string;
 }
 
 interface APMGeneratorProps {
@@ -27,11 +30,12 @@ export function APMGenerator({
   children,
   skipBronzeState = false
 }: APMGeneratorProps) {
-  const theme = useTheme();
+  const token = (path: string) => system.token(path, '');
   const [apmStatus, setApmStatus] = useState<APMStatus | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isRefreshing) return; // Skip status check if we're refreshing
@@ -49,57 +53,60 @@ export function APMGenerator({
     run();
   }, [matchId, onStatusChange, isRefreshing]);
 
-  // Reset refreshing state when matchId changes (new match loaded)
+  // Reset refreshing/error state when matchId changes (new match loaded)
   useEffect(() => {
     setIsRefreshing(false);
+    setError(null);
   }, [matchId]);
 
   const handleClick = async () => {
     if (processing || apmStatus?.state !== 'silverStatus') return;
     setProcessing(true);
+    setError(null);
     try {
-      const success = await downloadReplay(matchId, profileId);
-      if (success) {
+      // Use profileId from status check (which confirmed replay availability) over the prop
+      const downloadProfileId = apmStatus?.profileId || profileId;
+      const result = await downloadReplay(matchId, downloadProfileId);
+      if (result.success) {
         // Start polling immediately with exponential backoff
         let attempt = 0;
-        const maxAttempts = 8; // Max ~30 seconds total
+        const maxAttempts = 8;
         const poll = async () => {
           if (attempt >= maxAttempts) {
             setProcessing(false);
             return;
           }
-          
+
           const newStatus = await checkApmStatus(matchId, profileId);
-          
+
           if (newStatus.state === 'bronzeStatus' && skipBronzeState) {
-            // For card variant, skip bronze state entirely and trigger refresh immediately
             setProcessing(false);
             setIsRefreshing(true);
             onStatusChange?.(newStatus);
             return;
           }
-          
+
           setApmStatus(newStatus);
           onStatusChange?.(newStatus);
-          
+
           if (newStatus.state === 'bronzeStatus') {
             setProcessing(false);
             return;
           }
-          
-          // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s (capped at 8s)
+
           const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
           attempt++;
           setTimeout(poll, delay);
         };
-        
-        // Start polling after 500ms to allow backend to begin processing
+
         setTimeout(poll, 500);
       } else {
         setProcessing(false);
+        setError(result.error || 'Replay server busy — try again later');
       }
     } catch {
       setProcessing(false);
+      setError('Failed to process replay');
     }
   };
 
@@ -108,9 +115,9 @@ export function APMGenerator({
 
   if (variant === 'button') {
     const bg = silver
-      ? `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 50%, ${theme.colors.brand.brightSilver} 100%)`
+      ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.lightSteel')} 50%, ${token('colors.brand.brightSilver')} 100%)`
       : apmStatus?.state === 'bronzeStatus'
-        ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
+        ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
         : 'brand.steel';
 
     const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
@@ -119,18 +126,22 @@ export function APMGenerator({
         ? 'brand.brightGold'
         : 'brand.steel';
 
-    const tooltipLabel = processing
-      ? 'Processing replay...'
-      : isLoading
-        ? 'Checking APM status...'
-        : apmStatus?.state === 'bronzeStatus'
-          ? 'APM Ready'
-          : apmStatus?.state === 'silverStatus'
-            ? 'Download & Process Replay'
-            : 'Replay not found';
+    const tooltipLabel = error
+      ? error
+      : processing
+        ? 'Processing replay...'
+        : isLoading
+          ? 'Checking APM status...'
+          : apmStatus?.state === 'bronzeStatus'
+            ? 'APM Ready'
+            : apmStatus?.state === 'silverStatus'
+              ? 'Download & Process Replay'
+              : 'Replay not found';
 
     const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
-    const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
+    const borderColor = error
+      ? 'brand.brightRed'
+      : silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
     const boxShadow = silver
       ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
       : (apmStatus?.state === 'bronzeStatus' ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
@@ -138,7 +149,7 @@ export function APMGenerator({
     const linkProps = apmStatus?.state === 'bronzeStatus' ? { to: `/match/${matchId}#apm` } : {} as const;
 
     return (
-      <Tooltip label={tooltipLabel} fontSize="xs">
+      <Tooltip content={tooltipLabel} fontSize="xs">
         <Box
           as={apmStatus?.state === 'bronzeStatus' ? RouterLink : 'button'}
           onClick={apmStatus?.state === 'bronzeStatus' ? undefined : handleClick}
@@ -168,9 +179,9 @@ export function APMGenerator({
 
   // Card variant
   const bg = silver
-    ? `linear-gradient(135deg, ${theme.colors.brand.brightSilver} 0%, ${theme.colors.brand.lightSteel} 50%, ${theme.colors.brand.brightSilver} 100%)`
+    ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.lightSteel')} 50%, ${token('colors.brand.brightSilver')} 100%)`
     : apmStatus?.state === 'bronzeStatus'
-      ? `linear-gradient(135deg, ${theme.colors.brand.bronzeLight} 0%, ${theme.colors.brand.bronze} 40%, ${theme.colors.brand.bronzeMedium} 80%, ${theme.colors.brand.bronzeDark} 100%)`
+      ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
       : 'brand.steel';
 
   const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
@@ -189,6 +200,29 @@ export function APMGenerator({
           <Spinner size="lg" color="brand.steel" mb={4} />
           <Text color="brand.steel" fontWeight="medium">Processing replay...</Text>
           <Text color="brand.stoneLight" fontSize="sm" mt={2}>This may take a few moments</Text>
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box textAlign="center" py={8}>
+          <Text color="brand.brightRed" fontWeight="bold" fontSize="lg" mb={2}>Processing Failed</Text>
+          <Text color="brand.stoneLight" fontSize="sm" mb={4}>{error}</Text>
+          <Box
+            bg="brand.steel"
+            color="brand.stoneLight"
+            px={6}
+            py={2}
+            borderRadius="md"
+            display="inline-block"
+            cursor="pointer"
+            onClick={handleClick}
+            _hover={{ bg: 'brand.lightSteel' }}
+            transition="all 0.2s ease-in-out"
+          >
+            Try Again
+          </Box>
         </Box>
       );
     }

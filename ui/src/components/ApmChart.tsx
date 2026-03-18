@@ -8,7 +8,9 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { Box, useTheme, Text, Flex, useBreakpointValue, useColorMode, Button } from '@chakra-ui/react';
+import type { TooltipProps } from 'recharts';
+import { Box, Text, Flex, useBreakpointValue, Button } from '@chakra-ui/react';
+import { useThemeMode } from '../theme/ThemeProvider';
 import { PLAYER_COLORS } from '../utils/playerColors';
 import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 
@@ -36,14 +38,27 @@ interface ApmChartProps {
   onToggle?: (pid: string) => void;
 }
 
+// Resolved color values for non-Chakra (Recharts SVG) usage
+const colors = {
+  midnightBlue: { light: '#19214E', dark: '#F7FAFC' },
+  steel: { light: '#5A6478', dark: '#CBD5E0' },
+  stoneLight: { light: '#F2F0EA', dark: '#1A202C' },
+  parchment: { light: '#F8F3E6', dark: '#1A1A1A' },
+  slateBorder: { light: '#64728A', dark: '#4A5568' },
+  zoolanderBlue: { light: '#1E4BB8', dark: '#90CDF4' },
+  bronzeDark: { light: '#6B4423', dark: '#6B4423' },
+  darkWin: { light: '#2E7D32', dark: '#48BB78' },
+  bronze: { light: '#B37A3E', dark: '#CD7F32' },
+};
+
+const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token].dark : colors[token].light;
+
 export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids, onToggle }) => {
-  const theme = useTheme();
-  const { colorMode } = useColorMode();
-  const isDark = colorMode === 'dark';
+  const { isDark } = useThemeMode();
 
   // Use shared color utility functions
   const getOptimalTextColorForTheme = (backgroundColor: string): string => {
-    return getTextColorForBackground(backgroundColor, isDark, theme.colors.brand.white, theme.colors.brand.pureBlack);
+    return getTextColorForBackground(backgroundColor, isDark, '#fff', '#111');
   };
 
   const getTextShadowForTheme = (backgroundColor: string): string => {
@@ -62,9 +77,9 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     });
 
     // Build combined data rows from 0..maxMinute
-    const rows: Record<string, any>[] = [];
+    const rows: Record<string, number | string>[] = [];
     for (let m = 0; m <= maxMinute; m++) {
-      const row: Record<string, any> = { minute: m };
+      const row: Record<string, number | string> = { minute: m };
       Object.entries(players).forEach(([pid, series]) => {
         const point = series.find((s) => s.minute === m);
         if (point) {
@@ -84,7 +99,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   // Fixed height for chart area - will be matched by breakdown chart
   const chartAreaHeight = useBreakpointValue({ base: '550px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
-  
+
   // Viewport configuration for horizontal scrolling (same as breakdown chart)
   const minBarWidth = 20; // Minimum width per minute in pixels
   const chartWidth = Math.max(800, data.length * minBarWidth); // Minimum 800px, or minutes * minBarWidth
@@ -116,23 +131,24 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   if (!playerIds.length) return null;
 
   // Custom tooltip separates alias (uniform blue) and metric (stroke color)
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload || !payload.length) return null;
 
     // Sort payload by value (APM at this minute), highest first
-    const sortedPayload = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+    const sortedPayload = [...payload].sort((a, b) => ((b.value as number) ?? 0) - ((a.value as number) ?? 0));
 
     return (
-      <Box bg={theme.colors.brand.parchment} border="1px solid" borderColor={theme.colors.brand.slateBorder} p={2} borderRadius="md" fontSize="sm" minW="170px">
-        <Text fontWeight="bold" mb={1} color={theme.colors.brand.midnightBlue}>Minute {label}</Text>
-        {[...new Map(sortedPayload.map((entry: any) => [entry.dataKey, entry])).values()].map((entry: any) => {
-          const name = nameByProfile[entry.dataKey] ?? entry.dataKey;
+      <Box bg="brand.parchment" border="1px solid" borderColor="brand.slateBorder" p={2} borderRadius="md" fontSize="sm" minW="170px">
+        <Text fontWeight="bold" mb={1} color="brand.midnightBlue">Minute {label}</Text>
+        {[...new Map(sortedPayload.map((entry) => [String(entry.dataKey), entry])).values()].map((entry) => {
+          const key = String(entry.dataKey);
+          const name = nameByProfile[key] ?? key;
           const strokeColor = entry.color as string;
           const textColor = getOptimalTextColorForTheme(strokeColor);
                       const textShadow = getTextShadowForTheme(strokeColor);
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
-              <Text color={theme.colors.brand.midnightBlue}>{name}</Text>
+              <Text color="brand.midnightBlue">{name}</Text>
               <Box
                 bg={strokeColor}
                 border="1px solid"
@@ -144,10 +160,10 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                 justifyContent="center"
                 alignItems="center"
               >
-                <Text 
-                  fontSize="xs" 
-                  fontWeight="bold" 
-                  color={textColor} 
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  color={textColor}
                   style={{ textShadow }}
                 >
                   {entry.value}
@@ -167,53 +183,53 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
         <Box minW={`${chartWidth}px`} h="100%">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke={theme.colors.brand.steel}
-            fill={isDark ? 'transparent' : theme.colors.brand.stoneLight}
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={c('steel', isDark)}
+            fill={isDark ? 'transparent' : c('stoneLight', isDark)}
           />
           <XAxis
             dataKey="minute"
-            stroke={theme.colors.brand.midnightBlue}
+            stroke={c('midnightBlue', isDark)}
             label={showAxisLabel ? {
               value: 'Minute',
               position: 'insideBottom',
               offset: -5,
-              fill: theme.colors.brand.midnightBlue,
+              fill: c('midnightBlue', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
           <YAxis
-            stroke={theme.colors.brand.midnightBlue}
+            stroke={c('midnightBlue', isDark)}
             label={showAxisLabel ? {
               value: 'APM',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fill: theme.colors.brand.midnightBlue,
+              fill: c('midnightBlue', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
           <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
           {playerIds.map((pid) => {
             const colorId = colorByProfile[pid];
-            const stroke = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
+            const stroke = colorId ? PLAYER_COLORS[colorId] || c('zoolanderBlue', isDark) : c('zoolanderBlue', isDark);
             if (!visibleIds.includes(pid)) return null;
             // Enhanced contrast for yellow, green, cyan, orange
             let isEnhanced = false;
-            let outlineColor = theme.colors.brand.steel;
+            let outlineColor = c('steel', isDark);
             if (colorId === 4 || stroke.toUpperCase() === '#FFFF00') { // yellow
               isEnhanced = true;
-              outlineColor = theme.colors.brand.bronzeDark;
+              outlineColor = c('bronzeDark', isDark);
             } else if (colorId === 3 || stroke.toUpperCase() === '#00FF00') { // green
               isEnhanced = true;
-              outlineColor = theme.colors.brand.darkWin;
+              outlineColor = c('darkWin', isDark);
             } else if (colorId === 5 || stroke.toUpperCase() === '#00FFFF') { // cyan
               isEnhanced = true;
-              outlineColor = theme.colors.brand.slateBorder;
+              outlineColor = c('slateBorder', isDark);
             } else if (colorId === 8 || stroke.toUpperCase() === '#FFA500') { // orange
               isEnhanced = true;
-              outlineColor = theme.colors.brand.bronze;
+              outlineColor = c('bronze', isDark);
             }
             return isEnhanced ? (
               <React.Fragment key={pid}>
@@ -253,7 +269,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
       </ResponsiveContainer>
         </Box>
       </Box>
-      
       {/* Legend Area - Dynamic Height */}
       <Box mt={2}>
         <Flex
@@ -268,17 +283,17 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             const name = nameByProfile[pid] ?? pid;
             const avg = averages[pid];
             const colorId = colorByProfile[pid];
-            const playerColor = colorId ? PLAYER_COLORS[colorId] || theme.colors.brand.zoolanderBlue : theme.colors.brand.zoolanderBlue;
+            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('zoolanderBlue', isDark) : c('zoolanderBlue', isDark);
             const inactive = !visibleIds.includes(pid);
-            
+
             return (
               <Button
                 key={pid}
                 size="sm"
                 variant={inactive ? "outline" : "solid"}
-                colorScheme="brand"
+                colorPalette="brand"
                 bg={inactive ? "transparent" : playerColor}
-                color={inactive ? theme.colors.brand.midnightBlue : getOptimalTextColorForTheme(playerColor)}
+                color={inactive ? (isDark ? '#F7FAFC' : '#19214E') : getOptimalTextColorForTheme(playerColor)}
                 borderColor={playerColor}
                 _hover={{
                   bg: inactive ? playerColor : playerColor,
@@ -297,8 +312,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                     fontWeight="medium"
                     flexShrink={0}
                     maxW="100px"
-                    isTruncated
-                    color={inactive ? theme.colors.brand.midnightBlue : getOptimalTextColorForTheme(playerColor)}
+                    truncate
+                    color={inactive ? (isDark ? '#F7FAFC' : '#19214E') : getOptimalTextColorForTheme(playerColor)}
                     style={{
                       textShadow: inactive ? 'none' : getTextShadowForTheme(playerColor)
                     }}
@@ -307,18 +322,18 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                   </Text>
                   {avg !== undefined && avg !== null && (
                     <Box
-                      bg={theme.colors.brand.stoneLight}
+                      bg="brand.stoneLight"
                       border="1px solid"
-                      borderColor={theme.colors.brand.slateBorder}
+                      borderColor="brand.slateBorder"
                       borderRadius="sm"
                       px={1.5}
                       py={0.5}
                       flexShrink={0}
                     >
-                      <Text 
-                        fontSize="xs" 
-                        fontWeight="bold" 
-                        color={theme.colors.brand.midnightBlue}
+                      <Text
+                        fontSize="xs"
+                        fontWeight="bold"
+                        color="brand.midnightBlue"
                       >
                         {avg}
                       </Text>
@@ -332,4 +347,4 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
       </Box>
     </Box>
   );
-}; 
+};

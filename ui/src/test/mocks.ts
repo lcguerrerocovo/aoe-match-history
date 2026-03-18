@@ -166,38 +166,30 @@ export const mockMatch: Match = {
   options: '',
   duration: 1800,
   teams: [
-    {
-      number: 1,
-      players: [
-        {
-          name: 'Player1',
-          civ: 'Britons',
-          number: 1,
-          color_id: 0,
-          user_id: '1',
-          winner: true,
-          rating: 1200,
-          rating_change: 15,
-        },
-      ],
-      won: true,
-    },
-    {
-      number: 2,
-      players: [
-        {
-          name: 'Player2',
-          civ: 'Franks',
-          number: 2,
-          color_id: 1,
-          user_id: '2',
-          winner: false,
-          rating: 1185,
-          rating_change: -15,
-        },
-      ],
-      won: false,
-    },
+    [
+      {
+        name: 'Player1',
+        civ: 'Britons',
+        number: 1,
+        color_id: 0,
+        user_id: '1',
+        winner: true,
+        rating: 1200,
+        rating_change: 15,
+      },
+    ],
+    [
+      {
+        name: 'Player2',
+        civ: 'Franks',
+        number: 2,
+        color_id: 1,
+        user_id: '2',
+        winner: false,
+        rating: 1185,
+        rating_change: -15,
+      },
+    ],
   ],
   players: [
     {
