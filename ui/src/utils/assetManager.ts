@@ -59,6 +59,8 @@ class AssetManager {
     const specialCases: Record<string, string> = {
       'Lac Viet': 'lacviet.png',
       'Aztec': 'aztecs.png',
+      'Hindustanis': 'indians.png',
+      'Macedonians': 'macedonian.png',
     };
     
     if (specialCases[civName]) {
