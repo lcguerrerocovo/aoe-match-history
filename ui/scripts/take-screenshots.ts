@@ -13,6 +13,7 @@ const CONFIG = {
   // Default IDs — update these to match your dev environment
   profileId: '4764337',
   matchId: '' as string, // Will be resolved from the profile's match history
+  searchQuery: 'torna', // Query used for search screenshots
   viewports: {
     desktop: { width: 1440, height: 900 },
     mobile: { width: 390, height: 844 },
@@ -26,6 +27,8 @@ interface ViewConfig {
   waitForSelector: string;
   /** Use viewport-only capture instead of full-page (for fixed-position layouts) */
   viewportOnly?: (viewport: 'desktop' | 'mobile') => boolean;
+  /** Actions to perform before capturing (e.g., type in search, click a tab) */
+  beforeCapture?: (page: Page, viewport: 'desktop' | 'mobile') => Promise<void>;
 }
 
 const VIEWS: ViewConfig[] = [
@@ -35,16 +38,70 @@ const VIEWS: ViewConfig[] = [
     waitForSelector: 'input[placeholder]',
   },
   {
+    name: 'landing-search',
+    path: '/',
+    waitForSelector: 'input[placeholder]',
+    viewportOnly: () => true, // Search dropdown is a popover — full-page misses it
+    beforeCapture: async (page) => {
+      const input = await page.waitForSelector('input[placeholder]', { timeout: 5000 });
+      await input.click();
+      await input.fill(CONFIG.searchQuery);
+      // Wait for search results to appear
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
     name: 'profile',
     path: `/profile_id/${CONFIG.profileId}`,
     waitForSelector: '[data-testid="floating-box-container"]',
-    // Desktop profile has a fixed sidebar — full-page capture looks odd
     viewportOnly: (vp) => vp === 'desktop',
   },
   {
+    name: 'profile-search',
+    path: `/profile_id/${CONFIG.profileId}`,
+    waitForSelector: '[data-testid="floating-box-container"]',
+    viewportOnly: () => true, // Search dropdown is a popover
+    beforeCapture: async (page, viewport) => {
+      // On mobile, the search is in the TopBar's mobile layout
+      const searchSelector = viewport === 'mobile'
+        ? '[data-testid="mobile-search"] input'
+        : 'input[placeholder]';
+      const input = await page.waitForSelector(searchSelector, { timeout: 5000 });
+      await input.click();
+      await input.fill(CONFIG.searchQuery);
+      // Wait for search results to appear
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
+    name: 'profile-expanded',
+    path: `/profile_id/${CONFIG.profileId}`,
+    waitForSelector: '[data-testid="floating-box-container"]',
+    viewportOnly: (vp) => vp === 'desktop',
+    beforeCapture: async (page) => {
+      // Click the first accordion trigger to expand a match session
+      const trigger = await page.waitForSelector('[data-scope="accordion"] button', { timeout: 5000 });
+      await trigger.click();
+      // Wait for expand animation
+      await page.waitForTimeout(500);
+    },
+  },
+  {
     name: 'match',
-    path: '', // Resolved dynamically — we pick the first match from the profile
+    path: '', // Resolved dynamically
     waitForSelector: '[data-testid="enlarged-match-card"]',
+  },
+  {
+    name: 'match-actions',
+    path: '', // Resolved dynamically
+    waitForSelector: '[data-testid="enlarged-match-card"]',
+    beforeCapture: async (page) => {
+      // Click the "Actions" tab
+      const actionsTab = await page.waitForSelector('button[value="actions"]', { timeout: 5000 });
+      await actionsTab.click();
+      // Wait for the chart to render
+      await page.waitForTimeout(1000);
+    },
   },
 ];
 
@@ -63,26 +120,31 @@ async function waitAndCapture(
   page: Page,
   url: string,
   outputPath: string,
-  waitForSelector: string,
-  fullPage: boolean,
+  view: ViewConfig,
+  viewport: 'desktop' | 'mobile',
 ): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
   // Wait for view-specific content to confirm React rendered
   try {
-    await page.waitForSelector(waitForSelector, { timeout: 10000 });
+    await page.waitForSelector(view.waitForSelector, { timeout: 10000 });
   } catch {
-    console.warn(`  ⚠ Selector "${waitForSelector}" not found — capturing anyway`);
+    console.warn(`  ⚠ Selector "${view.waitForSelector}" not found — capturing anyway`);
   }
 
   // Settle time for CSS transitions and lazy renders
   await page.waitForTimeout(500);
 
+  // Run any pre-capture interactions (search, tab clicks, etc.)
+  if (view.beforeCapture) {
+    await view.beforeCapture(page, viewport);
+  }
+
+  const fullPage = view.viewportOnly ? !view.viewportOnly(viewport) : true;
   await page.screenshot({ path: outputPath, fullPage });
 }
 
 async function resolveMatchId(page: Page): Promise<string> {
-  // Navigate to the profile page and find a match link
   const profileUrl = `${CONFIG.baseUrl}/profile_id/${CONFIG.profileId}`;
   await page.goto(profileUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
@@ -90,11 +152,9 @@ async function resolveMatchId(page: Page): Promise<string> {
     await page.waitForSelector('[data-testid="floating-box-container"]', { timeout: 10000 });
     await page.waitForTimeout(500);
   } catch {
-    // Profile may not have the test ID — wait a bit and try to find links
     await page.waitForTimeout(2000);
   }
 
-  // Look for a match detail link in the page
   const matchLink = await page.$('a[href*="/match/"]');
   if (matchLink) {
     const href = await matchLink.getAttribute('href');
@@ -113,7 +173,6 @@ async function resolveMatchId(page: Page): Promise<string> {
 async function main() {
   console.log('Screenshot Tool — aoe2.site\n');
 
-  // Check dev server is running
   const serverUp = await checkDevServer(CONFIG.baseUrl);
   if (!serverUp) {
     console.error(
@@ -124,10 +183,8 @@ async function main() {
   }
   console.log(`✓ Dev server reachable at ${CONFIG.baseUrl}`);
 
-  // Ensure output directory exists
   await mkdir(CONFIG.outputDir, { recursive: true });
 
-  // Launch browser — force light mode
   const browser = await chromium.launch();
   const context = await browser.newContext({
     colorScheme: 'light',
@@ -142,21 +199,20 @@ async function main() {
       console.log('\nResolving match ID from profile...');
       matchId = await resolveMatchId(page);
       if (!matchId) {
-        console.warn('⚠ No match ID found — match view will be skipped');
+        console.warn('⚠ No match ID found — match views will be skipped');
       } else {
         console.log(`✓ Using match ID: ${matchId}`);
       }
     }
 
-    // Update match view path
+    // Update match view paths
     const views = VIEWS.map((v) => {
-      if (v.name === 'match') {
+      if (v.name === 'match' || v.name === 'match-actions') {
         return { ...v, path: matchId ? `/match/${matchId}` : '' };
       }
       return v;
     });
 
-    // Capture screenshots
     const viewportEntries = Object.entries(CONFIG.viewports) as [
       'desktop' | 'mobile',
       { width: number; height: number },
@@ -182,7 +238,7 @@ async function main() {
         await page.setViewportSize(vpSize);
 
         try {
-          await waitAndCapture(page, url, outputPath, view.waitForSelector, fullPage);
+          await waitAndCapture(page, url, outputPath, view, vpName);
           console.log(`   ✓ Saved to ${outputPath}`);
           captured++;
         } catch (err) {
