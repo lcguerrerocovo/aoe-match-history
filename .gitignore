@@ -117,6 +117,9 @@ ui/src/assets/
 # UI Review annotations (dev tool)
 .ui-review/
 
+# Claude Code project memory (personal)
+.claude/projects/
+
 # Environment files
 .env
 !.env.example
