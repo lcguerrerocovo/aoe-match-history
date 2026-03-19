@@ -108,7 +108,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               borderWidth="1px"
               borderColor="brand.borderWarm"
               _focus={{
-                borderColor: 'brand.gold',
+                borderColor: 'brand.redChalk',
                 borderWidth: '1px',
                 bg: searchValue ? 'brand.stone' : 'brand.inputBg'
               }}
@@ -168,7 +168,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 borderWidth="1px"
                 borderColor="brand.borderWarm"
                 _focus={{
-                  borderColor: 'brand.gold',
+                  borderColor: 'brand.redChalk',
                   borderWidth: '1px',
                   bg: 'brand.inputBg'
                 }}
@@ -197,7 +197,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 borderWidth="1px"
                 borderColor="brand.borderWarm"
                 _focus={{
-                  borderColor: 'brand.gold',
+                  borderColor: 'brand.redChalk',
                   borderWidth: '1px',
                   bg: 'brand.inputBg'
                 }}
@@ -225,7 +225,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               borderWidth="1px"
               borderColor="brand.borderWarm"
               color="brand.inkDark"
-              _hover={{ bg: 'brand.stone', borderColor: 'brand.gold' }}
+              _hover={{ bg: 'brand.stone', borderColor: 'brand.inkMedium' }}
               borderRadius="sm"
             >
               {sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}

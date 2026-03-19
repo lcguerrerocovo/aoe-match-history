@@ -49,7 +49,7 @@ export function LandingPage() {
         }}
         borderRadius="sm"
         borderWidth={{ base: '3px', md: '4px' }}
-        borderColor="brand.gold"
+        borderColor="brand.inkMedium"
         position="relative"
         overflow="hidden"
       >
@@ -106,13 +106,13 @@ export function LandingPage() {
           >
             Your recent Age of Empires 2 matches with detailed analytics at a glance.
           </Text>
-          <Box width="60px" height="2px" bg="brand.gold" mx="auto" />
+          <Box width="60px" height="2px" bg="brand.inkMedium" mx="auto" />
           <Box
             p="1rem"
             bg="brand.parchmentSurface"
             borderRadius="sm"
             borderLeft="4px solid"
-            borderColor="brand.gold"
+            borderColor="brand.inkMedium"
           >
             <Text
               fontSize={{ base: 'sm', md: 'md' }}

@@ -189,7 +189,7 @@ function App() {
           borderRadius={{ base: '0', md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderTopWidth={{ base: 0, md: '4px' }}
-          borderColor={{ base: 'transparent', md: 'brand.gold' }}
+          borderColor={{ base: 'transparent', md: 'brand.inkMedium' }}
           data-testid="floating-box-container"
         >
           {profileId && 

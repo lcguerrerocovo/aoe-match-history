@@ -118,11 +118,11 @@ export function MatchPage() {
 
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.gold"
+            borderColor="brand.inkMedium"
             minH="400px"
             justify="center"
           >
-            <Spinner size="xl" color="brand.gold" />
+            <Spinner size="xl" color="brand.redChalk" />
             <Text color="brand.inkMuted">Loading match details...</Text>
           </VStack>
         </Box>
@@ -146,7 +146,7 @@ export function MatchPage() {
 
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.gold"
+            borderColor="brand.inkMedium"
           >
             <Alert.Root status="error">
               <Alert.Indicator />
@@ -174,7 +174,7 @@ export function MatchPage() {
 
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.gold"
+            borderColor="brand.inkMedium"
           >
             <Alert.Root status="info">
               <Alert.Indicator />
@@ -200,7 +200,7 @@ export function MatchPage() {
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
-          borderColor={{ base: 'transparent', md: 'brand.gold' }}
+          borderColor={{ base: 'transparent', md: 'brand.inkMedium' }}
         >
           <VStack
             align="stretch"
@@ -223,7 +223,8 @@ export function MatchPage() {
                       bg: tabSelectedBg,
                       border: '1px solid',
                       borderColor: tabBorder,
-                      borderBottomColor: tabBorder,
+                      borderBottom: '2px solid',
+                      borderBottomColor: 'brand.redChalk',
                     }}
                   >
                     APM
@@ -238,7 +239,8 @@ export function MatchPage() {
                       bg: tabSelectedBg,
                       border: '1px solid',
                       borderColor: tabBorder,
-                      borderBottomColor: tabBorder,
+                      borderBottom: '2px solid',
+                      borderBottomColor: 'brand.redChalk',
                     }}
                   >
                     Actions

@@ -22,6 +22,7 @@ const semanticColors = {
     inkLight: { value: { base: '#C4B59A', _dark: '#2D3748' } },
     heraldic: { value: { base: '#5A3A20', _dark: '#90CDF4' } },
     inkMedium: { value: { base: '#6B5240', _dark: '#2D3748' } },
+    redChalk: { value: { base: '#8B3A3A', _dark: '#C44536' } },
     borderWarm: { value: { base: '#9C8567', _dark: '#4A5568' } },
     white: { value: '#fff' },
     pureBlack: { value: '#111' },
@@ -113,7 +114,7 @@ const semanticColors = {
     // Shadow and border colors
     shadowLight: { value: { base: 'rgba(0,0,0,0.05)', _dark: 'rgba(0,0,0,0.3)' } },
     shadowMedium: { value: { base: 'rgba(0,0,0,0.07)', _dark: 'rgba(0,0,0,0.4)' } },
-    shadowGold: { value: { base: 'rgba(212,175,55,0.4)', _dark: 'rgba(255,215,0,0.4)' } },
+    shadowGold: { value: { base: 'rgba(139,58,58,0.4)', _dark: 'rgba(255,215,0,0.4)' } },
     borderLight: { value: { base: 'rgba(139, 90, 43, 0.15)', _dark: '#4A5568' } },
     textShadowLight: { value: { base: 'rgba(255, 248, 230, 0.9)', _dark: 'rgba(0,0,0,0.8)' } },
     textShadowAlpha: { value: { base: 'rgba(0,0,0,0.04)', _dark: 'rgba(255,255,255,0.1)' } },
@@ -277,7 +278,7 @@ const cardSlotRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderRadius: '0',
           borderLeft: '3px solid',
-          borderLeftColor: '{colors.brand.gold}',
+          borderLeftColor: '{colors.brand.redChalk}',
           p: '1',
           transition: 'all 0.3s ease',
         },
@@ -369,7 +370,7 @@ const profileHeaderSlotRecipe = defineSlotRecipe({
     avatar: {
       bg: '{colors.brand.stoneLight}',
       border: '2px solid',
-      borderColor: '{colors.brand.gold}',
+      borderColor: '{colors.brand.inkMedium}',
       width: '100px',
       height: '100px',
     },
@@ -533,10 +534,10 @@ const buttonRecipe = defineRecipe({
         },
       },
       outline: {
-        borderColor: '{colors.brand.gold}',
+        borderColor: '{colors.brand.inkMedium}',
         color: '{colors.brand.inkDark}',
         _hover: {
-          bg: { base: '#b78b2b', _dark: '{colors.brand.gold}' },
+          bg: { base: '#7A6350', _dark: '{colors.brand.inkMedium}' },
           color: { base: 'white', _dark: '{colors.brand.black}' },
         },
       },
