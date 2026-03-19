@@ -323,7 +323,7 @@ export function createFlatMatchGroup(matches: Match[]): MatchGroup[] {
   }
   
   return [{
-    date: `Search Results (${matches.length})`,
+    date: 'flat',
     matches: matches
   }];
 }

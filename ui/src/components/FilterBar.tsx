@@ -72,7 +72,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
     if (searchValue && searchResultsCount !== undefined) {
       return `${searchResultsCount} matches found`;
     }
-    return 'Search matches...';
+    return 'Filter matches...';
   };
 
   const shouldShowDropdown = searchValue && searchResultsCount !== undefined && isSearchFocused;
@@ -86,7 +86,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
         mb={layout?.filterBar.marginBottom}
       >
         <HStack justify="space-between" align="center">
-          {/* Left: Search Box */}
+          {/* Left: Filter input */}
           <Box 
             position="relative" 
             flex="1"
@@ -129,7 +129,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               </Box>
             )}
             
-            {/* Search Results Dropdown */}
+            {/* Filter Results Dropdown */}
             {shouldShowDropdown && (
               <Box
                 position="absolute"

@@ -255,14 +255,14 @@ describe('matchUtils', () => {
   });
 
   describe('createFlatMatchGroup', () => {
-    it('should wrap matches in a single group with count label', () => {
+    it('should wrap matches in a single flat group', () => {
       const matches = [
         mockMatch('2023-01-01T12:00:00Z', 1800),
         mockMatch('2023-01-01T13:00:00Z', 1800),
       ];
       const groups = createFlatMatchGroup(matches);
       expect(groups).toHaveLength(1);
-      expect(groups[0].date).toBe('Search Results (2)');
+      expect(groups[0].date).toBe('flat');
       expect(groups[0].matches).toHaveLength(2);
     });
 
