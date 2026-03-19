@@ -232,10 +232,12 @@ const cardSlotRecipe = defineSlotRecipe({
     variant: {
       match: {
         root: {
-          backgroundColor: { base: '{colors.brand.cardBg}', _dark: '{colors.brand.lightSteel}' },
-          borderWidth: '1px',
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
-          borderRadius: 'sm',
+          backgroundColor: 'transparent',
+          borderWidth: '0',
+          borderRadius: '0',
+          borderBottom: '1px solid',
+          borderBottomColor: { base: 'rgba(139, 90, 43, 0.2)', _dark: '{colors.brand.slateBorder}' },
+          _last: { borderBottom: 'none' },
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
@@ -254,30 +256,32 @@ const cardSlotRecipe = defineSlotRecipe({
       },
       summary: {
         root: {
-          backgroundColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.lightSteel}' },
-          borderWidth: '1px',
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
-          borderRadius: 'sm',
+          backgroundColor: 'transparent',
+          borderWidth: '0',
+          borderRadius: '0',
+          borderBottom: '1px solid',
+          borderBottomColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.slateBorder}' },
           transition: 'all 0.3s ease',
         },
       },
       winner: {
         root: {
-          bg: '{colors.brand.stoneLight}',
-          borderColor: '{colors.brand.gold}',
-          boxShadow: '0 0 8px rgba(212,175,55,0.6)',
-          borderWidth: '2px',
-          borderRadius: 'sm',
+          bg: 'transparent',
+          borderWidth: '0',
+          borderRadius: '0',
+          borderLeft: '3px solid',
+          borderLeftColor: '{colors.brand.gold}',
           p: '1',
           transition: 'all 0.3s ease',
         },
       },
       loser: {
         root: {
-          bg: '{colors.brand.stoneLight}',
-          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.slateBorder}' },
-          borderWidth: '1px',
-          borderRadius: 'sm',
+          bg: 'transparent',
+          borderWidth: '0',
+          borderRadius: '0',
+          borderLeft: '3px solid',
+          borderLeftColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.slateBorder}' },
           p: '1',
           transition: 'all 0.3s ease',
         },
@@ -293,15 +297,12 @@ const cardSlotRecipe = defineSlotRecipe({
       },
       recordBubble: {
         root: {
-          bg: { base: '#f0e6d2', _dark: '{colors.brand.slateBlue}' },
+          bg: 'transparent',
           color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
           borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
-          borderWidth: '2px',
-          borderRadius: 'md',
-          boxShadow: {
-            base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
-            _dark: '0 1px 3px rgba(0,0,0,0.3)',
-          },
+          borderWidth: '1px',
+          borderRadius: 'sm',
+          boxShadow: 'none',
           px: { base: '1', md: '3' },
           py: '1',
           fontSize: '0.8125rem',
@@ -311,13 +312,6 @@ const cardSlotRecipe = defineSlotRecipe({
           justifyContent: 'center',
           transition: 'all 0.3s ease',
           position: 'relative',
-          _hover: {
-            boxShadow: {
-              base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
-              _dark: '0 2px 6px rgba(0,0,0,0.4)',
-            },
-            transform: 'translateY(-2px)',
-          },
         },
         body: {
           padding: '0',
@@ -327,11 +321,11 @@ const cardSlotRecipe = defineSlotRecipe({
       },
       matchesCountBubble: {
         root: {
-          bg: { base: '#f0e6d2', _dark: '{colors.brand.slateBlue}' },
+          bg: 'transparent',
           color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
           borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
-          borderWidth: '2px',
-          borderRadius: 'md',
+          borderWidth: '1px',
+          borderRadius: 'sm',
           px: { base: '1', md: '3' },
           width: '80px',
           py: '1',
@@ -341,19 +335,9 @@ const cardSlotRecipe = defineSlotRecipe({
           alignItems: 'center',
           justifyContent: 'center',
           gap: '0.5',
-          boxShadow: {
-            base: '0 3px 8px rgba(139, 90, 43, 0.15), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)',
-            _dark: '0 1px 3px rgba(0,0,0,0.3)',
-          },
+          boxShadow: 'none',
           transition: 'all 0.3s ease',
           position: 'relative',
-          _hover: {
-            boxShadow: {
-              base: '0 4px 12px rgba(139, 90, 43, 0.2), 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)',
-              _dark: '0 2px 6px rgba(0,0,0,0.4)',
-            },
-            transform: 'translateY(-2px)',
-          },
         },
         body: {
           padding: '0',

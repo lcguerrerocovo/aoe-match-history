@@ -45,10 +45,6 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
       {isSearchMode ? (
         // Search mode: render matches with same background as accordion
         (<Box
-          bg="brand.cardBg"
-          borderRadius="sm"
-          borderWidth="1px"
-          borderColor="brand.heraldic"
           p={4}
         >
           {renderMatches(matchGroups[0].matches, true)}
@@ -70,17 +66,15 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             return (
               <Accordion.Item
                 key={group.date}
-                bg="brand.sessionCardBg"
-                borderWidth="1px"
-                borderColor="brand.slateBorder"
-                borderRadius="sm"
+                borderBottom="2px solid"
+                borderBottomColor="brand.bronzeLight"
                 mb={0.5}
                 value={group.date}>
                 <h2>
                   <Accordion.ItemTrigger>
                     <VStack flex="1" align="stretch" gap={2}>
                       {/* Date Header */}
-                      <Box bg="brand.sessionHeaderBg" p={1} borderRadius="sm" borderWidth="1px" borderColor="brand.bronze">
+                      <Box bg="brand.sessionHeaderBg" p={1} borderBottom="1px solid" borderBottomColor="brand.bronze">
                         {(() => {
                           const timingData = formatSessionTimingData(group.date, totalReal);
                           return (

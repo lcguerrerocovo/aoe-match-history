@@ -72,7 +72,6 @@ export function TeamCard({ match }: { match: Match }) {
                 alignItems="center"
                 borderWidth="1px"
                 borderColor="brand.stone"
-                borderRadius="sm"
                 p={cardPadding}
                 bg={globalPlayerIndex % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight'}
                 minW={layout?.teamCard.playerBoxMinWidth}
@@ -84,7 +83,6 @@ export function TeamCard({ match }: { match: Match }) {
                   w={layout?.teamCard.colorBarWidth}
                   h={layout?.teamCard.colorBarHeight}
                   bg={PLAYER_COLORS[p.color_id] || 'brand.steel'}
-                  borderRadius="sm"
                   mr={1}
                   flexShrink={0}
                 />
@@ -92,7 +90,6 @@ export function TeamCard({ match }: { match: Match }) {
                   position="relative"
                   w={layout?.teamCard.civIconSize}
                   h={layout?.teamCard.civIconSize}
-                  borderRadius="sm"
                   mr={1}
                   display="flex"
                   alignItems="center"
@@ -107,7 +104,7 @@ export function TeamCard({ match }: { match: Match }) {
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      borderRadius: '0'
                     }}
                     onError={(e) => {
                       // Fallback to text if image fails to load
@@ -132,7 +129,6 @@ export function TeamCard({ match }: { match: Match }) {
                     display="none"
                     bg="brand.stoneLight"
                     px={1}
-                    borderRadius="sm"
                   >
                     {(typeof p.civ === 'string' ? p.civ : '???').slice(0, 3).toUpperCase()}
                   </Text>
