@@ -30,25 +30,11 @@ const TopBar = () => {
       }}
       px={4}
       py={2}
-      boxShadow={{ md: 'xl' }}
       zIndex={10}
       borderBottomWidth={{ base: '0px', md: '4px' }}
       borderBottomStyle="solid"
       borderColor="brand.gold"
-      borderRadius={{ md: '0 0 var(--chakra-radii-xl) var(--chakra-radii-xl)' }}
     >
-      {/* Gloss highlight */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        height="8px"
-        bgGradient={`linear(to-r, ${system.token('colors.brand.heroGradientStart', '')}, ${system.token('colors.brand.heroGradientEnd', '')})`}
-        borderTopRadius="md"
-        pointerEvents="none"
-        zIndex={1}
-      />
       <Box
         position="relative"
         zIndex={2}

@@ -47,25 +47,12 @@ export function LandingPage() {
           base: "brand.landingBg",
           md: "brand.landingBgMd"
         }}
-        borderRadius={{ base: 0, md: 'xl' }}
-        boxShadow={{ md: 'xl' }}
+        borderRadius="sm"
         borderWidth={{ base: '3px', md: '4px' }}
         borderColor="brand.gold"
         position="relative"
         overflow="hidden"
       >
-        {/* Gloss highlight */}
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          height="8px"
-          bg="brand.heroGradientStart"
-          borderTopRadius="md"
-          pointerEvents="none"
-          zIndex={1}
-        />
         {/* Background overlay */}
         <Box
           position="absolute"
@@ -123,7 +110,7 @@ export function LandingPage() {
           <Box
             p="1rem"
             bg="brand.parchmentSurface"
-            borderRadius="md"
+            borderRadius="sm"
             borderLeft="4px solid"
             borderColor="brand.gold"
           >

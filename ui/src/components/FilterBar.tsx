@@ -138,13 +138,12 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 right={0}
                 mt={1}
                 bg="brand.stone"
-                borderRadius="md"
+                borderRadius="sm"
                 borderWidth="1px"
                 borderColor="brand.steel"
                 p={2}
                 fontSize="sm"
                 zIndex={10}
-                boxShadow="md"
               >
                 <Text color="brand.midnightBlue" textAlign="center">
                   {searchResultsCount} matches found
@@ -227,7 +226,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               borderColor="brand.slateBorder"
               color="brand.midnightBlue"
               _hover={{ bg: 'brand.stone', borderColor: 'brand.gold' }}
-              borderRadius="md"
+              borderRadius="sm"
             >
               {sortDirection === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUpAlt />}
             </IconButton>

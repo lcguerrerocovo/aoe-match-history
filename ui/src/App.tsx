@@ -186,8 +186,7 @@ function App() {
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
           bg="brand.parchmentSurface"
-          borderRadius={{ base: '0 0 1rem 1rem', md: 'xl' }}
-          boxShadow={{ md: 'xl' }}
+          borderRadius={{ base: '0 0 1rem 1rem', md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderTopWidth={{ base: 0, md: '4px' }}
           borderColor={{ base: 'transparent', md: 'brand.gold' }}

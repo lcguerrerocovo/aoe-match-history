@@ -34,7 +34,7 @@ describe('TopBar responsiveness', () => {
     mountWithChakra(<TopBar />);
     cy.get('[data-testid="topbar-root"]').invoke('css', 'border-radius').should('eq', '0px');
     cy.viewport(1280, 800);
-    cy.get('[data-testid="topbar-root"]').invoke('css', 'border-radius').should('eq', '0px 0px 12px 12px');
+    cy.get('[data-testid="topbar-root"]').invoke('css', 'border-radius').should('eq', '0px');
   });
 
   it('shows correct layout on desktop - title left, search right, toggle far right', () => {

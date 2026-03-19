@@ -115,8 +115,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'xl' }}
-            boxShadow={{ md: 'xl' }}
+            borderRadius={{ md: 'sm' }}
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -144,8 +143,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'xl' }}
-            boxShadow={{ md: 'xl' }}
+            borderRadius={{ md: 'sm' }}
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -173,8 +171,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'xl' }}
-            boxShadow={{ md: 'xl' }}
+            borderRadius={{ md: 'sm' }}
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -201,8 +198,7 @@ export function MatchPage() {
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-          borderRadius={{ md: 'xl' }}
-          boxShadow={{ md: 'xl' }}
+          borderRadius={{ md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderColor={{ base: 'transparent', md: 'brand.gold' }}
         >
