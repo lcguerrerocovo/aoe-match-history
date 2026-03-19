@@ -96,7 +96,6 @@ APM tests: `cd functions/apm && pytest test_main.py -v`
 ## Documentation
 
 - **[UI Development Guide](ui/README.md)** — component architecture, responsive design, theme system
-- **[Style Guide](STYLE_GUIDE.md)** — DaVinci-inspired theme, color palette, design principles
 
 ## Development with Claude Code
 
@@ -104,11 +103,12 @@ This repo is set up for [Claude Code](https://claude.com/claude-code) assisted d
 
 | Skill | What it covers |
 |---|---|
-| `meilisearch` | VM deployment, container management, indexing, snapshot recovery |
-| `gcp-setup` | IAM roles, service accounts, GCS buckets, Cloud Run domain mapping |
-| `player-indexing` | Player data collection, Meilisearch reindexing, Firestore uploads |
-| `cloudflare-cdn` | Cache purging, DNS config, CDN troubleshooting |
 | `aoe2-relic-api` | Civ/map mappings, API encoding, adding new civs |
+| `cloudflare-cdn` | Cache purging, DNS config, CDN troubleshooting |
+| `gcp-setup` | IAM roles, service accounts, GCS buckets, Cloud Run domain mapping |
+| `meilisearch` | VM deployment, container management, indexing, snapshot recovery |
+| `player-indexing` | Player data collection, Meilisearch reindexing, Firestore uploads |
+| `ui-style` | DaVinci-inspired theme, color tokens, design principles |
 
 Skills are loaded on demand when relevant — ask Claude about any of these topics and the right skill activates automatically. You can also invoke them directly with `/skill-name`.
 

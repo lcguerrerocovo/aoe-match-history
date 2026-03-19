@@ -38,7 +38,8 @@ Key files: `functions/proxy/relicAuth.js`, `functions/proxy/sessionManager.js`
 ### Public (no auth needed)
 | Endpoint | Purpose | File |
 |----------|---------|------|
-| `community/leaderboard/getRecentMatchHistory?title=age2&profile_ids=["ID"]` | Match history | `functions/proxy/index.js` → `handleRawMatchHistory()` |
+| `community/leaderboard/getRecentMatchHistory?title=age2&profile_ids=["ID"]` | Match history | `functions/proxy/matchHandlers.ts` |
+| `community/leaderboard/GetPersonalStat?title=age2&profile_ids=["ID","ID2"]` | Player ranked stats (wins, losses, rating, rank per leaderboard) | `functions/proxy/matchHandlers.ts` |
 | `https://aoe.ms/replay/?gameId=X&profileId=Y` | Replay availability check | `functions/proxy/index.js` → `checkReplayAvailability()` |
 
 ### Authenticated (require session)

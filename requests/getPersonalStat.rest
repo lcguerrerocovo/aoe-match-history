@@ -1,3 +1,0 @@
-GET https://aoe-api.worldsedgelink.com/community/leaderboard/GetPersonalStat?title=age2&profile_ids=[\"123\",\"4764337\"]
-Accept: application/json
-User-Agent: aoe2-site
