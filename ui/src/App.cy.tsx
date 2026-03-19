@@ -39,16 +39,17 @@ describe('App Responsive Layout', () => {
     cy.get('[data-testid="profile-header-stack"]').should('have.css', 'flex-direction', 'row');
   });
 
-  it('should display a floating box with a parchment background on all screen sizes', () => {
+  it('should display a parchment background on all screen sizes', () => {
     renderApp();
 
     // Test mobile view
     cy.viewport(400, 600);
+    cy.get('body').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
     cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
 
-    // Test desktop view
+    // Test desktop view — body is now parchment everywhere (unified manuscript feel)
     cy.viewport(1400, 900);
-    cy.get('body').should('have.css', 'background-color', 'rgb(44, 62, 80)'); // charcoal
+    cy.get('body').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
     cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
   });
 }); 
