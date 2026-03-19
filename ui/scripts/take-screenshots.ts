@@ -1,4 +1,4 @@
-import { chromium, type Page } from 'playwright';
+import { chromium, type Page, type BrowserContext } from 'playwright';
 import { mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -7,8 +7,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // --- Configuration ---
 
+const SOURCES = {
+  dev: 'http://localhost:5173',
+  prod: 'https://aoe2.site',
+} as const;
+
 const CONFIG = {
-  baseUrl: 'http://localhost:5173',
   outputDir: join(__dirname, '..', 'screenshots'),
   // Default IDs — update these to match your dev environment
   profileId: '4764337',
@@ -19,6 +23,8 @@ const CONFIG = {
     mobile: { width: 390, height: 844 },
   },
 } as const;
+
+type Source = keyof typeof SOURCES;
 
 interface ViewConfig {
   name: string;
@@ -31,87 +37,81 @@ interface ViewConfig {
   beforeCapture?: (page: Page, viewport: 'desktop' | 'mobile') => Promise<void>;
 }
 
-const VIEWS: ViewConfig[] = [
-  {
-    name: 'landing',
-    path: '/',
-    waitForSelector: 'input[placeholder]',
-  },
-  {
-    name: 'landing-search',
-    path: '/',
-    waitForSelector: 'input[placeholder]',
-    viewportOnly: () => true, // Search dropdown is a popover — full-page misses it
-    beforeCapture: async (page) => {
-      const input = await page.waitForSelector('input[placeholder]', { timeout: 5000 });
-      await input.click();
-      await input.fill(CONFIG.searchQuery);
-      // Wait for search results to appear
-      await page.waitForTimeout(1500);
+function buildViews(): ViewConfig[] {
+  return [
+    {
+      name: 'landing',
+      path: '/',
+      waitForSelector: 'input[placeholder]',
     },
-  },
-  {
-    name: 'profile',
-    path: `/profile_id/${CONFIG.profileId}`,
-    waitForSelector: '[data-testid="floating-box-container"]',
-    viewportOnly: (vp) => vp === 'desktop',
-  },
-  {
-    name: 'profile-search',
-    path: `/profile_id/${CONFIG.profileId}`,
-    waitForSelector: '[data-testid="floating-box-container"]',
-    viewportOnly: () => true, // Search dropdown is a popover
-    beforeCapture: async (page, viewport) => {
-      // On mobile, the search is in the TopBar's mobile layout
-      const searchSelector = viewport === 'mobile'
-        ? '[data-testid="mobile-search"] input'
-        : 'input[placeholder]';
-      const input = await page.waitForSelector(searchSelector, { timeout: 5000 });
-      await input.click();
-      await input.fill(CONFIG.searchQuery);
-      // Wait for search results to appear
-      await page.waitForTimeout(1500);
+    {
+      name: 'landing-search',
+      path: '/',
+      waitForSelector: 'input[placeholder]',
+      viewportOnly: () => true,
+      beforeCapture: async (page) => {
+        const input = await page.waitForSelector('input[placeholder]', { timeout: 5000 });
+        await input.click();
+        await input.fill(CONFIG.searchQuery);
+        await page.waitForTimeout(1500);
+      },
     },
-  },
-  {
-    name: 'profile-expanded',
-    path: `/profile_id/${CONFIG.profileId}`,
-    waitForSelector: '[data-testid="floating-box-container"]',
-    viewportOnly: (vp) => vp === 'desktop',
-    beforeCapture: async (page) => {
-      // Click the first accordion trigger to expand a match session
-      const trigger = await page.waitForSelector('[data-scope="accordion"] button', { timeout: 5000 });
-      await trigger.click();
-      // Wait for expand animation
-      await page.waitForTimeout(500);
+    {
+      name: 'profile',
+      path: `/profile_id/${CONFIG.profileId}`,
+      waitForSelector: '[data-testid="floating-box-container"]',
+      viewportOnly: (vp) => vp === 'desktop',
     },
-  },
-  {
-    name: 'match',
-    path: '', // Resolved dynamically
-    waitForSelector: '[data-testid="enlarged-match-card"]',
-  },
-  {
-    name: 'match-actions',
-    path: '', // Resolved dynamically
-    waitForSelector: '[data-testid="enlarged-match-card"]',
-    beforeCapture: async (page) => {
-      // Click the "Actions" tab — Chakra v3 uses data-value attribute
-      const actionsTab = await page.waitForSelector('button[data-value="actions"]', { timeout: 5000 }).catch(() => null)
-        // Fallback: find by text content
-        ?? await page.locator('button:has-text("Actions")').first().elementHandle();
-      if (actionsTab) await actionsTab.click();
-      // Wait for the chart to render
-      await page.waitForTimeout(1000);
+    {
+      name: 'profile-search',
+      path: `/profile_id/${CONFIG.profileId}`,
+      waitForSelector: '[data-testid="floating-box-container"]',
+      viewportOnly: () => true,
+      beforeCapture: async (page, viewport) => {
+        const searchSelector = viewport === 'mobile'
+          ? '[data-testid="mobile-search"] input'
+          : 'input[placeholder]';
+        const input = await page.waitForSelector(searchSelector, { timeout: 5000 });
+        await input.click();
+        await input.fill(CONFIG.searchQuery);
+        await page.waitForTimeout(1500);
+      },
     },
-  },
-];
+    {
+      name: 'profile-expanded',
+      path: `/profile_id/${CONFIG.profileId}`,
+      waitForSelector: '[data-testid="floating-box-container"]',
+      viewportOnly: (vp) => vp === 'desktop',
+      beforeCapture: async (page) => {
+        const trigger = await page.waitForSelector('[data-scope="accordion"] button', { timeout: 5000 });
+        await trigger.click();
+        await page.waitForTimeout(500);
+      },
+    },
+    {
+      name: 'match',
+      path: '', // Resolved dynamically
+      waitForSelector: '[data-testid="enlarged-match-card"]',
+    },
+    {
+      name: 'match-actions',
+      path: '', // Resolved dynamically
+      waitForSelector: '[data-testid="enlarged-match-card"]',
+      beforeCapture: async (page) => {
+        const actionsTab = await page.waitForSelector('button[data-value="actions"]', { timeout: 5000 }).catch(() => null)
+          ?? await page.locator('button:has-text("Actions")').first().elementHandle();
+        if (actionsTab) await actionsTab.click();
+        await page.waitForTimeout(1000);
+      },
+    },
+  ];
+}
 
 // --- Helpers ---
 
-async function checkDevServer(url: string): Promise<boolean> {
+async function checkServer(url: string): Promise<boolean> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     return res.ok;
   } catch {
     return false;
@@ -127,17 +127,14 @@ async function waitAndCapture(
 ): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
-  // Wait for view-specific content to confirm React rendered
   try {
     await page.waitForSelector(view.waitForSelector, { timeout: 10000 });
   } catch {
     console.warn(`  ⚠ Selector "${view.waitForSelector}" not found — capturing anyway`);
   }
 
-  // Settle time for CSS transitions and lazy renders
   await page.waitForTimeout(500);
 
-  // Run any pre-capture interactions (search, tab clicks, etc.)
   if (view.beforeCapture) {
     await view.beforeCapture(page, viewport);
   }
@@ -146,8 +143,8 @@ async function waitAndCapture(
   await page.screenshot({ path: outputPath, fullPage });
 }
 
-async function resolveMatchId(page: Page): Promise<string> {
-  const profileUrl = `${CONFIG.baseUrl}/profile_id/${CONFIG.profileId}`;
+async function resolveMatchId(page: Page, baseUrl: string): Promise<string> {
+  const profileUrl = `${baseUrl}/profile_id/${CONFIG.profileId}`;
   await page.goto(profileUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
   try {
@@ -170,36 +167,30 @@ async function resolveMatchId(page: Page): Promise<string> {
   return '';
 }
 
-// --- Main ---
+// --- Capture a full set of screenshots for one source ---
 
-async function main() {
-  console.log('Screenshot Tool — aoe2.site\n');
+async function captureSource(
+  context: BrowserContext,
+  source: Source,
+  baseUrl: string,
+  outputDir: string,
+): Promise<number> {
+  console.log(`\n${'='.repeat(50)}`);
+  console.log(`📷 Capturing: ${source} (${baseUrl})`);
+  console.log(`   Output: ${outputDir}`);
+  console.log('='.repeat(50));
 
-  const serverUp = await checkDevServer(CONFIG.baseUrl);
-  if (!serverUp) {
-    console.error(
-      `✗ Dev server not running at ${CONFIG.baseUrl}\n` +
-      '  Start it with: npm run dev:all (+ Meilisearch tunnel)',
-    );
-    process.exit(1);
-  }
-  console.log(`✓ Dev server reachable at ${CONFIG.baseUrl}`);
+  await mkdir(outputDir, { recursive: true });
 
-  await mkdir(CONFIG.outputDir, { recursive: true });
-
-  const browser = await chromium.launch();
-  const context = await browser.newContext({
-    colorScheme: 'light',
-  });
+  const page = await context.newPage();
+  let captured = 0;
 
   try {
-    const page = await context.newPage();
-
-    // Resolve match ID from profile's match history
+    // Resolve match ID
     let matchId = CONFIG.matchId;
     if (!matchId) {
       console.log('\nResolving match ID from profile...');
-      matchId = await resolveMatchId(page);
+      matchId = await resolveMatchId(page, baseUrl);
       if (!matchId) {
         console.warn('⚠ No match ID found — match views will be skipped');
       } else {
@@ -207,8 +198,8 @@ async function main() {
       }
     }
 
-    // Update match view paths
-    const views = VIEWS.map((v) => {
+    // Build views with resolved match paths
+    const views = buildViews().map((v) => {
       if (v.name === 'match' || v.name === 'match-actions') {
         return { ...v, path: matchId ? `/match/${matchId}` : '' };
       }
@@ -220,8 +211,6 @@ async function main() {
       { width: number; height: number },
     ][];
 
-    let captured = 0;
-
     for (const view of views) {
       if (!view.path) {
         console.log(`\n⚠ Skipping ${view.name} — no path`);
@@ -230,8 +219,8 @@ async function main() {
 
       for (const [vpName, vpSize] of viewportEntries) {
         const filename = `${view.name}-${vpName}.png`;
-        const outputPath = join(CONFIG.outputDir, filename);
-        const url = `${CONFIG.baseUrl}${view.path}`;
+        const outputPath = join(outputDir, filename);
+        const url = `${baseUrl}${view.path}`;
         const fullPage = view.viewportOnly ? !view.viewportOnly(vpName) : true;
 
         console.log(`\n📸 ${filename}`);
@@ -241,15 +230,97 @@ async function main() {
 
         try {
           await waitAndCapture(page, url, outputPath, view, vpName);
-          console.log(`   ✓ Saved to ${outputPath}`);
+          console.log(`   ✓ Saved`);
           captured++;
         } catch (err) {
           console.error(`   ✗ Failed: ${err instanceof Error ? err.message : err}`);
         }
       }
     }
+  } finally {
+    await page.close();
+  }
 
-    console.log(`\n✓ Done — ${captured} screenshots saved to ${CONFIG.outputDir}`);
+  return captured;
+}
+
+// --- CLI ---
+
+function parseArgs(): Source[] {
+  const args = process.argv.slice(2);
+
+  if (args.includes('--compare')) return ['dev', 'prod'];
+  if (args.includes('--prod')) return ['prod'];
+  return ['dev'];
+}
+
+function printUsage() {
+  console.log(`Usage: tsx scripts/take-screenshots.ts [options]
+
+Options:
+  (none)      Capture dev server only (default)
+  --prod      Capture production site only
+  --compare   Capture both dev and prod for side-by-side comparison
+
+Output:
+  Single source  → screenshots/*.png
+  --compare      → screenshots/dev/*.png + screenshots/prod/*.png
+`);
+}
+
+// --- Main ---
+
+async function main() {
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    printUsage();
+    return;
+  }
+
+  const sources = parseArgs();
+  const isCompare = sources.length > 1;
+
+  console.log('Screenshot Tool — aoe2.site\n');
+
+  // Check reachability
+  for (const source of sources) {
+    const url = SOURCES[source];
+    const up = await checkServer(url);
+    if (!up) {
+      if (source === 'dev') {
+        console.error(
+          `✗ Dev server not running at ${url}\n` +
+          '  Start it with: npm run dev:all (+ Meilisearch tunnel)',
+        );
+      } else {
+        console.error(`✗ ${source} site not reachable at ${url}`);
+      }
+      process.exit(1);
+    }
+    console.log(`✓ ${source} reachable at ${url}`);
+  }
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ colorScheme: 'light' });
+
+  try {
+    let totalCaptured = 0;
+
+    for (const source of sources) {
+      const baseUrl = SOURCES[source];
+      const outputDir = isCompare
+        ? join(CONFIG.outputDir, source)
+        : CONFIG.outputDir;
+
+      totalCaptured += await captureSource(context, source, baseUrl, outputDir);
+    }
+
+    console.log(`\n✓ Done — ${totalCaptured} screenshots captured`);
+
+    if (isCompare) {
+      console.log(`\nComparison ready:`);
+      console.log(`  Dev:  ${join(CONFIG.outputDir, 'dev')}/`);
+      console.log(`  Prod: ${join(CONFIG.outputDir, 'prod')}/`);
+    }
   } finally {
     await browser.close();
   }
