@@ -16,7 +16,6 @@ const semanticColors = {
     bronzeDark: { value: '#6B4423' },
     bronzeDarkest: { value: '#5A3A20' },
     black: { value: { base: '#2B1810', _dark: '#F7FAFC' } },
-    surfaceDark: { value: '#3D2B1F' },
     parchment: { value: { base: '#F8F3E6', _dark: '#1A1A1A' } },
     inkMuted: { value: { base: '#8B7355', _dark: '#CBD5E0' } },
     inkLight: { value: { base: '#C4B59A', _dark: '#2D3748' } },
@@ -30,11 +29,8 @@ const semanticColors = {
     // Status colors
     darkWin: { value: { base: '#2E7D32', _dark: '#48BB78' } },
     darkLoss: { value: { base: '#D32F2F', _dark: '#F56565' } },
-    tableBorderOnLight: { value: { base: '#A08060', _dark: '#4A5568' } },
-    modernTableBorder: { value: { base: '#6B4423', _dark: '#90CDF4' } },
     win: { value: { base: '#3AA76D', _dark: '#48BB78' } },
     loss: { value: { base: '#D64545', _dark: '#F56565' } },
-    same: { value: { base: '#8B7355', _dark: '#90CDF4' } },
     inkAccent: { value: { base: '#8B4513', _dark: '#90CDF4' } },
     stone: { value: { base: '#E6E3D8', _dark: '#2D3748' } },
     stoneLight: { value: { base: '#F2F0EA', _dark: '#1A202C' } },
@@ -46,7 +42,6 @@ const semanticColors = {
     brightBronze: { value: '#CD7F32' },
     brightGreen: { value: { base: '#4AE374', _dark: '#48BB78' } },
     brightRed: { value: { base: '#FF8282', _dark: '#F56565' } },
-    contrastRed: { value: { base: '#FF6B94', _dark: '#F56565' } },
 
     // Tier ranking colors
     tierGoldDark: { value: '#FFD700' },
@@ -84,13 +79,13 @@ const semanticColors = {
     topbarSearchBorder: { value: { base: 'rgba(245,237,218,0.2)', _dark: 'rgba(255,255,255,0.15)' } },
     landingBg: {
       value: {
-        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 10%, #f0e8d8 60%, #F8F3E6 100%)',
+        base: 'transparent',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
       },
     },
     landingBgMd: {
       value: {
-        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 20%, #f0e8d8 55%, #F8F3E6 100%)',
+        base: 'transparent',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
       },
     },
@@ -98,7 +93,7 @@ const semanticColors = {
     // Session header
     sessionHeaderBg: {
       value: {
-        base: `linear-gradient(135deg, #E8E5DA 0%, #E2DFD4 25%, #DCD9CE 50%, #D6D3C8 75%, #D0CDC2 100%), repeating-linear-gradient(135deg, rgba(139, 90, 43, 0.06) 0px, rgba(139, 90, 43, 0.06) 2px, transparent 2px, transparent 8px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)`,
+        base: 'transparent',
         _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #171923 50%, #1A202C 75%, #2D3748 100%), repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)`,
       },
     },
@@ -108,13 +103,10 @@ const semanticColors = {
     inputBg: { value: { base: '#faf5e8', _dark: '#2D3748' } },
 
     // Gradient colors for UI elements
-    heroGradientStart: { value: { base: 'rgba(255,248,230,0.7)', _dark: 'rgba(45,55,72,0.9)' } },
-    heroGradientEnd: { value: { base: 'rgba(255,248,230,0.1)', _dark: 'rgba(45,55,72,0.3)' } },
 
     // Shadow and border colors
     shadowLight: { value: { base: 'rgba(0,0,0,0.05)', _dark: 'rgba(0,0,0,0.3)' } },
     shadowMedium: { value: { base: 'rgba(0,0,0,0.07)', _dark: 'rgba(0,0,0,0.4)' } },
-    shadowGold: { value: { base: 'rgba(139,58,58,0.4)', _dark: 'rgba(255,215,0,0.4)' } },
     borderLight: { value: { base: 'rgba(139, 90, 43, 0.15)', _dark: '#4A5568' } },
     textShadowLight: { value: { base: 'rgba(255, 248, 230, 0.9)', _dark: 'rgba(0,0,0,0.8)' } },
     textShadowAlpha: { value: { base: 'rgba(0,0,0,0.04)', _dark: 'rgba(255,255,255,0.1)' } },
@@ -392,19 +384,12 @@ const playerStatsSlotRecipe = defineSlotRecipe({
   slots: ['container', 'statsTable'],
   base: {
     container: {
-      bg: { base: '#f6ecd8', _dark: '{colors.brand.inkMedium}' },
-      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
+      bg: { base: 'transparent', _dark: '{colors.brand.inkMedium}' },
+      borderColor: { base: 'rgba(107, 82, 64, 0.5)', _dark: '{colors.brand.borderWarm}' },
       borderRadius: 'sm',
       padding: '1rem',
-      borderWidth: '2px',
-      backgroundImage: {
-        base: `linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
-          repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
-          repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
-          radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)`,
-        _dark: 'none',
-      },
+      borderWidth: '1px',
+      backgroundImage: 'none',
       transition: 'all 0.3s ease',
       position: 'relative',
     },
@@ -420,19 +405,12 @@ const rankingCardSlotRecipe = defineSlotRecipe({
   slots: ['container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'],
   base: {
     container: {
-      bg: { base: '#f6ecd8', _dark: '{colors.brand.inkMedium}' },
-      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
+      bg: { base: 'transparent', _dark: '{colors.brand.inkMedium}' },
+      borderColor: { base: 'rgba(107, 82, 64, 0.5)', _dark: '{colors.brand.borderWarm}' },
       borderRadius: 'sm',
       padding: '0.3rem',
-      borderWidth: '2px',
-      backgroundImage: {
-        base: `linear-gradient(135deg, #f6ecd8 0%, #eee2ce 25%, #e6d8c4 70%, #deceba 90%, #e0d0b8 100%),
-          repeating-linear-gradient(45deg, rgba(139, 90, 43, 0.04) 0px, rgba(139, 90, 43, 0.04) 1px, transparent 1px, transparent 3px),
-          repeating-linear-gradient(-45deg, rgba(139, 90, 43, 0.02) 0px, rgba(139, 90, 43, 0.02) 1px, transparent 1px, transparent 6px),
-          radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
-          radial-gradient(ellipse at 70% 70%, rgba(139, 90, 43, 0.05) 0%, transparent 40%)`,
-        _dark: 'none',
-      },
+      borderWidth: '1px',
+      backgroundImage: 'none',
       transition: 'all 0.3s ease',
       minW: { base: '100%', md: '220px' },
       maxW: { base: '100%', md: '240px' },

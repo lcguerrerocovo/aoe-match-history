@@ -43,28 +43,8 @@ export function LandingPage() {
         minH={{ base: '100vh', md: 'auto' }}
         justifyContent="center"
         maxW={{ md: '90%', xl: '1100px' }}
-        bg={{
-          base: "brand.landingBg",
-          md: "brand.landingBgMd"
-        }}
-        borderRadius="sm"
-        borderWidth={{ base: '3px', md: '4px' }}
-        borderColor="brand.inkMedium"
         position="relative"
-        overflow="hidden"
       >
-        {/* Background overlay */}
-        <Box
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          opacity="0.05"
-          backgroundRepeat="repeat"
-          backgroundSize="200px"
-          zIndex="0"
-        />
         {/* Logo */}
         <Box
           cursor="pointer"
@@ -109,9 +89,7 @@ export function LandingPage() {
           <Box width="60px" height="2px" bg="brand.inkMedium" mx="auto" />
           <Box
             p="1rem"
-            bg="brand.parchmentSurface"
-            borderRadius="sm"
-            borderLeft="4px solid"
+            borderLeft="1px solid"
             borderColor="brand.inkMedium"
           >
             <Text
@@ -122,7 +100,7 @@ export function LandingPage() {
               Analyze your recent Age of Empires II ranked match history with detailed performance
               metrics. View player statistics and performance, as well as detailed match APM insights
               broken down by action types from your latest games in a clean, competitive-focused interface.
-              <br /> <br /> More features coming soon!
+              <br /> <br /> <Text as="span" color="brand.redChalk">More features coming soon!</Text>
             </Text>
           </Box>
         </VStack>

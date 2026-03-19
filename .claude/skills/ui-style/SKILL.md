@@ -7,36 +7,35 @@ description: Use when building or modifying UI components, choosing colors, addi
 
 ## Design Philosophy
 
-The site uses a **DaVinci-inspired medieval aesthetic** — Renaissance manuscripts, aged parchment, and cross-hatching combined with modern usability. Light mode is warm parchment/cream; dark mode is slate/charcoal.
+The site uses a **Da Vinci Codex aesthetic** — a leather-bound manuscript brought to life as a web app. The TopBar is the oxblood leather cover with gold tooling; all content areas are transparent manuscript pages on warm aged parchment. Content is organized by placement, ruled lines, and ink weight — not by cards, shadows, or containers.
 
 ## Rules
 
 1. **Always use theme tokens** from `ui/src/theme/theme.ts` — never hardcode colors or hex values in components
 2. **Use `useLayoutConfig()`** and `ui/src/theme/breakpoints.ts` for responsive layouts — never hardcode breakpoints
 3. **Use existing card variants** (`match`, `recordBubble`, `winner`, `loser`, `filter`, `summary`) before creating new ones
-4. **Transitions**: 0.3s ease for layout/shadows, 0.2s ease-in-out for interactive elements (links, buttons)
-5. **Hover effects**: subtle lift (`translateY(-1px)` or `-2px`) with enhanced shadows — never color-only hovers
+4. **Transitions**: 0.3s ease for layout, 0.2s ease-in-out for interactive elements (links, buttons)
+5. **No container chrome**: Components should be transparent on the body parchment. Use ruled lines (1-2px sepia ink borders) for structure, not distinct backgrounds or gradient stacks.
 
 ## Key Color Tokens
 
 | Token | Purpose |
 |-------|---------|
-| `brand.gold` / `brand.bronze` | Medieval metal accents, highlights, borders |
-| `brand.parchment` | Page background (light mode) |
+| `brand.parchment` | Page background (body) |
 | `brand.inkDark` | Primary text, headings |
-| `brand.surfaceDark` | Desktop body background (light mode) |
+| `brand.inkMedium` | Sepia ink borders, dividers, structural lines |
 | `brand.inkMuted` / `brand.inkLight` | Secondary text, subtle borders |
-| `brand.win` / `brand.loss` / `brand.same` | Match result status |
-| `brand.stone` / `brand.stoneLight` | Card backgrounds, neutral surfaces |
+| `brand.redChalk` | Page-level emphasis, focus states, winner marks, interactive accents |
+| `brand.gold` / `brand.bronze` | Cover only (TopBar) — never on pages |
+| `brand.win` / `brand.loss` | Match result status |
+| `brand.stone` / `brand.stoneLight` | Neutral surfaces |
 
-## Texture Patterns
+## Surface Treatment
 
-Parchment texture is built from layered CSS gradients. When adding textured elements, follow the pattern in `playerStats` or `rankingCard` slot recipes in `theme.ts`:
-
-1. Base parchment gradient (warm earth tones)
-2. Cross-hatched `repeating-linear-gradient` at 45deg and -45deg
-3. Radial gradients for light/shadow effects
-4. Multi-layer `boxShadow` with inset highlights
+Components are transparent on the body parchment. Structure comes from:
+- 1px sepia ink borders (`rgba(107, 82, 64, 0.5)`) for containers like PlayerStats, RankingCard
+- Ruled bottom lines (1-2px `brand.bronze` or `brand.inkMedium`) for section headers and row dividers
+- Red chalk (`brand.redChalk`) for emphasis marks (winner left border, focus states)
 
 Dark mode strips textures (`backgroundImage: 'none'`) and uses flat slate colors.
 

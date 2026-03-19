@@ -74,7 +74,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                   <Accordion.ItemTrigger>
                     <VStack flex="1" align="stretch" gap={2}>
                       {/* Date Header */}
-                      <Box bg="brand.sessionHeaderBg" p={1} borderBottom="1px solid" borderBottomColor="brand.bronze">
+                      <Box bg="brand.sessionHeaderBg" p={1} borderBottom="2px solid" borderBottomColor="brand.bronze">
                         {(() => {
                           const timingData = formatSessionTimingData(group.date, totalReal);
                           return (
