@@ -558,12 +558,6 @@ const config = defineConfig({
       fontSize: '15px',
       transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     },
-    // Responsive body bg: on md+, same parchment canvas as mobile (unified manuscript feel)
-    '@media screen and (min-width: 768px)': {
-      '& body': {
-        bg: { base: '{colors.brand.parchment}', _dark: '#0F0F0F' },
-      },
-    },
     'a, button': {
       transition: 'all 0.2s ease-in-out',
     },
@@ -574,7 +568,7 @@ const config = defineConfig({
       transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     },
     '.rank': {
-      color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.zoolanderBlue}' },
+      color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.heraldic}' },
       fontWeight: '700',
     },
     '.loss': {

@@ -23,9 +23,9 @@ The site uses a **DaVinci-inspired medieval aesthetic** — Renaissance manuscri
 |-------|---------|
 | `brand.gold` / `brand.bronze` | Medieval metal accents, highlights, borders |
 | `brand.parchment` | Page background (light mode) |
-| `brand.midnightBlue` | Primary text, headings |
-| `brand.charcoal` | Desktop body background (light mode) |
-| `brand.steel` / `brand.lightSteel` | Secondary text, subtle borders |
+| `brand.inkDark` | Primary text, headings |
+| `brand.surfaceDark` | Desktop body background (light mode) |
+| `brand.inkMuted` / `brand.inkLight` | Secondary text, subtle borders |
 | `brand.win` / `brand.loss` / `brand.same` | Match result status |
 | `brand.stone` / `brand.stoneLight` | Card backgrounds, neutral surfaces |
 
@@ -44,5 +44,5 @@ Dark mode strips textures (`backgroundImage: 'none'`) and uses flat slate colors
 
 - Font: `'Lora', serif` (set globally)
 - Base size: 15px
-- Headings: `brand.midnightBlue`, weight 600
+- Headings: `brand.inkDark`, weight 600
 - Links: `brand.linkDefault` / `brand.linkHover`

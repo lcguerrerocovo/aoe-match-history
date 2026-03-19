@@ -39,13 +39,14 @@ interface ApmChartProps {
 }
 
 // Resolved color values for non-Chakra (Recharts SVG) usage
+// These MUST match the semantic tokens in theme.ts
 const colors = {
-  inkDark: { light: '#19214E', dark: '#F7FAFC' },
-  inkMuted: { light: '#5A6478', dark: '#CBD5E0' },
+  inkDark: { light: '#3B2614', dark: '#F7FAFC' },
+  inkMuted: { light: '#8B7355', dark: '#CBD5E0' },
   stoneLight: { light: '#F2F0EA', dark: '#1A202C' },
   parchment: { light: '#F8F3E6', dark: '#1A1A1A' },
-  borderWarm: { light: '#64728A', dark: '#4A5568' },
-  inkAccent: { light: '#1E4BB8', dark: '#90CDF4' },
+  borderWarm: { light: '#9C8567', dark: '#4A5568' },
+  inkAccent: { light: '#8B4513', dark: '#90CDF4' },
   bronzeDark: { light: '#6B4423', dark: '#6B4423' },
   darkWin: { light: '#2E7D32', dark: '#48BB78' },
   bronze: { light: '#B37A3E', dark: '#CD7F32' },
