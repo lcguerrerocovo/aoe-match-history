@@ -64,25 +64,25 @@ const semanticColors = {
     // UI component backgrounds (gradients as strings)
     topbarBg: {
       value: {
-        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)',
+        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 10%, #f0e8d8 60%, #F8F3E6 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
       },
     },
     topbarBgMd: {
       value: {
-        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)',
+        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 20%, #f0e8d8 55%, #F8F3E6 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
       },
     },
     landingBg: {
       value: {
-        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 10%, #cfd2d6 60%, #b0b6be 100%)',
+        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 10%, #f0e8d8 60%, #F8F3E6 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
       },
     },
     landingBgMd: {
       value: {
-        base: 'linear-gradient(180deg, #f9fafb 0%, #e6e8ec 20%, #cfd2d6 55%, #bfc4ca 100%)',
+        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 20%, #f0e8d8 55%, #F8F3E6 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
       },
     },
@@ -96,12 +96,12 @@ const semanticColors = {
     },
 
     // UI element backgrounds
-    cardBg: { value: { base: '#ffffff', _dark: '#2D3748' } },
-    inputBg: { value: { base: '#ffffff', _dark: '#2D3748' } },
+    cardBg: { value: { base: '#f6ecd8', _dark: '#2D3748' } },
+    inputBg: { value: { base: '#faf5e8', _dark: '#2D3748' } },
 
     // Gradient colors for UI elements
-    heroGradientStart: { value: { base: 'rgba(255,255,255,0.7)', _dark: 'rgba(45,55,72,0.9)' } },
-    heroGradientEnd: { value: { base: 'rgba(255,255,255,0.1)', _dark: 'rgba(45,55,72,0.3)' } },
+    heroGradientStart: { value: { base: 'rgba(255,248,230,0.7)', _dark: 'rgba(45,55,72,0.9)' } },
+    heroGradientEnd: { value: { base: 'rgba(255,248,230,0.1)', _dark: 'rgba(45,55,72,0.3)' } },
 
     // Shadow and border colors
     shadowLight: { value: { base: 'rgba(0,0,0,0.05)', _dark: 'rgba(0,0,0,0.3)' } },
@@ -132,8 +132,8 @@ const semanticColors = {
     },
 
     // Session group card colors
-    sessionCardBg: { value: { base: '#f4f4f6', _dark: '#2D3748' } },
-    sessionCardBorder: { value: { base: '#e0e0e6', _dark: '#4A5568' } },
+    sessionCardBg: { value: { base: '#efe6d4', _dark: '#2D3748' } },
+    sessionCardBorder: { value: { base: 'rgba(139, 90, 43, 0.2)', _dark: '#4A5568' } },
 
     // Stamp button colors
     stampBg: {
@@ -232,11 +232,11 @@ const cardSlotRecipe = defineSlotRecipe({
     variant: {
       match: {
         root: {
-          backgroundColor: { base: 'white', _dark: '{colors.brand.lightSteel}' },
+          backgroundColor: { base: '{colors.brand.cardBg}', _dark: '{colors.brand.lightSteel}' },
           borderWidth: '1px',
-          borderColor: '{colors.brand.slateBorder}',
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
           borderRadius: 'lg',
-          boxShadow: { base: '0 2px 4px rgba(0,0,0,0.04)', _dark: '0 2px 4px rgba(0,0,0,0.3)' },
+          boxShadow: { base: '0 2px 4px rgba(139, 90, 43, 0.15)', _dark: '0 2px 4px rgba(0,0,0,0.3)' },
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
@@ -257,7 +257,7 @@ const cardSlotRecipe = defineSlotRecipe({
         root: {
           backgroundColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.lightSteel}' },
           borderWidth: '1px',
-          borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.slateBorder}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
           borderRadius: 'md',
           transition: 'all 0.3s ease',
         },
@@ -276,10 +276,10 @@ const cardSlotRecipe = defineSlotRecipe({
       loser: {
         root: {
           bg: '{colors.brand.stoneLight}',
-          borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.slateBorder}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.slateBorder}' },
           borderWidth: '1px',
           borderRadius: 'md',
-          boxShadow: { base: '0 0 6px rgba(0,0,0,0.06)', _dark: '0 0 4px rgba(0,0,0,0.4)' },
+          boxShadow: { base: '0 0 6px rgba(139, 90, 43, 0.1)', _dark: '0 0 4px rgba(0,0,0,0.4)' },
           p: '1',
           transition: 'all 0.3s ease',
         },
@@ -288,9 +288,9 @@ const cardSlotRecipe = defineSlotRecipe({
         root: {
           bg: '{colors.brand.sessionCardBg}',
           borderWidth: '1px',
-          borderColor: '{colors.brand.slateBorder}',
+          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.slateBorder}' },
           borderRadius: 'lg',
-          boxShadow: { base: '0 1px 3px rgba(0,0,0,0.06)', _dark: '0 1px 3px rgba(0,0,0,0.3)' },
+          boxShadow: { base: '0 1px 3px rgba(139, 90, 43, 0.12)', _dark: '0 1px 3px rgba(0,0,0,0.3)' },
           transition: 'all 0.3s ease',
         },
       },
@@ -624,10 +624,10 @@ const config = defineConfig({
       fontSize: '15px',
       transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     },
-    // Responsive body bg: on md+, light mode uses charcoal
+    // Responsive body bg: on md+, same parchment canvas as mobile (unified manuscript feel)
     '@media screen and (min-width: 768px)': {
       '& body': {
-        bg: { base: '{colors.brand.charcoal}', _dark: '#0F0F0F' },
+        bg: { base: '{colors.brand.parchment}', _dark: '#0F0F0F' },
       },
     },
     'a, button': {
