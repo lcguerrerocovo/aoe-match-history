@@ -15,7 +15,7 @@ const CONFIG = {
   matchId: '' as string, // Will be resolved from the profile's match history
   searchQuery: 'torna', // Query used for search screenshots
   viewports: {
-    desktop: { width: 1440, height: 900 },
+    desktop: { width: 1440, height: 1400 },
     mobile: { width: 390, height: 844 },
   },
 } as const;
