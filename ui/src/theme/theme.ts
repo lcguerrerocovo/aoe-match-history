@@ -138,17 +138,17 @@ const semanticColors = {
     // Stamp button colors
     stampBg: {
       value: {
-        base: `linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)`,
+        base: `linear-gradient(135deg, #6B2A2A 0%, #8B3A3A 25%, #6B2A2A 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)`,
         _dark: `linear-gradient(135deg, #4A5568 0%, #2D3748 25%, #4A5568 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)`,
       },
     },
     stampBgHover: {
       value: {
-        base: `linear-gradient(135deg, #A0522D 0%, #CD853F 25%, #A0522D 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)`,
+        base: `linear-gradient(135deg, #8B3A3A 0%, #A04040 25%, #8B3A3A 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)`,
         _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #2D3748 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)`,
       },
     },
-    stampBorder: { value: { base: '#654321', _dark: '#2D3748' } },
+    stampBorder: { value: { base: '#4A1C1C', _dark: '#2D3748' } },
     stampText: { value: { base: '#654321', _dark: '#E2E8F0' } },
     stampTextShadow: {
       value: {
@@ -172,14 +172,8 @@ const semanticColors = {
     // Parchment textures
     parchmentSurface: {
       value: {
-        base: `radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9) 0%, rgba(248,243,230,0.95) 12%, rgba(0,0,0,0.12) 100%), repeating-linear-gradient(135deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 6px), #F8F3E6`,
+        base: 'transparent',
         _dark: `radial-gradient(circle at 50% 45%, rgba(60,70,90,0.55) 0%, rgba(0,0,0,0.25) 100%), repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 6px), #1A1A1A`,
-      },
-    },
-    parchmentSurfaceItem: {
-      value: {
-        base: `repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 5px), repeating-linear-gradient(45deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, transparent 2px, transparent 6px), #F8F3E6`,
-        _dark: `repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px), repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 6px), #1A1A1A`,
       },
     },
 
@@ -539,6 +533,10 @@ const config = defineConfig({
   globalCss: {
     body: {
       bg: { base: '{colors.brand.parchment}', _dark: '#0F0F0F' },
+      backgroundImage: {
+        base: `radial-gradient(ellipse at 50% 50%, #F8F3E6 0%, #E8DCC8 100%), repeating-linear-gradient(135deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 5px), repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 5px)`,
+        _dark: 'none',
+      },
       color: '{colors.brand.black}',
       fontFamily: "'Lora', serif",
       fontSize: '15px',

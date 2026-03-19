@@ -45,11 +45,11 @@ describe('App Responsive Layout', () => {
     // Test mobile view
     cy.viewport(400, 600);
     cy.get('body').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
-    cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
+    cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgba(0, 0, 0, 0)'); // transparent — body provides texture
 
     // Test desktop view — body is now parchment everywhere (unified manuscript feel)
     cy.viewport(1400, 900);
     cy.get('body').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
-    cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgb(248, 243, 230)'); // parchment
+    cy.get('[data-testid="floating-box-container"]').should('have.css', 'background-color', 'rgba(0, 0, 0, 0)'); // transparent — body provides texture
   });
 }); 
