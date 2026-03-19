@@ -19,6 +19,8 @@ import { getMatch } from '../services/matchService';
 import { ApmChart } from './ApmChart';
 import { ApmBreakdownChart } from './ApmBreakdownChart';
 import { APMGenerator } from './APMGenerator';
+import { Watermark } from './Watermark';
+import { CornerFlourishes } from './CornerFlourishes';
 
 export function MatchPage() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -201,7 +203,9 @@ export function MatchPage() {
           borderRadius={{ md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
           borderColor={{ base: 'transparent', md: 'brand.inkMedium' }}
+          position="relative"
         >
+          <CornerFlourishes />
           <VStack
             align="stretch"
             p={layout?.mainContent.padding}
@@ -210,7 +214,12 @@ export function MatchPage() {
           >
             <FullMatchSummaryCard match={match} />
 
-            <Card.Root variant={cardVariant('match')} w="100%" p={6}>
+            <Card.Root variant={cardVariant('match')} w="100%" p={6} position="relative">
+              <Watermark
+                variant="trebuchet"
+                size={240}
+                style={{ right: '-50px', bottom: '-30px' }}
+              />
               <Tabs.Root defaultValue="apm" colorPalette="brand">
                 <Tabs.List mb={4} justifyContent="flex-start">
                   <Tabs.Trigger

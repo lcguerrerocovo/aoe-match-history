@@ -10,6 +10,8 @@ import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
 import { groupMatchesBySession, searchMatches, createFlatMatchGroup, sortMatchesByStart, sortMatchGroupsByDate } from './utils/matchUtils';
 import TopBar from './components/TopBar';
+import { WatermarkTiled } from './components/Watermark';
+import { CornerFlourishes } from './components/CornerFlourishes';
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -178,11 +180,11 @@ function App() {
     <>
       <TopBar />
       <Box py={{ md: 8 }}>
-        <VStack 
-          gap={1} 
-          mx="auto" 
-          px={{ base: 2, lg: 4 }} 
-          py={{ base: 4, lg: 6 }} 
+        <VStack
+          gap={1}
+          mx="auto"
+          px={{ base: 2, lg: 4 }}
+          py={{ base: 4, lg: 6 }}
           w="100%"
           maxW={{ md: '90%', xl: '1100px' }}
           bg="brand.parchmentSurface"
@@ -191,8 +193,11 @@ function App() {
           borderTopWidth={{ base: 0, md: '4px' }}
           borderColor={{ base: 'transparent', md: 'brand.inkMedium' }}
           data-testid="floating-box-container"
+          position="relative"
         >
-          {profileId && 
+          <CornerFlourishes />
+          <WatermarkTiled />
+          {profileId &&
             <Box w="100%">
               <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
             </Box>

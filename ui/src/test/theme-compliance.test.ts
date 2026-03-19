@@ -97,6 +97,8 @@ function findHardcodedColors(content: string, filePath: string): Array<{ line: n
         filePath.includes('PlayerAvatar.tsx') || // Hardcoded gradient hex for replay buttons
         filePath.includes('ApmBreakdownChart/') || // Chart color constants and components
         filePath.includes('ApmChart.tsx') ||    // Chart player color calculations
+        filePath.includes('Watermark.tsx') ||   // Decorative SVG watermark sketches
+        filePath.includes('CornerFlourishes.tsx') || // Decorative SVG corner ornaments
         filePath.includes('theme.ts') ||        // Theme definitions themselves
         filePath.includes('breakpoints.ts')) {   // Responsive breakpoints
       return;

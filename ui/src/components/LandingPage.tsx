@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
 import { responsiveSpacing } from '../theme/theme';
+import { Watermark } from './Watermark';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -75,8 +76,13 @@ export function LandingPage() {
         <Box w="100%" maxW="400px">
           <PlayerSearch onSelect={handlePlayerSelect} context="landing" searchFn={searchPlayers} />
         </Box>
-        {/* Description */}
-        <VStack gap={{ base: '1rem', md: '2rem' }} maxW="600px" align="stretch">
+        {/* Description — with watermark behind */}
+        <VStack gap={{ base: '1rem', md: '2rem' }} maxW="600px" align="stretch" position="relative">
+          <Watermark
+            variant="swords"
+            size={420}
+            style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+          />
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"
