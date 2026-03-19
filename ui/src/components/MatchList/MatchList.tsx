@@ -2,12 +2,26 @@ import { Box, VStack, Text, HStack, Accordion, Card, Icon, useBreakpointValue } 
 import { system } from '../../theme/theme';
 import { cardVariant } from '../../types/chakra-overrides';
 import type { Match, MatchGroup } from '../../types/match';
-import { FiCalendar, FiClock } from 'react-icons/fi';
+import { FiClock } from 'react-icons/fi';
 import { GiBroadsword } from 'react-icons/gi';
 import { useLayoutConfig } from '../../theme/breakpoints';
 import { sumDurations, countByDiplomacy, formatSessionTimingData } from '../../utils/matchUtils';
 import { shortenMatchTypeName } from '../../utils/gameUtils';
 import { MatchCard } from './MatchCard';
+
+// Convert number to Roman numerals (handles up to ~20)
+function toRoman(num: number): string {
+  const vals = [10, 9, 5, 4, 1];
+  const syms = ['X', 'IX', 'V', 'IV', 'I'];
+  let result = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (num >= vals[i]) {
+      result += syms[i];
+      num -= vals[i];
+    }
+  }
+  return result;
+}
 
 interface MatchListProps {
   matchGroups: MatchGroup[];
@@ -19,7 +33,7 @@ interface MatchListProps {
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
   const layout = useLayoutConfig();
   const token = (path: string) => system.token(path, '');
-  const isSearchMode = matchGroups.length === 1 && matchGroups[0].date === 'search';
+  const isFlatMode = matchGroups.length === 1 && matchGroups[0].date === 'flat';
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Render matches for a group
@@ -42,35 +56,56 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
 
   return (
     <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth} overflow={layout?.matchList.overflow}>
-      {isSearchMode ? (
-        // Search mode: render matches with same background as accordion
-        (<Box
-          p={4}
-        >
-          {renderMatches(matchGroups[0].matches, true)}
-        </Box>)
-      ) : (
-        // Normal mode: render with accordion
-        (<Accordion.Root
+      <Accordion.Root
           multiple
-          value={openDates}
-          onValueChange={({ value }: { value: string[] }) => onOpenDatesChange(value)}
+          value={isFlatMode ? ['flat'] : openDates}
+          onValueChange={({ value }: { value: string[] }) => !isFlatMode && onOpenDatesChange(value)}
           w={layout?.matchList.accordionWidth}
           mx="auto"
           variant="enclosed"
         >
-          {matchGroups.map((group: MatchGroup, _idx: number) => {
+          {matchGroups.map((group: MatchGroup) => {
             const { totalReal } = sumDurations(group.matches);
             const byDiplo = countByDiplomacy(group.matches, profileId);
-            const isOpen = openDates.includes(group.date);
+            const isOpen = isFlatMode || openDates.includes(group.date);
+            const totalWins = Object.values(byDiplo).reduce((sum, rec) => sum + rec.wins, 0);
             return (
               <Accordion.Item
                 key={group.date}
-                borderBottom="2px solid"
+                borderBottom={isFlatMode ? 'none' : '2px solid'}
                 borderBottomColor="brand.bronzeLight"
-                mb={0.5}
+                position="relative"
                 value={group.date}>
-                <h2>
+                {/* Margin annotation — desktop only, hidden in flat mode */}
+                {!isFlatMode && (
+                  <Box
+                    display={{ base: 'none', md: 'block' }}
+                    position="absolute"
+                    left="-28px"
+                    top="8px"
+                    bottom="8px"
+                    width="20px"
+                    css={{
+                      writingMode: 'vertical-rl',
+                    }}
+                    borderRight="1px solid"
+                    borderRightColor="brand.inkLight"
+                    pr="6px"
+                    textAlign="center"
+                  >
+                    <Text
+                      fontFamily="'Lora', serif"
+                      fontStyle="italic"
+                      fontSize="9px"
+                      color="brand.inkMuted"
+                      opacity={0.6}
+                      whiteSpace="nowrap"
+                    >
+                      {toRoman(group.matches.length)} · {toRoman(totalWins)} victoria
+                    </Text>
+                  </Box>
+                )}
+                <h2 style={isFlatMode ? { display: 'none' } : undefined}>
                   <Accordion.ItemTrigger>
                     <VStack flex="1" align="stretch" gap={2}>
                       {/* Date Header */}
@@ -81,16 +116,17 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                             <>
                               {/* Mobile: Two-line layout */}
                               <VStack gap={1} display={{ base: "flex", md: "none" }} align="stretch">
-                                {/* Line 1: Date and Time Range */}
-                                <HStack gap={2} justify="flex-start">
-                                  <HStack gap={1}>
-                                    <Icon boxSize={3} color="brand.bronze"><FiCalendar /></Icon>
-                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay}</Text>
-                                  </HStack>
-                                  <Text color="brand.inkMuted" fontSize="xs">|</Text>
-                                  {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
-                                  )}
+                                {/* Line 1: Drop cap + Date and Time Range */}
+                                <HStack gap={1} alignItems="flex-start">
+                                  <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="1px">
+                                    {timingData.dateDisplay.charAt(0)}
+                                  </Text>
+                                  <VStack gap={0} align="flex-start">
+                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
+                                    {timingData.timeRange && (
+                                      <Text fontWeight="semibold" color="brand.inkDark" fontSize="xs">{timingData.timeRange}</Text>
+                                    )}
+                                  </VStack>
                                 </HStack>
 
                                 {/* Line 2: Session Duration and Time Played */}
@@ -109,16 +145,17 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               </VStack>
                               {/* Desktop: One line with better hierarchy */}
                               <HStack justify="space-between" align="center" display={{ base: "none", md: "flex" }}>
-                                {/* Left: Date and Time Range as primary info */}
-                                <HStack gap={3}>
-                                  <HStack gap={1}>
-                                    <Icon boxSize={3} color="brand.bronze"><FiCalendar /></Icon>
-                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="md">{timingData.dateDisplay}</Text>
-                                  </HStack>
-                                  <Text color="brand.inkMuted" fontSize="sm">|</Text>
-                                  {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="md">{timingData.timeRange}</Text>
-                                  )}
+                                {/* Left: Drop cap + date/time info */}
+                                <HStack gap={1} alignItems="flex-start">
+                                  <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="2px">
+                                    {timingData.dateDisplay.charAt(0)}
+                                  </Text>
+                                  <VStack gap={0} align="flex-start">
+                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="md">{timingData.dateDisplay.slice(1)}</Text>
+                                    {timingData.timeRange && (
+                                      <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
+                                    )}
+                                  </VStack>
                                 </HStack>
 
                                 {/* Right: Duration info with labels */}
@@ -178,8 +215,6 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                           ))}
                         </HStack>
                       </HStack>
-
-
                     </VStack>
                     <Box
                       w="24px"
@@ -222,8 +257,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
               </Accordion.Item>
             );
           })}
-        </Accordion.Root>)
-      )}
+      </Accordion.Root>
     </Box>
   );
 }

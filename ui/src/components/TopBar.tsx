@@ -61,11 +61,33 @@ const TopBar = () => {
             cursor="pointer"
             _hover={{ textDecoration: 'none', filter: 'brightness(1.15)' }}
             data-testid="desktop-title"
-            asChild><RouterLink to="/">aoe2
-                          <Box as="span" display="inline-flex" alignItems="center">
+            asChild><RouterLink to="/">
+              <Box as="span" display="inline-flex" alignItems="center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginRight: '6px' }}>
+                  <line x1="2" y1="12" x2="22" y2="12" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" />
+                  <line x1="12" y1="4" x2="12" y2="20" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" />
+                  <circle cx="12" cy="12" r="3" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" fill="none" />
+                  <circle cx="12" cy="12" r="1" fill="#D4AF37" opacity="0.3" />
+                  <line x1="5" y1="5" x2="19" y2="19" stroke="#D4AF37" strokeWidth="0.3" opacity="0.2" />
+                  <line x1="19" y1="5" x2="5" y2="19" stroke="#D4AF37" strokeWidth="0.3" opacity="0.2" />
+                </svg>
+              </Box>
+              aoe2
+              <Box as="span" display="inline-flex" alignItems="center">
                 <FaGlobe size={14} color="inherit" style={{ verticalAlign: 'middle' }} />
-              </Box>site
-                        </RouterLink></Text>
+              </Box>
+              site
+              <Box as="span" display="inline-flex" alignItems="center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '6px' }}>
+                  <line x1="2" y1="12" x2="22" y2="12" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" />
+                  <line x1="12" y1="4" x2="12" y2="20" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" />
+                  <circle cx="12" cy="12" r="3" stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" fill="none" />
+                  <circle cx="12" cy="12" r="1" fill="#D4AF37" opacity="0.3" />
+                  <line x1="5" y1="5" x2="19" y2="19" stroke="#D4AF37" strokeWidth="0.3" opacity="0.2" />
+                  <line x1="19" y1="5" x2="5" y2="19" stroke="#D4AF37" strokeWidth="0.3" opacity="0.2" />
+                </svg>
+              </Box>
+            </RouterLink></Text>
 
           {/* Right: Search bar */}
           <Box w="220px" ref={searchContainerRef}>
