@@ -96,9 +96,11 @@ const VIEWS: ViewConfig[] = [
     path: '', // Resolved dynamically
     waitForSelector: '[data-testid="enlarged-match-card"]',
     beforeCapture: async (page) => {
-      // Click the "Actions" tab
-      const actionsTab = await page.waitForSelector('button[value="actions"]', { timeout: 5000 });
-      await actionsTab.click();
+      // Click the "Actions" tab — Chakra v3 uses data-value attribute
+      const actionsTab = await page.waitForSelector('button[data-value="actions"]', { timeout: 5000 }).catch(() => null)
+        // Fallback: find by text content
+        ?? await page.locator('button:has-text("Actions")').first().elementHandle();
+      if (actionsTab) await actionsTab.click();
       // Wait for the chart to render
       await page.waitForTimeout(1000);
     },
