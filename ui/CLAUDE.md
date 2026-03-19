@@ -8,6 +8,8 @@ Vite + React 18 + TypeScript + Chakra UI v3.
 - `/profile_id/:profileId` — `App` (match history for a player)
 - `/match/:matchId` — `MatchPage` (single match detail with APM)
 
+When adding or removing routes, update the screenshot tool views in `scripts/take-screenshots.ts`.
+
 ## Component Hierarchy
 
 ```
@@ -76,6 +78,29 @@ Assets are **not in the repo** (gitignored). Served from CDN.
 - Coverage thresholds: 30% lines, 65% functions, 75% branches
 - Always use `VITE_AOE_API_URL=/api` when running tests (set in npm scripts)
 - Prevent interactive/watch mode in CI to avoid hanging
+
+## Screenshot Tool
+
+Playwright-based tool that captures all key views for visual review. Lives in `scripts/take-screenshots.ts`.
+
+```bash
+npm run screenshots           # Dev server only
+npm run screenshots:prod      # Prod site only
+npm run screenshots:compare   # Both side-by-side (screenshots/dev/ + screenshots/prod/)
+```
+
+Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev captures.
+
+**Current views captured** (each at desktop 1440x1400 + mobile 390x844):
+- `landing` — landing page at rest
+- `landing-search` — search dropdown with results
+- `profile` — profile with match history
+- `profile-search` — profile with TopBar search results
+- `profile-expanded` — profile with accordion session expanded
+- `match` — match detail with APM tab
+- `match-actions` — match detail with Actions tab
+
+**When adding new views or interactive states**, add a corresponding entry to the `VIEWS` array in `scripts/take-screenshots.ts`. Each entry needs a `name`, `path`, `waitForSelector`, and optionally a `beforeCapture` function for interactions (typing, clicking tabs, expanding accordions).
 
 ## Key Utils
 

@@ -123,3 +123,6 @@ ui/src/assets/
 # Environment files
 .env
 !.env.example
+
+# Screenshot tool output
+ui/screenshots/

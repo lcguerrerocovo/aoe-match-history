@@ -30,6 +30,9 @@
     "cy:run:parallel": "cypress run --config-file cypress.config.mts --component --parallel --record",
     "test:ci": "VITE_AOE_API_URL=/api vitest run --reporter=verbose",
     "cy:run:ci": "cypress run --config-file cypress.config.mts --component --headless",
+    "screenshots": "tsx scripts/take-screenshots.ts",
+    "screenshots:prod": "tsx scripts/take-screenshots.ts --prod",
+    "screenshots:compare": "tsx scripts/take-screenshots.ts --compare",
     "clean": "rm -rf dist node_modules && npx cypress cache clear",
     "prepare": "husky"
   },
@@ -70,7 +73,9 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "playwright": "^1.58.2",
     "prettier": "^3.2.5",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vitest": "^3.2.4"
