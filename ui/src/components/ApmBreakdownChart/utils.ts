@@ -58,12 +58,12 @@ export const calculateActionTypeTotals = (playerData: ApmActionData[], actionTyp
   return totals;
 };
 
-// Fallback color matching brand.inkAccent light/dark
-const ZOOLANDER_BLUE_LIGHT = '#1E4BB8';
-const ZOOLANDER_BLUE_DARK = '#90CDF4';
+// Fallback chart line color (vibrant blue for data visibility)
+const INK_ACCENT_LIGHT = '#1E4BB8';
+const INK_ACCENT_DARK = '#90CDF4';
 
 export const getPlayerColor = (colorId: number | undefined, isDark: boolean): string => {
-  const fallback = isDark ? ZOOLANDER_BLUE_DARK : ZOOLANDER_BLUE_LIGHT;
+  const fallback = isDark ? INK_ACCENT_DARK : INK_ACCENT_LIGHT;
   if (colorId !== undefined) {
     return PLAYER_COLORS[colorId] || fallback;
   }

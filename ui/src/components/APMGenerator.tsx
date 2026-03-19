@@ -283,7 +283,7 @@ export function APMGenerator({
     <Box
       bg={bg}
       color={fg}
-      borderRadius="lg"
+      borderRadius="sm"
       border="2px solid"
       borderColor={borderColor}
       minH="200px"
@@ -292,7 +292,7 @@ export function APMGenerator({
       justifyContent="center"
       transition="all 0.2s ease-in-out"
       cursor={clickable ? 'pointer' : 'default'}
-      _hover={clickable ? { transform: 'translateY(-2px)', boxShadow: 'lg' } : {}}
+      _hover={clickable ? { transform: 'translateY(-1px)' } : {}}
     >
       {getCardContent()}
     </Box>
