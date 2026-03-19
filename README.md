@@ -1,711 +1,128 @@
 # AoE2 Match History
 
-site: https://aoe2.site
+Live at **https://aoe2.site**
 
-## Overview
-This project provides a modern React-based website for viewing **Age of Empires II: Definitive Edition (AoE2:DE)** match history and player statistics. It features a responsive interface with player search, detailed match statistics, and medieval-themed design.
+A match history viewer for Age of Empires II: Definitive Edition. Search for players, browse match history with team compositions, civilization and map stats, and replay APM breakdowns.
 
 ## Features
-- **Player Search**
-  - Search for players by name using Relic API
-  - Automatic Steam authentication and session management
-  - Persistent session storage with Firestore
-  - Optimized caching for performance
-  - **Fast typo-tolerant search with Meilisearch**
 
-- **Match History Viewing**
-  - Detailed match statistics and team compositions
-  - Civilization and map information
-  - Winner/team logic with clear visualization
-  - Interactive match filtering and sorting
-
-- **Modern UI with Medieval Design**
-  - Responsive design optimized for mobile, tablet, and desktop
-  - Medieval-themed color palette and typography
-  - Professional landing page with logo branding
-  - Dark/light theme toggle
+- **Player Search** — fast typo-tolerant search powered by Meilisearch, backed by Relic API + Steam auth
+- **Match History** — detailed stats, team compositions, civ/map info, filtering and sorting
+- **APM Analysis** — replay parsing with per-player action-per-minute breakdowns
+- **Medieval UI** — responsive parchment/charcoal theme with dark/light toggle
 
 ## Architecture
 
-### Components
-- **React UI**: Modern responsive interface for browsing match history and player stats
-  - **Cloud Function API**: Proxy service for external API calls (RelicLink, Steam) - deployed in us-central1 for free tier
-- **Static Hosting**: UI served from Google Cloud Storage with Cloudflare CDN
-- **Meilisearch**: Fast, typo-tolerant search engine for player lookup
+```
+ui/                  React 18 + Vite + TypeScript + Chakra UI v3
+functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch)
+functions/apm/       Python Cloud Function — replay parsing (mgz library)
+data/                Static data files (civ/map mappings)
+indexing-job/        Cloud Run Job — player collection + Meilisearch indexing
+aoe-search/          Meilisearch VM config
+scripts/             Utility scripts
+```
 
-### Data Flow
+**Infra:** GCS bucket behind Cloudflare CDN, Cloud Run (API proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, Firestore for session/match caching.
 
-#### Development
-1. Vite dev server serves React app with hot reloading
-2. Local Cloud Function proxy handles API calls to external services
-3. Firestore emulator provides local database for testing
-
-#### Production
-1. React app is built and deployed to GCS bucket, served via Cloudflare
-2. Cloud Function at `/functions/proxy` handles API calls to external services (RelicLink, Steam)
-3. React app fetches data through the Cloud Function API proxy
-4. **Meilisearch VM provides fast player search functionality**
-
-## Documentation
-
-📖 **[UI Development Guide](ui/README.md)** - Component architecture, responsive design system, and frontend development guidelines
-
-🎨 **[Style Guide](STYLE_GUIDE.md)** - DaVinci-inspired theme elements, color palette, and design principles
-
-📋 **Infrastructure Guide** (below) - API proxy deployment and Cloud infrastructure
+**Deployment:** Push to `master` triggers GitHub Actions — lint, test, build, deploy UI to GCS, deploy proxy to Cloud Run, deploy APM function, selective Cloudflare cache purge.
 
 ## Quick Start
-1. Clone the repository
-2. Set up frontend development environment
-3. Configure API proxy for player search functionality
-4. **Deploy Meilisearch search engine**
-
-## Meilisearch Search Engine
-
-The project uses Meilisearch for fast, typo-tolerant player search, replacing the previous Firestore-based search.
-
-### Deployment
-
-#### 1. Deploy the Search VM
-```bash
-# Deploy Meilisearch VM with automatic configuration
-bash scripts/deploy.sh
-
-# Or with custom master key
-MEILI_MASTER_KEY="your-secure-key" bash scripts/deploy.sh
-```
-
-The deployment script:
-- Creates an e2-micro VM in `us-central1-a` (free tier compatible)
-- Installs Docker and Meilisearch automatically
-- Configures the search index using `aoe-search/meilisearch_config.json`
-- Sets up firewall rules for internal access
-- Provides environment variables for indexing
-
-#### 2. Deploy and Run Indexing Job
-```bash
-# Deploy the indexing job
-cd indexing-job
-./build_and_deploy_indexer.sh
-
-# Run with default settings (collects active players, creates snapshot)
-gcloud run jobs execute meilisearch-indexing-job --region=us-central1
-
-# Run with custom parameters
-gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
-  --set-env-vars="API_BATCH_SIZE=200,CONCURRENT_REQUESTS=35,ACTIVE_YEARS=2.5"
-```
-
-#### 3. Update Cloud Function
-Update your Cloud Function environment variables:
-```bash
-MEILISEARCH_HOST="http://34.58.214.230:7700"
-MEILISEARCH_API_KEY="a-secure-master-key-change-this"
-```
-
-### Management and Troubleshooting
-
-#### SSH Access and Basic Commands
-```bash
-# Connect to the search VM
-gcloud compute ssh aoe-search --zone=us-central1-a
-
-# Check running containers
-sudo docker ps -a
-
-# Check Meilisearch health
-curl http://localhost:7700/health
-
-# Check with authentication
-curl -H "Authorization: Bearer your-master-key" http://localhost:7700/health
-
-# Check index status and document count
-curl -H "Authorization: Bearer your-master-key" http://localhost:7700/indexes/players/stats
-
-# Restart with latest snapshot (bulletproof wrapper)
-sudo bash /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
-```
-
-#### Log Analysis and Monitoring
-
-**Startup Script Logs** (most important for deployment issues):
-```bash
-# Real-time startup script execution
-sudo journalctl -u google-startup-scripts.service -f
-
-# Recent startup logs
-sudo journalctl -u google-startup-scripts.service --since "1 hour ago"
-
-# Check startup script status
-sudo systemctl status google-startup-scripts.service
-```
-
-**Meilisearch Application Logs**:
-```bash
-# Real-time Meilisearch logs
-sudo docker logs meilisearch -f
-
-# Recent Meilisearch logs  
-sudo docker logs meilisearch --since "1h"
-
-# Last 50 lines
-sudo docker logs --tail 50 meilisearch
-```
-
-**System Logs**:
-```bash
-# All system logs
-sudo journalctl --since "1 hour ago"
-
-# Docker service logs
-sudo journalctl -u docker.service
-```
-
-#### Testing and Verification
-
-**Search Testing**:
-```bash
-# Test search from VM
-curl -X POST 'http://localhost:7700/indexes/players/search' \
-  -H "Authorization: Bearer your-master-key" \
-  -H 'Content-Type: application/json' \
-  --data-binary '{"q": "viper"}'
-
-# Test from external (if firewall allows)
-curl -X POST 'http://<EXTERNAL_IP>:7700/indexes/players/search' \
-  -H "Authorization: Bearer your-master-key" \
-  -H 'Content-Type: application/json' \
-  --data-binary '{"q": "viper"}'
-```
-
-**VM Metadata Checks**:
-```bash
-# Check startup script
-curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/startup-script
-
-# Check master key
-curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key
-```
-
-#### Common Issues and Solutions
-
-- **Container in development mode**: Check startup script logs and master key metadata
-- **Random container names**: Indicates startup script didn't run or failed
-- **No index found**: Check if snapshot was imported or index creation failed
-- **Authentication errors**: Verify master key in metadata and container environment
-- **Empty search results**: Check document count with stats endpoint
-
-#### Manual Recovery and Container Management
-
-**Container Operations**:
-```bash
-# Restart Meilisearch container
-sudo docker restart meilisearch
-
-# View container details and environment
-sudo docker inspect meilisearch | grep -A 20 "Env"
-
-# Check resource usage
-sudo docker stats meilisearch
-```
-
-**Manual Container Start** (if needed):
-```bash
-# Stop and remove existing container
-sudo docker stop meilisearch 2>/dev/null || true
-sudo docker rm meilisearch 2>/dev/null || true
-
-# Get master key from metadata
-MASTER_KEY=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/meili_master_key)
-
-# Start with proper configuration
-sudo docker run -d \
-  --name meilisearch \
-  --restart unless-stopped \
-  -p 7700:7700 \
-  -e MEILI_ENV=production \
-  -e MEILI_MASTER_KEY=$MASTER_KEY \
-  -v /var/lib/meilisearch/data:/meili_data \
-  getmeili/meilisearch:v1.7
-```
-
-#### Index Management
-```bash
-# Get index statistics
-curl -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players/stats
-
-# Get index settings
-curl -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players/settings
-
-# Clear and reindex (if needed)
-curl -X DELETE -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/indexes/players
-```
-
-#### Firewall Management
-```bash
-# List firewall rules
-gcloud compute firewall-rules list --filter="name~meilisearch"
-
-# Allow external access (for testing)
-gcloud compute firewall-rules create allow-meilisearch-external \
-  --direction=INGRESS \
-  --priority=1000 \
-  --network=default \
-  --action=ALLOW \
-  --rules=tcp:7700 \
-  --source-ranges=0.0.0.0/0 \
-  --target-tags=meilisearch-server \
-  --description="Allow external access to Meilisearch (for testing)"
-
-# Remove external access (for production)
-gcloud compute firewall-rules delete allow-meilisearch-external
-```
-
-### Configuration
-
-#### Search Index Settings
-The search index is configured via `aoe-search/meilisearch_config.json`:
-- **Searchable fields**: `name`, `alias`
-- **Filterable fields**: `country`, `total_matches`, `last_match_date`
-- **Sortable fields**: `total_matches`, `last_match_date`
-- **Ranking rules**: Prioritizes players with more matches and recent activity
-- **Typo tolerance**: Enabled for better search experience
-
-#### Performance Tuning
-For the e2-micro VM:
-- **Memory limit**: 400MB for indexing
-- **Threads**: 2 concurrent indexing threads
-- **Batch size**: 1000 documents per batch
-
-### Backup and Recovery
-```bash
-# Create index dump
-curl -X POST -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/dumps
-
-# List available dumps
-curl -H "Authorization: Bearer your-master-key" \
-  http://localhost:7700/dumps
-
-# Restore from dump
-curl -X POST -H "Authorization: Bearer your-master-key" \
-  -H "Content-Type: application/json" \
-  --data-binary '{"dumpUid": "dump_uid_here"}' \
-  http://localhost:7700/dumps/import
-```
-
-## Development
-
-### Prerequisites
-- Node.js 20.x
-- npm
-- Google Cloud SDK (for deployment)
-- Firebase CLI (for local development)
-- **Python 3.8+ (for data processing scripts)**
-
-### Python Environment Setup
-
-The project requires Python dependencies for data processing scripts and Cloud Functions. Set up a Python environment using `pyenv` and `pyenv-virtualenv`:
 
 ```bash
-# Install pyenv (if not already installed)
-# On macOS with Homebrew:
-brew install pyenv pyenv-virtualenv
-pyenv install 3.11.7
-pyenv virtualenv 3.11.7 aoe-match-history
-pyenv local aoe-match-history
+git clone https://github.com/lcguerrerocovo/aoe-match-history.git
+cd aoe-match-history
 
-# Install all dependencies (data processing + Cloud Functions)
-pip install -r requirements.txt
-
-# Verify installations
-python -c "import meilisearch; print('Meilisearch client installed successfully')"
-python -c "import functions_framework; print('Cloud Functions framework installed successfully')"
-```
-
-**Important**: The virtual environment is automatically activated when you're in the project directory. If you need to activate it manually:
-```bash
-pyenv activate aoe-match-history
-```
-
-**Note**: If you don't have `pyenv` installed, you can use the system Python, but `pyenv` is recommended for consistent Python version management across projects.
-
-#### Development vs Production Dependencies
-
-- **Development**: All dependencies installed in root virtual environment (`requirements.txt`)
-- **Production**: Each Cloud Function installs its own dependencies (`pip install -r requirements.txt -t .`)
-
-### Local Development
-
-#### Frontend (UI Development)
-```bash
+# Frontend only (no API — uses mock data in tests)
 cd ui
 npm install
-npm run dev        # Start development server
-npm run dev:all    # Start all services (UI + proxy + Firestore emulator)
-npm run test       # Run tests
-npm run cy:open    # Open Cypress for testing
+npm run dev
+
+# Full stack (requires .env config, Meilisearch tunnel)
+npm run dev:all
 ```
 
-See the **[UI README](ui/README.md)** for detailed frontend development guidelines.
+### Prerequisites
 
-#### Player Search API (Local Development)
-1. Create a `.env` file in `functions/proxy/`:
-   ```
-   STEAM_API_KEY=your_steam_api_key
-   RELIC_AUTH_STEAM_USER=your_steam_username
-   RELIC_AUTH_STEAM_PASS=your_steam_password
-   ```
+- Node.js 20 (see `.nvmrc`)
+- Python 3.11 (for APM function and data scripts)
+- Google Cloud SDK + Firebase CLI (for deployment and emulators)
 
-2. Start the API services:
-   ```bash
-   cd ui
-   npm run dev:api  # Starts proxy + Firestore emulator
-   ```
+### API Proxy Setup
 
-3. Test the API:
-   ```bash
-   curl "http://localhost:8080/api/player-search?name=playerName"
-   ```
-
-### Player Data Collection & Firestore Ingestion
-
-The project includes scripts for collecting player data from the AoE2 API and uploading it to Firestore for the player search functionality.
-
-#### 1. Collect Player Data
-Use the data collection script to gather player information from the AoE2 API:
+Create `functions/proxy/.env` from the example:
 
 ```bash
-# Activate Python environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Collect player data with rate limiting (50 RPS)
-python scripts/collect_player_data.py
-
-# Optional: Resume collection from a specific point
-python scripts/collect_player_data.py --resume-from-id 12345
+cp functions/proxy/.env.example functions/proxy/.env
+# Fill in: STEAM_API_KEY, RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS
 ```
 
-The script:
-- Processes players in batches of 200 IDs per API request
-- Implements rate limiting (50 requests per second)
-- Uses 25 concurrent workers for improved performance
-- Automatically resumes from interruptions
-- Saves data in JSONL format (`player_data_YYYYMMDD_HHMMSS.jsonl`)
-- Filters out players with 0 matches
+Then start all services:
 
-#### 2. Upload to Firestore
-After collecting data, upload it to Firestore:
-
-```bash
-# Upload collected data to Firestore
-python scripts/upload_to_firestore.py player_data_20241210_123456.jsonl
-
-# Monitor progress - the script shows detailed worker statistics
-```
-
-The upload script:
-- Uses 8 concurrent workers for efficient uploads
-- Processes data in batches of 500 players
-- Overwrites existing records with updated data
-- Shows real-time progress with worker distribution
-- Typically processes ~1M players efficiently
-
-#### 3. Development Setup Options
-
-**Option A: Local Development with Production Data**
 ```bash
 cd ui
-npm run dev:all:prod  # Connect to production Firestore
+npm run dev:all    # UI + proxy + Firestore emulator
 ```
 
-**Option B: Local Development with Emulator + Test Data**
+For player search, you'll also need a Meilisearch tunnel:
+
+```bash
+bash scripts/tunnel-meilisearch.sh   # In a separate terminal
+```
+
+## Testing
+
 ```bash
 cd ui
-npm run dev:all       # Uses local emulator with auto-seeded test data
+npm test              # Vitest unit tests
+npm run cy:run        # Cypress component tests (headless)
+npm run test:all      # Everything in parallel (vitest + cypress + proxy jest)
 ```
 
-The emulator is automatically seeded with test players for development and testing.
-
-#### Data Structure
-Player records in Firestore include:
-- `profile_id` - Unique player identifier
-- `name` - Display name
-- `name_no_special` - Cleaned name for search (prefix matching)
-- `name_tokens` - Array of searchable tokens for partial name matching
-- `total_matches` - Total match count
-- `country` - Country code (2-letter ISO)
-- `last_match_date` - Timestamp of last match
-- `clan` - Clan information (if available)
-
-### Firestore Index Management
-
-Player search uses composite indexes defined in `firestore.indexes.json`:
-- **Prefix Search**: `name_no_special` + `total_matches` (for "gl" → "GL.TheViper")  
-- **Token Search**: `name_tokens` + `total_matches` (for "viper" → "GL.TheViper")
-
-**Deploy Changes**: `firebase deploy --only firestore:indexes` (5-15 min build time)
-
-## Frontend (UI) Guidelines
-
-- All responsive and theming logic is centralized in the UI package. See `ui/README.md` for details.
-- Static assets are managed and served from Google Cloud Storage, with CDN caching in production.
-- Automated tests (unit and component) are run via Jest and Cypress.
-
-## Production
-
-### Infrastructure
-
-#### Google Cloud Services
-- Cloud Run (API Proxy)
-- Cloud Storage (static hosting)
-- Firestore (session management and player data)
-
-#### API Proxy Setup
-The project uses Cloud Functions as a proxy to external APIs (RelicLink, Steam) with Cloudflare DNS for caching and SSL termination.
-
-1. **Cloudflare DNS Configuration**
-   - Create a CNAME record in Cloudflare:
-     - Name: `api`
-     - Target: `us-central1-aoe2-site.cloudfunctions.net`
-     - Enable proxy (orange cloud)
-   - This setup allows Cloudflare to:
-     - Handle SSL termination
-     - Cache API responses
-     - Protect against DDoS attacks
-
-3. **Verify Setup**
-   ```bash
-   # Check DNS resolution
-   dig +short api.aoe2.site CNAME
-
-   # Test API endpoint
-   curl -I https://api.aoe2.site/api/steam/avatar/76561198377637238
-   ```
-
-#### Required IAM Roles
-The service account (`aoe2-site-bot@aoe2-site.iam.gserviceaccount.com`) needs:
-- `roles/run.admin` - Manage Cloud Run services
-- `roles/storage.admin` - Manage GCS buckets
-- `roles/run.invoker` - Invoke Cloud Run services
-- `roles/iam.serviceAccountUser` - Act as the service account
-- `roles/datastore.user` - Access Firestore for session management
-- `roles/compute.viewer` - View compute instances (for Meilisearch VM detection)
-- `roles/cloudbuild.builds.editor` - Build containers from source for Cloud Run deployment
-
-Grant roles:
-```bash
-# Core application roles
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/run.admin"
-
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
-
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/datastore.user"
-
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/storage.admin"
-
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/cloudbuild.builds.editor"
-
-# Meilisearch VM deployment roles
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/compute.instanceAdmin.v1"
-
-gcloud projects add-iam-policy-binding aoe2-site \
-  --member="serviceAccount:aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-  --role="roles/compute.networkAdmin"
-
-# Public API access
-gcloud run services add-iam-policy-binding aoe2-api-proxy \
-  --region=us-central1 \
-  --member="allUsers" \
-  --role="roles/run.invoker"
-```
-
-### Cloudflare Integration
-
-The deployment workflow automatically clears Cloudflare cache for updated endpoints. You'll need to add these secrets to your GitHub repository:
-
-- `CLOUDFLARE_API_TOKEN` - API token with Zone:Zone:Edit and Zone:Cache Purge permissions
-- `CLOUDFLARE_ZONE_ID` - Zone ID for your domain (found in Cloudflare dashboard)
-
-**To get these values:**
-
-1. **API Token**: Go to Cloudflare Dashboard → My Profile → API Tokens → Create Token
-   - Use "Custom token" template
-   - Permissions: Zone:Zone:Edit, Zone:Cache Purge
-   - Zone Resources: Include → Specific zone → aoe2.site
-
-2. **Zone ID**: Go to Cloudflare Dashboard → aoe2.site → Overview → Zone ID (right sidebar)
-
-
-### Automated Deployment
-The project uses GitHub Actions for automated deployment:
-
-**Frontend & API Deployment** (`.github/workflows/deploy.yml`):
-- Triggered on push to master
-- Builds the React app
-- Uploads the built files to GCS bucket
-- Deploys Cloud Function with Firestore support
-
-Required GCS bucket setup (one-time):
-```bash
-# Create bucket
-gsutil mb -l us-east1 gs://aoe2.site
-
-# Make bucket public
-gsutil iam ch allUsers:objectViewer gs://aoe2.site
-
-# Set website configuration
-gsutil web set -m index.html -e index.html gs://aoe2.site
-```
+Proxy tests: `cd functions/proxy && npm test`
+APM tests: `cd functions/apm && pytest test_main.py -v`
 
 ## API Endpoints
 
-- `GET /api/steam/avatar/{steamId}` - Get Steam avatar
-- `GET /api/match-history/{profileId}` - Get match history
-- `GET /api/personal-stats/{profileId}` - Get personal stats
-- `GET /api/player-search?name={playerName}` - Search for players (new)
+| Endpoint | Description |
+|---|---|
+| `GET /api/player-search?name={name}` | Search players |
+| `GET /api/match-history/{profileId}` | Match history |
+| `GET /api/personal-stats/{profileId}` | Player stats |
+| `GET /api/match/{matchId}` | Single match detail |
+| `GET /api/steam/avatar/{steamId}` | Steam avatar |
+| `GET /api/apm-status/{gameId}/{profileId}` | APM availability |
 
-## Troubleshooting
-- If GitHub Actions fail, check the service account permissions
-- If site deployment fails, verify GCS bucket permissions
-- For local testing issues, ensure all prerequisites are installed
+## Documentation
 
-## Troubleshooting: Cloud Run Custom Domain Mapping
+- **[UI Development Guide](ui/README.md)** — component architecture, responsive design, theme system
+- **[Style Guide](STYLE_GUIDE.md)** — DaVinci-inspired theme, color palette, design principles
 
-If your Cloud Run service returns 404s or SSL errors when accessed via a custom domain (e.g., through Cloudflare), ensure that:
+## Development with Claude Code
 
-- The custom domain is mapped to your Cloud Run service in the **same region** where the service is deployed.
-- The mapping must use the correct region flag. For example, if your service is in `us-central1`:
+This repo is set up for [Claude Code](https://claude.com/claude-code) assisted development. Operational knowledge (deployment, infrastructure management, troubleshooting) lives in `.claude/skills/` rather than this README:
 
-```sh
-gcloud beta run domain-mappings create --service=aoe2-api-proxy --region=us-central1 --domain=api.aoe2.site
-```
+| Skill | What it covers |
+|---|---|
+| `meilisearch` | VM deployment, container management, indexing, snapshot recovery |
+| `gcp-setup` | IAM roles, service accounts, GCS buckets, Cloud Run domain mapping |
+| `player-indexing` | Player data collection, Meilisearch reindexing, Firestore uploads |
+| `cloudflare-cdn` | Cache purging, DNS config, CDN troubleshooting |
+| `aoe2-relic-api` | Civ/map mappings, API encoding, adding new civs |
 
-If the mapping points to a different region (e.g., `us-east1`), requests will fail with 404 or SSL errors.
-
-After mapping, Google will provision an SSL certificate for the custom domain. This may take a few minutes to become active.
-
-## Cache Management
-
-### Long-lived Files
-Some files like `rl_api_mappings.json` have long cache times (24 hours) for performance. If you update these files and need immediate cache refresh:
-
-```bash
-# Purge Cloudflare cache for specific file
-export API_TOKEN=your_cloudflare_api_token
-export ZONE_ID=your_zone_id
-curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
-  -H "Authorization: Bearer $API_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data '{
-    "files": [
-      "https://aoe2.site/data/rl_api_mappings.json"
-    ]
-  }'
-```
-
-to clear cached search queries when search changes are deployed, run the following:
-
-```bash
-export CF_API_TOKEN=your_cloudflare_api_token
-export CF_ZONE_ID=your_zone_id
-curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
-  -H "Authorization: Bearer $CF_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data '{
-    "files": [
-      "https://api.aoe2.site/api/player-search",
-      "https://api.aoe2.site/api/player-search?name=*"
-    ]
-  }'
-```
-
-Alternatively, use the Cloudflare Dashboard: **Caching** → **Configuration** → **Purge Cache** → **Custom Purge**.
+Skills are loaded on demand when relevant — ask Claude about any of these topics and the right skill activates automatically. You can also invoke them directly with `/skill-name`.
 
 ## Data/API References
+
 - [RelicLink API](https://app.swaggerhub.com/apis/simonsan/RelicLinkCommunityAPI_OA3/0.1#/)
-- [RecentMatchHistory LibreMatch](https://wiki.librematch.org/rlink/game/leaderboard/getrecentmatchhistory)
-- Civ mapping: [100.json](https://raw.githubusercontent.com/SiegeEngineers/aoc-reference-data/master/data/datasets/100.json)
-- [mgz Python library](https://github.com/happyleavesaoc/python-mgz)
-- [worlds edge api client](https://github.com/oliverfenwick90/edgelink-api-client/blob/main/src/util.ts#L3)
-- [age lan server](https://github.com/luskaner/ageLANServer/tree/d52e38b647f1226255dd74b4ab3f6d7ee08720d1)
-- [libre match thread](https://discord.com/channels/952812514272489503/1023626327342993511)
-- [aoe companion](https://github.com/denniske/aoe2companion)
-- [slot metadata parsing](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/advertisement/advertisement-players.ts#L24)
-- [leaderboard mapping](https://github.com/librematch/librematch-collector/blob/90909b784cb5e8366794ffb5bafeb45ad0756916/collector/src/parser/match.ts#L8)
-- [auth flow](https://github.com/librematch/librematch-steam_auth/blob/main/poc_steam_proxy/__init__.py)
-- [steam api](https://steamwebapi.azurewebsites.net/)
+- [RecentMatchHistory (LibreMatch wiki)](https://wiki.librematch.org/rlink/game/leaderboard/getrecentmatchhistory)
+- [Civ reference data (100.json)](https://raw.githubusercontent.com/SiegeEngineers/aoc-reference-data/master/data/datasets/100.json)
+- [mgz replay parser](https://github.com/happyleavesaoc/python-mgz)
+- [edgelink-api-client](https://github.com/oliverfenwick90/edgelink-api-client/blob/main/src/util.ts#L3)
+- [librematch-collector](https://github.com/librematch/librematch-collector/) — slot metadata parsing, leaderboard mapping
+- [aoe2companion](https://github.com/denniske/aoe2companion)
+- [Steam Web API](https://steamwebapi.azurewebsites.net/)
 
-## Deploying Cloud Run with a Custom Domain Behind Cloudflare
+## License
 
-### Step-by-step Setup
-
-1. **Deploy your Cloud Run service**
-   - Deploy as usual to your chosen region (e.g., `us-central1`).
-
-2. **Map your custom domain to Cloud Run**
-   - Use the correct region:
-     ```sh
-     gcloud beta run domain-mappings create --service=YOUR_SERVICE --region=YOUR_REGION --domain=YOUR_CUSTOM_DOMAIN
-     ```
-   - Example:
-     ```sh
-     gcloud beta run domain-mappings create --service=aoe2-api-proxy --region=us-central1 --domain=api.aoe2.site
-     ```
-
-3. **Update DNS in Cloudflare**
-   - Add a CNAME record for your subdomain (e.g., `api`) pointing to `ghs.googlehosted.com.`
-   - Example:
-     | Type  | Name | Content                | Proxy Status |
-     |-------|------|------------------------|--------------|
-     | CNAME | api  | ghs.googlehosted.com.  | Proxied      |
-   - (If certificate provisioning fails, temporarily set Proxy Status to "DNS only" until SSL is ready, then re-enable proxy.)
-
-4. **Wait for SSL certificate provisioning**
-   - Google will automatically provision an SSL certificate for your custom domain. This can take 5–30 minutes.
-   - Check status:
-     ```sh
-     gcloud beta run domain-mappings describe --region=YOUR_REGION --domain=YOUR_CUSTOM_DOMAIN
-     ```
-   - Look for `type: Ready` and `type: CertificateProvisioned` with `status: 'True'`.
-
-5. **Cloudflare SSL/TLS settings**
-   - Set SSL/TLS mode to **Full** (not "Full (strict)", not "Flexible").
-   - Make sure Universal SSL is enabled in Cloudflare.
-
-6. **Purge Cloudflare cache**
-   - After SSL is provisioned and proxy is enabled, purge cache for your domain to clear any stale SSL or routing data.
-
-7. **Test**
-   - Access your API via the custom domain (e.g., `https://api.aoe2.site/`).
-   - If you get a 525 error, repeat the cache purge and double-check SSL settings.
-
-### Troubleshooting
-- If you see `CertificatePending` or 525 errors:
-  - Set Cloudflare proxy to "DNS only" until Google issues the certificate, then re-enable proxy.
-  - Always use CNAME to `ghs.googlehosted.com.` for custom domain mapping.
-  - Purge Cloudflare cache after any SSL or proxy changes.
-- If you mapped the domain to the wrong region, delete and recreate the mapping with the correct region.
-
-### Automation Tips
-- Use `gcloud` commands in deployment scripts for domain mapping and status checks.
-- Use Cloudflare API to automate DNS record creation and cache purging.
-- Add checks in your automation to verify certificate status before enabling proxy.
-- Document all required environment variables (e.g., `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`).
+MIT
