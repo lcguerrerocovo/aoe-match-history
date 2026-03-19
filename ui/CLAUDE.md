@@ -53,7 +53,7 @@ All state in `App.tsx` — no global store. Props drilled to children.
 ## Styling
 
 - Theme: `src/theme/theme.ts` — `createSystem()` with 170+ semantic color tokens
-- Light mode: parchment/cream aesthetic. Dark mode: slate/charcoal
+- Light mode: warm parchment/sepia (Da Vinci Codex palette). Dark mode: dark charcoal
 - Breakpoints: `src/theme/breakpoints.ts` — use `useLayoutConfig()` hook
 - Never hardcode colors or breakpoints — always use theme tokens
 - Desktop: profile header is fixed 320px sidebar. Mobile: stacked layout
