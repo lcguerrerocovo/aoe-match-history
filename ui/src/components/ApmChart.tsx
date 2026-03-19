@@ -12,7 +12,6 @@ import type { TooltipProps } from 'recharts';
 import { Box, Text, Flex, useBreakpointValue, Button } from '@chakra-ui/react';
 import { useThemeMode } from '../theme/ThemeProvider';
 import { PLAYER_COLORS } from '../utils/playerColors';
-import { getTextColorForBackground, getTextShadowForBackground } from '../utils/colorUtils';
 
 interface ApmPlayerSeries {
   minute: number;
@@ -40,15 +39,15 @@ interface ApmChartProps {
 
 // Resolved color values for non-Chakra (Recharts SVG) usage.
 // UI entries (inkDark, inkMuted, borderWarm, etc.) must match theme.ts.
-// inkAccent uses a vibrant blue for chart line visibility, distinct from
-// the theme's brand.inkAccent which is saddlebrown for UI text accents.
+// chartFallback uses a vibrant blue for chart line visibility when no
+// player color is available — distinct from theme's brand.inkAccent.
 const colors = {
   inkDark: { light: '#3B2614', dark: '#F7FAFC' },
   inkMuted: { light: '#8B7355', dark: '#CBD5E0' },
   stoneLight: { light: '#F2F0EA', dark: '#1A202C' },
   parchment: { light: '#F8F3E6', dark: '#1A1A1A' },
   borderWarm: { light: '#9C8567', dark: '#4A5568' },
-  inkAccent: { light: '#1E4BB8', dark: '#90CDF4' },
+  chartFallback: { light: '#1E4BB8', dark: '#90CDF4' },
   bronzeDark: { light: '#6B4423', dark: '#6B4423' },
   darkWin: { light: '#2E7D32', dark: '#48BB78' },
   bronze: { light: '#B37A3E', dark: '#CD7F32' },
@@ -58,15 +57,6 @@ const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token
 
 export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids, onToggle }) => {
   const { isDark } = useThemeMode();
-
-  // Use shared color utility functions
-  const getOptimalTextColorForTheme = (backgroundColor: string): string => {
-    return getTextColorForBackground(backgroundColor, isDark, '#fff', '#111');
-  };
-
-  const getTextShadowForTheme = (backgroundColor: string): string => {
-    return getTextShadowForBackground(backgroundColor, isDark);
-  };
 
 
 
@@ -147,8 +137,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           const key = String(entry.dataKey);
           const name = nameByProfile[key] ?? key;
           const strokeColor = entry.color as string;
-          const textColor = getOptimalTextColorForTheme(strokeColor);
-                      const textShadow = getTextShadowForTheme(strokeColor);
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
               <Text color="brand.inkDark">{name}</Text>
@@ -166,8 +154,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                 <Text
                   fontSize="xs"
                   fontWeight="bold"
-                  color={textColor}
-                  style={{ textShadow }}
+                  color="#fff"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
                 >
                   {entry.value}
                 </Text>
@@ -188,8 +176,9 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={c('inkMuted', isDark)}
-            fill={isDark ? 'transparent' : c('stoneLight', isDark)}
+            stroke={isDark ? c('inkMuted', isDark) : '#C4B59A'}
+            strokeOpacity={isDark ? 1 : 0.4}
+            fill="transparent"
           />
           <XAxis
             dataKey="minute"
@@ -216,7 +205,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
           {playerIds.map((pid) => {
             const colorId = colorByProfile[pid];
-            const stroke = colorId ? PLAYER_COLORS[colorId] || c('inkAccent', isDark) : c('inkAccent', isDark);
+            const stroke = colorId ? PLAYER_COLORS[colorId] || c('chartFallback', isDark) : c('chartFallback', isDark);
             if (!visibleIds.includes(pid)) return null;
             // Enhanced contrast for yellow, green, cyan, orange
             let isEnhanced = false;
@@ -286,43 +275,50 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             const name = nameByProfile[pid] ?? pid;
             const avg = averages[pid];
             const colorId = colorByProfile[pid];
-            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('inkAccent', isDark) : c('inkAccent', isDark);
+            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('chartFallback', isDark) : c('chartFallback', isDark);
             const inactive = !visibleIds.includes(pid);
 
             return (
               <Button
                 key={pid}
                 size="sm"
-                variant={inactive ? "outline" : "solid"}
+                variant="outline"
                 colorPalette="brand"
-                bg={inactive ? "transparent" : playerColor}
-                color={inactive ? (isDark ? '#F7FAFC' : '#19214E') : getOptimalTextColorForTheme(playerColor)}
-                borderColor={playerColor}
+                bg={inactive ? (isDark ? 'transparent' : 'brand.stoneLight') : (isDark ? '#2D3748' : '#EDE5D2')}
+                color={isDark ? '#F7FAFC' : '#3B2614'}
+                borderColor={inactive ? (isDark ? '#4A5568' : '#9C8567') : (isDark ? '#F7FAFC' : '#3B2614')}
                 _hover={{
-                  bg: inactive ? playerColor : playerColor,
-                  color: getOptimalTextColorForTheme(playerColor)
+                  bg: isDark ? '#2D3748' : '#EDE5D2',
                 }}
                 onClick={() => onToggle?.(pid)}
-                maxW="180px"
+                maxW="200px"
                 h="auto"
                 py={1.5}
                 px={2}
                 opacity={inactive ? 0.5 : 1}
               >
                 <Flex align="center" justify="space-between" w="100%" gap={2}>
-                  <Text
-                    fontSize="xs"
-                    fontWeight="medium"
-                    flexShrink={0}
-                    maxW="100px"
-                    truncate
-                    color={inactive ? (isDark ? '#F7FAFC' : '#19214E') : getOptimalTextColorForTheme(playerColor)}
-                    style={{
-                      textShadow: inactive ? 'none' : getTextShadowForTheme(playerColor)
-                    }}
-                  >
-                    {name}
-                  </Text>
+                  <Flex align="center" gap={2}>
+                    <Box
+                      w="10px"
+                      h="10px"
+                      borderRadius="full"
+                      bg={playerColor}
+                      border="1px solid"
+                      borderColor={isDark ? '#4A5568' : '#9C8567'}
+                      flexShrink={0}
+                    />
+                    <Text
+                      fontSize="xs"
+                      fontWeight={inactive ? 'medium' : 'bold'}
+                      flexShrink={0}
+                      maxW="100px"
+                      truncate
+                      color={isDark ? '#F7FAFC' : '#3B2614'}
+                    >
+                      {name}
+                    </Text>
+                  </Flex>
                   {avg !== undefined && avg !== null && (
                     <Box
                       bg="brand.stoneLight"

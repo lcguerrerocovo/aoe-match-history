@@ -2,7 +2,6 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import type { TooltipProps } from 'recharts';
 import { Box, Text, Flex, useBreakpointValue } from '@chakra-ui/react';
 import { useThemeMode } from '../../theme/ThemeProvider';
-import { getTextColorForBackground, getTextShadowForBackground } from '../../utils/colorUtils';
 import { getColorByIndex } from './utils';
 
 interface ActionTypeStat {
@@ -67,15 +66,9 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
               <Text
                 fontSize="xs"
                 fontWeight="bold"
-                color={getTextColorForBackground(entry.color || '', isDark, '#fff', '#111')}
+                color="#fff"
                 style={{
-                  textShadow: getTextShadowForBackground(entry.color || '', isDark)
-                }}
-                css={{ color: getTextColorForBackground(entry.color || '', isDark, '#fff', '#111') }}
-                onClick={() => {
-                  const textColor = getTextColorForBackground(entry.color || '', isDark, '#fff', '#111');
-                  console.log(`Text color for ${entry.color}: ${textColor}`);
-                  console.log(`Applied color:`, textColor);
+                  textShadow: '0 1px 2px rgba(0,0,0,0.6)'
                 }}
               >
                 {entry.value}
@@ -102,28 +95,29 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
           >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#CBD5E0' : '#5A6478'}
-            fill={isDark ? 'transparent' : '#F2F0EA'}
+            stroke={isDark ? '#CBD5E0' : '#C4B59A'}
+            strokeOpacity={isDark ? 1 : 0.4}
+            fill="transparent"
           />
           <XAxis
             dataKey="minute"
-            stroke={isDark ? '#F7FAFC' : '#19214E'}
+            stroke={isDark ? '#F7FAFC' : '#3B2614'}
             label={showAxisLabel ? {
               value: 'Minute',
               position: 'insideBottom',
               offset: -5,
-              fill: isDark ? '#F7FAFC' : '#19214E',
+              fill: isDark ? '#F7FAFC' : '#3B2614',
               fontWeight: 'bold',
             } : undefined}
           />
           <YAxis
-            stroke={isDark ? '#F7FAFC' : '#19214E'}
+            stroke={isDark ? '#F7FAFC' : '#3B2614'}
             label={showAxisLabel ? {
               value: 'Actions',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fill: isDark ? '#F7FAFC' : '#19214E',
+              fill: isDark ? '#F7FAFC' : '#3B2614',
               fontWeight: 'bold',
             } : undefined}
           />
@@ -138,7 +132,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
               dataKey={actionStat.actionType}
               stackId="a"
               fill={getColorByIndex(actionTypeColorMap[actionStat.actionType] || 0)}
-              stroke={isDark ? '#CBD5E0' : '#5A6478'}
+              stroke={isDark ? '#CBD5E0' : '#C4B59A'}
               strokeWidth={1}
             />
           ))}

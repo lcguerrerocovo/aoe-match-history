@@ -1,6 +1,5 @@
 import { Box, Text, Flex, Button } from '@chakra-ui/react';
 import { useThemeMode } from '../../theme/ThemeProvider';
-import { getTextColorForBackground, getTextShadowForBackground } from '../../utils/colorUtils';
 import { getPlayerColor } from './utils';
 
 interface PlayerSelectorProps {
@@ -41,35 +40,41 @@ export function PlayerSelector({
           <Button
             key={pid}
             size="sm"
-            variant={isSelected ? "solid" : "outline"}
+            variant="outline"
             colorPalette="brand"
-            bg={isSelected ? playerColor : "transparent"}
-            color={isSelected ? getTextColorForBackground(playerColor, isDark, '#fff', '#111') : (isDark ? '#F7FAFC' : '#19214E')}
-            borderColor={playerColor}
+            bg={isSelected ? (isDark ? '#2D3748' : '#EDE5D2') : (isDark ? 'transparent' : 'brand.stoneLight')}
+            color={isDark ? '#F7FAFC' : '#3B2614'}
+            borderColor={isSelected ? (isDark ? '#F7FAFC' : '#3B2614') : (isDark ? '#4A5568' : '#9C8567')}
             _hover={{
-              bg: isSelected ? playerColor : playerColor,
-              color: getTextColorForBackground(playerColor, isDark, '#fff', '#111'),
+              bg: isDark ? '#2D3748' : '#EDE5D2',
             }}
             onClick={() => onSelectPlayer(pid)}
-            maxW="200px"
+            maxW="220px"
             h="auto"
             py={2}
             px={3}
           >
             <Flex align="center" justify="space-between" w="100%" gap={2}>
-              <Text
-                fontSize="xs"
-                fontWeight="semibold"
-                flexShrink={0}
-                maxW="120px"
-                truncate
-                color={isSelected ? getTextColorForBackground(playerColor, isDark, '#fff', '#111') : (isDark ? '#F7FAFC' : '#19214E')}
-                style={{
-                  textShadow: isSelected ? getTextShadowForBackground(playerColor, isDark) : 'none'
-                }}
-              >
-                {name}
-              </Text>
+              <Flex align="center" gap={2}>
+                <Box
+                  w="12px"
+                  h="12px"
+                  borderRadius="full"
+                  bg={playerColor}
+                  border="1px solid"
+                  borderColor={isDark ? '#4A5568' : '#9C8567'}
+                  flexShrink={0}
+                />
+                <Text
+                  fontSize="xs"
+                  fontWeight={isSelected ? 'bold' : 'semibold'}
+                  maxW="120px"
+                  truncate
+                  color={isDark ? '#F7FAFC' : '#3B2614'}
+                >
+                  {name}
+                </Text>
+              </Flex>
               {isSelected && (
                 <Box
                   bg="brand.stoneLight"
@@ -83,10 +88,7 @@ export function PlayerSelector({
                   <Text
                     fontSize="xs"
                     fontWeight="bold"
-                    color={getTextColorForBackground(isDark ? '#1A202C' : '#F2F0EA', isDark, '#fff', '#111')}
-                    style={{
-                      textShadow: getTextShadowForBackground(isDark ? '#1A202C' : '#F2F0EA', isDark)
-                    }}
+                    color="brand.inkDark"
                   >
                     {playerAvg}
                   </Text>
