@@ -42,11 +42,11 @@ export function PlayerSelector({
             size="sm"
             variant="outline"
             colorPalette="brand"
-            bg={isSelected ? (isDark ? '#2D3748' : '#EDE5D2') : (isDark ? 'transparent' : 'brand.stoneLight')}
-            color={isDark ? '#F7FAFC' : '#3B2614'}
-            borderColor={isSelected ? (isDark ? '#F7FAFC' : '#3B2614') : (isDark ? '#4A5568' : '#9C8567')}
+            bg={isSelected ? 'brand.parchmentDark' : (isDark ? 'transparent' : 'brand.stoneLight')}
+            color={isDark ? 'brand.parchment' : 'brand.inkDark'}
+            borderColor={isSelected ? (isDark ? 'brand.parchment' : 'brand.inkDark') : 'brand.borderWarm'}
             _hover={{
-              bg: isDark ? '#2D3748' : '#EDE5D2',
+              bg: 'brand.parchmentDark',
             }}
             onClick={() => onSelectPlayer(pid)}
             maxW="220px"
@@ -62,7 +62,7 @@ export function PlayerSelector({
                   borderRadius="full"
                   bg={playerColor}
                   border="1px solid"
-                  borderColor={isDark ? '#4A5568' : '#9C8567'}
+                  borderColor="brand.borderWarm"
                   flexShrink={0}
                 />
                 <Text
@@ -70,7 +70,7 @@ export function PlayerSelector({
                   fontWeight={isSelected ? 'bold' : 'semibold'}
                   maxW="120px"
                   truncate
-                  color={isDark ? '#F7FAFC' : '#3B2614'}
+                  color={isDark ? 'brand.parchment' : 'brand.inkDark'}
                 >
                   {name}
                 </Text>

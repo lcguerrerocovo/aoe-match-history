@@ -46,6 +46,7 @@ const colors = {
   inkMuted: { light: '#8B7355', dark: '#CBD5E0' },
   stoneLight: { light: '#F2F0EA', dark: '#1A202C' },
   parchment: { light: '#F8F3E6', dark: '#1A1A1A' },
+  inkLight: { light: '#C4B59A', dark: '#2D3748' },
   borderWarm: { light: '#9C8567', dark: '#4A5568' },
   chartFallback: { light: '#1E4BB8', dark: '#90CDF4' },
   bronzeDark: { light: '#6B4423', dark: '#6B4423' },
@@ -176,7 +177,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? c('inkMuted', isDark) : '#C4B59A'}
+            stroke={isDark ? c('inkMuted', isDark) : c('inkLight', false)}
             strokeOpacity={isDark ? 1 : 0.4}
             fill="transparent"
           />
@@ -284,11 +285,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                 size="sm"
                 variant="outline"
                 colorPalette="brand"
-                bg={inactive ? (isDark ? 'transparent' : 'brand.stoneLight') : (isDark ? '#2D3748' : '#EDE5D2')}
-                color={isDark ? '#F7FAFC' : '#3B2614'}
-                borderColor={inactive ? (isDark ? '#4A5568' : '#9C8567') : (isDark ? '#F7FAFC' : '#3B2614')}
+                bg={inactive ? (isDark ? 'transparent' : 'brand.stoneLight') : 'brand.parchmentDark'}
+                color={isDark ? 'brand.parchment' : 'brand.inkDark'}
+                borderColor={inactive ? 'brand.borderWarm' : (isDark ? 'brand.parchment' : 'brand.inkDark')}
                 _hover={{
-                  bg: isDark ? '#2D3748' : '#EDE5D2',
+                  bg: 'brand.parchmentDark',
                 }}
                 onClick={() => onToggle?.(pid)}
                 maxW="200px"
@@ -305,7 +306,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       borderRadius="full"
                       bg={playerColor}
                       border="1px solid"
-                      borderColor={isDark ? '#4A5568' : '#9C8567'}
+                      borderColor="brand.borderWarm"
                       flexShrink={0}
                     />
                     <Text
@@ -314,7 +315,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       flexShrink={0}
                       maxW="100px"
                       truncate
-                      color={isDark ? '#F7FAFC' : '#3B2614'}
+                      color={isDark ? 'brand.parchment' : 'brand.inkDark'}
                     >
                       {name}
                     </Text>

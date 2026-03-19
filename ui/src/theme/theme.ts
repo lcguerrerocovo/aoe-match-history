@@ -35,6 +35,7 @@ const semanticColors = {
     stone: { value: { base: '#E6E3D8', _dark: '#2D3748' } },
     stoneLight: { value: { base: '#F2F0EA', _dark: '#1A202C' } },
     fadedParchment: { value: { base: '#E8DCC8', _dark: '#2A4A6B' } },
+    parchmentDark: { value: { base: '#EDE5D2', _dark: '#2D3748' } },
 
     // Dark background optimized
     brightGold: { value: '#FFD700' },
