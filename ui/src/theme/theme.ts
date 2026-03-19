@@ -64,16 +64,23 @@ const semanticColors = {
     // UI component backgrounds (gradients as strings)
     topbarBg: {
       value: {
-        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 10%, #f0e8d8 60%, #F8F3E6 100%)',
+        base: 'linear-gradient(180deg, #3D1C11 0%, #4A2318 10%, #5C2E1A 60%, #4A2318 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 10%, #171923 60%, #0F0F0F 100%)',
       },
     },
     topbarBgMd: {
       value: {
-        base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 20%, #f0e8d8 55%, #F8F3E6 100%)',
+        base: 'linear-gradient(180deg, #3D1C11 0%, #4A2318 20%, #5C2E1A 55%, #4A2318 100%)',
         _dark: 'linear-gradient(180deg, #2D3748 0%, #1A202C 20%, #171923 55%, #0F0F0F 100%)',
       },
     },
+    topbarText: { value: { base: '#F5EDDA', _dark: '#F7FAFC' } },
+    topbarTextShadow: { value: { base: 'rgba(0,0,0,0.3)', _dark: 'rgba(0,0,0,0.8)' } },
+    topbarTextShadowAlpha: { value: { base: 'rgba(0,0,0,0.15)', _dark: 'rgba(255,255,255,0.1)' } },
+    topbarSearchBg: { value: { base: 'rgba(245,237,218,0.12)', _dark: 'rgba(255,255,255,0.08)' } },
+    topbarSearchText: { value: { base: '#F5EDDA', _dark: '#F7FAFC' } },
+    topbarSearchPlaceholder: { value: { base: 'rgba(245,237,218,0.5)', _dark: 'rgba(255,255,255,0.4)' } },
+    topbarSearchBorder: { value: { base: 'rgba(245,237,218,0.2)', _dark: 'rgba(255,255,255,0.15)' } },
     landingBg: {
       value: {
         base: 'linear-gradient(180deg, #e6dcc8 0%, #ece3d0 10%, #f0e8d8 60%, #F8F3E6 100%)',
@@ -112,21 +119,21 @@ const semanticColors = {
     textShadowAlpha: { value: { base: 'rgba(0,0,0,0.04)', _dark: 'rgba(255,255,255,0.1)' } },
 
     // Animation glow colors
-    sunGlow: { value: { base: 'rgba(255, 215, 0, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
-    sunGlowBright: { value: { base: 'rgba(255, 215, 0, 0.6)', _dark: 'rgba(147, 197, 253, 0.6)' } },
-    sunGlowDim: { value: { base: 'rgba(255, 215, 0, 0.2)', _dark: 'rgba(147, 197, 253, 0.2)' } },
-    sunColor: { value: { base: '#D4AF37', _dark: '#93C5FD' } },
-    sunBg: { value: { base: 'rgba(255, 215, 0, 0.1)', _dark: 'rgba(147, 197, 253, 0.1)' } },
-    sunBorder: { value: { base: 'rgba(212, 175, 55, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
+    sunGlow: { value: { base: 'rgba(139, 58, 58, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
+    sunGlowBright: { value: { base: 'rgba(139, 58, 58, 0.6)', _dark: 'rgba(147, 197, 253, 0.6)' } },
+    sunGlowDim: { value: { base: 'rgba(139, 58, 58, 0.2)', _dark: 'rgba(147, 197, 253, 0.2)' } },
+    sunColor: { value: { base: '#8B3A3A', _dark: '#93C5FD' } },
+    sunBg: { value: { base: 'rgba(139, 58, 58, 0.15)', _dark: 'rgba(147, 197, 253, 0.1)' } },
+    sunBorder: { value: { base: 'rgba(139, 58, 58, 0.3)', _dark: 'rgba(147, 197, 253, 0.3)' } },
     sunRadialGradient: {
       value: {
-        base: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.1), transparent 70%)',
+        base: 'radial-gradient(circle at 30% 30%, rgba(139, 58, 58, 0.1), transparent 70%)',
         _dark: 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.1), transparent 70%)',
       },
     },
     sunRadialGradientBg: {
       value: {
-        base: 'radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%)',
+        base: 'radial-gradient(circle, rgba(139, 58, 58, 0.05) 0%, transparent 70%)',
         _dark: 'radial-gradient(circle, rgba(147, 197, 253, 0.05) 0%, transparent 70%)',
       },
     },

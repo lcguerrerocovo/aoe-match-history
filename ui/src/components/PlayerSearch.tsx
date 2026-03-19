@@ -90,8 +90,8 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
         zIndex={dropdownStyle.zIndex}
         bg="brand.stoneLight"
         borderRadius="sm"
-        border="1.5px solid"
-        borderColor="brand.gold"
+        border="1px solid"
+        borderColor="brand.inkMedium"
         maxH="270px"
         overflowY="auto"
         p={0}
@@ -167,7 +167,12 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
 
   return (
     <Box position="relative" w="100%" ref={inputBoxRef}>
-      <Card.Root variant={cardVariant('filter')} p={0} w="100%">
+      <Card.Root
+        variant={cardVariant('filter')}
+        p={0}
+        w="100%"
+        {...(context === 'topbar' ? { bg: 'transparent', borderColor: 'brand.topbarSearchBorder' } : {})}
+      >
         <Box position="relative">
           <Input
             ref={inputRef}
@@ -177,9 +182,9 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
             fontSize={size === 'sm' ? 'sm' : { base: 'md', md: 'lg' }}
             borderRadius="sm"
             borderWidth={0}
-            _placeholder={{ color: 'brand.inkMuted' }}
-            bg="brand.inputBg"
-            color="brand.inkDark"
+            _placeholder={{ color: context === 'topbar' ? 'brand.topbarSearchPlaceholder' : 'brand.inkMuted' }}
+            bg={context === 'topbar' ? 'brand.topbarSearchBg' : 'brand.inputBg'}
+            color={context === 'topbar' ? 'brand.topbarSearchText' : 'brand.inkDark'}
             boxShadow="none"
             h={size === 'sm' ? '38px' : '50px'}
             value={value}
@@ -197,7 +202,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
               transform="translateY(-50%)"
               cursor="pointer"
               onClick={() => setValue('')}
-              color="brand.inkMuted"
+              color={context === 'topbar' ? 'brand.topbarSearchText' : 'brand.inkMuted'}
               fontSize="lg"
             >
               ×
@@ -211,7 +216,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
       >
         {loading ? (
           <Box display="flex" alignItems="center" justifyContent="center" py={4}>
-            <Spinner size="sm" color="brand.gold" borderWidth="3px" />
+            <Spinner size="sm" color="brand.inkMuted" borderWidth="3px" />
           </Box>
         ) : results.length > 0 ? (
           results

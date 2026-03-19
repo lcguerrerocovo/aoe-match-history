@@ -31,7 +31,7 @@ const TopBar = () => {
       px={4}
       py={2}
       zIndex={10}
-      borderBottomWidth={{ base: '0px', md: '4px' }}
+      borderBottomWidth={{ base: '0px', md: '2px' }}
       borderBottomStyle="solid"
       borderColor="brand.gold"
     >
@@ -51,10 +51,10 @@ const TopBar = () => {
           {/* Left: Site title */}
           <Text
             fontWeight="bold"
-            color="brand.inkDark"
+            color="brand.topbarText"
             fontSize="2xl"
             letterSpacing="wide"
-            textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}
+            textShadow={`0 1px 0 ${system.token('colors.brand.topbarTextShadow', '')}, 0 2px 4px ${system.token('colors.brand.topbarTextShadowAlpha', '')}`}
             display="flex"
             alignItems="center"
             gap={0.5}
@@ -85,10 +85,10 @@ const TopBar = () => {
           {/* Centered title */}
           <Text
             fontWeight="bold"
-            color="brand.inkDark"
+            color="brand.topbarText"
             fontSize="xl"
             letterSpacing="wide"
-            textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}
+            textShadow={`0 1px 0 ${system.token('colors.brand.topbarTextShadow', '')}, 0 2px 4px ${system.token('colors.brand.topbarTextShadowAlpha', '')}`}
             display="flex"
             alignItems="center"
             gap={0.5}
