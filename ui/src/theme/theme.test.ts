@@ -9,8 +9,8 @@ describe('Chakra Theme Configuration (v3)', () => {
 
   it('should have semantic color tokens for brand palette', () => {
     // Verify key brand tokens exist in the system
-    const midnightBlue = system.token('colors.brand.midnightBlue');
-    expect(midnightBlue).toBeDefined();
+    const inkDark = system.token('colors.brand.inkDark');
+    expect(inkDark).toBeDefined();
 
     const gold = system.token('colors.brand.gold');
     expect(gold).toBeDefined();

@@ -36,27 +36,27 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
       <Box
         bg="brand.parchment"
         border="1px solid"
-        borderColor="brand.slateBorder"
+        borderColor="brand.borderWarm"
         p={2}
         borderRadius="md"
         fontSize="sm"
         minW="200px"
       >
-        <Text fontWeight="bold" mb={1} color="brand.midnightBlue">
+        <Text fontWeight="bold" mb={1} color="brand.inkDark">
           Minute {label}
         </Text>
-        <Text fontSize="xs" color="brand.midnightBlue" mb={1}>
+        <Text fontSize="xs" color="brand.inkDark" mb={1}>
           Total: {totalActions} actions
         </Text>
         {payload.map((entry) => (
           <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
-            <Text color="brand.midnightBlue" fontSize="xs">
+            <Text color="brand.inkDark" fontSize="xs">
               {entry.dataKey}
             </Text>
             <Box
               bg={entry.color}
               border="1px solid"
-              borderColor="brand.steel"
+              borderColor="brand.inkMuted"
               borderRadius="sm"
               w="32px"
               h="18px"

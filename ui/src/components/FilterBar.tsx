@@ -106,7 +106,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
               bg={searchValue ? 'brand.stone' : 'brand.inputBg'}
               borderWidth="1px"
-              borderColor="brand.slateBorder"
+              borderColor="brand.borderWarm"
               _focus={{
                 borderColor: 'brand.gold',
                 borderWidth: '1px',
@@ -121,7 +121,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 transform="translateY(-50%)"
                 cursor="pointer"
                 onClick={handleClear}
-                color="brand.steel"
+                color="brand.inkMuted"
                 fontSize="lg"
                 _hover={{ color: 'brand.bronze' }}
               >
@@ -140,12 +140,12 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 bg="brand.stone"
                 borderRadius="sm"
                 borderWidth="1px"
-                borderColor="brand.steel"
+                borderColor="brand.inkMuted"
                 p={2}
                 fontSize="sm"
                 zIndex={10}
               >
-                <Text color="brand.midnightBlue" textAlign="center">
+                <Text color="brand.inkDark" textAlign="center">
                   {searchResultsCount} matches found
                 </Text>
               </Box>
@@ -166,7 +166,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 fontSize={{ base: 'xs', md: 'sm' }}
                 bg="brand.inputBg"
                 borderWidth="1px"
-                borderColor="brand.slateBorder"
+                borderColor="brand.borderWarm"
                 _focus={{
                   borderColor: 'brand.gold',
                   borderWidth: '1px',
@@ -195,7 +195,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                 fontSize={{ base: 'xs', md: 'sm' }}
                 bg="brand.inputBg"
                 borderWidth="1px"
-                borderColor="brand.slateBorder"
+                borderColor="brand.borderWarm"
                 _focus={{
                   borderColor: 'brand.gold',
                   borderWidth: '1px',
@@ -223,8 +223,8 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               size="md"
               bg="brand.inputBg"
               borderWidth="1px"
-              borderColor="brand.slateBorder"
-              color="brand.midnightBlue"
+              borderColor="brand.borderWarm"
+              color="brand.inkDark"
               _hover={{ bg: 'brand.stone', borderColor: 'brand.gold' }}
               borderRadius="sm"
             >

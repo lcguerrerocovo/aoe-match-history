@@ -89,10 +89,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
         {/* Avatar */}
         <Avatar.Root
           size={{ base: "sm", md: "md", lg: "md" }}
-          bg="brand.steel"
+          bg="brand.inkMuted"
           color="brand.parchment"
           border="1px solid"
-          borderColor={player.winner ? "brand.brightGreen" : "brand.steel"}
+          borderColor={player.winner ? "brand.brightGreen" : "brand.inkMuted"}
           data-testid="player-avatar"><Avatar.Fallback name={player.name} /><Avatar.Image src={avatarUrl} /></Avatar.Root>
 
         {/* Details column */}
@@ -105,7 +105,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
               bg={bgColor}
               borderRadius="sm"
               border="1px solid"
-              borderColor="brand.steel"
+              borderColor="brand.inkMuted"
               display="flex"
               alignItems="center"
               justifyContent="center"
@@ -165,14 +165,14 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
                 {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
               </Box>
             </Box>
-            <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.midnightBlue" lineClamp={1}>
+            <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.inkDark" lineClamp={1}>
               {player.civ}
             </Text>
           </HStack>
 
           {/* Rating and change */}
           {player.rating && (
-            <Text fontSize={{ base: "2xs", md: "xs", lg: "sm" }} color="brand.midnightBlue" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
+            <Text fontSize={{ base: "2xs", md: "xs", lg: "sm" }} color="brand.inkDark" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
               {player.rating}
               {player.rating_change && (
                 <Text as="span" fontSize={{ base: '2xs', md: '2xs', lg: 'xs' }} color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
@@ -187,8 +187,8 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
       <Link
         fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
-        color="brand.midnightBlue"
-        _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+        color="brand.inkDark"
+        _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
         textDecoration="none"
         lineClamp={1}
         maxW={{ base: "calc(100% - 16px)", md: "calc(100% - 20px)" }}
@@ -218,9 +218,9 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
           h={{ base: "18px", md: "22px" }}
           bg={
             isReplayLoading
-              ? 'brand.steel'
+              ? 'brand.inkMuted'
               : isReplayDisabled
-                ? 'brand.steel'
+                ? 'brand.inkMuted'
                 : `linear-gradient(135deg, ${bronzeLightResolved} 0%, ${bronzeResolved} 40%, ${BRONZE_MEDIUM} 80%, ${BRONZE_DARK} 100%)`
           }
           borderRadius="full"

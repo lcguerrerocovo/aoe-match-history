@@ -16,20 +16,20 @@ interface StatsTableProps {
 }
 
 const thStyles = {
-  color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.steel}' },
+  color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkMuted}' },
   textTransform: 'uppercase' as const,
   whiteSpace: 'nowrap' as const,
   fontSize: '2xs',
   fontWeight: 'bold',
   padding: '0.35rem 0.15rem',
   borderBottom: '2px solid',
-  borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.slateBorder}' },
+  borderColor: { base: '{colors.brand.inkMuted}', _dark: '{colors.brand.borderWarm}' },
 };
 
 const tdStyles = {
-  color: { base: '{colors.brand.black}', _dark: '{colors.brand.midnightBlue}' },
+  color: { base: '{colors.brand.black}', _dark: '{colors.brand.inkDark}' },
   borderBottom: '1px solid',
-  borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.slateBorder}' },
+  borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.borderWarm}' },
   fontSize: 'xs',
   whiteSpace: 'nowrap' as const,
   textOverflow: 'ellipsis',

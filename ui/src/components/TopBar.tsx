@@ -51,7 +51,7 @@ const TopBar = () => {
           {/* Left: Site title */}
           <Text
             fontWeight="bold"
-            color="brand.midnightBlue"
+            color="brand.inkDark"
             fontSize="2xl"
             letterSpacing="wide"
             textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}
@@ -85,7 +85,7 @@ const TopBar = () => {
           {/* Centered title */}
           <Text
             fontWeight="bold"
-            color="brand.midnightBlue"
+            color="brand.inkDark"
             fontSize="xl"
             letterSpacing="wide"
             textShadow={`0 1px 0 ${system.token('colors.brand.textShadowLight', '')}, 0 2px 4px ${system.token('colors.brand.textShadowAlpha', '')}`}

@@ -115,16 +115,16 @@ export function APMGenerator({
 
   if (variant === 'button') {
     const bg = silver
-      ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.lightSteel')} 50%, ${token('colors.brand.brightSilver')} 100%)`
+      ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.inkLight')} 50%, ${token('colors.brand.brightSilver')} 100%)`
       : apmStatus?.state === 'bronzeStatus'
         ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
-        : 'brand.steel';
+        : 'brand.inkMuted';
 
     const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
-      ? (processing ? 'brand.steel' : 'brand.stoneLight')
+      ? (processing ? 'brand.inkMuted' : 'brand.stoneLight')
       : apmStatus?.state === 'bronzeStatus'
         ? 'brand.brightGold'
-        : 'brand.steel';
+        : 'brand.inkMuted';
 
     const tooltipLabel = error
       ? error
@@ -141,7 +141,7 @@ export function APMGenerator({
     const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
     const borderColor = error
       ? 'brand.brightRed'
-      : silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
+      : silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.inkMuted');
     const boxShadow = silver
       ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
       : (apmStatus?.state === 'bronzeStatus' ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
@@ -171,7 +171,7 @@ export function APMGenerator({
           transition="all 0.2s ease-in-out"
           {...linkProps}
         >
-          {processing ? <Spinner size="xs" color="brand.steel" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : 'APM'}
+          {processing ? <Spinner size="xs" color="brand.inkMuted" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : 'APM'}
         </Box>
       </Tooltip>
     );
@@ -179,26 +179,26 @@ export function APMGenerator({
 
   // Card variant
   const bg = silver
-    ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.lightSteel')} 50%, ${token('colors.brand.brightSilver')} 100%)`
+    ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.inkLight')} 50%, ${token('colors.brand.brightSilver')} 100%)`
     : apmStatus?.state === 'bronzeStatus'
       ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
-      : 'brand.steel';
+      : 'brand.inkMuted';
 
   const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
-    ? (processing ? 'brand.steel' : 'brand.stoneLight')
+    ? (processing ? 'brand.inkMuted' : 'brand.stoneLight')
     : apmStatus?.state === 'bronzeStatus'
       ? 'brand.brightGold'
-      : 'brand.steel';
+      : 'brand.inkMuted';
 
   const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
-  const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.steel');
+  const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.inkMuted');
 
   const getCardContent = () => {
     if (processing) {
       return (
         <Box textAlign="center" py={8}>
-          <Spinner size="lg" color="brand.steel" mb={4} />
-          <Text color="brand.steel" fontWeight="medium">Processing replay...</Text>
+          <Spinner size="lg" color="brand.inkMuted" mb={4} />
+          <Text color="brand.inkMuted" fontWeight="medium">Processing replay...</Text>
           <Text color="brand.stoneLight" fontSize="sm" mt={2}>This may take a few moments</Text>
         </Box>
       );
@@ -210,7 +210,7 @@ export function APMGenerator({
           <Text color="brand.brightRed" fontWeight="bold" fontSize="lg" mb={2}>Processing Failed</Text>
           <Text color="brand.stoneLight" fontSize="sm" mb={4}>{error}</Text>
           <Box
-            bg="brand.steel"
+            bg="brand.inkMuted"
             color="brand.stoneLight"
             px={6}
             py={2}
@@ -218,7 +218,7 @@ export function APMGenerator({
             display="inline-block"
             cursor="pointer"
             onClick={handleClick}
-            _hover={{ bg: 'brand.lightSteel' }}
+            _hover={{ bg: 'brand.inkLight' }}
             transition="all 0.2s ease-in-out"
           >
             Try Again
@@ -251,18 +251,18 @@ export function APMGenerator({
     if (apmStatus?.state === 'silverStatus') {
       return (
         <Box textAlign="center" py={8} cursor="pointer" onClick={handleClick}>
-          <Text color="brand.steel" fontWeight="bold" fontSize="lg" mb={2}>Generate APM Analysis</Text>
+          <Text color="brand.inkMuted" fontWeight="bold" fontSize="lg" mb={2}>Generate APM Analysis</Text>
           <Text color="brand.stoneLight" fontSize="sm" mb={4}>
             Click to download and process the replay for APM data
           </Text>
           <Box
-            bg="brand.steel"
+            bg="brand.inkMuted"
             color="brand.stoneLight"
             px={6}
             py={2}
             borderRadius="md"
             display="inline-block"
-            _hover={{ bg: 'brand.lightSteel' }}
+            _hover={{ bg: 'brand.inkLight' }}
             transition="all 0.2s ease-in-out"
           >
             Generate APM

@@ -58,7 +58,7 @@ export const calculateActionTypeTotals = (playerData: ApmActionData[], actionTyp
   return totals;
 };
 
-// Fallback color matching brand.zoolanderBlue light/dark
+// Fallback color matching brand.inkAccent light/dark
 const ZOOLANDER_BLUE_LIGHT = '#1E4BB8';
 const ZOOLANDER_BLUE_DARK = '#90CDF4';
 

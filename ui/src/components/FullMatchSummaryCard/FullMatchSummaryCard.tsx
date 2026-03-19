@@ -13,7 +13,7 @@ export function FullMatchSummaryCard({ match }: FullMatchSummaryCardProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <Card.Root variant={cardVariant('match')} w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px" data-testid="enlarged-match-card">
+    <Card.Root variant={cardVariant('match')} w="100%" p={6} data-testid="enlarged-match-card">
       <VStack gap={6} align="stretch">
         {/* Match Details */}
         <MatchDetails match={match} />
@@ -74,7 +74,7 @@ export function FullMatchSummaryCard({ match }: FullMatchSummaryCardProps) {
                               w="100%"
                               h="100%"
                               bg={bg}
-                              borderRadius="md"
+                              borderRadius="0"
                               p={0}
                               display="flex"
                               alignItems="center"

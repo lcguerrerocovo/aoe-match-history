@@ -248,7 +248,7 @@ describe('Theme Compliance', () => {
     expect(themeContent).toMatch(/createSystem/);
 
     // Essential brand colors should be defined
-    const essentialColors = ['midnightBlue', 'gold', 'steel', 'parchment'];
+    const essentialColors = ['inkDark', 'gold', 'inkMuted', 'parchment'];
     essentialColors.forEach(color => {
       expect(themeContent).toMatch(new RegExp(color));
     });

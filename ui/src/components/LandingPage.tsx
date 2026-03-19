@@ -76,7 +76,7 @@ export function LandingPage() {
           <RouterLink to="#">
             <Text
               fontWeight="bold"
-              color="brand.midnightBlue"
+              color="brand.inkDark"
               fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
               letterSpacing="wide"
               display="flex"
@@ -100,7 +100,7 @@ export function LandingPage() {
           <Text
             fontSize={{ base: 'lg', md: 'xl' }}
             fontWeight="600"
-            color="brand.midnightBlue"
+            color="brand.inkDark"
             textAlign="center"
             lineHeight="1.4"
           >
@@ -116,7 +116,7 @@ export function LandingPage() {
           >
             <Text
               fontSize={{ base: 'sm', md: 'md' }}
-              color="brand.midnightBlue"
+              color="brand.inkDark"
               lineHeight="1.6"
             >
               Analyze your recent Age of Empires II ranked match history with detailed performance

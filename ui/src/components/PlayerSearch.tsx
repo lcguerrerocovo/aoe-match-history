@@ -177,9 +177,9 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
             fontSize={size === 'sm' ? 'sm' : { base: 'md', md: 'lg' }}
             borderRadius="sm"
             borderWidth={0}
-            _placeholder={{ color: 'brand.steel' }}
+            _placeholder={{ color: 'brand.inkMuted' }}
             bg="brand.inputBg"
-            color="brand.midnightBlue"
+            color="brand.inkDark"
             boxShadow="none"
             h={size === 'sm' ? '38px' : '50px'}
             value={value}
@@ -197,7 +197,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
               transform="translateY(-50%)"
               cursor="pointer"
               onClick={() => setValue('')}
-              color="brand.steel"
+              color="brand.inkMuted"
               fontSize="lg"
             >
               ×
@@ -248,13 +248,13 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
                       }}
                     />
                   )}
-                  <Text fontWeight="bold" color="brand.midnightBlue" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
+                  <Text fontWeight="bold" color="brand.inkDark" fontSize={size === 'sm' ? 'xs' : 'sm'}>{player.name}</Text>
                 </HStack>
-                <Text color="brand.steel" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches}</Text>
+                <Text color="brand.inkMuted" fontSize={size === 'sm' ? '2xs' : 'xs'}>{player.matches}</Text>
               </Card.Root>
             ))
         ) : (
-          <Text color="brand.steel" fontSize="sm" textAlign="center" py={2}>No players found</Text>
+          <Text color="brand.inkMuted" fontSize="sm" textAlign="center" py={2}>No players found</Text>
         )}
       </PlayerSearchDropdown>
     </Box>

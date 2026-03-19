@@ -37,9 +37,9 @@ export function ActionTypeLegend({
               placement="top"
               hasArrow
               bg="brand.parchment"
-              color="brand.midnightBlue"
+              color="brand.inkDark"
               border="1px solid"
-              borderColor="brand.slateBorder"
+              borderColor="brand.borderWarm"
               borderRadius="md"
               p={2}
               fontSize="sm"
@@ -52,10 +52,10 @@ export function ActionTypeLegend({
                 py={1}
                 flexShrink={0}
                 minW="fit-content"
-                bg={isActive ? 'brand.stoneLight' : 'brand.fadedBlue'}
+                bg={isActive ? 'brand.stoneLight' : 'brand.fadedParchment'}
                 borderRadius="md"
                 border="1px solid"
-                borderColor={isActive ? 'brand.slateBorder' : 'brand.lightSteel'}
+                borderColor={isActive ? 'brand.borderWarm' : 'brand.inkLight'}
                 opacity={isActive ? 1 : 0.6}
                 cursor="pointer"
                 onClick={() => onToggleActionType(actionType)}
@@ -72,7 +72,7 @@ export function ActionTypeLegend({
                   flexShrink={0}
                 />
                 <Text
-                  color="brand.midnightBlue"
+                  color="brand.inkDark"
                   fontSize="sm"
                   fontWeight="semibold"
                   maxW="140px"
@@ -84,7 +84,7 @@ export function ActionTypeLegend({
                 </Text>
                 {actionStat.percentage !== null && (
                   <Text
-                    color="brand.midnightBlue"
+                    color="brand.inkDark"
                     fontSize="xs"
                     fontWeight="bold"
                     flexShrink={0}

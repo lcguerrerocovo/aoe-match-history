@@ -44,7 +44,7 @@ export function RankingCard({ stats }: RankingCardProps) {
           const textProps = (() => {
             // Use tier colors for medaled players, default colors for unmedaled players
             if (!tier.showCrown) {
-              return { color: isDark ? 'white' : 'brand.midnightBlue' };
+              return { color: isDark ? 'white' : 'brand.inkDark' };
             }
             if (tier.gradient) {
               // Use solid colors for better visibility in dark mode

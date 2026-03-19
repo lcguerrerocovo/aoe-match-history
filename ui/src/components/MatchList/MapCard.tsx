@@ -57,7 +57,7 @@ export function MapCard({ match }: { match: Match }) {
       </Box>
       {/* Map name below image */}
       <Box mt={1} textAlign="center" fontSize="xs">
-        <Text as="span" color="brand.steel">{mapName}</Text>
+        <Text as="span" color="brand.inkMuted">{mapName}</Text>
       </Box>
     </Box>
   );

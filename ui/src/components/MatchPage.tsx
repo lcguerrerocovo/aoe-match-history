@@ -27,10 +27,10 @@ export function MatchPage() {
   const [error, setError] = useState<string | null>(null);
   const layout = useLayoutConfig();
   const { isDark } = useThemeMode();
-  const tabText = isDark ? 'brand.parchment' : 'brand.midnightBlue';
-  const tabSelectedText = isDark ? 'brand.brightGold' : 'brand.midnightBlue';
-  const tabSelectedBg = isDark ? 'brand.steel' : 'brand.stoneLight';
-  const tabBorder = isDark ? 'brand.steel' : 'brand.slateBorder';
+  const tabText = isDark ? 'brand.parchment' : 'brand.inkDark';
+  const tabSelectedText = isDark ? 'brand.brightGold' : 'brand.inkDark';
+  const tabSelectedBg = isDark ? 'brand.inkMuted' : 'brand.stoneLight';
+  const tabBorder = isDark ? 'brand.inkMuted' : 'brand.borderWarm';
 
   const [activePids, setActivePids] = useState<string[]>([]);
 
@@ -115,7 +115,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'sm' }}
+
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -123,7 +123,7 @@ export function MatchPage() {
             justify="center"
           >
             <Spinner size="xl" color="brand.gold" />
-            <Text color="brand.steel">Loading match details...</Text>
+            <Text color="brand.inkMuted">Loading match details...</Text>
           </VStack>
         </Box>
       </>
@@ -143,7 +143,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'sm' }}
+
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -171,7 +171,7 @@ export function MatchPage() {
             w="100%"
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
-            borderRadius={{ md: 'sm' }}
+
             borderWidth={{ base: '3px', md: '4px' }}
             borderTopWidth={{ base: 0, md: '4px' }}
             borderColor="brand.gold"
@@ -210,7 +210,7 @@ export function MatchPage() {
           >
             <FullMatchSummaryCard match={match} />
 
-            <Card.Root variant={cardVariant('match')} w="100%" p={6} bg="brand.sessionCardBg" borderColor="brand.slateBorder" borderWidth="1px">
+            <Card.Root variant={cardVariant('match')} w="100%" p={6}>
               <Tabs.Root defaultValue="apm" colorPalette="brand">
                 <Tabs.List mb={4} justifyContent="flex-start">
                   <Tabs.Trigger
@@ -247,7 +247,7 @@ export function MatchPage() {
                 <Tabs.Content value="apm" p={0}>
                   {hasApm ? (
                     <>
-                      <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                      <Text fontSize="lg" fontWeight="bold" color="brand.inkDark" mb={2} textAlign="center">
                         APM (Game Time)
                       </Text>
                       <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
@@ -269,7 +269,7 @@ export function MatchPage() {
                         }
                       }}
                     >
-                      <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                      <Text fontSize="lg" fontWeight="bold" color="brand.inkDark" mb={2} textAlign="center">
                         APM (Game Time)
                       </Text>
                       <ApmChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} activePids={activePids} onToggle={togglePid} />
@@ -279,7 +279,7 @@ export function MatchPage() {
                 <Tabs.Content value="actions" p={0}>
                   {hasApm ? (
                     <>
-                      <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                      <Text fontSize="lg" fontWeight="bold" color="brand.inkDark" mb={2} textAlign="center">
                         Actions Breakdown
                       </Text>
                       <ApmBreakdownChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />
@@ -301,7 +301,7 @@ export function MatchPage() {
                         }
                       }}
                     >
-                      <Text fontSize="lg" fontWeight="bold" color="brand.midnightBlue" mb={2} textAlign="center">
+                      <Text fontSize="lg" fontWeight="bold" color="brand.inkDark" mb={2} textAlign="center">
                         Actions Breakdown
                       </Text>
                       <ApmBreakdownChart apm={match.apm!} colorByProfile={colorMap} nameByProfile={nameMap} />

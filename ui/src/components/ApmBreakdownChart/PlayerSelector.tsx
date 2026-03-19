@@ -74,7 +74,7 @@ export function PlayerSelector({
                 <Box
                   bg="brand.stoneLight"
                   border="1px solid"
-                  borderColor="brand.slateBorder"
+                  borderColor="brand.borderWarm"
                   borderRadius="sm"
                   px={2}
                   py={1}

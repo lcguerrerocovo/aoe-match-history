@@ -8,7 +8,7 @@ import { createSystem, defaultConfig, defineConfig, defineSlotRecipe, defineReci
 const semanticColors = {
   brand: {
     // Core palette
-    midnightBlue: { value: { base: '#3B2614', _dark: '#F7FAFC' } },
+    inkDark: { value: { base: '#3B2614', _dark: '#F7FAFC' } },
     gold: { value: { base: '#D4AF37', _dark: '#FFD700' } },
     bronzeLight: { value: { base: '#C8A26B', _dark: '#CFA46B' } },
     bronze: { value: { base: '#B37A3E', _dark: '#CD7F32' } },
@@ -16,13 +16,13 @@ const semanticColors = {
     bronzeDark: { value: '#6B4423' },
     bronzeDarkest: { value: '#5A3A20' },
     black: { value: { base: '#2B1810', _dark: '#F7FAFC' } },
-    charcoal: { value: '#3D2B1F' },
+    surfaceDark: { value: '#3D2B1F' },
     parchment: { value: { base: '#F8F3E6', _dark: '#1A1A1A' } },
-    steel: { value: { base: '#8B7355', _dark: '#CBD5E0' } },
-    lightSteel: { value: { base: '#C4B59A', _dark: '#2D3748' } },
+    inkMuted: { value: { base: '#8B7355', _dark: '#CBD5E0' } },
+    inkLight: { value: { base: '#C4B59A', _dark: '#2D3748' } },
     heraldic: { value: { base: '#5A3A20', _dark: '#90CDF4' } },
-    slateBlue: { value: { base: '#6B5240', _dark: '#2D3748' } },
-    slateBorder: { value: { base: '#9C8567', _dark: '#4A5568' } },
+    inkMedium: { value: { base: '#6B5240', _dark: '#2D3748' } },
+    borderWarm: { value: { base: '#9C8567', _dark: '#4A5568' } },
     white: { value: '#fff' },
     pureBlack: { value: '#111' },
 
@@ -34,10 +34,10 @@ const semanticColors = {
     win: { value: { base: '#3AA76D', _dark: '#48BB78' } },
     loss: { value: { base: '#D64545', _dark: '#F56565' } },
     same: { value: { base: '#8B7355', _dark: '#90CDF4' } },
-    zoolanderBlue: { value: { base: '#8B4513', _dark: '#90CDF4' } },
+    inkAccent: { value: { base: '#8B4513', _dark: '#90CDF4' } },
     stone: { value: { base: '#E6E3D8', _dark: '#2D3748' } },
     stoneLight: { value: { base: '#F2F0EA', _dark: '#1A202C' } },
-    fadedBlue: { value: { base: '#E8DCC8', _dark: '#2A4A6B' } },
+    fadedParchment: { value: { base: '#E8DCC8', _dark: '#2A4A6B' } },
 
     // Dark background optimized
     brightGold: { value: '#FFD700' },
@@ -236,7 +236,7 @@ const cardSlotRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderRadius: '0',
           borderBottom: '1px solid',
-          borderBottomColor: { base: 'rgba(139, 90, 43, 0.2)', _dark: '{colors.brand.slateBorder}' },
+          borderBottomColor: { base: 'rgba(139, 90, 43, 0.2)', _dark: '{colors.brand.borderWarm}' },
           _last: { borderBottom: 'none' },
           display: 'flex',
           flexDirection: 'column',
@@ -260,7 +260,7 @@ const cardSlotRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderRadius: '0',
           borderBottom: '1px solid',
-          borderBottomColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.slateBorder}' },
+          borderBottomColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.borderWarm}' },
           transition: 'all 0.3s ease',
         },
       },
@@ -281,7 +281,7 @@ const cardSlotRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderRadius: '0',
           borderLeft: '3px solid',
-          borderLeftColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.slateBorder}' },
+          borderLeftColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.borderWarm}' },
           p: '1',
           transition: 'all 0.3s ease',
         },
@@ -290,7 +290,7 @@ const cardSlotRecipe = defineSlotRecipe({
         root: {
           bg: '{colors.brand.sessionCardBg}',
           borderWidth: '1px',
-          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.slateBorder}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.borderWarm}' },
           borderRadius: 'sm',
           transition: 'all 0.3s ease',
         },
@@ -298,8 +298,8 @@ const cardSlotRecipe = defineSlotRecipe({
       recordBubble: {
         root: {
           bg: 'transparent',
-          color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+          color: { base: '{colors.brand.black}', _dark: '{colors.brand.inkMuted}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
           borderWidth: '1px',
           borderRadius: 'sm',
           boxShadow: 'none',
@@ -322,8 +322,8 @@ const cardSlotRecipe = defineSlotRecipe({
       matchesCountBubble: {
         root: {
           bg: 'transparent',
-          color: { base: '{colors.brand.black}', _dark: '{colors.brand.steel}' },
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+          color: { base: '{colors.brand.black}', _dark: '{colors.brand.inkMuted}' },
+          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
           borderWidth: '1px',
           borderRadius: 'sm',
           px: { base: '1', md: '3' },
@@ -367,12 +367,12 @@ const profileHeaderSlotRecipe = defineSlotRecipe({
       height: '100px',
     },
     name: {
-      color: '{colors.brand.midnightBlue}',
+      color: '{colors.brand.inkDark}',
       fontWeight: 'bold',
       fontSize: 'lg',
     },
     id: {
-      color: '{colors.brand.steel}',
+      color: '{colors.brand.inkMuted}',
       fontSize: 'xs',
     },
     statsTable: {},
@@ -384,8 +384,8 @@ const playerStatsSlotRecipe = defineSlotRecipe({
   slots: ['container', 'statsTable'],
   base: {
     container: {
-      bg: { base: '#f6ecd8', _dark: '{colors.brand.slateBlue}' },
-      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+      bg: { base: '#f6ecd8', _dark: '{colors.brand.inkMedium}' },
+      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
       borderRadius: 'sm',
       padding: '1rem',
       borderWidth: '2px',
@@ -412,8 +412,8 @@ const rankingCardSlotRecipe = defineSlotRecipe({
   slots: ['container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'],
   base: {
     container: {
-      bg: { base: '#f6ecd8', _dark: '{colors.brand.slateBlue}' },
-      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.slateBorder}' },
+      bg: { base: '#f6ecd8', _dark: '{colors.brand.inkMedium}' },
+      borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
       borderRadius: 'sm',
       padding: '0.3rem',
       borderWidth: '2px',
@@ -448,7 +448,7 @@ const rankingCardSlotRecipe = defineSlotRecipe({
       },
     },
     leaderboardName: {
-      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.steel}' },
+      color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkMuted}' },
       fontSize: '2xs',
       fontWeight: 'bold',
       textTransform: 'uppercase',
@@ -460,7 +460,7 @@ const rankingCardSlotRecipe = defineSlotRecipe({
       whiteSpace: 'nowrap',
     },
     percentileText: {
-      color: '{colors.brand.steel}',
+      color: '{colors.brand.inkMuted}',
       fontSize: 'xs',
       fontWeight: 'bold',
       whiteSpace: 'nowrap',
@@ -470,7 +470,7 @@ const rankingCardSlotRecipe = defineSlotRecipe({
       w: '100%',
     },
     tableHeader: {
-      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.steel}' },
+      color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkMuted}' },
       textTransform: 'uppercase',
       whiteSpace: 'nowrap',
       fontSize: '2xs',
@@ -478,11 +478,11 @@ const rankingCardSlotRecipe = defineSlotRecipe({
       textAlign: 'left',
       padding: '0.5rem',
       borderBottom: '1px solid',
-      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.slateBorder}' },
+      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.borderWarm}' },
     },
     tableRow: {
       borderBottom: '1px solid',
-      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.slateBorder}' },
+      borderColor: { base: '{colors.brand.bronzeLight}', _dark: '{colors.brand.borderWarm}' },
       _last: { borderBottom: 'none' },
     },
     tableCell: {
@@ -499,7 +499,7 @@ const rankingCardSlotRecipe = defineSlotRecipe({
 const headingRecipe = defineRecipe({
   className: 'heading',
   base: {
-    color: '{colors.brand.midnightBlue}',
+    color: '{colors.brand.inkDark}',
     fontWeight: '600',
   },
 });
@@ -519,15 +519,15 @@ const buttonRecipe = defineRecipe({
   variants: {
     variant: {
       solid: {
-        bg: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.lightSteel}' },
-        color: { base: 'white', _dark: '{colors.brand.midnightBlue}' },
+        bg: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkLight}' },
+        color: { base: 'white', _dark: '{colors.brand.inkDark}' },
         _hover: {
-          bg: { base: '{colors.brand.heraldic}', _dark: '{colors.brand.slateBlue}' },
+          bg: { base: '{colors.brand.heraldic}', _dark: '{colors.brand.inkMedium}' },
         },
       },
       outline: {
         borderColor: '{colors.brand.gold}',
-        color: '{colors.brand.midnightBlue}',
+        color: '{colors.brand.inkDark}',
         _hover: {
           bg: { base: '#b78b2b', _dark: '{colors.brand.gold}' },
           color: { base: 'white', _dark: '{colors.brand.black}' },
@@ -540,7 +540,7 @@ const buttonRecipe = defineRecipe({
 const separatorRecipe = defineRecipe({
   className: 'separator',
   base: {
-    borderColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.slateBorder}' },
+    borderColor: { base: '{colors.brand.stone}', _dark: '{colors.brand.borderWarm}' },
     opacity: 0.4,
   },
 });
@@ -568,13 +568,13 @@ const config = defineConfig({
       transition: 'all 0.2s ease-in-out',
     },
     '*, *::before, *::after': {
-      borderColor: { base: '{colors.brand.steel}', _dark: '{colors.brand.lightSteel}' },
+      borderColor: { base: '{colors.brand.inkMuted}', _dark: '{colors.brand.inkLight}' },
     },
     '*': {
       transition: 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease',
     },
     '.rank': {
-      color: { base: '{colors.brand.midnightBlue}', _dark: '{colors.brand.zoolanderBlue}' },
+      color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.zoolanderBlue}' },
       fontWeight: '700',
     },
     '.loss': {

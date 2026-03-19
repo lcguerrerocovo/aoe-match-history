@@ -37,10 +37,10 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
             {profile?.country ? (
               <ReactCountryFlag countryCode={profile.country} svg style={{ width: '1em', height: '1em' }} />
             ) : (
-              <Icon w={3} h={3} color="brand.steel" asChild><FaFlag /></Icon>
+              <Icon w={3} h={3} color="brand.inkMuted" asChild><FaFlag /></Icon>
             )}
             {profile?.clanlist_name && (
-              <Text fontSize="xs" color="brand.steel">Clan: {profile.clanlist_name}</Text>
+              <Text fontSize="xs" color="brand.inkMuted">Clan: {profile.clanlist_name}</Text>
             )}
           </HStack>
           <Text css={styles.id}>ID: {profileId}</Text>

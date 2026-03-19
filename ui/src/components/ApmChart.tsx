@@ -40,12 +40,12 @@ interface ApmChartProps {
 
 // Resolved color values for non-Chakra (Recharts SVG) usage
 const colors = {
-  midnightBlue: { light: '#19214E', dark: '#F7FAFC' },
-  steel: { light: '#5A6478', dark: '#CBD5E0' },
+  inkDark: { light: '#19214E', dark: '#F7FAFC' },
+  inkMuted: { light: '#5A6478', dark: '#CBD5E0' },
   stoneLight: { light: '#F2F0EA', dark: '#1A202C' },
   parchment: { light: '#F8F3E6', dark: '#1A1A1A' },
-  slateBorder: { light: '#64728A', dark: '#4A5568' },
-  zoolanderBlue: { light: '#1E4BB8', dark: '#90CDF4' },
+  borderWarm: { light: '#64728A', dark: '#4A5568' },
+  inkAccent: { light: '#1E4BB8', dark: '#90CDF4' },
   bronzeDark: { light: '#6B4423', dark: '#6B4423' },
   darkWin: { light: '#2E7D32', dark: '#48BB78' },
   bronze: { light: '#B37A3E', dark: '#CD7F32' },
@@ -138,8 +138,8 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     const sortedPayload = [...payload].sort((a, b) => ((b.value as number) ?? 0) - ((a.value as number) ?? 0));
 
     return (
-      <Box bg="brand.parchment" border="1px solid" borderColor="brand.slateBorder" p={2} borderRadius="md" fontSize="sm" minW="170px">
-        <Text fontWeight="bold" mb={1} color="brand.midnightBlue">Minute {label}</Text>
+      <Box bg="brand.parchment" border="1px solid" borderColor="brand.borderWarm" p={2} borderRadius="md" fontSize="sm" minW="170px">
+        <Text fontWeight="bold" mb={1} color="brand.inkDark">Minute {label}</Text>
         {[...new Map(sortedPayload.map((entry) => [String(entry.dataKey), entry])).values()].map((entry) => {
           const key = String(entry.dataKey);
           const name = nameByProfile[key] ?? key;
@@ -148,11 +148,11 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       const textShadow = getTextShadowForTheme(strokeColor);
           return (
             <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
-              <Text color="brand.midnightBlue">{name}</Text>
+              <Text color="brand.inkDark">{name}</Text>
               <Box
                 bg={strokeColor}
                 border="1px solid"
-                borderColor="brand.steel"
+                borderColor="brand.inkMuted"
                 borderRadius="sm"
                 w="32px"
                 h="18px"
@@ -185,39 +185,39 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={c('steel', isDark)}
+            stroke={c('inkMuted', isDark)}
             fill={isDark ? 'transparent' : c('stoneLight', isDark)}
           />
           <XAxis
             dataKey="minute"
-            stroke={c('midnightBlue', isDark)}
+            stroke={c('inkDark', isDark)}
             label={showAxisLabel ? {
               value: 'Minute',
               position: 'insideBottom',
               offset: -5,
-              fill: c('midnightBlue', isDark),
+              fill: c('inkDark', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
           <YAxis
-            stroke={c('midnightBlue', isDark)}
+            stroke={c('inkDark', isDark)}
             label={showAxisLabel ? {
               value: 'APM',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fill: c('midnightBlue', isDark),
+              fill: c('inkDark', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
           <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
           {playerIds.map((pid) => {
             const colorId = colorByProfile[pid];
-            const stroke = colorId ? PLAYER_COLORS[colorId] || c('zoolanderBlue', isDark) : c('zoolanderBlue', isDark);
+            const stroke = colorId ? PLAYER_COLORS[colorId] || c('inkAccent', isDark) : c('inkAccent', isDark);
             if (!visibleIds.includes(pid)) return null;
             // Enhanced contrast for yellow, green, cyan, orange
             let isEnhanced = false;
-            let outlineColor = c('steel', isDark);
+            let outlineColor = c('inkMuted', isDark);
             if (colorId === 4 || stroke.toUpperCase() === '#FFFF00') { // yellow
               isEnhanced = true;
               outlineColor = c('bronzeDark', isDark);
@@ -226,7 +226,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
               outlineColor = c('darkWin', isDark);
             } else if (colorId === 5 || stroke.toUpperCase() === '#00FFFF') { // cyan
               isEnhanced = true;
-              outlineColor = c('slateBorder', isDark);
+              outlineColor = c('borderWarm', isDark);
             } else if (colorId === 8 || stroke.toUpperCase() === '#FFA500') { // orange
               isEnhanced = true;
               outlineColor = c('bronze', isDark);
@@ -283,7 +283,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
             const name = nameByProfile[pid] ?? pid;
             const avg = averages[pid];
             const colorId = colorByProfile[pid];
-            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('zoolanderBlue', isDark) : c('zoolanderBlue', isDark);
+            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('inkAccent', isDark) : c('inkAccent', isDark);
             const inactive = !visibleIds.includes(pid);
 
             return (
@@ -324,7 +324,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                     <Box
                       bg="brand.stoneLight"
                       border="1px solid"
-                      borderColor="brand.slateBorder"
+                      borderColor="brand.borderWarm"
                       borderRadius="sm"
                       px={1.5}
                       py={0.5}
@@ -333,7 +333,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                       <Text
                         fontSize="xs"
                         fontWeight="bold"
-                        color="brand.midnightBlue"
+                        color="brand.inkDark"
                       >
                         {avg}
                       </Text>

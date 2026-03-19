@@ -31,7 +31,7 @@ export function MapCard({ match }: { match: Match }) {
           onError={handleImageError}
         />
       </Box>
-      <Text fontSize="xl" fontWeight="semibold" color="brand.midnightBlue" textAlign="center">
+      <Text fontSize="xl" fontWeight="semibold" color="brand.inkDark" textAlign="center">
         {mapName}
       </Text>
     </VStack>

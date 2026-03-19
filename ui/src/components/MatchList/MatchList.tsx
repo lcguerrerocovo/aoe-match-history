@@ -85,11 +85,11 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack gap={2} justify="flex-start">
                                   <HStack gap={1}>
                                     <Icon boxSize={3} color="brand.bronze"><FiCalendar /></Icon>
-                                    <Text fontWeight="bold" color="brand.midnightBlue" fontSize="sm">{timingData.dateDisplay}</Text>
+                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay}</Text>
                                   </HStack>
-                                  <Text color="brand.steel" fontSize="xs">|</Text>
+                                  <Text color="brand.inkMuted" fontSize="xs">|</Text>
                                   {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.midnightBlue" fontSize="sm">{timingData.timeRange}</Text>
+                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
                                   )}
                                 </HStack>
 
@@ -97,13 +97,13 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack gap={3} justify="flex-start" fontSize="xs">
                                   <HStack gap={1}>
                                     <Icon boxSize="10px" color="brand.bronze"><FiClock /></Icon>
-                                    <Text color="brand.steel">Session:</Text>
-                                    <Text fontWeight="medium" color="brand.steel">{timingData.sessionDuration}</Text>
+                                    <Text color="brand.inkMuted">Session:</Text>
+                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.sessionDuration}</Text>
                                   </HStack>
                                   <HStack gap={1}>
                                     <GiBroadsword size={10} color="currentColor" />
-                                    <Text color="brand.steel">Played:</Text>
-                                    <Text fontWeight="medium" color="brand.steel">{timingData.timePlayed}</Text>
+                                    <Text color="brand.inkMuted">Played:</Text>
+                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.timePlayed}</Text>
                                   </HStack>
                                 </HStack>
                               </VStack>
@@ -113,11 +113,11 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack gap={3}>
                                   <HStack gap={1}>
                                     <Icon boxSize={3} color="brand.bronze"><FiCalendar /></Icon>
-                                    <Text fontWeight="bold" color="brand.midnightBlue" fontSize="md">{timingData.dateDisplay}</Text>
+                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="md">{timingData.dateDisplay}</Text>
                                   </HStack>
-                                  <Text color="brand.steel" fontSize="sm">|</Text>
+                                  <Text color="brand.inkMuted" fontSize="sm">|</Text>
                                   {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.midnightBlue" fontSize="md">{timingData.timeRange}</Text>
+                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="md">{timingData.timeRange}</Text>
                                   )}
                                 </HStack>
 
@@ -125,13 +125,13 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 <HStack gap={4} fontSize="sm">
                                   <HStack gap={1}>
                                     <Icon boxSize={3} color="brand.bronze"><FiClock /></Icon>
-                                    <Text color="brand.steel">Session:</Text>
-                                    <Text fontWeight="medium" color="brand.steel">{timingData.sessionDuration}</Text>
+                                    <Text color="brand.inkMuted">Session:</Text>
+                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.sessionDuration}</Text>
                                   </HStack>
                                   <HStack gap={1}>
                                     <GiBroadsword size={12} color="currentColor" />
-                                    <Text color="brand.steel">Played:</Text>
-                                    <Text fontWeight="medium" color="brand.steel">{timingData.timePlayed}</Text>
+                                    <Text color="brand.inkMuted">Played:</Text>
+                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.timePlayed}</Text>
                                   </HStack>
                                 </HStack>
                               </HStack>
@@ -152,15 +152,15 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               <Text as="span" fontWeight="bold" mr={2} display="inline-block" width={{ base: '60px', md: '120px' }} textAlign="center" verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                                 {isMobile ? shortenMatchTypeName(diplo) : diplo}
                               </Text>
-                              <Text as="span" color="brand.steel" mr={2} verticalAlign="middle">|</Text>
+                              <Text as="span" color="brand.inkMuted" mr={2} verticalAlign="middle">|</Text>
                               <Text as="span" color="brand.darkWin" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.wins}W</Text>
                               <Text as="span" color="brand.darkLoss" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.losses}L</Text>
                               {rec.uncategorized > 0 && (
-                                <Text as="span" color="brand.steel" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
+                                <Text as="span" color="brand.inkMuted" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
                               )}
                               {rec.eloChange !== 0 && (
                                 <>
-                                  <Text as="span" color="brand.steel" ml={2} mr={2} verticalAlign="middle">|</Text>
+                                  <Text as="span" color="brand.inkMuted" ml={2} mr={2} verticalAlign="middle">|</Text>
                                   <Text
                                     as="span"
                                     display="inline-block"

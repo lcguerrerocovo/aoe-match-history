@@ -20,8 +20,8 @@ export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match
         <HStack justify="space-between" gap={2} wrap="wrap" align="center" minH="32px" py={1}>
           <Link
             fontWeight="bold"
-            color="brand.midnightBlue"
-            _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+            color="brand.inkDark"
+            _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
             textDecoration="none"
             asChild><RouterLink to={`/match/${match.match_id}`}>#{match.match_id}
             </RouterLink></Link>
@@ -50,22 +50,22 @@ export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match
         >
           <HStack gap={1}>
             <Icon boxSize={3} color="brand.bronze"><FiCalendar /></Icon>
-            <Text as="span" color="brand.steel">
+            <Text as="span" color="brand.inkMuted">
               {formatDateTime(match.start_time)}
             </Text>
           </HStack>
           <HStack gap={2}>
             <HStack gap={1}>
-              <Icon boxSize={3} color="brand.zoolanderBlue"><FiClock /></Icon>
+              <Icon boxSize={3} color="brand.inkAccent"><FiClock /></Icon>
               <Tooltip content="Game time (1.7x Real time)" fontSize="xs">
-              <Text as="span" color="brand.steel">
+              <Text as="span" color="brand.inkMuted">
                 {formatDuration(gameTimeSec)}
               </Text>
               </Tooltip>
             </HStack>
             <HStack gap={1}>
               <Icon boxSize={3} color="brand.bronze"><FiClock /></Icon>
-                <Text as="span" color="brand.steel">
+                <Text as="span" color="brand.inkMuted">
                   {formatDuration(durationSec)}
                 </Text>
             </HStack>

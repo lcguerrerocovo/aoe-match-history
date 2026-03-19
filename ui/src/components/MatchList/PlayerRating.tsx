@@ -15,7 +15,7 @@ export function PlayerRating({ player }: { player: Player }) {
   if (displayMode === 'full') {
     return (
       <HStack gap={2} ml="auto">
-        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
+        <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.inkDark">
           {rating}
         </Text>
         <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="3ch" textAlign="right">
@@ -27,7 +27,7 @@ export function PlayerRating({ player }: { player: Player }) {
 
   return (
     <HStack gap={1} ml="auto">
-      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.midnightBlue">
+      <Text fontWeight="semibold" fontSize="xs" fontFamily="mono" minWidth="4ch" textAlign="right" color="brand.inkDark">
         {rating}
       </Text>
       <Text color={changeColor} fontWeight="semibold" fontSize="xs" fontFamily="mono">

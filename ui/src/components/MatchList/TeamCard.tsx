@@ -82,7 +82,7 @@ export function TeamCard({ match }: { match: Match }) {
                 <Box
                   w={layout?.teamCard.colorBarWidth}
                   h={layout?.teamCard.colorBarHeight}
-                  bg={PLAYER_COLORS[p.color_id] || 'brand.steel'}
+                  bg={PLAYER_COLORS[p.color_id] || 'brand.inkMuted'}
                   mr={1}
                   flexShrink={0}
                 />
@@ -134,9 +134,9 @@ export function TeamCard({ match }: { match: Match }) {
                   </Text>
                 </Box>
                 <Link
-                  color="brand.midnightBlue"
+                  color="brand.inkDark"
                   fontWeight="semibold"
-                  _hover={{ color: "brand.zoolanderBlue", textDecoration: "underline" }}
+                  _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
                   textDecoration="none"
                   fontSize={layout?.teamCard.playerNameFontSize}
                   textOverflow="ellipsis"
