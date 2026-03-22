@@ -71,7 +71,7 @@ jobs:
     - name: Install dependencies and build
       run: |
         cd jobs/collector
-        npm ci
+        npm ci --registry=https://registry.npmjs.org/ --no-audit --no-fund
         npx tsc
         npm prune --production
 
