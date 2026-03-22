@@ -69,15 +69,15 @@ jobs:
         node-version: 20
 
     - name: Install dependencies and build
+      working-directory: jobs/collector
       run: |
-        cd jobs/collector
         npm ci --registry=https://registry.npmjs.org/ --no-audit --no-fund
         npx tsc
         npm prune --production
 
     - name: Build Docker image
+      working-directory: jobs/collector
       run: |
-        cd jobs/collector
         docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} .
         docker tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
 
