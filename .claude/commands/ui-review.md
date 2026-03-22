@@ -16,10 +16,17 @@ match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, Apm
 
 ## Workflow
 
+### 0. Handle `clear` Argument
+
+If `$ARGUMENTS` is `clear`:
+1. Delete `.ui-review/annotations.json` from the project root (if it exists)
+2. If the dev server is running, also call: `curl -s -X POST http://localhost:5173/__ui-review/clear`
+3. Respond: "Annotations cleared." and stop — do not continue to subsequent steps.
+
 ### 1. Validate
 
 - Check that the Vite dev server is running: `curl -s http://localhost:5173/ > /dev/null`. If it fails, tell the user: "Start the dev server first: `cd ui && npm run dev`"
-- Validate that the view argument matches one of the view mapping keys above. If not, list the valid views.
+- Validate that the view argument matches one of the view mapping keys above. If not, list the valid views and also mention `/ui-review clear` to clear existing annotations.
 - Check that the component files for this view exist. If any are missing, warn: "[ComponentName].tsx not found — view mapping may be stale."
 
 ### 2. Clear Previous Annotations
