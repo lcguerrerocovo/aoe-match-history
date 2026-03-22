@@ -68,17 +68,19 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install dependencies
+    - name: Install dependencies and build
       working-directory: jobs/collector
-      run: npm install --include=dev --registry=https://registry.npmjs.org/ --no-audit --no-fund
-
-    - name: Build TypeScript
-      working-directory: jobs/collector
-      run: npm run build
-
-    - name: Prune dev dependencies
-      working-directory: jobs/collector
-      run: npm prune --omit=dev
+      env:
+        NODE_ENV: development
+      run: |
+        echo "--- Debug: NODE_ENV=$NODE_ENV, npm=$(npm --version), node=$(node --version)"
+        npm install --registry=https://registry.npmjs.org/ --no-audit --no-fund
+        echo "--- Debug: node_modules/.bin contents:"
+        ls node_modules/.bin/ 2>/dev/null | head -20 || echo "No .bin dir"
+        echo "--- Debug: @types contents:"
+        ls node_modules/@types/ 2>/dev/null || echo "No @types dir"
+        npm run build
+        npm prune --omit=dev
 
     - name: Build Docker image
       working-directory: jobs/collector
