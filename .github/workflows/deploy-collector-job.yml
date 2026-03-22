@@ -70,7 +70,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: jobs/collector
-      run: npm install --registry=https://registry.npmjs.org/ --no-audit --no-fund
+      run: npm install --include=dev --registry=https://registry.npmjs.org/ --no-audit --no-fund
 
     - name: Build TypeScript
       working-directory: jobs/collector
