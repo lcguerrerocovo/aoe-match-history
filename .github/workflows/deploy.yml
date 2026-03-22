@@ -212,18 +212,27 @@ jobs:
       
 
       
-      - name: Get Meilisearch VM External IP
+      - name: Get VM External IPs
         run: |
-          # Get the external IP of the Meilisearch VM
-          EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
-          if [ -z "$EXTERNAL_IP" ]; then
+          # Meilisearch VM
+          MEILI_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+          if [ -z "$MEILI_IP" ]; then
             echo "⚠️  Meilisearch VM not found. Using fallback configuration."
             echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
           else
-            echo "✅ Found Meilisearch VM at external IP: $EXTERNAL_IP"
-            echo "MEILISEARCH_HOST=http://$EXTERNAL_IP:7700" >> $GITHUB_ENV
+            echo "✅ Found Meilisearch VM at external IP: $MEILI_IP"
+            echo "MEILISEARCH_HOST=http://$MEILI_IP:7700" >> $GITHUB_ENV
           fi
-      
+          # PostgreSQL VM
+          PG_IP=$(gcloud compute instances describe aoe-match-db --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+          if [ -z "$PG_IP" ]; then
+            echo "⚠️  PostgreSQL VM not found."
+            echo "MATCH_DB_HOST=" >> $GITHUB_ENV
+          else
+            echo "✅ Found PostgreSQL VM at external IP: $PG_IP"
+            echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
+          fi
+
       - name: Deploy Proxy Cloud Run Service
         run: |
           cd functions/proxy
@@ -237,7 +246,7 @@ jobs:
             --allow-unauthenticated \
             --memory=256Mi \
             --timeout=30s \
-            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }},MEILISEARCH_HOST=${{ env.MEILISEARCH_HOST }},MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }},DATABASE_URL=${{ secrets.MATCH_DB_URL }}" \
+            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }},MEILISEARCH_HOST=${{ env.MEILISEARCH_HOST }},MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }},DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches" \
             --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
             --verbosity=debug
 

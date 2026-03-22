@@ -53,6 +53,16 @@ jobs:
       run: |
         gcloud auth configure-docker $REGION-docker.pkg.dev
 
+    - name: Get PostgreSQL VM External IP
+      run: |
+        PG_IP=$(gcloud compute instances describe aoe-match-db --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+        if [ -z "$PG_IP" ]; then
+          echo "❌ PostgreSQL VM not found!"
+          exit 1
+        fi
+        echo "✅ Found PostgreSQL VM at external IP: $PG_IP"
+        echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
+
     - name: Build and push Docker image via Cloud Build
       run: |
         cd jobs/collector
@@ -85,7 +95,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=3600 \
-            --set-env-vars="DATABASE_URL=${{ secrets.MATCH_DB_URL }}" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         else
           echo "Job does not exist, creating..."
@@ -96,7 +106,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=3600 \
-            --set-env-vars="DATABASE_URL=${{ secrets.MATCH_DB_URL }}" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
 
