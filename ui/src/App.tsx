@@ -1,9 +1,9 @@
-import { Box, VStack } from '@chakra-ui/react';
+import { Box, VStack, Text } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
 import { useEffect, useState, useCallback } from 'react';
-import { getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
+import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
 import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
@@ -28,6 +28,9 @@ function App() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const layout = useLayoutConfig();
 
   useEffect(() => {
@@ -42,14 +45,20 @@ function App() {
   const updateMatches = useCallback(async () => {
     if (!profileId) return;
     setIsLoading(true);
+    setCurrentPage(1);
+    setHasMore(false);
     try {
-      const [data, statsData] = await Promise.all([
-        getMatches(profileId),
+      // Try full endpoint first, fall back to legacy if it fails
+      const [matchResult, statsData] = await Promise.all([
+        getFullMatchHistory(profileId, 1, 50).catch(() =>
+          getMatches(profileId).then(data => ({ matches: data.matches, hasMore: false }))
+        ),
         getPersonalStats(profileId)
       ]);
-      
+
       // Store all matches for filtering
-      setAllMatches(data.matches);
+      setAllMatches(matchResult.matches);
+      setHasMore(matchResult.hasMore);
       
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
@@ -61,7 +70,7 @@ function App() {
         }
       }
 
-      const name = playerInfo?.alias || data.name || profileId;
+      const name = playerInfo?.alias || profileId;
       setProfile({ 
         id: String(profileId),
         name: String(name),
@@ -75,6 +84,20 @@ function App() {
       setIsLoading(false);
     }
   }, [profileId]);
+
+  const loadMoreMatches = useCallback(async () => {
+    if (!profileId || isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const result = await getFullMatchHistory(profileId, nextPage, 50);
+      setAllMatches(prev => [...prev, ...result.matches]);
+      setHasMore(result.hasMore);
+      setCurrentPage(nextPage);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [profileId, currentPage, isLoadingMore, hasMore]);
 
   // Effect to filter matches when search term, selected map, selected match type, or all matches change
   useEffect(() => {
@@ -222,12 +245,26 @@ function App() {
               selectedMatchType={selectedMatchType}
               sortDirection={sortDirection}
             />
+            {profileId && allMatches.length > 0 && hasMore && (
+              <Text
+                fontSize="xs"
+                color="brand.inkMuted"
+                textAlign="center"
+                fontStyle="italic"
+                py={1}
+              >
+                Collecting match history since March 2026
+              </Text>
+            )}
             {profileId && (
-              <MatchList 
-                matchGroups={matchGroups} 
-                openDates={openDates} 
-                onOpenDatesChange={setOpenDates} 
+              <MatchList
+                matchGroups={matchGroups}
+                openDates={openDates}
+                onOpenDatesChange={setOpenDates}
                 profileId={profileId}
+                hasMore={hasMore}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={loadMoreMatches}
               />
             )}
           </VStack>

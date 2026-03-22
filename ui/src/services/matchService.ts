@@ -53,6 +53,35 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   return await response.json();
 }
 
+export interface FullMatchHistoryResponse {
+  matches: Match[];
+  hasMore: boolean;
+}
+
+export async function getFullMatchHistory(
+  profileId: string,
+  page: number = 1,
+  limit: number = 50,
+): Promise<FullMatchHistoryResponse> {
+  const response = await fetch(
+    `${API_URL}/match-history/${profileId}/full?page=${page}&limit=${limit}`,
+    {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'aoe2-site'
+      }
+    }
+  );
+  if (!response.ok) {
+    throw new Error('Failed to fetch full match history');
+  }
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error('Invalid response format');
+  }
+  return await response.json();
+}
+
 export async function getPersonalStats(profileId: string): Promise<PersonalStats> {
   const response = await fetch(`${API_URL}/personal-stats/${profileId}`);
   if (!response.ok) {

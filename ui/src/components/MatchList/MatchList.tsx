@@ -1,4 +1,4 @@
-import { Box, VStack, Text, HStack, Accordion, Card, Icon, useBreakpointValue } from '@chakra-ui/react';
+import { Box, VStack, Text, HStack, Accordion, Card, Icon, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
 import { system } from '../../theme/theme';
 import { cardVariant } from '../../types/chakra-overrides';
 import type { Match, MatchGroup } from '../../types/match';
@@ -28,9 +28,12 @@ interface MatchListProps {
   openDates: string[];
   onOpenDatesChange: (dates: string[]) => void;
   profileId: string;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId }: MatchListProps) {
+export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId, hasMore, isLoadingMore, onLoadMore }: MatchListProps) {
   const layout = useLayoutConfig();
   const token = (path: string) => system.token(path, '');
   const isFlatMode = matchGroups.length === 1 && matchGroups[0].date === 'flat';
@@ -258,6 +261,31 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             );
           })}
       </Accordion.Root>
+      {hasMore && onLoadMore && (
+        <Box textAlign="center" py={6}>
+          <Button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            variant="outline"
+            size="lg"
+            borderColor="brand.bronze"
+            color="brand.inkDark"
+            bg="brand.parchmentSurface"
+            _hover={{ bg: 'brand.parchmentHover', borderColor: 'brand.bronzeDark' }}
+            fontFamily="'Lora', serif"
+            data-testid="load-more-button"
+          >
+            {isLoadingMore ? (
+              <HStack gap={2}>
+                <Spinner size="sm" color="brand.bronze" />
+                <Text>Loading...</Text>
+              </HStack>
+            ) : (
+              'Load More Matches'
+            )}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }
