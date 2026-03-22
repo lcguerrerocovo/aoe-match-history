@@ -74,7 +74,7 @@ jobs:
 
     - name: Build TypeScript
       working-directory: jobs/collector
-      run: ./node_modules/.bin/tsc
+      run: npm run build
 
     - name: Prune dev dependencies
       working-directory: jobs/collector
