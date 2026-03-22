@@ -12,6 +12,8 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `authService.ts` | Relic authentication, session management, `ensureAuthenticated`, `getAuthenticatedPlayerService`, `withAuthRetry` |
 | `steamHandler.ts` | Steam avatar lookup (`handleSteamAvatar`) |
 | `matchHandlers.ts` | Automatch history handlers: raw/processed match history, personal stats, single match |
+| `fullMatchHistoryHandler.ts` | Full match history handler: merges Relic API + PostgreSQL, deduplicates, paginates |
+| `matchHistoryDb.ts` | PostgreSQL queries for historical match data, transforms DB rows to ProcessedMatch |
 | `gameMatchHandlers.ts` | Authenticated single-player match history (Relic API), alias resolution |
 | `replayDownloadHandler.ts` | Replay download → APM processing pipeline |
 | `matchProcessing.ts` | Civ/map mappings, team grouping, match transformation (`processMatch`) |
@@ -37,6 +39,7 @@ npm run test:watch
 |--------|------|---------|-------|
 | GET | `/api/player-search?name=` | Meilisearch player search (Firestore fallback) | 30 min |
 | GET | `/api/match-history/:profileId` | Processed automatch history | 5 min |
+| GET | `/api/match-history/:profileId/full` | Full match history (Relic + PostgreSQL, paginated) | 5 min |
 | GET | `/api/raw-match-history/:profileId` | Raw automatch history from Relic | 1 min |
 | GET | `/api/gamematch-history/:profileIds` | Processed single-player history (authenticated) | 5 min |
 | GET | `/api/raw-gamematch-history/:profileIds` | Raw authenticated history | 1 min |
@@ -88,6 +91,7 @@ APM_API_URL               # Python APM function URL
 NODE_ENV                  # development | production
 LOG_LEVEL                 # pino log level (default: info)
 FIRESTORE_EMULATOR_HOST   # localhost:8081 for local dev
+DATABASE_URL              # PostgreSQL connection string for match history (optional — falls back to Relic API only)
 SIMULATE_LATENCY_MS       # Artificial delay for UI testing (default: 1500)
 ```
 

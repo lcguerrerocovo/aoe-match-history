@@ -1,0 +1,146 @@
+import type pg from 'pg';
+import { log } from './config';
+import { groupPlayersIntoTeams, detectWinningTeams, getGameType } from './matchProcessing';
+import type { ProcessedMatch, ProcessedPlayer } from './types';
+
+interface MatchRow {
+  match_id: string;
+  map_id: number | null;
+  map_name: string | null;
+  match_type_id: number;
+  start_time: Date | null;
+  completion_time: Date | null;
+  duration: number | null;
+  description: string | null;
+  max_players: number | null;
+  winning_team: number | null;
+}
+
+interface PlayerRow {
+  match_id: string;
+  profile_id: string;
+  civilization_id: number | null;
+  civilization_name: string | null;
+  team_id: number | null;
+  color_id: number | null;
+  result_type: number | null;
+  old_rating: number | null;
+  new_rating: number | null;
+  player_name: string | null;
+  matchurl: string | null;
+  matchurl_size: number | null;
+}
+
+/**
+ * Query match history for a player from PostgreSQL.
+ * Returns ProcessedMatch[] in the same format the UI expects.
+ */
+export async function queryMatchHistory(
+  pool: pg.Pool,
+  profileId: string,
+  page: number,
+  limit: number,
+): Promise<{ matches: ProcessedMatch[]; hasMore: boolean }> {
+  const offset = (page - 1) * limit;
+
+  // Step 1: Get match IDs for this player, paginated
+  const matchIdsResult = await pool.query<{ match_id: string }>(
+    `SELECT mp.match_id
+     FROM match_player mp
+     JOIN match m ON m.match_id = mp.match_id
+     WHERE mp.profile_id = $1
+     ORDER BY m.start_time DESC
+     LIMIT $2 OFFSET $3`,
+    [profileId, limit + 1, offset],
+  );
+
+  const hasMore = matchIdsResult.rows.length > limit;
+  const matchIds = matchIdsResult.rows.slice(0, limit).map(r => r.match_id);
+
+  if (matchIds.length === 0) {
+    return { matches: [], hasMore: false };
+  }
+
+  // Step 2: Get full match + player data for those match IDs
+  const [matchesResult, playersResult] = await Promise.all([
+    pool.query<MatchRow>(
+      `SELECT match_id, map_id, map_name, match_type_id, start_time,
+              completion_time, duration, description, max_players, winning_team
+       FROM match
+       WHERE match_id = ANY($1)`,
+      [matchIds],
+    ),
+    pool.query<PlayerRow>(
+      `SELECT match_id, profile_id, civilization_id, civilization_name,
+              team_id, color_id, result_type, old_rating, new_rating,
+              player_name, matchurl, matchurl_size
+       FROM match_player
+       WHERE match_id = ANY($1)`,
+      [matchIds],
+    ),
+  ]);
+
+  // Index players by match_id
+  const playersByMatch = new Map<string, PlayerRow[]>();
+  for (const row of playersResult.rows) {
+    const id = row.match_id.toString();
+    if (!playersByMatch.has(id)) playersByMatch.set(id, []);
+    playersByMatch.get(id)!.push(row);
+  }
+
+  // Transform to ProcessedMatch[]
+  const matches: ProcessedMatch[] = matchesResult.rows.map(match => {
+    const matchId = match.match_id.toString();
+    const playerRows = playersByMatch.get(matchId) || [];
+
+    const players: ProcessedPlayer[] = playerRows.map(p => ({
+      name: p.player_name || p.profile_id.toString(),
+      civ: p.civilization_name || p.civilization_id || 0,
+      number: p.team_id ?? 0,
+      color_id: p.color_id ?? 0,
+      user_id: parseInt(p.profile_id, 10),
+      winner: p.result_type === 1,
+      rating: p.new_rating,
+      rating_change: p.old_rating != null && p.new_rating != null
+        ? p.new_rating - p.old_rating
+        : null,
+      save_game_url: p.matchurl || null,
+      save_game_size: p.matchurl_size || null,
+      match_id: parseInt(matchId, 10),
+      replay_available: null,
+    }));
+
+    const teams = groupPlayersIntoTeams(players);
+    const { winningTeam, winningTeams } = detectWinningTeams(teams);
+    const matchTypeId = match.match_type_id;
+    const startTime = match.start_time
+      ? match.start_time.toISOString()
+      : new Date(0).toISOString();
+
+    return {
+      match_id: matchId,
+      map_id: match.map_id,
+      start_time: startTime,
+      description: match.description === 'AUTOMATCH'
+        ? getGameType(matchTypeId)
+        : match.description,
+      diplomacy: {
+        type: getGameType(matchTypeId) || 'Unknown',
+        team_size: (match.max_players ?? 0).toString(),
+      },
+      map: match.map_name || 'Unknown',
+      duration: match.duration ?? 0,
+      teams,
+      players,
+      winning_team: winningTeam,
+      winning_teams: winningTeams,
+    };
+  });
+
+  // Sort by start_time DESC (preserving the order from the match IDs query)
+  matches.sort((a, b) => b.start_time.localeCompare(a.start_time));
+
+  log.debug({ profileId, page, count: matches.length, hasMore }, 'PostgreSQL match history query');
+
+  return { matches, hasMore };
+}

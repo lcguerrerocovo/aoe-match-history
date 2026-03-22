@@ -7,6 +7,7 @@ import { handlePlayerSearch } from './playerSearch';
 import { handleSteamAvatar } from './steamHandler';
 import { __setPlayerService, __resetPlayerService } from './authService';
 import { handleRawMatchHistory, handleMatchHistory, handlePersonalStats, handleRawMatch, handleMatch } from './matchHandlers';
+import { handleFullMatchHistory } from './fullMatchHistoryHandler';
 import { handleGameMatchHistory, handleProcessedGameMatchHistory } from './gameMatchHandlers';
 import { handleReplayDownload } from './replayDownloadHandler';
 import { checkReplayAvailability, checkApmStatus } from './replayService';
@@ -34,6 +35,10 @@ const routes: Route[] = [
   {
     pattern: /^\/api\/raw-match-history\/(\d+)(\?.*)?$/,
     handler: handleRawMatchHistory
+  },
+  {
+    pattern: /^\/api\/match-history\/(\d+)\/full(\?.*)?$/,
+    handler: handleFullMatchHistory
   },
   {
     pattern: /^\/api\/match-history\/(\d+)(\?.*)?$/,
