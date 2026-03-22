@@ -12,10 +12,11 @@ data/                Static data files deployed to GCS (rl_api_mappings.json, 10
 jobs/indexing/       Cloud Run Job — collects players from Relic API, indexes to Meilisearch
 jobs/collector/      Cloud Run Job — collects match history from Relic API to PostgreSQL (scaffold)
 aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
+aoe-match-db/        PostgreSQL VM config (e2-medium, backup cron, firewall rules)
 scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup)
 ```
 
-**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, Firestore for session/match caching.
+**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, PostgreSQL on GCE VM (match history), Firestore for session/match caching.
 
 ## Commands
 
@@ -49,8 +50,9 @@ pytest test_main.py -v           # Run APM tests
 
 ### Local Dev (full stack)
 ```bash
-# Terminal 1: SSH tunnel to Meilisearch VM
+# Terminal 1: SSH tunnels to VMs
 bash scripts/tunnel-meilisearch.sh
+bash scripts/tunnel-postgres.sh
 
 # Terminal 2: Everything else
 cd ui && npm run dev:all
