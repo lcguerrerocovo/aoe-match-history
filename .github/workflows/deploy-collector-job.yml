@@ -68,20 +68,25 @@ jobs:
       with:
         node-version: 20
 
-    - name: Cache npm packages
-      uses: actions/cache@v3
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-npm-collector-${{ hashFiles('jobs/collector/package-lock.json') }}
+        version: 10
+
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/share/pnpm/store/v3
+        key: ${{ runner.os }}-pnpm-collector-${{ hashFiles('jobs/collector/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-npm-collector-
+          ${{ runner.os }}-pnpm-collector-
 
     - name: Install dependencies and build
       working-directory: jobs/collector
       run: |
-        npm ci --maxsockets=1 --prefer-offline --no-audit --no-fund
-        npm run build
-        npm prune --omit=dev
+        pnpm install --frozen-lockfile
+        pnpm run build
+        pnpm prune --prod
 
     - name: Build Docker image
       working-directory: jobs/collector
