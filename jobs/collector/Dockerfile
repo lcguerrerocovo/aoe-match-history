@@ -2,13 +2,9 @@ FROM node:22-slim
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY tsconfig.json ./
-COPY src/ ./src/
-RUN ./node_modules/.bin/tsc
-
+COPY package.json ./
+COPY node_modules/ ./node_modules/
+COPY dist/ ./dist/
 COPY migrations/ ./migrations/
 
 USER node

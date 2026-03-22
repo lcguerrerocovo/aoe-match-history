@@ -63,6 +63,18 @@ jobs:
         echo "✅ Found PostgreSQL VM at external IP: $PG_IP"
         echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install dependencies and build
+      run: |
+        cd jobs/collector
+        npm ci
+        npx tsc
+        npm prune --production
+
     - name: Build Docker image
       run: |
         cd jobs/collector

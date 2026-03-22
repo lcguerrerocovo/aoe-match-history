@@ -1,0 +1,5 @@
+src/
+tsconfig.json
+package-lock.json
+.dockerignore
+CLAUDE.md
