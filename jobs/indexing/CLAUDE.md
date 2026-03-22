@@ -12,7 +12,7 @@ Cloud Run Job that collects active AoE2 players from the Relic API, indexes them
 ## Running Locally
 
 ```bash
-cd indexing-job/scripts
+cd jobs/indexing/scripts
 ./run-indexer.sh          # Build image + run with conservative test settings
 ./run-indexer.sh false    # Pull prod image instead of building
 ```
@@ -21,7 +21,7 @@ Uses conservative defaults (high start ID, low concurrency, skips GCS upload).
 
 ## Deployment
 
-Push to `master` with changes in `indexing-job/**` triggers `.github/workflows/deploy-indexing-job.yml`:
+Push to `master` with changes in `jobs/indexing/**` triggers `.github/workflows/deploy-indexing-job.yml`:
 - Builds Docker image → Artifact Registry (`us-central1-docker.pkg.dev/aoe2-site/meilisearch/meilisearch-indexer`)
 - Deploys/updates Cloud Run Job (4GB RAM, 2 CPU, 1hr timeout)
 - Creates/updates Cloud Scheduler (`0 */6 * * *`)

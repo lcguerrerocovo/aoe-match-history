@@ -18,7 +18,8 @@ ui/                  React 18 + Vite + TypeScript + Chakra UI v3
 functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch)
 functions/apm/       Python Cloud Function — replay parsing (mgz library)
 data/                Static data files (civ/map mappings)
-indexing-job/        Cloud Run Job — player collection + Meilisearch indexing
+jobs/indexing/       Cloud Run Job — player collection + Meilisearch indexing
+jobs/collector/      Cloud Run Job — match history collection to PostgreSQL (scaffold)
 aoe-search/          Meilisearch VM config
 scripts/             Utility scripts
 ```

@@ -33,7 +33,7 @@ The deploy script creates the e2-micro VM, installs Docker, starts Meilisearch, 
 
 ```bash
 # Deploy the indexing job container
-cd indexing-job && ./build_and_deploy_indexer.sh
+cd jobs/indexing && ./build_and_deploy_indexer.sh
 
 # Run with default settings (collects active players, creates snapshot)
 gcloud run jobs execute meilisearch-indexing-job --region=us-central1

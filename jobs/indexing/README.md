@@ -37,7 +37,7 @@ You can test the indexing job locally using Docker with a comprehensive testing 
 The local test script provides a complete testing environment:
 
 ```bash
-cd indexing-job/scripts
+cd jobs/indexing/scripts
 ./run-indexer.sh
 ```
 
@@ -128,7 +128,7 @@ curl http://localhost:7700/health
 ### Build and Deploy
 
 ```bash
-cd indexing-job
+cd jobs/indexing
 chmod +x build_and_deploy_indexer.sh
 ./build_and_deploy_indexer.sh
 ```

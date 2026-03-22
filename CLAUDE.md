@@ -9,7 +9,8 @@ ui/                  React frontend (Vite + TypeScript + Chakra UI)
 functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore)
 functions/apm/       Python Cloud Function — replay parsing for APM stats (mgz library)
 data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json)
-indexing-job/        Cloud Run Job — collects players from Relic API, indexes to Meilisearch
+jobs/indexing/       Cloud Run Job — collects players from Relic API, indexes to Meilisearch
+jobs/collector/      Cloud Run Job — collects match history from Relic API to PostgreSQL (scaffold)
 aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
 scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup)
 ```

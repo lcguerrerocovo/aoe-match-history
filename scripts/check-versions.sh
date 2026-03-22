@@ -6,7 +6,7 @@ echo "🔍 Checking Meilisearch version consistency..."
 # Define expected version
 EXPECTED_VERSION="v1.7.3"
 FILES_TO_CHECK=(
-    "indexing-job/Dockerfile.indexer"
+    "jobs/indexing/Dockerfile.indexer"
     "aoe-search/startup.sh"
     "aoe-search/meilisearch-wrapper.sh"
 )
