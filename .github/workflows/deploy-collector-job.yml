@@ -53,16 +53,12 @@ jobs:
       run: |
         gcloud auth configure-docker $REGION-docker.pkg.dev
 
-    - name: Build Docker image
+    - name: Build and push Docker image via Cloud Build
       run: |
         cd jobs/collector
-        docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} .
-        docker tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
-
-    - name: Push Docker image
-      run: |
-        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }}
-        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
+        gcloud builds submit \
+          --tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest \
+          --timeout=600s
 
     - name: Cleanup old Docker images
       run: |
