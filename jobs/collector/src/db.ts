@@ -6,6 +6,12 @@ import type { RawMatch, RawProfile, IdNameMap, PlayerMetadata } from './types.js
 const { Pool } = pg;
 const log = pino({ name: 'match-collector' });
 
+const INT_MAX = 2147483647;
+function clampInt(val: number | null | undefined): number | null {
+  if (val == null || val > INT_MAX || val < -INT_MAX) return null;
+  return val;
+}
+
 export class Database {
   private pool: pg.Pool;
 
@@ -60,6 +66,8 @@ export class Database {
 
       for (const match of matches) {
         try {
+          await client.query(`SAVEPOINT match_${match.id}`);
+
           // Decode options to get map_id
           const options = decodeOptions(match.options);
           const mapIdStr = options['10'];
@@ -94,17 +102,17 @@ export class Database {
                updated_at = NOW()`,
             [
               match.id,
-              mapId,
+              clampInt(mapId),
               mapName,
-              match.matchtype_id,
+              clampInt(match.matchtype_id),
               match.startgametime > 0 ? new Date(match.startgametime * 1000) : null,
               match.completiontime > 0 ? new Date(match.completiontime * 1000) : null,
-              duration,
+              clampInt(duration),
               match.description,
-              match.maxplayers,
+              clampInt(match.maxplayers),
               options,
               slotInfo.length > 0 ? JSON.stringify(slotInfo) : null,
-              winningTeam,
+              clampInt(winningTeam),
             ]
           );
 
@@ -140,16 +148,16 @@ export class Database {
               [
                 match.id,
                 result.profile_id,
-                result.civilization_id,
+                clampInt(result.civilization_id),
                 civName,
-                teamId,
-                colorId,
-                result.resulttype,
-                ratingEntry?.oldrating ?? null,
-                ratingEntry?.newrating ?? null,
+                clampInt(teamId),
+                clampInt(colorId),
+                clampInt(result.resulttype),
+                clampInt(ratingEntry?.oldrating),
+                clampInt(ratingEntry?.newrating),
                 profile?.alias || profile?.name || null,
                 matchUrl?.url || null,
-                matchUrl?.size || null,
+                clampInt(matchUrl?.size),
               ]
             );
           }
@@ -163,8 +171,10 @@ export class Database {
             [match.id, JSON.stringify(match)]
           );
 
+          await client.query(`RELEASE SAVEPOINT match_${match.id}`);
           upsertedCount++;
         } catch (err) {
+          await client.query(`ROLLBACK TO SAVEPOINT match_${match.id}`);
           log.error({ err: (err as Error).message, matchId: match.id }, 'Failed to upsert match');
         }
       }

@@ -118,7 +118,7 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --max-retries=1 \
-            --task-timeout=3600 \
+            --task-timeout=10800 \
             --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         else
@@ -129,7 +129,7 @@ jobs:
             --memory=1Gi \
             --cpu=1 \
             --max-retries=1 \
-            --task-timeout=3600 \
+            --task-timeout=10800 \
             --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
