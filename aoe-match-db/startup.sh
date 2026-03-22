@@ -40,6 +40,12 @@ if ! grep -q "10.0.0.0/8" "$PG_HBA"; then
     echo "Added pg_hba rule for internal network"
 fi
 
+# Allow connections from Cloud Run / external (password-protected)
+if ! grep -q "0.0.0.0/0" "$PG_HBA"; then
+    echo "host    $DB_NAME    $DB_USER    0.0.0.0/0    scram-sha-256" >> "$PG_HBA"
+    echo "Added pg_hba rule for external access (Cloud Run)"
+fi
+
 # Restart PostgreSQL to apply config
 systemctl restart postgresql
 echo "PostgreSQL restarted with updated config"

@@ -18,6 +18,19 @@ gcloud compute firewall-rules create allow-postgres-internal \
   --description="Allow internal access to PostgreSQL from Cloud Run/Cloud Run Jobs" \
   --quiet || echo "Firewall rule 'allow-postgres-internal' may already exist"
 
+# Allow PostgreSQL from Cloud Run (egresses via public IP, password-protected)
+gcloud compute firewall-rules create allow-postgres-external \
+  --project="$PROJECT_ID" \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --action=ALLOW \
+  --rules=tcp:5432 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=postgres-server \
+  --description="Allow PostgreSQL from Cloud Run and external (password-protected)" \
+  --quiet || echo "Firewall rule 'allow-postgres-external' may already exist"
+
 # Allow SSH for maintenance
 gcloud compute firewall-rules create allow-postgres-ssh \
   --project="$PROJECT_ID" \
