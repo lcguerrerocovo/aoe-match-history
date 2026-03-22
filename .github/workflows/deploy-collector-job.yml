@@ -63,12 +63,16 @@ jobs:
         echo "✅ Found PostgreSQL VM at external IP: $PG_IP"
         echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
 
-    - name: Build and push Docker image via Cloud Build
+    - name: Build Docker image
       run: |
         cd jobs/collector
-        gcloud builds submit \
-          --tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest \
-          --timeout=600s
+        docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} .
+        docker tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
+
+    - name: Push Docker image
+      run: |
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }}
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
 
     - name: Cleanup old Docker images
       run: |
