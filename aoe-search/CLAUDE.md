@@ -7,7 +7,7 @@ GCE e2-micro VM running Meilisearch v1.7.3 in Docker. Provides typo-tolerant pla
 Snapshot-driven: the indexing job builds the search index, creates a snapshot, uploads to GCS. The VM imports the latest snapshot on boot.
 
 ```
-indexing-job → GCS snapshot → VM imports → proxy queries → UI search
+jobs/indexing → GCS snapshot → VM imports → proxy queries → UI search
 ```
 
 ## Scripts
@@ -15,7 +15,7 @@ indexing-job → GCS snapshot → VM imports → proxy queries → UI search
 - `deploy-vm.sh` — Creates/updates the GCE VM (e2-micro, cos-stable, 10GB disk). Sets firewall rules (7700 internal-only, 22 public SSH).
 - `startup.sh` — VM boot script: fetches master key from metadata, starts Meilisearch Docker container.
 - `meilisearch-wrapper.sh` — Post-boot orchestration: imports snapshot, applies settings, verifies index has documents.
-- `meilisearch_config.json` — Index settings (searchable: `alias`, filterable: country/clan/matches/date, ranking prioritizes exactness then match count). **Must stay in sync with `indexing-job/meilisearch_config.json`.**
+- `meilisearch_config.json` — Index settings (searchable: `alias`, filterable: country/clan/matches/date, ranking prioritizes exactness then match count). **Must stay in sync with `jobs/indexing/meilisearch_config.json`.**
 
 ## Deployment
 
@@ -31,7 +31,7 @@ No CI pipeline — deployed manually when VM config changes. Day-to-day data upd
 Version v1.7.3 is pinned in 3 files — use `scripts/check-versions.sh` to verify consistency:
 1. `aoe-search/startup.sh`
 2. `aoe-search/meilisearch-wrapper.sh`
-3. `indexing-job/Dockerfile.indexer`
+3. `jobs/indexing/Dockerfile.indexer`
 
 ## Local Dev
 

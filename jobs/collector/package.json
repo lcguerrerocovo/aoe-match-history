@@ -1,0 +1,28 @@
+{
+  "name": "@aoe2/match-collector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "migrate": "node-pg-migrate --database-url-var DATABASE_URL --migrations-dir migrations",
+    "migrate:up": "npm run migrate -- up",
+    "migrate:down": "npm run migrate -- down",
+    "migrate:create": "node-pg-migrate --migrations-dir migrations -j sql create"
+  },
+  "dependencies": {
+    "node-pg-migrate": "^7.9.1",
+    "pg": "^8.13.1",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/pg": "^8.11.10",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

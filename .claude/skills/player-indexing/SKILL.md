@@ -7,7 +7,7 @@ description: Use when collecting player data from the Relic API, running the ind
 
 ## Overview
 
-Player data flows through a pipeline: **Relic API** → `collect_player_data.py` → JSONL file → `upload_to_firestore.py` → **Firestore** → `indexing-job` → **Meilisearch**. The collection script pulls player records from the AoE2 Relic API, Firestore stores the canonical dataset, and a Cloud Run job indexes players into Meilisearch for fast typo-tolerant search on the site.
+Player data flows through a pipeline: **Relic API** → `collect_player_data.py` → JSONL file → `upload_to_firestore.py` → **Firestore** → `jobs/indexing` → **Meilisearch**. The collection script pulls player records from the AoE2 Relic API, Firestore stores the canonical dataset, and a Cloud Run job indexes players into Meilisearch for fast typo-tolerant search on the site.
 
 ## Collecting Player Data
 
@@ -47,18 +47,18 @@ Behavior:
 
 ## Meilisearch Indexing Job
 
-The Cloud Run job reads from Firestore and indexes players into Meilisearch. Deploy and run from `indexing-job/`:
+The Cloud Run job reads from Firestore and indexes players into Meilisearch. Deploy and run from `jobs/indexing/`:
 
 ```bash
 # Deploy the indexing job
-cd indexing-job
+cd jobs/indexing
 ./build_and_deploy_indexer.sh
 
 # Run with default settings (collects active players, creates snapshot)
-gcloud run jobs execute meilisearch-indexing-job --region=us-central1
+gcloud run jobs execute meilisearch-jobs/indexing --region=us-central1
 
 # Run with custom parameters
-gcloud run jobs execute meilisearch-indexing-job --region=us-central1 \
+gcloud run jobs execute meilisearch-jobs/indexing --region=us-central1 \
   --set-env-vars="API_BATCH_SIZE=200,CONCURRENT_REQUESTS=35,ACTIVE_YEARS=2.5"
 ```
 

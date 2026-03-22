@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import pino from 'pino';
 import { Firestore } from '@google-cloud/firestore';
+import pg from 'pg';
 
 export const STEAM_API_KEY = process.env.STEAM_API_KEY;
 export const RELIC_AUTH_STEAM_USER = process.env.RELIC_AUTH_STEAM_USER;
@@ -55,6 +56,23 @@ export function getFirestoreClient(): Firestore {
     log.info('Firestore client initialized with default credentials');
   }
   return firestoreDb;
+}
+
+// PostgreSQL match history database
+export const DATABASE_URL = process.env.DATABASE_URL;
+
+let matchDbPool: pg.Pool | null = null;
+
+export function getMatchDbPool(): pg.Pool | null {
+  if (!DATABASE_URL) return null;
+  if (!matchDbPool) {
+    matchDbPool = new pg.Pool({
+      connectionString: DATABASE_URL,
+      max: 5,
+    });
+    log.info('Match history database pool initialized');
+  }
+  return matchDbPool;
 }
 
 export function sleep(ms: number): Promise<void> {

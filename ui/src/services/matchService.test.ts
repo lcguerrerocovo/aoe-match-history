@@ -9,6 +9,7 @@ global.fetch = fetchMock;
 // Import after mocking
 import {
   getMatches,
+  getFullMatchHistory,
   getPersonalStats,
   getSteamAvatar,
   getMatch,
@@ -154,6 +155,56 @@ describe('matchService', () => {
         headers: new Headers({ 'Content-Type': 'text/html' }),
       });
       await expect(getMatches('12345')).rejects.toThrow('Invalid response format');
+    });
+  });
+
+  describe('getFullMatchHistory', () => {
+    it('should fetch paginated match history from /full endpoint', async () => {
+      const mockResponse = {
+        matches: [{ match_id: '123', start_time: '2026-03-22T00:00:00Z' }],
+        hasMore: true,
+      };
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      });
+
+      const result = await getFullMatchHistory('4764337', 2, 50);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/match-history/4764337/full?page=2&limit=50',
+        expect.any(Object),
+      );
+      expect(result.matches).toHaveLength(1);
+      expect(result.hasMore).toBe(true);
+    });
+
+    it('should use default page and limit', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ matches: [], hasMore: false }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      });
+
+      await getFullMatchHistory('4764337');
+
+      const calledUrl = fetchMock.mock.calls[0][0] as string;
+      expect(calledUrl).toBe('/api/match-history/4764337/full?page=1&limit=50');
+    });
+
+    it('should throw on non-ok response', async () => {
+      fetchMock.mockResolvedValue({ ok: false });
+      await expect(getFullMatchHistory('12345')).rejects.toThrow('Failed to fetch full match history');
+    });
+
+    it('should throw on non-JSON content type', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({}),
+        headers: new Headers({ 'Content-Type': 'text/html' }),
+      });
+      await expect(getFullMatchHistory('12345')).rejects.toThrow('Invalid response format');
     });
   });
 

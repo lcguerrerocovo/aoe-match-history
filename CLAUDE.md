@@ -6,15 +6,17 @@ Personal project: Age of Empires 2 match history viewer. Live at **https://aoe2.
 
 ```
 ui/                  React frontend (Vite + TypeScript + Chakra UI)
-functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore)
+functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore, PostgreSQL)
 functions/apm/       Python Cloud Function — replay parsing for APM stats (mgz library)
 data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json)
-indexing-job/        Cloud Run Job — collects players from Relic API, indexes to Meilisearch
+jobs/indexing/       Cloud Run Job — collects players from Relic API, indexes to Meilisearch
+jobs/collector/      Cloud Run Job — collects match history from Relic API to PostgreSQL
 aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
+aoe-match-db/        PostgreSQL VM config (e2-medium, backup cron, firewall rules)
 scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup)
 ```
 
-**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, Firestore for session/match caching.
+**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, PostgreSQL on GCE VM (match history), Firestore for session/match caching.
 
 ## Commands
 
@@ -46,10 +48,20 @@ python -m functions_framework --target=aoe2_apm_processor --port=5001
 pytest test_main.py -v           # Run APM tests
 ```
 
+### Match Collector (from `jobs/collector/`)
+```bash
+npm run build            # Compile TypeScript to dist/
+npm start                # Run compiled output
+npm run dev              # Watch mode (recompile on change)
+npm run migrate:up       # Apply database migrations (requires DATABASE_URL)
+npm run migrate:down     # Roll back last migration
+```
+
 ### Local Dev (full stack)
 ```bash
-# Terminal 1: SSH tunnel to Meilisearch VM
+# Terminal 1: SSH tunnels to VMs
 bash scripts/tunnel-meilisearch.sh
+bash scripts/tunnel-postgres.sh
 
 # Terminal 2: Everything else
 cd ui && npm run dev:all
@@ -57,12 +69,16 @@ cd ui && npm run dev:all
 
 ## Deployment
 
-Push to `master` triggers GitHub Actions (`deploy.yml`). Three parallel jobs:
+Push to `master` triggers GitHub Actions. Main deployment (`deploy.yml`) runs three parallel jobs:
 1. **build-and-deploy** — lint, test (vitest + cypress + proxy jest), build, upload assets + data to GCS
 2. **deploy-proxy-function** — deploy Cloud Run service with secrets
 3. **deploy-apm-function** — pytest, deploy Cloud Function Gen2
 
 Post-deploy: selective Cloudflare cache purge based on changed paths.
+
+Separate path-triggered workflows:
+- **deploy-collector-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 3 hours (`jobs/collector/**`)
+- **deploy-indexing-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 6 hours (`jobs/indexing/**`)
 
 ## Key Data Files
 

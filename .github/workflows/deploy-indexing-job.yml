@@ -3,7 +3,7 @@ name: Deploy Meilisearch Indexing Job
 on:
   push:
     branches: [ master ]
-    paths: [ 'indexing-job/**' ]
+    paths: [ 'jobs/indexing/**', '.github/workflows/deploy-indexing-job.yml' ]
   workflow_dispatch:
     inputs:
       run_job:
@@ -56,7 +56,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-        cd indexing-job
+        cd jobs/indexing
         docker build -f Dockerfile.indexer -t $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }} .
         docker tag $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
 
