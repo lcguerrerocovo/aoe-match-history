@@ -94,6 +94,8 @@ function App() {
       setAllMatches(prev => [...prev, ...result.matches]);
       setHasMore(result.hasMore);
       setCurrentPage(nextPage);
+    } catch {
+      // Silently fail — existing matches remain visible, user can retry
     } finally {
       setIsLoadingMore(false);
     }

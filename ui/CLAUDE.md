@@ -48,7 +48,8 @@ Extracted subdirectories use barrel exports (`index.ts`) — import from the dir
 ## State Management
 
 All state in `App.tsx` — no global store. Props drilled to children.
-- Matches fetched once on profile load, then filtered/grouped client-side
+- Matches fetched via `getFullMatchHistory` (paginated, merges Relic API + PostgreSQL). Falls back to legacy `getMatches` if `/full` endpoint fails.
+- Pagination: `currentPage`, `hasMore`, `isLoadingMore` state in App.tsx. "Load More" button in MatchList appends next page.
 - Session grouping: matches within 1 hour are grouped together
 - Flat mode (no grouping) when any filter is active
 
@@ -101,6 +102,10 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `match-actions` — match detail with Actions tab
 
 **When adding new views or interactive states**, add a corresponding entry to the `VIEWS` array in `scripts/take-screenshots.ts`. Each entry needs a `name`, `path`, `waitForSelector`, and optionally a `beforeCapture` function for interactions (typing, clicking tabs, expanding accordions).
+
+## Key Services
+
+- `matchService.ts` — API client (`getFullMatchHistory` for paginated history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, `searchPlayers`, replay/APM helpers)
 
 ## Key Utils
 

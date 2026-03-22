@@ -6,7 +6,7 @@ Personal project: Age of Empires 2 match history viewer. Live at **https://aoe2.
 
 ```
 ui/                  React frontend (Vite + TypeScript + Chakra UI)
-functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore)
+functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore, PostgreSQL)
 functions/apm/       Python Cloud Function — replay parsing for APM stats (mgz library)
 data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json)
 jobs/indexing/       Cloud Run Job — collects players from Relic API, indexes to Meilisearch

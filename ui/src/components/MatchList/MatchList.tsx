@@ -271,7 +271,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             borderColor="brand.bronze"
             color="brand.inkDark"
             bg="brand.parchmentSurface"
-            _hover={{ bg: 'brand.parchmentHover', borderColor: 'brand.bronzeDark' }}
+            _hover={{ bg: 'brand.parchmentDark', borderColor: 'brand.bronzeDark' }}
             fontFamily="'Lora', serif"
             data-testid="load-more-button"
           >
