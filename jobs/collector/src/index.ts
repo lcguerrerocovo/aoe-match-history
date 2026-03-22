@@ -1,13 +1,25 @@
 import pino from "pino";
+import { Database } from './db.js';
+import { Collector } from './collector.js';
 
 const logger = pino({ name: "match-collector" });
 
 async function main(): Promise<void> {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+
   logger.info("Starting match collector");
 
-  // TODO: Initialize API client (Relic API)
-  // TODO: Initialize database connection (PostgreSQL)
-  // TODO: Run collection logic
+  const db = new Database(databaseUrl);
+  const collector = new Collector(db);
+
+  try {
+    await collector.run();
+  } finally {
+    await db.close();
+  }
 
   logger.info("Match collector finished");
 }

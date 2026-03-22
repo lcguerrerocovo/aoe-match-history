@@ -1,0 +1,122 @@
+name: Deploy Match Collector Job
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'jobs/collector/**', '.github/workflows/deploy-collector-job.yml' ]
+  workflow_dispatch:
+    inputs:
+      run_job:
+        description: 'Run the collector job after deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: aoe2-site
+  REGION: us-central1
+  IMAGE_NAME: match-collector
+  JOB_NAME: match-collector-job
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Google Auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Create Artifact Registry repository
+      run: |
+        if ! gcloud artifacts repositories describe match-collector --location=$REGION 2>/dev/null; then
+          echo "Creating Artifact Registry repository..."
+          gcloud artifacts repositories create match-collector \
+            --repository-format=docker \
+            --location=$REGION \
+            --description="Match collector job images"
+        else
+          echo "Repository already exists"
+        fi
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker $REGION-docker.pkg.dev
+
+    - name: Build Docker image
+      run: |
+        cd jobs/collector
+        docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} .
+        docker tag $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
+
+    - name: Push Docker image
+      run: |
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }}
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
+
+    - name: Cleanup old Docker images
+      run: |
+        echo "Cleaning up old Docker images..."
+        TAGS=$(gcloud artifacts docker images list ${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME} --include-tags --format="value(tags)" | tr ',' '\n' | sort -u)
+
+        if [ -n "$TAGS" ]; then
+          for TAG in $TAGS; do
+            if [ "$TAG" != "latest" ]; then
+              echo "Deleting tag: $TAG"
+              gcloud artifacts docker images delete ${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME}:${TAG} --quiet || echo "Failed to delete tag: $TAG"
+            fi
+          done
+        fi
+
+    - name: Deploy Cloud Run Job
+      run: |
+        if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
+          echo "Job exists, updating..."
+          gcloud run jobs update ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=1Gi \
+            --cpu=1 \
+            --max-retries=1 \
+            --task-timeout=3600 \
+            --set-env-vars="DATABASE_URL=${{ secrets.MATCH_DB_URL }}" \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        else
+          echo "Job does not exist, creating..."
+          gcloud run jobs create ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=1Gi \
+            --cpu=1 \
+            --max-retries=1 \
+            --task-timeout=3600 \
+            --set-env-vars="DATABASE_URL=${{ secrets.MATCH_DB_URL }}" \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        fi
+
+    - name: Create Cloud Scheduler Job
+      run: |
+        gcloud scheduler jobs create http match-collector-scheduler \
+          --schedule="0 */3 * * *" \
+          --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/$JOB_NAME:run" \
+          --http-method=POST \
+          --oauth-service-account-email="$PROJECT_ID@appspot.gserviceaccount.com" \
+          --location=$REGION \
+          --description="Runs match collector every 3 hours" \
+          || echo "Scheduler job already exists or failed to create"
+
+    - name: Run collector job
+      if: ${{ github.event.inputs.run_job == 'true' }}
+      run: |
+        echo "Running collector job..."
+        gcloud run jobs execute $JOB_NAME --region=$REGION --wait
