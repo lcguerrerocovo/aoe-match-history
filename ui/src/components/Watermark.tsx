@@ -539,14 +539,15 @@ const tiledSlots = (() => {
   }
   shuffle(order);
 
-  // Randomise sides — start with an even split, then shuffle
-  const sides = shuffle(['left', 'right', 'left', 'right', 'left', 'right']);
+  // Alternate sides — randomly pick whether to start left or right
+  const startLeft = Math.random() < 0.5;
 
   return order.map((uri, i) => {
+    const side = (i % 2 === 0) === startLeft ? 'left' : 'right';
     const hOffset = 20 + Math.floor(Math.random() * 25); // 20–44px
     const size = 160 + Math.floor(Math.random() * 25);   // 160–184px
     const vOffset = VERTICAL_START + i * VERTICAL_SPACING;
-    return { uri, side: sides[i], hOffset, size, vOffset };
+    return { uri, side, hOffset, size, vOffset };
   });
 })();
 
