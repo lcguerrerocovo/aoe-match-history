@@ -505,11 +505,50 @@ export function Watermark({ variant, size = 300, style }: WatermarkProps) {
  * Uses CSS background-image with SVG data URIs generated from the same content
  * strings as the React components. Six separate background layers are staggered
  * with different background-position offsets, creating a non-uniform pattern.
+ *
+ * The variant order, sides, and offsets are shuffled once at module load so
+ * each session sees a unique arrangement, but it stays consistent while the
+ * page is open.
  */
-const compassUri = makeSvgUri(COMPASS_CONTENT);
-const trebuchetUri = makeSvgUri(TREBUCHET_CONTENT);
-const swordsUri = makeSvgUri(SWORDS_CONTENT);
-const castleUri = makeSvgUri(CASTLE_CONTENT);
+const allUris = [
+  makeSvgUri(COMPASS_CONTENT),
+  makeSvgUri(TREBUCHET_CONTENT),
+  makeSvgUri(SWORDS_CONTENT),
+  makeSvgUri(CASTLE_CONTENT),
+];
+
+const SLOT_COUNT = 6;
+const VERTICAL_SPACING = 600; // px between each slot's starting offset
+const VERTICAL_START = 500;
+
+// Shuffle an array in place (Fisher-Yates)
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Build randomised slot assignments once at module load
+const tiledSlots = (() => {
+  // Fill 6 slots from 4 variants: shuffle all 4, then pick 2 more at random
+  const order = shuffle([...allUris]);
+  while (order.length < SLOT_COUNT) {
+    order.push(allUris[Math.floor(Math.random() * allUris.length)]);
+  }
+  shuffle(order);
+
+  // Randomise sides — start with an even split, then shuffle
+  const sides = shuffle(['left', 'right', 'left', 'right', 'left', 'right']);
+
+  return order.map((uri, i) => {
+    const hOffset = 20 + Math.floor(Math.random() * 25); // 20–44px
+    const size = 160 + Math.floor(Math.random() * 25);   // 160–184px
+    const vOffset = VERTICAL_START + i * VERTICAL_SPACING;
+    return { uri, side: sides[i], hOffset, size, vOffset };
+  });
+})();
 
 export function WatermarkTiled() {
   return (
@@ -520,24 +559,14 @@ export function WatermarkTiled() {
       zIndex={0}
       overflow="hidden"
       style={{
-        backgroundImage: [
-          compassUri,    // slot 1: right
-          trebuchetUri,  // slot 2: left
-          swordsUri,     // slot 3: right
-          castleUri,     // slot 4: left
-          compassUri,    // slot 5: right (repeat)
-          trebuchetUri,  // slot 6: left (repeat)
-        ].join(', '),
+        backgroundImage: tiledSlots.map((s) => s.uri).join(', '),
         backgroundRepeat: 'repeat-y',
-        backgroundSize: '180px 3600px, 170px 3600px, 160px 3600px, 180px 3600px, 170px 3600px, 160px 3600px',
-        backgroundPosition: [
-          'right 30px top 500px',
-          'left 20px top 1100px',
-          'right 40px top 1700px',
-          'left 25px top 2300px',
-          'right 35px top 2900px',
-          'left 30px top 3500px',
-        ].join(', '),
+        backgroundSize: tiledSlots
+          .map((s) => `${s.size}px 3600px`)
+          .join(', '),
+        backgroundPosition: tiledSlots
+          .map((s) => `${s.side} ${s.hOffset}px top ${s.vOffset}px`)
+          .join(', '),
       }}
     />
   );
