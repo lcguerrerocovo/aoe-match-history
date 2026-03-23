@@ -145,7 +145,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=10800 \
-            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=40,COLLECTOR_CONCURRENCY=20" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         else
           echo "Job does not exist, creating..."
@@ -156,7 +156,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=10800 \
-            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=40,COLLECTOR_CONCURRENCY=20" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
 
