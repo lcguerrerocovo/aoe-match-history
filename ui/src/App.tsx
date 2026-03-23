@@ -369,7 +369,7 @@ function App() {
               selectedMatchType={selectedMatchType}
               sortDirection={sortDirection}
             />
-            {profileId && allMatches.length > 0 && hasMore && (
+            {profileId && allMatches.length > 0 && (
               <Text
                 fontSize="xs"
                 color="brand.inkMuted"
