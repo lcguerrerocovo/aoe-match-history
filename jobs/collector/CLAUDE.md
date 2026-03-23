@@ -35,7 +35,8 @@ docker run match-collector
 | `src/index.ts` | Entry point — wires up DB + Collector, handles errors |
 | `src/collector.ts` | Orchestrator — scan → diff → fetch → store flow |
 | `src/api.ts` | Relic API client — leaderboard scanning, match history fetching |
-| `src/db.ts` | PostgreSQL layer — upsert matches/players/raw, collection state |
+| `src/db.ts` | PostgreSQL layer — upsert matches/players, collection state |
+| `src/raw-archive.ts` | Parquet archiver — buffers raw match JSON, writes to GCS |
 | `src/decoders.ts` | Options/SlotInfo decoding (base64 + zlib), copied from proxy |
 | `src/mappings.ts` | Civ/map ID resolution from CDN mappings file |
 | `src/types.ts` | TypeScript interfaces for Relic API responses + leaderboard data |
@@ -47,6 +48,7 @@ docker run match-collector
 | `DATABASE_URL` | (required) | PostgreSQL connection string |
 | `RATE_LIMIT_RPS` | 10 | Relic API requests/second (API limit is 50) |
 | `COLLECTOR_CONCURRENCY` | 5 | Number of parallel batch workers |
+| `RAW_ARCHIVE_BUCKET` | `aoe2-site-backups` | GCS bucket for raw match Parquet archives |
 
 ## Running Locally
 
