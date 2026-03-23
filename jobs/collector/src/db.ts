@@ -27,7 +27,7 @@ interface ProcessedPlayer {
   matchUrlSize: number | null;
 }
 
-interface ProcessedMatch {
+export interface ProcessedMatch {
   matchId: number;
   mapId: number | null;
   mapName: string | null;
@@ -44,7 +44,7 @@ interface ProcessedMatch {
   players: ProcessedPlayer[];
 }
 
-function processMatch(
+export function processMatch(
   match: RawMatch,
   profiles: RawProfile[],
   civMap: IdNameMap,
@@ -195,7 +195,6 @@ export class Database {
         await client.query('SAVEPOINT batch');
         await this.batchInsertMatches(client, processed);
         await this.batchInsertPlayers(client, processed);
-        await this.batchInsertRaw(client, processed);
         await client.query('RELEASE SAVEPOINT batch');
         upsertedCount = processed.length;
       } catch (err) {
@@ -277,23 +276,6 @@ export class Database {
     );
   }
 
-  private async batchInsertRaw(client: pg.PoolClient, processed: ProcessedMatch[]): Promise<void> {
-    if (processed.length === 0) return;
-    const placeholders: string[] = [];
-    const values: unknown[] = [];
-    for (let i = 0; i < processed.length; i++) {
-      const off = i * 2;
-      placeholders.push(`($${off + 1}, $${off + 2}, 1, NOW())`);
-      values.push(processed[i].matchId, processed[i].rawJson);
-    }
-    await client.query(
-      `INSERT INTO match_raw (match_id, raw_json, version, created_at)
-       VALUES ${placeholders.join(',')}
-       ON CONFLICT (match_id) DO UPDATE SET raw_json = EXCLUDED.raw_json`,
-      values,
-    );
-  }
-
   private async batchUpdateCollectionState(
     client: pg.PoolClient,
     profileIds: number[],
@@ -330,7 +312,6 @@ export class Database {
         await client.query(`SAVEPOINT match_${m.matchId}`);
         await this.batchInsertMatches(client, [m]);
         await this.batchInsertPlayers(client, [m]);
-        await this.batchInsertRaw(client, [m]);
         await client.query(`RELEASE SAVEPOINT match_${m.matchId}`);
         count++;
       } catch (err) {
