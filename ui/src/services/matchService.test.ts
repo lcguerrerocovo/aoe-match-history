@@ -214,7 +214,7 @@ describe('matchService', () => {
         headers: new Headers({ 'Content-Type': 'application/json' }),
       });
 
-      await getFullMatchHistory('4764337', { limit: 50, map: 'Arabia', matchType: 6, sort: 'asc' });
+      await getFullMatchHistory('4764337', { limit: 50, map: 'Arabia', matchType: '6', sort: 'asc' });
 
       const calledUrl = fetchMock.mock.calls[0][0] as string;
       expect(calledUrl).toContain('limit=50');
