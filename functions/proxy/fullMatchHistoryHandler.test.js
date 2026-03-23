@@ -44,7 +44,7 @@ jest.mock('./matchProcessing', () => ({
     return { winningTeam: winningTeams[0], winningTeams };
   }),
   getGameType: jest.fn((id) => {
-    const types = { 6: 'RM 1v1', 7: 'RM Team' };
+    const types = { 6: 'RM 1v1', 7: 'RM Team', 8: 'RM Team', 9: 'RM Team' };
     return types[id] || null;
   }),
 }));
@@ -304,6 +304,30 @@ describe('handleFullMatchHistory', () => {
       expect(result.data.filterOptions.maps[0]).toEqual({ name: 'Arabia', count: 10 });
       expect(result.data.filterOptions.matchTypes).toHaveLength(2);
       expect(result.data.filterOptions.matchTypes[0]).toEqual({ ids: [6], name: 'RM 1v1', count: 10 });
+    });
+
+    it('merges match types with same display name into single entry', async () => {
+      mockGetMatchDbPool.mockReturnValue(mockPool);
+      setupRelicApi([]);
+      setupSmartDbMock({
+        matchData: [],
+        filterMaps: [],
+        // IDs 7, 8, 9 all map to "RM Team" in getGameType()
+        filterMatchTypes: [
+          { match_type_id: 7, count: '50' },
+          { match_type_id: 8, count: '30' },
+          { match_type_id: 9, count: '20' },
+        ],
+      });
+
+      const result = await handleFullMatchHistory('123');
+
+      expect(result.data.filterOptions.matchTypes).toHaveLength(1);
+      expect(result.data.filterOptions.matchTypes[0]).toEqual({
+        ids: [7, 8, 9],
+        name: 'RM Team',
+        count: 100,
+      });
     });
 
     it('includes nextCursor when hasMore is true', async () => {
