@@ -20,6 +20,10 @@ jest.mock('./config', () => ({
     error: jest.fn(),
   },
   getFirestoreClient: jest.fn(),
+  getMatchDbPool: jest.fn().mockReturnValue(null),
+}));
+jest.mock('./matchHistoryDb', () => ({
+  querySingleMatch: jest.fn(),
 }));
 
 const { getFirestoreClient } = require('./config');
