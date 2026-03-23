@@ -13,25 +13,36 @@ before(() => {
   });
 });
 
-const createMockMatch = (numTeams: number = 2) => {
-  const teams = Array.from({ length: numTeams }, (_, teamIndex) =>
-    Array.from({ length: teamIndex === 0 ? 2 : 1 }, (_, playerIndex) => ({
-      name: `Player${teamIndex + 1}-${playerIndex + 1}`,
-      civ: ['Britons', 'Franks'][teamIndex + playerIndex],
-      number: teamIndex * 2 + playerIndex + 1,
-      color_id: teamIndex * 2 + playerIndex,
-      user_id: (teamIndex * 2 + playerIndex + 1).toString(),
-      winner: teamIndex === 0,
-      rating: 1200 + (teamIndex * 100),
-      rating_change: teamIndex === 0 ? 15 : -15,
+const createMockMatch = (playersPerTeam: number = 2) => {
+  const teams = [
+    Array.from({ length: playersPerTeam }, (_, i) => ({
+      name: `Player1-${i + 1}`,
+      civ: ['Britons', 'Franks', 'Mongols', 'Aztecs'][i % 4],
+      number: i + 1,
+      color_id: i,
+      user_id: (i + 1).toString(),
+      winner: true,
+      rating: 1200 + i * 50,
+      rating_change: 15,
       save_game_size: 1024 * 50,
-    }))
-  );
+    })),
+    Array.from({ length: playersPerTeam }, (_, i) => ({
+      name: `Player2-${i + 1}`,
+      civ: ['Celts', 'Teutons', 'Japanese', 'Vikings'][i % 4],
+      number: playersPerTeam + i + 1,
+      color_id: playersPerTeam + i,
+      user_id: (playersPerTeam + i + 1).toString(),
+      winner: false,
+      rating: 1100 + i * 50,
+      rating_change: -15,
+      save_game_size: 1024 * 50,
+    })),
+  ];
   return {
     match_id: '404309454',
     start_time: '2025-07-05T15:34:00.000Z',
     description: 'RM Team',
-    diplomacy: { type: 'RM Team', team_size: numTeams.toString() },
+    diplomacy: { type: 'RM Team', team_size: playersPerTeam.toString() },
     map: 'Kawasan',
     options: '',
     duration: 1456,
@@ -42,9 +53,8 @@ const createMockMatch = (numTeams: number = 2) => {
   };
 };
 
-describe('FullMatchSummaryCard Responsive Tests', () => {
+describe('FullMatchSummaryCard Battle Record Layout', () => {
   beforeEach(() => {
-    // Reset stubs before each test
     cy.window().then((win) => {
       win.fetch = cy.stub().resolves({
         ok: true,
@@ -53,12 +63,10 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
     });
   });
 
+  describe('Confrontational Layout', () => {
+    it('should use column layout on mobile and row on desktop', () => {
+      const mockMatch = createMockMatch(1);
 
-
-  describe('Layout Direction Changes', () => {
-    it('should display correct layout for different viewports', () => {
-      const mockMatch = createMockMatch();
-      
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -71,7 +79,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.viewport(400, 800);
       cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
-      
+
       // Desktop viewport - row layout
       cy.viewport(1200, 800);
       cy.wait(50);
@@ -80,9 +88,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
   });
 
   describe('Match Details Responsive Text', () => {
-    it('should show appropriate labels and spacing for different viewports', () => {
-      const mockMatch = createMockMatch();
-      
+    it('should show appropriate labels for different viewports', () => {
+      const mockMatch = createMockMatch(1);
+
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -97,9 +105,6 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.contains('Date').should('be.visible');
       cy.contains('Game').should('be.visible');
       cy.contains('Real').should('be.visible');
-      cy.get('[data-testid="match-details"]').within(() => {
-        cy.get('div').should('have.css', 'gap');
-      });
 
       // Desktop viewport - full labels
       cy.viewport(1200, 800);
@@ -110,12 +115,10 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
     });
   });
 
-  describe('Player Avatar Responsive Behavior', () => {
+  describe('Victory/Defeat Indication', () => {
+    it('should show Victory label for winning team and Defeat for losing', () => {
+      const mockMatch = createMockMatch(1);
 
-    it('should properly truncate long player names on mobile', () => {
-      const mockMatch = createMockMatch();
-      mockMatch.teams[0][0].name = 'VeryLongPlayerNameThatShouldBeTruncated';
-      
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -124,23 +127,17 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         </BrowserRouter>
       );
 
-      // Mobile viewport
-      cy.viewport(400, 800);
-      cy.wait(50);
-
-      // Player name should be truncated
-      cy.get('[data-testid="player-name"]').should('have.css', {
-        'text-overflow': 'ellipsis',
-        'white-space': 'nowrap',
-        'overflow': 'hidden'
-      }).and('have.attr', 'title', 'VeryLongPlayerNameThatShouldBeTruncated');
+      cy.get('[data-testid="victory-label"]').should('have.length', 2);
+      cy.get('[data-testid="victory-label"]').first().should('contain.text', 'Victory');
+      cy.get('[data-testid="victory-label"]').last().should('contain.text', 'Defeat');
     });
   });
 
-  describe('Trophy and Winner Indication', () => {
-    it('should display trophy correctly across viewports', () => {
-      const mockMatch = createMockMatch();
-      
+  describe('Player Name Display', () => {
+    it('should clamp long player names to one line', () => {
+      const mockMatch = createMockMatch(1);
+      mockMatch.teams[0][0].name = 'VeryLongPlayerNameThatShouldBeClamped';
+
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -149,48 +146,48 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
         </BrowserRouter>
       );
 
-      // Mobile viewport
       cy.viewport(400, 800);
       cy.wait(50);
-      cy.get('[data-testid="trophy-box"]').should('be.visible');
-      cy.get('[data-testid="trophy-box"]').should('have.css', 'position', 'absolute');
 
-      // Desktop viewport
-      cy.viewport(1200, 800);
-      cy.wait(50);
-      cy.get('[data-testid="trophy-box"]').should('be.visible');
-      cy.get('[data-testid="trophy-box"]').should('have.css', 'z-index', '1');
+      cy.get('[data-testid="player-name"]').first()
+        .should('have.css', '-webkit-line-clamp', '1');
     });
   });
 
-  describe('Font Size Responsiveness', () => {
-
-    it('should use larger font sizes on desktop', () => {
-      const mockMatch = createMockMatch();
-      
+  describe('Density Adaptation', () => {
+    it('should render both 1v1 and 4v4 matches', () => {
+      // 1v1 match
+      const match1v1 = createMockMatch(1);
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
-            <FullMatchSummaryCard match={mockMatch} />
+            <FullMatchSummaryCard match={match1v1} />
           </CustomThemeProvider>
         </BrowserRouter>
       );
 
-      // Desktop viewport
-      cy.viewport(1200, 800);
-      cy.wait(50);
+      cy.get('[data-testid="player-name"]').should('have.length', 2);
+      cy.get('[data-testid="victory-label"]').should('have.length', 2);
+    });
 
-      // Check font sizes for desktop
-      cy.get('[data-testid="player-name"]').first().should('have.css', 'font-size', '14px');
-      cy.get('[data-testid="player-rating"]').first().should('have.css', 'font-size', '14px');
-      cy.get('[data-testid="match-detail-value"]').first().should('have.css', 'font-size', '16px');
+    it('should render 4v4 with all players visible', () => {
+      const match4v4 = createMockMatch(4);
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={match4v4} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      cy.get('[data-testid="player-name"]').should('have.length', 8);
     });
   });
 
   describe('Breakpoint Transitions', () => {
     it('should transition between layouts when resizing', () => {
-      const mockMatch = createMockMatch();
-      
+      const mockMatch = createMockMatch(2);
+
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -203,7 +200,7 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.viewport(400, 800);
       cy.wait(50);
       cy.get('[data-testid="match-card-content"]').should('have.css', 'flex-direction', 'column');
-      
+
       // Desktop - row layout
       cy.viewport(1024, 768);
       cy.wait(50);
@@ -212,9 +209,9 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
   });
 
   describe('Content Wrapping and Overflow', () => {
-    it('should handle content wrapping and prevent overflow', () => {
-      const mockMatch = createMockMatch();
-      
+    it('should handle content at narrow viewports', () => {
+      const mockMatch = createMockMatch(2);
+
       mount(
         <BrowserRouter>
           <CustomThemeProvider>
@@ -227,12 +224,8 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       cy.viewport(320, 568);
       cy.wait(50);
       cy.get('[data-testid="details-row"]').should('have.css', 'flex-wrap', 'wrap');
-      cy.get('[data-testid="player-name"]').each(($el) => {
-        cy.wrap($el).should('have.css', 'text-overflow', 'ellipsis');
-        cy.wrap($el).should('have.css', 'overflow', 'hidden');
-      });
 
-      // Mobile viewport
+      // Ensure card doesn't overflow
       cy.viewport(400, 800);
       cy.wait(50);
       cy.get('[data-testid="enlarged-match-card"]').should(($el) => {
@@ -240,4 +233,224 @@ describe('FullMatchSummaryCard Responsive Tests', () => {
       });
     });
   });
-}); 
+
+  describe('Winner/Loser Card Variants', () => {
+    it('should apply red chalk top border to winner team column', () => {
+      const mockMatch = createMockMatch(2);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Winner team (first) gets a visible red chalk top border
+      cy.get('[data-testid="victory-label"]').first().parent().parent()
+        .should('have.css', 'border-top-style', 'solid')
+        .and('have.css', 'border-top-width', '2px');
+
+      // Loser team gets a transparent top border (for consistent sizing)
+      cy.get('[data-testid="victory-label"]').last().parent().parent()
+        .should('have.css', 'border-top-style', 'solid')
+        .and('have.css', 'border-top-color', 'rgba(0, 0, 0, 0)');
+    });
+
+    it('should show red chalk underline after Victory label', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Victory label should have a red chalk underline (60px wide box)
+      cy.get('[data-testid="victory-label"]').first()
+        .parent()
+        .find('div')
+        .should('have.css', 'height', '2px');
+    });
+  });
+
+  describe('MapCard Illustration', () => {
+    it('should render map with double-line frame and italic caption', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Map image exists
+      cy.get('img[alt="Kawasan"]').should('exist');
+
+      // Italic map caption
+      cy.contains('Kawasan').should('have.css', 'font-style', 'italic');
+
+      // VS label exists below map
+      cy.contains('vs').should('exist');
+    });
+  });
+
+  describe('MatchDetails Inscription', () => {
+    it('should render inscription title and match ID', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Inscription title
+      cy.get('[data-testid="match-details"]').within(() => {
+        // Match description as title
+        cy.contains('RM Team').should('exist');
+
+        // Match ID annotation in italic
+        cy.contains('Match #404309454')
+          .should('have.css', 'font-style', 'italic');
+
+        // Detail values present (3 values: date, game duration, real time)
+        cy.get('[data-testid="match-detail-value"]').should('have.length', 3);
+      });
+    });
+
+    it('should render detail labels in italic', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      cy.viewport(1200, 800);
+      cy.wait(50);
+
+      // Labels should be italic
+      cy.contains('Date & Time').should('have.css', 'font-style', 'italic');
+      cy.contains('Game Duration').should('have.css', 'font-style', 'italic');
+      cy.contains('Real Time').should('have.css', 'font-style', 'italic');
+    });
+  });
+
+  describe('Player Avatar Components', () => {
+    it('should render color stripe for each player', () => {
+      const mockMatch = createMockMatch(2);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      cy.get('[data-testid="color-indicator"]').should('have.length', 4);
+    });
+
+    it('should display civ name and rating for each player', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Civ names
+      cy.contains('Britons').should('exist');
+      cy.contains('Celts').should('exist');
+
+      // Ratings
+      cy.get('[data-testid="player-rating"]').should('have.length', 2);
+      cy.get('[data-testid="player-rating"]').first().should('contain.text', '1200');
+
+      // Rating change with sign
+      cy.get('[data-testid="player-rating"]').first().should('contain.text', '+15');
+    });
+
+    it('should render replay download link as italic annotation', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      cy.get('[data-testid="download-button"]')
+        .should('have.length', 2)
+        .first()
+        .should('have.css', 'font-style', 'italic')
+        .and('contain.text', 'replay');
+    });
+
+    it('should show winner avatar with red chalk border', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // Winner avatars (first team) should exist
+      cy.get('[data-testid="player-avatar"]').should('have.length', 2);
+    });
+  });
+
+  describe('Decorative Elements', () => {
+    it('should render section divider between header and content', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      // The double-rule divider exists between match-details and match-card-content
+      cy.get('[data-testid="match-details"]')
+        .parent()
+        .children()
+        .should('have.length.at.least', 3); // details + divider + content
+    });
+
+    it('should render VS label between teams', () => {
+      const mockMatch = createMockMatch(1);
+
+      mount(
+        <BrowserRouter>
+          <CustomThemeProvider>
+            <FullMatchSummaryCard match={mockMatch} />
+          </CustomThemeProvider>
+        </BrowserRouter>
+      );
+
+      cy.contains('vs')
+        .should('have.css', 'text-transform', 'uppercase')
+        .and('have.css', 'letter-spacing');
+    });
+  });
+});

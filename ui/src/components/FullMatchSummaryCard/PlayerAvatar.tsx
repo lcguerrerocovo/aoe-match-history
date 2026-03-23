@@ -8,23 +8,16 @@ import type { Player } from '../../types/match';
 import { assetManager } from '../../utils/assetManager';
 import { PLAYER_COLORS } from '../../utils/playerColors';
 import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../../services/matchService';
-import { getTextColorForBackground, getTextShadowForBackground } from '../../utils/colorUtils';
 
 interface PlayerAvatarProps {
   player: Player;
   matchId: string;
+  teamSize?: number;
 }
 
-// Hardcoded gradient hex values (non-semantic, same in light/dark)
-const BRONZE_LIGHT = '#C8A26B';
-const BRONZE = '#B37A3E';
-const BRONZE_MEDIUM = '#8B5A2B';
-const BRONZE_DARK = '#6B4423';
-const GOLD_LIGHT = '#D4AF37';
-const GOLD_DARK = '#FFD700';
-
-export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) => {
+export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, teamSize = 4 }) => {
   const { isDark } = useThemeMode();
+  const isExpansive = teamSize <= 2;
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [replayAvailable, setReplayAvailable] = useState<boolean | null>(null); // null = loading, true/false = result
 
@@ -67,61 +60,63 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
   const isReplayDisabled = replayAvailable === false;
   const isReplayLoading = replayAvailable === null;
 
-  // Determine background and foreground colors for the player number rectangle
+  // Determine player color for the vertical stripe
   const steelHex = isDark ? '#CBD5E0' : '#5A6478';
   const bgColor = PLAYER_COLORS[player.color_id] || steelHex;
 
-  const numberTextColor = getTextColorForBackground(bgColor, isDark, '#fff', '#111');
-  const textShadow = getTextShadowForBackground(bgColor, isDark);
-
-  const bronzeLightResolved = isDark ? '#CFA46B' : BRONZE_LIGHT;
-  const bronzeResolved = isDark ? '#CD7F32' : BRONZE;
-  const goldResolved = isDark ? GOLD_DARK : GOLD_LIGHT;
-
   return (
-    <Box position="relative" w="full">
-      {/* Top row: avatar and details */}
+    <Box w="full">
       <HStack
-        gap={{ base: 1, md: 2 }}
-        align="flex-start"
+        gap={{ base: 2, md: 3 }}
+        align="stretch"
         w="full"
+        minH={{ base: '60px', md: '68px' }}
       >
+        {/* Vertical color stripe */}
+        <Box
+          w={{ base: "4px", md: "5px" }}
+          borderRadius="sm"
+          bg={bgColor}
+          opacity={0.5}
+          flexShrink={0}
+          alignSelf="stretch"
+          data-testid="color-indicator"
+        />
+
         {/* Avatar */}
         <Avatar.Root
-          size={{ base: "sm", md: "md", lg: "md" }}
+          size={isExpansive ? { base: "md", md: "lg" } : { base: "sm", md: "md" }}
           bg="brand.inkMuted"
           color="brand.parchment"
           border="1px solid"
-          borderColor={player.winner ? "brand.brightGreen" : "brand.inkMuted"}
-          data-testid="player-avatar"><Avatar.Fallback name={player.name} /><Avatar.Image src={avatarUrl} /></Avatar.Root>
+          borderColor={player.winner ? "brand.redChalk" : "brand.inkMuted"}
+          alignSelf="center"
+          data-testid="player-avatar"
+        >
+          <Avatar.Fallback name={player.name} />
+          <Avatar.Image src={avatarUrl} />
+        </Avatar.Root>
 
-        {/* Details column */}
-        <VStack gap={1} align="start" flex="1" minW={0}>
-          {/* Player Color Indicator with Index */}
-          <HStack gap={0} align="center" w="full">
-            <Box
-              w={{ base: '75px', md: '75px' }}
-              h={{ base: "16px", md: "18px" }}
-              bg={bgColor}
-              borderRadius="sm"
-              border="1px solid"
-              borderColor="brand.inkMuted"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              boxShadow="sm"
-              data-testid="color-indicator"
+        {/* Details column: name, civ, rating */}
+        <VStack gap={1} align="start" flex="1" minW={0} justifyContent="center">
+          {/* Player name link */}
+          <Tooltip content={player.name}>
+            <Link
+              fontSize={isExpansive ? { base: "sm", md: "md" } : { base: "xs", md: "sm" }}
+              fontWeight="semibold"
+              color="brand.inkDark"
+              _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
+              textDecoration="none"
+              lineClamp={1}
+              lineHeight="tight"
+              data-testid="player-name"
+              asChild
             >
-              <Text
-                fontSize={{ base: "2xs", md: "xs" }}
-                fontWeight="bold"
-                color={numberTextColor}
-                style={{ textShadow }}
-              >
-                {player.color_id || '?'}
-              </Text>
-            </Box>
-          </HStack>
+              <RouterLink to={`/profile_id/${player.user_id}`}>
+                {player.name}
+              </RouterLink>
+            </Link>
+          </Tooltip>
 
           {/* Civ Icon and Name */}
           <HStack gap={1} align="center">
@@ -159,7 +154,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
                 h="100%"
                 fontSize={{ base: "6px", md: "8px" }}
                 fontWeight="bold"
-                color="brand.bronze"
+                color="brand.inkMuted"
                 bg="brand.stoneLight"
               >
                 {(typeof player.civ === 'string' ? player.civ : '???').slice(0, 3).toUpperCase()}
@@ -172,7 +167,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
 
           {/* Rating and change */}
           {player.rating && (
-            <Text fontSize={{ base: "2xs", md: "xs", lg: "sm" }} color="brand.inkDark" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
+            <Text fontSize={isExpansive ? { base: "xs", md: "sm" } : { base: "2xs", md: "xs", lg: "sm" }} color="brand.inkDark" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
               {player.rating}
               {player.rating_change && (
                 <Text as="span" fontSize={{ base: '2xs', md: '2xs', lg: 'xs' }} color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
@@ -182,84 +177,68 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId }) =
             </Text>
           )}
         </VStack>
+
+        {/* Right margin: player number + replay annotation */}
+        <VStack
+          gap={1}
+          align="flex-end"
+          justifyContent="space-between"
+          py={1}
+          flexShrink={0}
+        >
+          {/* Player number */}
+          <Text
+            fontSize="xs"
+            fontWeight="bold"
+            fontFamily="mono"
+            color="brand.inkMuted"
+          >
+            #{player.color_id ?? '?'}
+          </Text>
+
+          {/* Replay annotation */}
+          <Tooltip
+            content={
+              isReplayLoading
+                ? 'Checking replay availability...'
+                : isReplayDisabled
+                  ? 'Replay file not available'
+                  : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
+            }
+          >
+            <Link
+              href={replayUrl}
+              fontSize={{ base: "2xs", md: "xs" }}
+              fontStyle="italic"
+              fontFamily="body"
+              color={isReplayLoading || isReplayDisabled ? 'brand.inkMuted' : 'brand.redChalk'}
+              opacity={isReplayLoading || isReplayDisabled ? 0.35 : 0.8}
+              cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
+              pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+              textDecoration="none"
+              transition="all 0.2s ease-in-out"
+              _hover={
+                isReplayLoading || isReplayDisabled
+                  ? {}
+                  : {
+                      opacity: 1,
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                    }
+              }
+              display="flex"
+              alignItems="center"
+              gap={1}
+              target='_blank'
+              rel='noopener noreferrer'
+              data-testid="download-button"
+            >
+              <Icon boxSize={3} asChild><FiDownload /></Icon>
+              <Text as="span" fontSize="inherit" fontStyle="inherit">replay</Text>
+            </Link>
+          </Tooltip>
+        </VStack>
       </HStack>
-      {/* Alias row */}
-      <Link
-        fontSize={{ base: "xs", md: "sm" }}
-        fontWeight="semibold"
-        color="brand.inkDark"
-        _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
-        textDecoration="none"
-        lineClamp={1}
-        maxW={{ base: "calc(100% - 16px)", md: "calc(100% - 20px)" }}
-        pr={{ base: 4, md: 5 }}
-        overflow="hidden"
-        textOverflow="ellipsis"
-        whiteSpace="nowrap"
-        title={player.name}
-        mt={1}
-        data-testid="player-name"
-        asChild><RouterLink to={`/profile_id/${player.user_id}`}>
-          {player.name}
-        </RouterLink></Link>
-      {/* Download button bottom-right */}
-      <Tooltip
-        content={
-          isReplayLoading
-            ? 'Checking replay availability...'
-            : isReplayDisabled
-              ? 'Replay file not available'
-              : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
-        }
-      >
-        <Link
-          href={replayUrl}
-          w={{ base: "18px", md: "22px" }}
-          h={{ base: "18px", md: "22px" }}
-          bg={
-            isReplayLoading
-              ? 'brand.inkMuted'
-              : isReplayDisabled
-                ? 'brand.inkMuted'
-                : `linear-gradient(135deg, ${bronzeLightResolved} 0%, ${bronzeResolved} 40%, ${BRONZE_MEDIUM} 80%, ${BRONZE_DARK} 100%)`
-          }
-          borderRadius="full"
-          display="flex"
-          boxSizing="border-box"
-          alignItems="center"
-          justifyContent="center"
-          color={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.brightGold'}
-          fontSize={{ base: "2xs", md: "xs" }}
-          fontWeight="bold"
-          borderWidth={{ base: 0, md: '1px' }}
-          borderColor={isReplayLoading || isReplayDisabled ? 'brand.stoneLight' : 'brand.bronze'}
-          boxShadow={
-            isReplayLoading || isReplayDisabled
-              ? 'none'
-              : 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)'
-          }
-          transition="all 0.2s ease"
-          opacity={isReplayLoading || isReplayDisabled ? 0.5 : 1}
-          cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
-          pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
-          data-testid="download-button"
-          position="absolute"
-          bottom={-1}
-          right={{ base: -3, lg: -5 }}
-          _hover={
-            isReplayLoading || isReplayDisabled
-              ? {}
-              : {
-                  bg: `linear-gradient(135deg, ${goldResolved} 0%, ${bronzeResolved} 30%, ${BRONZE_MEDIUM} 70%, ${BRONZE_DARK} 100%)`,
-                  color: "brand.brightGold",
-                  boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.25)"
-                }
-          }
-          target='_blank'
-          rel='noopener noreferrer'>
-          <Icon boxSize={{ base: 3, md: 4 }} asChild><FiDownload /></Icon>
-        </Link>
-      </Tooltip>
     </Box>
   );
 };

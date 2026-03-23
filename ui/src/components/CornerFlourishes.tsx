@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Box } from '@chakra-ui/react';
 
-function FlourishSvg() {
+function DefaultFlourishSvg() {
   return (
     <svg
       viewBox="0 0 60 60"
@@ -79,6 +79,89 @@ function FlourishSvg() {
   );
 }
 
+function BattleFlourishSvg() {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      width={48}
+      height={48}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Angular bracket — horizontal arm with serif terminal */}
+      <path
+        d="M6,6 L6,10 L6,48"
+        stroke="#6B5240"
+        strokeWidth="1.6"
+        opacity="0.45"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6,6 L10,6 L48,6"
+        stroke="#6B5240"
+        strokeWidth="1.6"
+        opacity="0.45"
+        strokeLinecap="round"
+      />
+      {/* Serif flicks at arm terminals */}
+      <path
+        d="M46,4 L48,6 L46,8"
+        stroke="#6B5240"
+        strokeWidth="1.2"
+        opacity="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4,46 L6,48 L8,46"
+        stroke="#6B5240"
+        strokeWidth="1.2"
+        opacity="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Inner companion line — thinner, inset */}
+      <path
+        d="M10,10 L10,36"
+        stroke="#6B5240"
+        strokeWidth="0.6"
+        opacity="0.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10,10 L36,10"
+        stroke="#6B5240"
+        strokeWidth="0.6"
+        opacity="0.3"
+        strokeLinecap="round"
+      />
+      {/* Crossed quill strokes at corner — the battle mark */}
+      <path
+        d="M14,22 L22,14"
+        stroke="#8B3A3A"
+        strokeWidth="1.0"
+        opacity="0.45"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14,14 L22,22"
+        stroke="#8B3A3A"
+        strokeWidth="1.0"
+        opacity="0.45"
+        strokeLinecap="round"
+      />
+      {/* Small red chalk diamond at bracket corner */}
+      <rect
+        x="6" y="6"
+        width="3.5" height="3.5"
+        fill="#8B3A3A"
+        opacity="0.5"
+        transform="rotate(45 7.75 7.75)"
+      />
+    </svg>
+  );
+}
+
 const cornerStyles: CSSProperties[] = [
   { top: 4, left: 4 },
   { top: 4, right: 4, transform: 'scaleX(-1)' },
@@ -86,7 +169,12 @@ const cornerStyles: CSSProperties[] = [
   { bottom: 4, right: 4, transform: 'scale(-1, -1)' },
 ];
 
-export function CornerFlourishes() {
+interface CornerFlourishesProps {
+  variant?: 'default' | 'battle';
+}
+
+export function CornerFlourishes({ variant = 'default' }: CornerFlourishesProps) {
+  const Svg = variant === 'battle' ? BattleFlourishSvg : DefaultFlourishSvg;
   return (
     <Box
       display={{ base: 'none', md: 'block' }}
@@ -97,7 +185,7 @@ export function CornerFlourishes() {
     >
       {cornerStyles.map((style, i) => (
         <Box key={i} position="absolute" style={style}>
-          <FlourishSvg />
+          <Svg />
         </Box>
       ))}
     </Box>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Text, Spinner } from '@chakra-ui/react';
 import { Tooltip } from './ui/tooltip';
-import { system } from '../theme/theme';
 import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
@@ -22,15 +21,14 @@ interface APMGeneratorProps {
   skipBronzeState?: boolean;
 }
 
-export function APMGenerator({ 
-  matchId, 
-  profileId, 
+export function APMGenerator({
+  matchId,
+  profileId,
   variant = 'button',
   onStatusChange,
   children,
   skipBronzeState = false
 }: APMGeneratorProps) {
-  const token = (path: string) => system.token(path, '');
   const [apmStatus, setApmStatus] = useState<APMStatus | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -39,7 +37,7 @@ export function APMGenerator({
 
   useEffect(() => {
     if (isRefreshing) return; // Skip status check if we're refreshing
-    
+
     setIsLoading(true);
     const run = async () => {
       try {
@@ -115,15 +113,15 @@ export function APMGenerator({
 
   if (variant === 'button') {
     const bg = silver
-      ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.inkLight')} 50%, ${token('colors.brand.brightSilver')} 100%)`
+      ? 'brand.inkLight'
       : apmStatus?.state === 'bronzeStatus'
-        ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
+        ? 'brand.inkMuted'
         : 'brand.inkMuted';
 
     const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
       ? (processing ? 'brand.inkMuted' : 'brand.stoneLight')
       : apmStatus?.state === 'bronzeStatus'
-        ? 'brand.brightGold'
+        ? 'brand.redChalk'
         : 'brand.inkMuted';
 
     const tooltipLabel = error
@@ -141,10 +139,8 @@ export function APMGenerator({
     const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
     const borderColor = error
       ? 'brand.brightRed'
-      : silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.inkMuted');
-    const boxShadow = silver
-      ? 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.25)'
-      : (apmStatus?.state === 'bronzeStatus' ? 'inset 0 1px 2px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.2)' : 'none');
+      : silver ? 'brand.inkMuted' : (apmStatus?.state === 'bronzeStatus' ? 'brand.redChalk' : 'brand.inkMuted');
+    const boxShadow = 'none';
 
     const linkProps = apmStatus?.state === 'bronzeStatus' ? { to: `/match/${matchId}#apm` } : {} as const;
 
@@ -179,19 +175,19 @@ export function APMGenerator({
 
   // Card variant
   const bg = silver
-    ? `linear-gradient(135deg, ${token('colors.brand.brightSilver')} 0%, ${token('colors.brand.inkLight')} 50%, ${token('colors.brand.brightSilver')} 100%)`
+    ? 'brand.inkLight'
     : apmStatus?.state === 'bronzeStatus'
-      ? `linear-gradient(135deg, ${token('colors.brand.bronzeLight')} 0%, ${token('colors.brand.bronze')} 40%, ${token('colors.brand.bronzeMedium')} 80%, ${token('colors.brand.bronzeDark')} 100%)`
+      ? 'brand.inkMuted'
       : 'brand.inkMuted';
 
   const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
     ? (processing ? 'brand.inkMuted' : 'brand.stoneLight')
     : apmStatus?.state === 'bronzeStatus'
-      ? 'brand.brightGold'
+      ? 'brand.redChalk'
       : 'brand.inkMuted';
 
   const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
-  const borderColor = silver ? 'brand.brightSilver' : (apmStatus?.state === 'bronzeStatus' ? 'brand.bronze' : 'brand.inkMuted');
+  const borderColor = silver ? 'brand.inkMuted' : (apmStatus?.state === 'bronzeStatus' ? 'brand.redChalk' : 'brand.inkMuted');
 
   const getCardContent = () => {
     if (processing) {
@@ -242,7 +238,7 @@ export function APMGenerator({
       }
       return children || (
         <Box textAlign="center" py={8}>
-          <Text color="brand.brightGold" fontWeight="bold" fontSize="lg" mb={2}>APM Data Ready</Text>
+          <Text color="brand.redChalk" fontWeight="bold" fontSize="lg" mb={2}>APM Data Ready</Text>
           <Text color="brand.stoneLight" fontSize="sm">Click to view detailed APM analysis</Text>
         </Box>
       );
@@ -284,7 +280,7 @@ export function APMGenerator({
       bg={bg}
       color={fg}
       borderRadius="sm"
-      border="2px solid"
+      border="1px solid"
       borderColor={borderColor}
       minH="200px"
       display="flex"
@@ -297,4 +293,4 @@ export function APMGenerator({
       {getCardContent()}
     </Box>
   );
-} 
+}

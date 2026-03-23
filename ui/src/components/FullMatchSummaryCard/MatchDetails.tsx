@@ -1,5 +1,4 @@
-import { Box, VStack, HStack, Text, Separator, Icon } from '@chakra-ui/react';
-import { FiCalendar, FiClock } from 'react-icons/fi';
+import { Box, VStack, HStack, Text } from '@chakra-ui/react';
 import type { Match } from '../../types/match';
 import { formatDateTime } from '../../utils/matchUtils';
 import { formatDuration, parseDuration } from '../../utils/timeUtils';
@@ -12,25 +11,42 @@ export function MatchDetails({ match }: { match: Match }) {
     <Box
       w="100%"
       p={4}
-      bg="brand.sessionHeaderBg"
-      borderRadius="md"
-      border="1px solid"
-      borderColor="brand.bronze"
-      boxShadow="inset 0 1px 2px rgba(0,0,0,0.1)"
+      pb={4}
+      bg="transparent"
+      borderBottom="1px solid"
+      borderBottomColor="brand.inkMedium"
       data-testid="match-details"
     >
       <VStack gap={3} align="stretch">
-        {/* Title Row */}
-        <HStack justify="space-between" align="center" wrap="wrap">
-          <Text fontWeight="bold" color="brand.inkDark" fontSize="2xl">
-            Match #{match.match_id}
-          </Text>
-          <Text color="brand.inkMuted" fontSize="xl" fontWeight="semibold">
+        {/* Inscription Title */}
+        <VStack gap={1} align="center">
+          <Text
+            fontSize={{ base: "xl", md: "2xl" }}
+            color="brand.inkDark"
+            letterSpacing="0.05em"
+            textAlign="center"
+          >
             {match.description}
           </Text>
-        </HStack>
+          <Text
+            fontSize="xs"
+            fontStyle="italic"
+            color="brand.inkMuted"
+            textAlign="center"
+          >
+            Match #{match.match_id}
+          </Text>
+        </VStack>
 
-        <Separator borderColor="brand.inkMuted" />
+        {/* Diamond Ornament */}
+        <Box display="flex" justifyContent="center">
+          <Box
+            w="5px"
+            h="5px"
+            bg="brand.redChalk"
+            transform="rotate(45deg)"
+          />
+        </Box>
 
         {/* Details Grid */}
         <HStack
@@ -41,13 +57,10 @@ export function MatchDetails({ match }: { match: Match }) {
         >
           {/* Date & Time */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "100px", md: "auto" }}>
-            <HStack gap={2}>
-              <Icon boxSize={4} color="brand.bronze"><FiCalendar /></Icon>
-              <Text fontSize="sm" color="brand.inkMuted" fontWeight="semibold">
-                <Box as="span" display={{ base: "inline", md: "none" }}>Date</Box>
-                <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
-              </Text>
-            </HStack>
+            <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
+              <Box as="span" display={{ base: "inline", md: "none" }}>Date</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
+            </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDateTime(match.start_time)}
             </Text>
@@ -55,13 +68,10 @@ export function MatchDetails({ match }: { match: Match }) {
 
           {/* Game Duration */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
-            <HStack gap={2}>
-              <Icon boxSize={4} color="brand.inkAccent"><FiClock /></Icon>
-              <Text fontSize="sm" color="brand.inkMuted" fontWeight="semibold">
-                <Box as="span" display={{ base: "inline", md: "none" }}>Game</Box>
-                <Box as="span" display={{ base: "none", md: "inline" }}>Game Duration</Box>
-              </Text>
-            </HStack>
+            <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
+              <Box as="span" display={{ base: "inline", md: "none" }}>Game</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>Game Duration</Box>
+            </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(gameTimeSec)}
             </Text>
@@ -69,13 +79,10 @@ export function MatchDetails({ match }: { match: Match }) {
 
           {/* Real Time */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
-            <HStack gap={2}>
-              <Icon boxSize={4} color="brand.bronze"><FiClock /></Icon>
-              <Text fontSize="sm" color="brand.inkMuted" fontWeight="semibold">
-                <Box as="span" display={{ base: "inline", md: "none" }}>Real</Box>
-                <Box as="span" display={{ base: "none", md: "inline" }}>Real Time</Box>
-              </Text>
-            </HStack>
+            <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
+              <Box as="span" display={{ base: "inline", md: "none" }}>Real</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>Real Time</Box>
+            </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(durationSec)}
             </Text>

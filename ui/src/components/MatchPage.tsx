@@ -29,10 +29,6 @@ export function MatchPage() {
   const [error, setError] = useState<string | null>(null);
   const layout = useLayoutConfig();
   const { isDark } = useThemeMode();
-  const tabText = isDark ? 'brand.parchment' : 'brand.inkDark';
-  const tabSelectedText = isDark ? 'brand.brightGold' : 'brand.inkDark';
-  const tabSelectedBg = isDark ? 'brand.inkMuted' : 'brand.stoneLight';
-  const tabBorder = isDark ? 'brand.inkMuted' : 'brand.borderWarm';
 
   const [activePids, setActivePids] = useState<string[]>([]);
 
@@ -118,9 +114,7 @@ export function MatchPage() {
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
-            borderWidth={{ base: '3px', md: '4px' }}
-            borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.inkMedium"
+            borderWidth={0}
             minH="400px"
             justify="center"
           >
@@ -146,9 +140,7 @@ export function MatchPage() {
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
-            borderWidth={{ base: '3px', md: '4px' }}
-            borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.inkMedium"
+            borderWidth={0}
           >
             <Alert.Root status="error">
               <Alert.Indicator />
@@ -174,9 +166,7 @@ export function MatchPage() {
             maxW={{ md: '90%', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
-            borderWidth={{ base: '3px', md: '4px' }}
-            borderTopWidth={{ base: 0, md: '4px' }}
-            borderColor="brand.inkMedium"
+            borderWidth={0}
           >
             <Alert.Root status="info">
               <Alert.Indicator />
@@ -201,11 +191,12 @@ export function MatchPage() {
           maxW={{ md: '90%', xl: '1100px' }}
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ md: 'sm' }}
-          borderWidth={{ base: 0, md: '4px' }}
-          borderColor={{ base: 'transparent', md: 'brand.inkMedium' }}
+          borderWidth={{ base: 0, md: '1px' }}
+          borderColor={{ base: 'transparent', md: 'brand.inkLight' }}
+          borderStyle="solid"
           position="relative"
         >
-          <CornerFlourishes />
+          <CornerFlourishes variant="battle" />
           <VStack
             align="stretch"
             p={layout?.mainContent.padding}
@@ -221,35 +212,37 @@ export function MatchPage() {
                 style={{ right: '-50px', bottom: '-30px' }}
               />
               <Tabs.Root defaultValue="apm" colorPalette="brand">
-                <Tabs.List mb={4} justifyContent="flex-start">
+                <Tabs.List mb={4} justifyContent="flex-start" borderBottomWidth="1px" borderBottomColor="brand.inkLight">
                   <Tabs.Trigger
                     value="apm"
-                    fontWeight="bold"
-                    w={{ base: '100px', md: '120px' }}
-                    color={tabText}
+                    fontWeight="semibold"
+                    px={4}
+                    py={2}
+                    color="brand.inkMuted"
+                    _hover={{ color: 'brand.redChalk' }}
                     _selected={{
-                      color: tabSelectedText,
-                      bg: tabSelectedBg,
-                      border: '1px solid',
-                      borderColor: tabBorder,
+                      color: isDark ? 'brand.parchment' : 'brand.inkDark',
+                      fontStyle: 'italic',
                       borderBottom: '2px solid',
                       borderBottomColor: 'brand.redChalk',
+                      mb: '-1px',
                     }}
                   >
                     APM
                   </Tabs.Trigger>
                   <Tabs.Trigger
                     value="actions"
-                    fontWeight="bold"
-                    w={{ base: '100px', md: '120px' }}
-                    color={tabText}
+                    fontWeight="semibold"
+                    px={4}
+                    py={2}
+                    color="brand.inkMuted"
+                    _hover={{ color: 'brand.redChalk' }}
                     _selected={{
-                      color: tabSelectedText,
-                      bg: tabSelectedBg,
-                      border: '1px solid',
-                      borderColor: tabBorder,
+                      color: isDark ? 'brand.parchment' : 'brand.inkDark',
+                      fontStyle: 'italic',
                       borderBottom: '2px solid',
                       borderBottomColor: 'brand.redChalk',
+                      mb: '-1px',
                     }}
                   >
                     Actions

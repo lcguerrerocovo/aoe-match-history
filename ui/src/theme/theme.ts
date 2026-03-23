@@ -101,6 +101,10 @@ const semanticColors = {
 
     // UI element backgrounds
     cardBg: { value: { base: '#f6ecd8', _dark: '#2D3748' } },
+    cardWinnerBg: { value: { base: 'rgba(139, 58, 58, 0.03)', _dark: 'rgba(196, 69, 54, 0.06)' } },
+    cardLoserBg: { value: { base: 'rgba(139, 115, 85, 0.03)', _dark: 'rgba(74, 85, 104, 0.06)' } },
+    cardWinnerBorder: { value: { base: 'rgba(139, 58, 58, 0.12)', _dark: 'rgba(196, 69, 54, 0.2)' } },
+    cardLoserBorder: { value: { base: 'rgba(139, 90, 43, 0.08)', _dark: 'rgba(74, 85, 104, 0.15)' } },
     inputBg: { value: { base: '#faf5e8', _dark: '#2D3748' } },
 
     // Gradient colors for UI elements
@@ -247,6 +251,9 @@ const cardSlotRecipe = defineSlotRecipe({
             xl: matchCardStyles.desktop.marginBottom,
           },
           transition: 'all 0.3s ease',
+          _hover: {
+            bg: { base: 'rgba(139, 90, 43, 0.02)', _dark: 'rgba(255, 255, 255, 0.02)' },
+          },
         },
       },
       summary: {
@@ -261,22 +268,30 @@ const cardSlotRecipe = defineSlotRecipe({
       },
       winner: {
         root: {
-          bg: 'transparent',
+          bg: '{colors.brand.cardWinnerBg}',
           borderWidth: '0',
           borderRadius: '0',
+          borderTop: '2px solid',
+          borderTopColor: '{colors.brand.redChalk}',
           borderLeft: '3px solid',
           borderLeftColor: '{colors.brand.redChalk}',
+          borderBottom: '1px solid',
+          borderBottomColor: '{colors.brand.cardWinnerBorder}',
           p: '1',
           transition: 'all 0.3s ease',
         },
       },
       loser: {
         root: {
-          bg: 'transparent',
+          bg: '{colors.brand.cardLoserBg}',
           borderWidth: '0',
           borderRadius: '0',
+          borderTop: '2px solid',
+          borderTopColor: 'transparent',
           borderLeft: '3px solid',
           borderLeftColor: { base: 'rgba(139, 90, 43, 0.15)', _dark: '{colors.brand.borderWarm}' },
+          borderBottom: '1px solid',
+          borderBottomColor: '{colors.brand.cardLoserBorder}',
           p: '1',
           transition: 'all 0.3s ease',
         },

@@ -53,11 +53,6 @@ export function TeamCard({ match }: { match: Match }) {
         maxW={layout?.teamCard.teamMaxWidth}
         position="relative"
       >
-        {isWinner && (
-          <Box position="absolute" top="-12px" right="-10px" zIndex={1} fontSize="xl">
-            🏆
-          </Box>
-        )}
         <VStack
           gap={layout?.teamCard.teamVStackSpacing}
           align={layout?.teamCard.teamVStackAlign}

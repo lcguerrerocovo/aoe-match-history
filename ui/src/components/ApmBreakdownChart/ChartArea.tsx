@@ -4,6 +4,15 @@ import { Box, Text, Flex, useBreakpointValue } from '@chakra-ui/react';
 import { useThemeMode } from '../../theme/ThemeProvider';
 import { getColorByIndex } from './utils';
 
+// Resolved color values for non-Chakra (Recharts SVG) usage.
+// Must mirror the semantic tokens in theme.ts.
+const colors = {
+  inkDark: { light: '#3B2614', dark: '#F7FAFC' },
+  inkSubtle: { light: '#C4B59A', dark: '#CBD5E0' },
+};
+
+const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token].dark : colors[token].light;
+
 interface ActionTypeStat {
   actionType: string;
   total: number;
@@ -95,29 +104,29 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
           >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#CBD5E0' : '#C4B59A'}
+            stroke={c('inkSubtle', isDark)}
             strokeOpacity={isDark ? 1 : 0.4}
             fill="transparent"
           />
           <XAxis
             dataKey="minute"
-            stroke={isDark ? '#F7FAFC' : '#3B2614'}
+            stroke={c('inkDark', isDark)}
             label={showAxisLabel ? {
               value: 'Minute',
               position: 'insideBottom',
               offset: -5,
-              fill: isDark ? '#F7FAFC' : '#3B2614',
+              fill: c('inkDark', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
           <YAxis
-            stroke={isDark ? '#F7FAFC' : '#3B2614'}
+            stroke={c('inkDark', isDark)}
             label={showAxisLabel ? {
               value: 'Actions',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              fill: isDark ? '#F7FAFC' : '#3B2614',
+              fill: c('inkDark', isDark),
               fontWeight: 'bold',
             } : undefined}
           />
@@ -132,7 +141,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
               dataKey={actionStat.actionType}
               stackId="a"
               fill={getColorByIndex(actionTypeColorMap[actionStat.actionType] || 0)}
-              stroke={isDark ? '#CBD5E0' : '#C4B59A'}
+              stroke={c('inkSubtle', isDark)}
               strokeWidth={1}
             />
           ))}
