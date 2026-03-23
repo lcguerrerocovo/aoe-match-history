@@ -1,7 +1,7 @@
 import { log, getFirestoreClient, getMatchDbPool } from './config';
 import { processMatch } from './matchProcessing';
 import { querySingleMatch } from './matchHistoryDb';
-import type { HandlerResponse, RawMatchHistoryResponse, RawMatch, RawProfile, ProcessedMatch } from './types';
+import type { HandlerResponse, RawMatchHistoryResponse, RawProfile, ProcessedMatch } from './types';
 
 // Pure API call - just fetch and cache raw data
 export async function handleRawMatchHistory(profileId: string): Promise<HandlerResponse<RawMatchHistoryResponse>> {
@@ -14,7 +14,6 @@ export async function handleRawMatchHistory(profileId: string): Promise<HandlerR
       }
     });
     if (!response.ok) {
-      const errorText = await response.text();
       throw new Error(`API responded with status ${response.status}`);
     }
     const data = await response.json() as RawMatchHistoryResponse;

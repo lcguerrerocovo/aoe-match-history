@@ -54,7 +54,13 @@ async function fetchWithRetry<T>(url: string, label: string): Promise<T> {
         signal: AbortSignal.timeout(30000),
       });
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const err = new Error(`HTTP ${response.status}`);
+        // Don't retry client errors — only server/transient failures
+        if (response.status >= 400 && response.status < 500) {
+          log.error({ url, label, status: response.status }, 'Client error, not retrying');
+          throw err;
+        }
+        throw err;
       }
       return await response.json() as T;
     } catch (err) {

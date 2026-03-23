@@ -50,11 +50,11 @@ pytest test_main.py -v           # Run APM tests
 
 ### Match Collector (from `jobs/collector/`)
 ```bash
-npm run build            # Compile TypeScript to dist/
-npm start                # Run compiled output
-npm run dev              # Watch mode (recompile on change)
-npm run migrate:up       # Apply database migrations (requires DATABASE_URL)
-npm run migrate:down     # Roll back last migration
+pnpm run build           # Compile TypeScript to dist/
+pnpm start               # Run compiled output
+pnpm run dev             # Watch mode (recompile on change)
+pnpm run migrate:up      # Apply database migrations (requires DATABASE_URL)
+pnpm run migrate:down    # Roll back last migration
 ```
 
 ### Local Dev (full stack)

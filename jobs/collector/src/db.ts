@@ -307,15 +307,17 @@ export class Database {
    */
   private async perMatchInsert(client: pg.PoolClient, processed: ProcessedMatch[]): Promise<number> {
     let count = 0;
-    for (const m of processed) {
+    for (let i = 0; i < processed.length; i++) {
+      const m = processed[i];
+      const sp = `sp_${i}`;
       try {
-        await client.query(`SAVEPOINT match_${m.matchId}`);
+        await client.query(`SAVEPOINT ${sp}`);
         await this.batchInsertMatches(client, [m]);
         await this.batchInsertPlayers(client, [m]);
-        await client.query(`RELEASE SAVEPOINT match_${m.matchId}`);
+        await client.query(`RELEASE SAVEPOINT ${sp}`);
         count++;
       } catch (err) {
-        await client.query(`ROLLBACK TO SAVEPOINT match_${m.matchId}`);
+        await client.query(`ROLLBACK TO SAVEPOINT ${sp}`);
         log.error({ err: (err as Error).message, matchId: m.matchId }, 'Failed to upsert match');
       }
     }

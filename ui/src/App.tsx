@@ -164,7 +164,8 @@ function App() {
         setCurrentPage(nextPage);
       }
     } catch {
-      // Silently fail — existing matches remain visible, user can retry
+      // Load failed — reset loading state so button reappears for retry
+      setHasMore(true);
     } finally {
       setIsLoadingMore(false);
     }

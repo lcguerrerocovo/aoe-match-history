@@ -5,27 +5,32 @@ Cloud Run Job that collects match history data from the Relic API and stores it 
 ## Commands
 
 ```bash
-npm install              # Install dependencies
-npm run build            # Compile TypeScript to dist/
-npm start                # Run compiled output
-npm run dev              # Watch mode (recompile on change)
+pnpm install             # Install dependencies (pnpm is canonical — CI uses frozen lockfile)
+pnpm run build           # Compile TypeScript to dist/
+pnpm start               # Run compiled output
+pnpm run dev             # Watch mode (recompile on change)
 ```
 
 ## Migrations (node-pg-migrate)
 
 ```bash
-DATABASE_URL=postgresql://collector:pass@host:5432/aoe2_matches npm run migrate:up    # Apply migrations
-DATABASE_URL=postgresql://collector:pass@host:5432/aoe2_matches npm run migrate:down  # Roll back last migration
-npm run migrate:create -- my-migration-name                                           # Create new migration file
+DATABASE_URL=postgresql://collector:pass@host:5432/aoe2_matches pnpm run migrate:up    # Apply migrations
+DATABASE_URL=postgresql://collector:pass@host:5432/aoe2_matches pnpm run migrate:down  # Roll back last migration
+pnpm run migrate:create -- my-migration-name                                           # Create new migration file
 ```
 
 Migration files live in `migrations/`. Schema changes should always go through a migration, never applied directly.
 
 ## Docker
 
+The Dockerfile expects pre-built `dist/` and `node_modules/` — it does NOT run install or build.
+CI handles this: `pnpm install → pnpm build → pnpm prune --prod → docker build`.
+
 ```bash
+# Local: build first, then Docker
+pnpm install && pnpm run build && pnpm prune --prod
 docker build -t match-collector .
-docker run match-collector
+docker run -e DATABASE_URL=... match-collector
 ```
 
 ## Module Structure
@@ -46,9 +51,11 @@ docker run match-collector
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `DATABASE_URL` | (required) | PostgreSQL connection string |
-| `RATE_LIMIT_RPS` | 10 | Relic API requests/second (API limit is 50) |
-| `COLLECTOR_CONCURRENCY` | 5 | Number of parallel batch workers |
+| `RATE_LIMIT_RPS` | 10 | Relic API requests/second (API limit is 50). **Prod: 40** |
+| `COLLECTOR_CONCURRENCY` | 5 | Number of parallel batch workers. **Prod: 20** |
 | `RAW_ARCHIVE_BUCKET` | `aoe2-site-backups` | GCS bucket for raw match Parquet archives |
+
+Prod values are set in `deploy-collector-job.yml`, not via env var defaults.
 
 ## Running Locally
 
@@ -57,6 +64,6 @@ docker run match-collector
 bash scripts/tunnel-postgres.sh
 
 # Terminal 2: Build and run
-npm run build
-DATABASE_URL=postgresql://collector:pass@localhost:5432/aoe2_matches npm start
+pnpm run build
+DATABASE_URL=postgresql://collector:pass@localhost:5432/aoe2_matches pnpm start
 ```
