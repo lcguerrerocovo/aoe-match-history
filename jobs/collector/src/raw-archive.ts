@@ -35,7 +35,7 @@ const PARQUET_SCHEMA = new ParquetSchema({
   raw_json:        { type: 'UTF8' },
 });
 
-const FLUSH_THRESHOLD = 50000;
+const FLUSH_THRESHOLD = 10000;
 
 export class RawArchive {
   private bucket: string;
