@@ -1,7 +1,8 @@
 import pino from 'pino';
 import { scanAllLeaderboards, fetchMatchHistory } from './api.js';
 import { getCivMap, getMapMap } from './mappings.js';
-import { Database } from './db.js';
+import { Database, processMatch } from './db.js';
+import { RawArchive } from './raw-archive.js';
 
 const log = pino({ name: 'match-collector' });
 
@@ -10,9 +11,11 @@ const CONCURRENCY = parseInt(process.env.COLLECTOR_CONCURRENCY || '5', 10);
 
 export class Collector {
   private db: Database;
+  private archiveBucket: string;
 
-  constructor(db: Database) {
+  constructor(db: Database, archiveBucket: string) {
     this.db = db;
+    this.archiveBucket = archiveBucket;
   }
 
   async run(): Promise<void> {
@@ -22,6 +25,8 @@ export class Collector {
     log.info('Loading civ/map mappings...');
     const [civMap, mapMap] = await Promise.all([getCivMap(), getMapMap()]);
     log.info({ civs: Object.keys(civMap).length, maps: Object.keys(mapMap).length }, 'Mappings loaded');
+
+    const archive = new RawArchive(this.archiveBucket);
 
     // Step 2: Scan all ranked leaderboards
     log.info('Scanning ranked leaderboards...');
@@ -96,9 +101,29 @@ export class Collector {
           }
 
           const matchStats = response.matchHistoryStats || [];
+          const profiles = response.profiles || [];
+
+          // Archive raw matches to Parquet
+          for (const match of matchStats) {
+            const pm = processMatch(match, profiles, civMap, mapMap);
+            archive.append({
+              match_id: pm.matchId,
+              map_id: pm.mapId,
+              map_name: pm.mapName,
+              match_type_id: pm.matchTypeId,
+              start_time: pm.startTime,
+              completion_time: pm.completionTime,
+              duration: pm.duration,
+              max_players: pm.maxPlayers,
+              player_count: pm.players.length,
+              winning_team: pm.winningTeam,
+              raw_json: pm.rawJson,
+            });
+          }
+
           const count = await this.db.upsertMatches(
             matchStats,
-            response.profiles || [],
+            profiles,
             batchProfileIds,
             batchLastMatchTimes,
             civMap,
@@ -133,6 +158,13 @@ export class Collector {
     // Launch concurrent workers
     const workers = Array.from({ length: CONCURRENCY }, () => worker());
     await Promise.all(workers);
+
+    // Upload Parquet archive to GCS
+    try {
+      await archive.finalize();
+    } catch (err) {
+      log.error({ err: (err as Error).message }, 'Archive finalization failed — matches are safe in PG');
+    }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     const rate = Math.round((changedProfiles.length) / (elapsed / 60));

@@ -10,10 +10,12 @@ async function main(): Promise<void> {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
-  logger.info("Starting match collector");
+  const archiveBucket = process.env.RAW_ARCHIVE_BUCKET || 'aoe2-site-backups';
+
+  logger.info({ archiveBucket }, "Starting match collector");
 
   const db = new Database(databaseUrl);
-  const collector = new Collector(db);
+  const collector = new Collector(db, archiveBucket);
 
   try {
     await collector.run();
