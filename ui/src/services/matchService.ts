@@ -53,25 +53,57 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
   return await response.json();
 }
 
+export interface FilterOptions {
+  maps: { name: string; count: number }[];
+  matchTypes: { id: number; name: string; count: number }[];
+}
+
 export interface FullMatchHistoryResponse {
   matches: Match[];
   hasMore: boolean;
+  nextCursor?: string;
+  filterOptions?: FilterOptions;
+}
+
+export interface FullMatchHistoryOptions {
+  limit?: number;
+  cursor?: string;
+  map?: string;
+  matchType?: number;
+  sort?: 'asc' | 'desc';
+  page?: number;
 }
 
 export async function getFullMatchHistory(
   profileId: string,
-  page: number = 1,
-  limit: number = 50,
+  pageOrOptions?: number | FullMatchHistoryOptions,
+  limitArg?: number,
 ): Promise<FullMatchHistoryResponse> {
-  const response = await fetch(
-    `${API_URL}/match-history/${profileId}/full?page=${page}&limit=${limit}`,
-    {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'aoe2-site'
-      }
+  const params = new URLSearchParams();
+
+  if (typeof pageOrOptions === 'number') {
+    // Legacy signature: getFullMatchHistory(profileId, page, limit)
+    params.set('page', pageOrOptions.toString());
+    if (limitArg) params.set('limit', limitArg.toString());
+  } else if (pageOrOptions) {
+    const opts = pageOrOptions;
+    if (opts.limit) params.set('limit', opts.limit.toString());
+    if (opts.cursor) params.set('cursor', opts.cursor);
+    if (opts.map) params.set('map', opts.map);
+    if (opts.matchType !== undefined) params.set('matchType', opts.matchType.toString());
+    if (opts.sort) params.set('sort', opts.sort);
+    if (opts.page) params.set('page', opts.page.toString());
+  }
+
+  const qs = params.toString();
+  const url = `${API_URL}/match-history/${profileId}/full${qs ? `?${qs}` : ''}`;
+
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/json',
+      'User-Agent': 'aoe2-site'
     }
-  );
+  });
   if (!response.ok) {
     throw new Error('Failed to fetch full match history');
   }
