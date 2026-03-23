@@ -35,39 +35,44 @@ const PARQUET_SCHEMA = new ParquetSchema({
   raw_json:        { type: 'UTF8' },
 });
 
+const FLUSH_THRESHOLD = 50000;
+
 export class RawArchive {
   private bucket: string;
   private prefix: string;
+  private storage: Storage;
   private rows: ArchiveRow[] = [];
   private runTimestamp: string;
+  private partIndex = 0;
+  private totalRows = 0;
 
   constructor(bucket: string, prefix = 'raw-matches') {
     this.bucket = bucket;
     this.prefix = prefix;
+    this.storage = new Storage();
     this.runTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
   }
 
-  append(row: ArchiveRow): void {
+  async append(row: ArchiveRow): Promise<void> {
     this.rows.push(row);
+    if (this.rows.length >= FLUSH_THRESHOLD) {
+      await this.flush();
+    }
   }
 
   get rowCount(): number {
-    return this.rows.length;
+    return this.totalRows + this.rows.length;
   }
 
-  async finalize(): Promise<void> {
-    if (this.rows.length === 0) {
-      log.info('No rows to archive, skipping Parquet write');
-      return;
-    }
+  private async flush(): Promise<void> {
+    if (this.rows.length === 0) return;
 
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const localPath = path.join(os.tmpdir(), `raw-matches-${this.runTimestamp}.parquet`);
-    const gcsPath = `${this.prefix}/${today}/run-${this.runTimestamp}.parquet`;
+    const today = new Date().toISOString().slice(0, 10);
+    const localPath = path.join(os.tmpdir(), `raw-matches-${this.runTimestamp}-part${this.partIndex}.parquet`);
+    const gcsPath = `${this.prefix}/${today}/run-${this.runTimestamp}-part${String(this.partIndex).padStart(4, '0')}.parquet`;
 
     try {
-      // Write Parquet file locally
-      log.info({ rowCount: this.rows.length, localPath }, 'Writing Parquet file');
+      log.info({ rowCount: this.rows.length, part: this.partIndex }, 'Writing Parquet part');
       const writer = await ParquetWriter.openFile(PARQUET_SCHEMA, localPath);
       for (const row of this.rows) {
         await writer.appendRow(row as unknown as Record<string, unknown>);
@@ -75,31 +80,39 @@ export class RawArchive {
       await writer.close();
 
       const stats = fs.statSync(localPath);
-      log.info({ sizeBytes: stats.size, sizeMB: (stats.size / 1024 / 1024).toFixed(1) }, 'Parquet file written');
+      log.info({ sizeMB: (stats.size / 1024 / 1024).toFixed(1), part: this.partIndex }, 'Parquet part written');
 
-      // Upload to GCS
-      log.info({ bucket: this.bucket, gcsPath }, 'Uploading to GCS');
-      const storage = new Storage();
-      await storage.bucket(this.bucket).upload(localPath, {
+      await this.storage.bucket(this.bucket).upload(localPath, {
         destination: gcsPath,
         metadata: {
           contentType: 'application/x-parquet',
           metadata: {
             matchCount: String(this.rows.length),
             collectorRun: this.runTimestamp,
+            part: String(this.partIndex),
           },
         },
       });
-      log.info({ bucket: this.bucket, gcsPath, rows: this.rows.length }, 'Archive uploaded to GCS');
+      log.info({ gcsPath, rows: this.rows.length }, 'Part uploaded to GCS');
+
+      this.totalRows += this.rows.length;
+      this.partIndex++;
     } catch (err) {
-      log.error({ err: (err as Error).message }, 'Failed to write/upload Parquet archive — continuing without archive');
+      log.error({ err: (err as Error).message, part: this.partIndex }, 'Failed to write/upload Parquet part — continuing');
     } finally {
-      // Clean up local file
       try {
         if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
       } catch { /* ignore cleanup errors */ }
-      // Free memory
       this.rows = [];
+    }
+  }
+
+  async finalize(): Promise<void> {
+    await this.flush();
+    if (this.totalRows > 0) {
+      log.info({ totalRows: this.totalRows, parts: this.partIndex, bucket: this.bucket }, 'Archive complete');
+    } else {
+      log.info('No rows to archive');
     }
   }
 }

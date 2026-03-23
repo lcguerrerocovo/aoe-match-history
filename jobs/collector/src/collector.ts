@@ -106,7 +106,7 @@ export class Collector {
           // Archive raw matches to Parquet
           for (const match of matchStats) {
             const pm = processMatch(match, profiles, civMap, mapMap);
-            archive.append({
+            await archive.append({
               match_id: pm.matchId,
               map_id: pm.mapId,
               map_name: pm.mapName,
