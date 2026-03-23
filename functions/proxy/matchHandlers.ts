@@ -195,18 +195,33 @@ export async function handleMatch(matchId: string): Promise<HandlerResponse<Proc
       if (dbMatch) {
         log.info({ matchId, source: 'postgresql' }, 'Match loaded from database');
 
-        // Check Firestore for APM data (stored separately by replay processing)
+        // Check Firestore for APM data and player profiles (Steam IDs for avatars)
         try {
           const apmDoc = await db.collection('matches').doc(matchId.toString()).get();
           if (apmDoc.exists) {
-            const storedApm = apmDoc.data()?.apm;
+            const docData = apmDoc.data()!;
+            const storedApm = docData.apm;
             if (storedApm) {
               dbMatch.apm = storedApm.apm || storedApm;
               log.info({ matchId }, 'APM data attached from Firestore');
             }
+
+            // Enrich players with original_name (Steam ID path) for avatar resolution
+            const profiles: RawProfile[] = docData.profiles || [];
+            if (profiles.length > 0) {
+              for (const player of dbMatch.players) {
+                if (!player.original_name) {
+                  const profile = profiles.find(p => p.profile_id === player.user_id);
+                  if (profile?.name) {
+                    player.original_name = profile.name;
+                  }
+                }
+              }
+              log.info({ matchId, profileCount: profiles.length }, 'Player profiles enriched from Firestore');
+            }
           }
         } catch (apmErr) {
-          log.warn({ matchId, err: (apmErr as Error).message }, 'Firestore APM lookup failed');
+          log.warn({ matchId, err: (apmErr as Error).message }, 'Firestore APM/profile lookup failed');
         }
 
         return { data: dbMatch, headers: noCache };
