@@ -181,7 +181,7 @@ export function MatchPage() {
   return (
     <>
       <TopBar />
-      <Box py={{ md: 8 }} overflowX="hidden">
+      <Box py={{ md: 8 }}>
         <VStack
           gap={4}
           mx="auto"
