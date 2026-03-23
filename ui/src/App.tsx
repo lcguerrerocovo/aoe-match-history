@@ -386,7 +386,7 @@ function App() {
                 fontStyle="italic"
                 py={1}
               >
-                Collecting match history since March 2026
+                Collecting match history since March 22, 2026. Older matches may appear but are not guaranteed.
               </Text>
             )}
             {profileId && (
