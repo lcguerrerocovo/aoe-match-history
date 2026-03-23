@@ -113,6 +113,20 @@ jobs:
           done
         fi
 
+    - name: Check for running executions
+      run: |
+        RUNNING=$(gcloud run jobs executions list \
+          --job=$JOB_NAME \
+          --region=$REGION \
+          --filter="status.conditions.type=Completed AND status.conditions.status=Unknown" \
+          --format="value(name)" \
+          --limit=1)
+        if [ -n "$RUNNING" ]; then
+          echo "::warning::Collector job execution $RUNNING is currently running. Deploy will update the job definition but will NOT affect the running execution. The next execution will use the new image."
+        else
+          echo "No running executions found. Proceeding with deploy."
+        fi
+
     - name: Deploy Cloud Run Job
       run: |
         if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
