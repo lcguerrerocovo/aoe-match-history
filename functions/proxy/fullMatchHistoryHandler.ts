@@ -39,7 +39,10 @@ interface ParsedParams {
 function parseQueryParams(queryString?: string): ParsedParams {
   const params = new URLSearchParams(queryString || '');
   const page = Math.max(1, parseInt(params.get('page') || '1', 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(params.get('limit') || '50', 10) || 50));
+  const hasFilters = !!(params.get('map') || params.get('matchType'));
+  const defaultLimit = hasFilters ? 1000 : 50;
+  const maxLimit = hasFilters ? 1000 : 100;
+  const limit = Math.min(maxLimit, Math.max(1, parseInt(params.get('limit') || String(defaultLimit), 10) || defaultLimit));
 
   const cursorParam = params.get('cursor');
   const cursor = cursorParam ? decodeCursor(cursorParam) : null;
