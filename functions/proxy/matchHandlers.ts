@@ -180,6 +180,13 @@ export async function handleRawMatch(matchId: string): Promise<HandlerResponse<u
 export async function handleMatch(matchId: string): Promise<HandlerResponse<ProcessedMatch>> {
   log.info({ matchId }, 'Attempting to load match');
 
+  const db = getFirestoreClient();
+  const noCache = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
+
   // Try PostgreSQL first (has historical matches from collector)
   const pool = getMatchDbPool();
   if (pool) {
@@ -187,14 +194,22 @@ export async function handleMatch(matchId: string): Promise<HandlerResponse<Proc
       const dbMatch = await querySingleMatch(pool, matchId);
       if (dbMatch) {
         log.info({ matchId, source: 'postgresql' }, 'Match loaded from database');
-        return {
-          data: dbMatch,
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+
+        // Check Firestore for APM data (stored separately by replay processing)
+        try {
+          const apmDoc = await db.collection('matches').doc(matchId.toString()).get();
+          if (apmDoc.exists) {
+            const storedApm = apmDoc.data()?.apm;
+            if (storedApm) {
+              dbMatch.apm = storedApm.apm || storedApm;
+              log.info({ matchId }, 'APM data attached from Firestore');
+            }
           }
-        };
+        } catch (apmErr) {
+          log.warn({ matchId, err: (apmErr as Error).message }, 'Firestore APM lookup failed');
+        }
+
+        return { data: dbMatch, headers: noCache };
       }
     } catch (err) {
       log.warn({ matchId, err: (err as Error).message }, 'PostgreSQL match lookup failed, trying Firestore');
@@ -202,7 +217,6 @@ export async function handleMatch(matchId: string): Promise<HandlerResponse<Proc
   }
 
   // Fallback to Firestore (has APM data, recent matches cached by other handlers)
-  const db = getFirestoreClient();
   const matchRef = db.collection('matches').doc(matchId.toString());
   const matchDoc = await matchRef.get();
   log.info({ matchId, exists: matchDoc.exists, source: 'firestore' }, 'Match document check');
@@ -223,12 +237,5 @@ export async function handleMatch(matchId: string): Promise<HandlerResponse<Proc
     processedMatch.apm = storedApm.apm || storedApm;
   }
 
-  return {
-    data: processedMatch,
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    }
-  };
+  return { data: processedMatch, headers: noCache };
 }

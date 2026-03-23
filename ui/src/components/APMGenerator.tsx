@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text, Spinner } from '@chakra-ui/react';
 import { Tooltip } from './ui/tooltip';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
 
@@ -35,6 +35,10 @@ export function APMGenerator({
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use ref for onStatusChange to avoid re-triggering the effect on every render
+  const onStatusChangeRef = useRef(onStatusChange);
+  onStatusChangeRef.current = onStatusChange;
+
   useEffect(() => {
     if (isRefreshing) return; // Skip status check if we're refreshing
 
@@ -43,13 +47,13 @@ export function APMGenerator({
       try {
         const status = await checkApmStatusForMatch(matchId);
         setApmStatus(status);
-        onStatusChange?.(status);
+        onStatusChangeRef.current?.(status);
       } finally {
         setIsLoading(false);
       }
     };
     run();
-  }, [matchId, onStatusChange, isRefreshing]);
+  }, [matchId, isRefreshing]);
 
   // Reset refreshing/error state when matchId changes (new match loaded)
   useEffect(() => {
@@ -112,16 +116,17 @@ export function APMGenerator({
   const silver = processing || ready;
 
   if (variant === 'button') {
+    const isBronze = apmStatus?.state === 'bronzeStatus';
     const bg = silver
       ? 'brand.inkLight'
-      : apmStatus?.state === 'bronzeStatus'
-        ? 'brand.inkMuted'
+      : isBronze
+        ? 'brand.redChalk'
         : 'brand.inkMuted';
 
     const fg = processing || (apmStatus?.state === 'greyStatus' || isLoading)
       ? (processing ? 'brand.inkMuted' : 'brand.stoneLight')
-      : apmStatus?.state === 'bronzeStatus'
-        ? 'brand.redChalk'
+      : isBronze
+        ? 'brand.parchment'
         : 'brand.inkMuted';
 
     const tooltipLabel = error
@@ -139,7 +144,7 @@ export function APMGenerator({
     const clickable = (ready && !processing && !isLoading) || apmStatus?.state === 'bronzeStatus';
     const borderColor = error
       ? 'brand.brightRed'
-      : silver ? 'brand.inkMuted' : (apmStatus?.state === 'bronzeStatus' ? 'brand.redChalk' : 'brand.inkMuted');
+      : silver ? 'brand.inkMuted' : (isBronze ? 'brand.redChalk' : 'brand.inkMuted');
     const boxShadow = 'none';
 
     const linkProps = apmStatus?.state === 'bronzeStatus' ? { to: `/match/${matchId}#apm` } : {} as const;
