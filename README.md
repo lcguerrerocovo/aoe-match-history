@@ -1,5 +1,9 @@
 # AoE2 Match History
 
+[![Deploy](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy.yml/badge.svg)](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy.yml)
+[![Collector](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy-collector-job.yml/badge.svg)](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy-collector-job.yml)
+[![Indexer](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy-indexing-job.yml/badge.svg)](https://github.com/lcguerrerocovo/aoe-match-history/actions/workflows/deploy-indexing-job.yml)
+
 Live at **https://aoe2.site**
 
 A match history viewer for Age of Empires II: Definitive Edition. Search for players, browse match history with team compositions, civilization and map stats, and replay APM breakdowns.
@@ -19,12 +23,12 @@ functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilis
 functions/apm/       Python Cloud Function — replay parsing (mgz library)
 data/                Static data files (civ/map mappings)
 jobs/indexing/       Cloud Run Job — player collection + Meilisearch indexing
-jobs/collector/      Cloud Run Job — match history collection to PostgreSQL (scaffold)
+jobs/collector/      Cloud Run Job — match history collection to PostgreSQL + Parquet archival
 aoe-search/          Meilisearch VM config
 scripts/             Utility scripts
 ```
 
-**Infra:** GCS bucket behind Cloudflare CDN, Cloud Run (API proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, Firestore for session/match caching.
+**Infra:** GCS bucket behind Cloudflare CDN, Cloud Run (API proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, PostgreSQL on GCE VM (match history), Firestore for session/match caching.
 
 **Deployment:** Push to `master` triggers GitHub Actions — lint, test, build, deploy UI to GCS, deploy proxy to Cloud Run, deploy APM function, selective Cloudflare cache purge.
 
@@ -88,7 +92,8 @@ APM tests: `cd functions/apm && pytest test_main.py -v`
 | Endpoint | Description |
 |---|---|
 | `GET /api/player-search?name={name}` | Search players |
-| `GET /api/match-history/{profileId}` | Match history |
+| `GET /api/match-history/{profileId}` | Recent match history (Relic API) |
+| `GET /api/match-history/{profileId}/full` | Full match history (cursor-paginated, server-filtered) |
 | `GET /api/personal-stats/{profileId}` | Player stats |
 | `GET /api/match/{matchId}` | Single match detail |
 | `GET /api/steam/avatar/{steamId}` | Steam avatar |
