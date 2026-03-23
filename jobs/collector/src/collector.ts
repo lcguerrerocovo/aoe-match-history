@@ -6,11 +6,7 @@ import { Database } from './db.js';
 const log = pino({ name: 'match-collector' });
 
 const BATCH_SIZE = 10;
-const THROTTLE_MS = 1000;
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const CONCURRENCY = parseInt(process.env.COLLECTOR_CONCURRENCY || '5', 10);
 
 export class Collector {
   private db: Database;
@@ -66,21 +62,32 @@ export class Collector {
       return;
     }
 
-    // Step 5: Batch fetch and store match history
+    // Step 5: Concurrent batch fetch and store
     let totalMatches = 0;
     let totalErrors = 0;
-    let batchNum = 0;
+    let completedBatches = 0;
     const totalBatches = Math.ceil(changedProfiles.length / BATCH_SIZE);
 
+    log.info({ totalBatches, concurrency: CONCURRENCY }, 'Starting concurrent collection');
+
+    // Build all batch slices
+    const batches: number[][] = [];
     for (let i = 0; i < changedProfiles.length; i += BATCH_SIZE) {
-      batchNum++;
-      const batchProfileIds = changedProfiles.slice(i, i + BATCH_SIZE);
+      batches.push(changedProfiles.slice(i, i + BATCH_SIZE));
+    }
 
-      try {
-        // Fetch match history for this batch
-        const response = await fetchMatchHistory(batchProfileIds);
+    // Process batches with bounded concurrency
+    let batchIndex = 0;
 
-        if (response.matchHistoryStats && response.matchHistoryStats.length > 0) {
+    const worker = async (): Promise<void> => {
+      while (true) {
+        const idx = batchIndex++;
+        if (idx >= batches.length) break;
+        const batchProfileIds = batches[idx];
+
+        try {
+          const response = await fetchMatchHistory(batchProfileIds);
+
           // Build lastMatchTimes map for this batch
           const batchLastMatchTimes = new Map<number, number>();
           for (const pid of batchProfileIds) {
@@ -88,56 +95,54 @@ export class Collector {
             if (t !== undefined) batchLastMatchTimes.set(pid, t);
           }
 
-          // Upsert matches and update collection state in one transaction
+          const matchStats = response.matchHistoryStats || [];
           const count = await this.db.upsertMatches(
-            response.matchHistoryStats,
-            response.profiles,
+            matchStats,
+            response.profiles || [],
             batchProfileIds,
             batchLastMatchTimes,
             civMap,
             mapMap,
           );
           totalMatches += count;
-
-          if (batchNum % 50 === 0 || batchNum === totalBatches) {
-            log.info({
-              batch: batchNum,
-              totalBatches,
-              matchesThisBatch: count,
-              totalMatches,
-            }, 'Batch progress');
-          }
-        } else {
-          // No matches returned — still update collection state so we don't re-fetch
-          const batchLastMatchTimes = new Map<number, number>();
-          for (const pid of batchProfileIds) {
-            const t = leaderboardProfiles.get(pid);
-            if (t !== undefined) batchLastMatchTimes.set(pid, t);
-          }
-          await this.db.upsertMatches([], response.profiles || [], batchProfileIds, batchLastMatchTimes, civMap, mapMap);
+        } catch (err) {
+          totalErrors++;
+          log.error({
+            err: (err as Error).message,
+            batch: idx + 1,
+            profileIds: batchProfileIds,
+          }, 'Batch failed, skipping');
         }
-      } catch (err) {
-        totalErrors++;
-        log.error({
-          err: (err as Error).message,
-          batch: batchNum,
-          profileIds: batchProfileIds,
-        }, 'Batch failed, skipping');
-      }
 
-      // Throttle between batches
-      if (i + BATCH_SIZE < changedProfiles.length) {
-        await sleep(THROTTLE_MS);
+        completedBatches++;
+        if (completedBatches % 100 === 0 || completedBatches === totalBatches) {
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          const rate = Math.round((completedBatches * BATCH_SIZE) / (elapsed / 60));
+          log.info({
+            batch: completedBatches,
+            totalBatches,
+            totalMatches,
+            errors: totalErrors,
+            elapsed: `${elapsed}s`,
+            profilesPerMin: rate,
+          }, 'Progress');
+        }
       }
-    }
+    };
+
+    // Launch concurrent workers
+    const workers = Array.from({ length: CONCURRENCY }, () => worker());
+    await Promise.all(workers);
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
+    const rate = Math.round((changedProfiles.length) / (elapsed / 60));
     log.info({
       elapsed: `${elapsed}s`,
       profilesScanned: leaderboardProfiles.size,
       profilesChanged: changedProfiles.length,
       matchesStored: totalMatches,
       batchErrors: totalErrors,
+      profilesPerMin: rate,
     }, 'Collection complete');
   }
 }

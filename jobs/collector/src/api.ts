@@ -5,7 +5,6 @@ const log = pino({ name: 'match-collector' });
 
 const RELIC_API = 'https://aoe-api.worldsedgelink.com';
 const PAGE_SIZE = 200;
-const THROTTLE_MS = 1000;
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 2000;
 
@@ -13,9 +12,40 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Rate limiter — ensures requests don't exceed maxRPS.
+ * Same pattern as jobs/indexing/player_collector.py RateLimiter.
+ */
+export class RateLimiter {
+  private minInterval: number;
+  private lastCalled: number = 0;
+  private queue: Promise<void> = Promise.resolve();
+
+  constructor(maxRPS: number) {
+    this.minInterval = 1000 / maxRPS;
+  }
+
+  async acquire(): Promise<void> {
+    this.queue = this.queue.then(async () => {
+      const now = Date.now();
+      const elapsed = now - this.lastCalled;
+      if (elapsed < this.minInterval) {
+        await sleep(this.minInterval - elapsed);
+      }
+      this.lastCalled = Date.now();
+    });
+    return this.queue;
+  }
+}
+
+// Global rate limiter — shared across leaderboard scans and match history fetches
+const RATE_LIMIT_RPS = parseInt(process.env.RATE_LIMIT_RPS || '10', 10);
+export const rateLimiter = new RateLimiter(RATE_LIMIT_RPS);
+
 async function fetchWithRetry<T>(url: string, label: string): Promise<T> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
+      await rateLimiter.acquire();
       const response = await fetch(url, {
         headers: {
           'Accept': 'application/json',
@@ -47,7 +77,7 @@ export interface ScannedProfile {
 
 /**
  * Scan a single ranked leaderboard, returning all profiles with their last match time.
- * Paginates through all pages at 200 entries per page with 1 req/s throttle.
+ * Paginates through all pages at 200 entries per page, rate-limited via shared RateLimiter.
  */
 export async function scanLeaderboard(leaderboardId: number): Promise<ScannedProfile[]> {
   const profiles: ScannedProfile[] = [];
@@ -83,7 +113,6 @@ export async function scanLeaderboard(leaderboardId: number): Promise<ScannedPro
     }
 
     start += PAGE_SIZE;
-    await sleep(THROTTLE_MS);
   } while (start <= total);
 
   log.info({ leaderboardId, profileCount: profiles.length }, 'Leaderboard scan complete');
@@ -98,8 +127,10 @@ export async function scanAllLeaderboards(): Promise<Map<number, number>> {
   const leaderboardIds = [3, 4]; // RM 1v1, RM Team
   const combined = new Map<number, number>();
 
-  for (const lbId of leaderboardIds) {
-    const profiles = await scanLeaderboard(lbId);
+  // Scan both leaderboards in parallel — they're independent
+  const results = await Promise.all(leaderboardIds.map(lbId => scanLeaderboard(lbId)));
+
+  for (const profiles of results) {
     for (const { profileId, lastMatchTime } of profiles) {
       const existing = combined.get(profileId);
       if (!existing || lastMatchTime > existing) {
