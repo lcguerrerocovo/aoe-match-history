@@ -25,7 +25,16 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   colorByProfile = {}
 }) => {
   const playerIds = Object.keys(apm?.players ?? {});
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(playerIds[0] || '');
+  // Default to player with the most data entries (longest game participation)
+  const defaultPlayerId = useMemo(() => {
+    if (!playerIds.length) return '';
+    return playerIds.reduce((best, pid) => {
+      const bestLen = apm?.players?.[best]?.length ?? 0;
+      const curLen = apm?.players?.[pid]?.length ?? 0;
+      return curLen > bestLen ? pid : best;
+    }, playerIds[0]);
+  }, [playerIds, apm]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultPlayerId);
   const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
 
   // Get current player data
@@ -65,9 +74,9 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   // Update selected player when playerIds change
   React.useEffect(() => {
     if (playerIds.length > 0 && !playerIds.includes(selectedPlayerId)) {
-      setSelectedPlayerId(playerIds[0]);
+      setSelectedPlayerId(defaultPlayerId);
     }
-  }, [playerIds, selectedPlayerId]);
+  }, [playerIds, selectedPlayerId, defaultPlayerId]);
 
   // Initialize active action types when player changes
   React.useEffect(() => {
