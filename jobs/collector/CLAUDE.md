@@ -42,9 +42,11 @@ docker run match-collector
 
 ## Environment Variables
 
-```bash
-DATABASE_URL    # PostgreSQL connection string (required)
-```
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | (required) | PostgreSQL connection string |
+| `RATE_LIMIT_RPS` | 10 | Relic API requests/second (API limit is 50) |
+| `COLLECTOR_CONCURRENCY` | 5 | Number of parallel batch workers |
 
 ## Running Locally
 

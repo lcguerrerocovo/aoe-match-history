@@ -110,3 +110,4 @@ See `functions/proxy/CLAUDE.md` for proxy-specific vars. UI uses:
 - Single shared Relic auth session stored in Firestore — not multi-tenant
 - Meilisearch version (1.7.3) pinned across 3 files — use `scripts/check-versions.sh` to verify
 - `ui/src/assets/` is gitignored — assets live in GCS bucket, not the repo
+- Relic API uses uint32 sentinel values (`0xFFFFFFFF` = 4294967295) for "unset" fields — these exceed PostgreSQL's signed int32 max. Use `clampInt()` in collector's `db.ts` to convert to null before INSERT.
