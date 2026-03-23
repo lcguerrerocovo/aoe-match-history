@@ -34,12 +34,27 @@ export function APMGenerator({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Use ref for onStatusChange to avoid re-triggering the effect on every render
   const onStatusChangeRef = useRef(onStatusChange);
   onStatusChangeRef.current = onStatusChange;
 
+  // Only fetch APM status when the component scrolls into view
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     if (isRefreshing) return; // Skip status check if we're refreshing
 
     setIsLoading(true);
@@ -53,7 +68,7 @@ export function APMGenerator({
       }
     };
     run();
-  }, [matchId, isRefreshing]);
+  }, [matchId, isRefreshing, isVisible]);
 
   // Reset refreshing/error state when matchId changes (new match loaded)
   useEffect(() => {
@@ -152,6 +167,7 @@ export function APMGenerator({
     return (
       <Tooltip content={tooltipLabel} fontSize="xs">
         <Box
+          ref={containerRef}
           as={apmStatus?.state === 'bronzeStatus' ? RouterLink : 'button'}
           onClick={apmStatus?.state === 'bronzeStatus' ? undefined : handleClick}
           bg={bg}
@@ -282,6 +298,7 @@ export function APMGenerator({
 
   return (
     <Box
+      ref={containerRef}
       bg={bg}
       color={fg}
       borderRadius="sm"
