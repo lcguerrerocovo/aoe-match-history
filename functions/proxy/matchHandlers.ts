@@ -1,5 +1,6 @@
-import { log, getFirestoreClient } from './config';
+import { log, getFirestoreClient, getMatchDbPool } from './config';
 import { processMatch } from './matchProcessing';
+import { querySingleMatch } from './matchHistoryDb';
 import type { HandlerResponse, RawMatchHistoryResponse, RawMatch, RawProfile, ProcessedMatch } from './types';
 
 // Pure API call - just fetch and cache raw data
@@ -175,38 +176,59 @@ export async function handleRawMatch(matchId: string): Promise<HandlerResponse<u
   }
 }
 
-// Processed match - apply transformation to cached raw data
+// Processed match - try PostgreSQL first, then Firestore
 export async function handleMatch(matchId: string): Promise<HandlerResponse<ProcessedMatch>> {
-  try {
-    log.info({ matchId, docId: matchId.toString() }, 'Attempting to load match');
-    const db = getFirestoreClient();
-    const matchRef = db.collection('matches').doc(matchId.toString());
-    const matchDoc = await matchRef.get();
-    log.info({ matchId, exists: matchDoc.exists }, 'Match document check');
-    // Use stored data
-    const docData = matchDoc.data()!;
-    const rawMatch = docData.raw || docData;
-    const profiles = docData.profiles || [];
+  log.info({ matchId }, 'Attempting to load match');
 
-    const processedMatch = await processMatch(rawMatch, profiles);
-
-    // Attach APM data if available in Firestore doc
-    const storedApm = docData ? docData.apm : undefined;
-    log.info({ storedApm }, 'Stored APM data');
-    if (storedApm) {
-      // If storedApm has a nested 'apm' field, use that, otherwise use the whole object
-      processedMatch.apm = storedApm.apm || storedApm;
-    }
-
-    return {
-      data: processedMatch,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+  // Try PostgreSQL first (has historical matches from collector)
+  const pool = getMatchDbPool();
+  if (pool) {
+    try {
+      const dbMatch = await querySingleMatch(pool, matchId);
+      if (dbMatch) {
+        log.info({ matchId, source: 'postgresql' }, 'Match loaded from database');
+        return {
+          data: dbMatch,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        };
       }
-    };
-  } catch (error) {
-    throw error;
+    } catch (err) {
+      log.warn({ matchId, err: (err as Error).message }, 'PostgreSQL match lookup failed, trying Firestore');
+    }
   }
+
+  // Fallback to Firestore (has APM data, recent matches cached by other handlers)
+  const db = getFirestoreClient();
+  const matchRef = db.collection('matches').doc(matchId.toString());
+  const matchDoc = await matchRef.get();
+  log.info({ matchId, exists: matchDoc.exists, source: 'firestore' }, 'Match document check');
+
+  if (!matchDoc.exists) {
+    throw new Error(`Match ${matchId} not found`);
+  }
+
+  const docData = matchDoc.data()!;
+  const rawMatch = docData.raw || docData;
+  const profiles = docData.profiles || [];
+
+  const processedMatch = await processMatch(rawMatch, profiles);
+
+  // Attach APM data if available in Firestore doc
+  const storedApm = docData.apm;
+  if (storedApm) {
+    processedMatch.apm = storedApm.apm || storedApm;
+  }
+
+  return {
+    data: processedMatch,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  };
 }
