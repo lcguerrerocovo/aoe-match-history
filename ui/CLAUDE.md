@@ -48,8 +48,9 @@ Extracted subdirectories use barrel exports (`index.ts`) — import from the dir
 ## State Management
 
 All state in `App.tsx` — no global store. Props drilled to children.
-- Matches fetched via `getFullMatchHistory` (paginated, merges Relic API + PostgreSQL). Falls back to legacy `getMatches` if `/full` endpoint fails.
-- Pagination: `currentPage`, `hasMore`, `isLoadingMore` state in App.tsx. "Load More" button in MatchList appends next page.
+- Matches fetched via `getFullMatchHistory` (cursor-paginated, merges Relic API + PostgreSQL). Falls back to legacy `getMatches` if `/full` endpoint fails.
+- Pagination: cursor-based via `nextCursor` + `hasMore` + `isLoadingMore` state in App.tsx. `currentPage` kept only as legacy fallback. "Load More" button in MatchList appends next batch.
+- Server-side filtering: `selectedMap` and `selectedMatchType` trigger server-side filtered queries (DB only, no Relic merge). `serverFilterOptions` (maps + matchTypes with counts) returned on first request.
 - Session grouping: matches within 1 hour are grouped together
 - Flat mode (no grouping) when any filter is active
 
@@ -105,7 +106,8 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 
 ## Key Services
 
-- `matchService.ts` — API client (`getFullMatchHistory` for paginated history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, `searchPlayers`, replay/APM helpers)
+- `matchService.ts` — API client (`getFullMatchHistory` for cursor-paginated + server-filtered history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, replay/APM helpers)
+- `playerSearchService.ts` — Player search API client (`searchPlayers`)
 
 ## Key Utils
 
@@ -115,5 +117,6 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `mappingUtils.ts` — civ/map ID lookups from `rl_api_mappings.json`
 - `gameUtils.ts` — tier/rank calculations, game mode labels
 - `teamUtils.ts` — team color assignment, win detection
-- `colorUtils.ts` — player color hex values
+- `colorUtils.ts` — contrast ratio calculation, optimal text color for backgrounds
+- `playerColors.ts` — player color hex values (color_id to hex mapping)
 - `timeUtils.ts` — relative time formatting, session timing display

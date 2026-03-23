@@ -69,12 +69,11 @@ cd ui && npm run dev:all
 
 ## Deployment
 
-Push to `master` triggers GitHub Actions. Main deployment (`deploy.yml`) runs three parallel jobs:
+Push to `master` triggers GitHub Actions. Main deployment (`deploy.yml`) runs three parallel jobs plus a post-deploy step:
 1. **build-and-deploy** — lint, test (vitest + cypress + proxy jest), build, upload assets + data to GCS
 2. **deploy-proxy-function** — deploy Cloud Run service with secrets
 3. **deploy-apm-function** — pytest, deploy Cloud Function Gen2
-
-Post-deploy: selective Cloudflare cache purge based on changed paths.
+4. **clear-cloudflare-cache** — selective cache purge based on changed paths (runs after jobs 1 + 2)
 
 Separate path-triggered workflows:
 - **deploy-collector-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 3 hours (`jobs/collector/**`)

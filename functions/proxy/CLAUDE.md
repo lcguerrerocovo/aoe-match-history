@@ -12,8 +12,8 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `authService.ts` | Relic authentication, session management, `ensureAuthenticated`, `getAuthenticatedPlayerService`, `withAuthRetry` |
 | `steamHandler.ts` | Steam avatar lookup (`handleSteamAvatar`) |
 | `matchHandlers.ts` | Automatch history handlers: raw/processed match history, personal stats, single match |
-| `fullMatchHistoryHandler.ts` | Full match history handler: merges Relic API + PostgreSQL, deduplicates, paginates |
-| `matchHistoryDb.ts` | PostgreSQL queries for historical match data, transforms DB rows to ProcessedMatch |
+| `fullMatchHistoryHandler.ts` | Full match history handler: merges Relic API + PostgreSQL, deduplicates, cursor-paginates, server-side map/matchType filtering |
+| `matchHistoryDb.ts` | PostgreSQL queries for historical match data, filter options, transforms DB rows to ProcessedMatch |
 | `gameMatchHandlers.ts` | Authenticated single-player match history (Relic API), alias resolution |
 | `replayDownloadHandler.ts` | Replay download → APM processing pipeline |
 | `matchProcessing.ts` | Civ/map mappings, team grouping, match transformation (`processMatch`) |
@@ -22,6 +22,7 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `decoders.ts` | Options/SlotInfo decoding (base64 + zlib) |
 | `relicAuth.ts` | Steam → Relic authentication flow |
 | `relicPlayerService.ts` | Authenticated Relic API calls |
+| `concurrencyLimiter.ts` | Generic async concurrency limiter (queue-based, used for batch operations) |
 | `sessionManager.ts` | Firestore-backed session persistence |
 
 ## Commands
@@ -31,6 +32,7 @@ npm run build    # TypeScript compile to dist/
 npm run dev      # Build + local dev on :8080
 npm test         # Jest tests (ts-jest, no build needed)
 npm run test:watch
+npm run test:coverage
 ```
 
 ## API Endpoints
@@ -39,7 +41,7 @@ npm run test:watch
 |--------|------|---------|-------|
 | GET | `/api/player-search?name=` | Meilisearch player search (Firestore fallback) | 30 min |
 | GET | `/api/match-history/:profileId` | Processed automatch history | 5 min |
-| GET | `/api/match-history/:profileId/full` | Full match history (Relic + PostgreSQL, paginated) | 5 min |
+| GET | `/api/match-history/:profileId/full` | Full match history (Relic + PostgreSQL, cursor-paginated). Query params: `cursor`, `limit`, `map`, `matchType`, `sort` (asc/desc), `page` (legacy). Returns `filterOptions` on first request. | 5 min |
 | GET | `/api/raw-match-history/:profileId` | Raw automatch history from Relic | 1 min |
 | GET | `/api/gamematch-history/:profileIds` | Processed single-player history (authenticated) | 5 min |
 | GET | `/api/raw-gamematch-history/:profileIds` | Raw authenticated history | 1 min |
