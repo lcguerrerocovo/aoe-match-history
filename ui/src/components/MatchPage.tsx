@@ -205,7 +205,7 @@ export function MatchPage() {
           >
             <FullMatchSummaryCard match={match} />
 
-            <Card.Root variant={cardVariant('match')} w="100%" p={6} position="relative">
+            <Card.Root variant={cardVariant('match')} w="100%" p={6} position="relative" overflow="hidden">
               <Watermark
                 variant="trebuchet"
                 size={240}
