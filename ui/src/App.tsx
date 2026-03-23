@@ -124,7 +124,6 @@ function App() {
     const matchTypeId = selectedMatchType ? matchTypeIdMapRef.current[selectedMatchType] : undefined;
 
     const result = await getFullMatchHistory(profileId, {
-      limit: 50,
       cursor: cursor || undefined,
       map: selectedMap || undefined,
       matchType: matchTypeId,
@@ -225,15 +224,15 @@ function App() {
     setFilteredMatches(filtered);
 
     // Update maps and match types with counts
-    // When server filter options are available and no server filters active, use them
-    if (serverFilterOptions && !hasServerFilters) {
+    // When server filter options are available, always use them (total counts across all matches)
+    if (serverFilterOptions) {
       setMaps(serverFilterOptions.maps);
       setMatchTypes(serverFilterOptions.matchTypes.map(mt => ({ name: mt.name, count: mt.count })));
     } else {
       setMaps(getMapsWithCounts(filtered));
       setMatchTypes(getMatchTypesWithCounts(filtered));
     }
-  }, [allMatches, searchTerm, selectedMap, selectedMatchType, sortDirection, serverFilterOptions, hasServerFilters]);
+  }, [allMatches, searchTerm, selectedMap, selectedMatchType, sortDirection, serverFilterOptions]);
 
   useEffect(() => {
     updateMatches();
@@ -264,10 +263,20 @@ function App() {
 
   const handleMapFilter = (map: string) => {
     setSelectedMap(map);
+    // Clear immediately to prevent flash of unfiltered content; effect handles full reset + fetch
+    if (map) {
+      setAllMatches([]);
+      setIsLoading(true);
+    }
   };
 
   const handleMatchTypeFilter = (matchType: string) => {
     setSelectedMatchType(matchType);
+    // Clear immediately to prevent flash of unfiltered content; effect handles full reset + fetch
+    if (matchType) {
+      setAllMatches([]);
+      setIsLoading(true);
+    }
   };
 
   const handleSearchChange = (search: string) => {
@@ -290,7 +299,6 @@ function App() {
 
       const matchTypeId = selectedMatchType ? matchTypeIdMapRef.current[selectedMatchType] : undefined;
       getFullMatchHistory(profileId!, {
-        limit: 50,
         map: selectedMap || undefined,
         matchType: matchTypeId,
         sort: direction,

@@ -529,6 +529,42 @@ describe('handleFullMatchHistory', () => {
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
+
+    it('uses higher default limit (1000) when filters are active', async () => {
+      mockGetMatchDbPool.mockReturnValue(mockPool);
+
+      setupSmartDbMock({
+        matchData: [{ id: 1100, startTime: 1700000000, mapName: 'Arabia' }],
+        filterMaps: [{ map_name: 'Arabia', count: '1' }],
+        filterMatchTypes: [],
+      });
+
+      await handleFullMatchHistory('123', '?map=Arabia');
+
+      // The matchIds query should use LIMIT 1001 (limit + 1 for hasMore check)
+      const matchIdsCall = mockPool.query.mock.calls.find(
+        c => typeof c[0] === 'string' && c[0].includes('SELECT mp.match_id')
+      );
+      expect(matchIdsCall[1]).toContain(1001);
+    });
+
+    it('uses default limit of 50 when no filters are active', async () => {
+      mockGetMatchDbPool.mockReturnValue(mockPool);
+
+      setupSmartDbMock({
+        matchData: [{ id: 1200, startTime: 1700000000 }],
+        filterMaps: [],
+        filterMatchTypes: [],
+      });
+
+      await handleFullMatchHistory('123', '');
+
+      // The matchIds query should use LIMIT 51 (50 + 1 for hasMore check)
+      const matchIdsCall = mockPool.query.mock.calls.find(
+        c => typeof c[0] === 'string' && c[0].includes('SELECT mp.match_id')
+      );
+      expect(matchIdsCall[1]).toContain(51);
+    });
   });
 
   describe('pagination', () => {
