@@ -2,8 +2,9 @@ import { Box, VStack, Text } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
+import type { FilterOptions } from './services/matchService';
 import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
@@ -30,8 +31,26 @@ function App() {
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [serverFilterOptions, setServerFilterOptions] = useState<FilterOptions | null>(null);
+  // Keep legacy page for backward compat fallback
   const [currentPage, setCurrentPage] = useState(1);
   const layout = useLayoutConfig();
+
+  // Track whether server-side filters are active (map or matchType selected)
+  const hasServerFilters = !!(selectedMap || selectedMatchType);
+
+  // Ref to look up matchType id from name using server filter options
+  const matchTypeIdMapRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    if (serverFilterOptions) {
+      const idMap: Record<string, number> = {};
+      for (const mt of serverFilterOptions.matchTypes) {
+        idMap[mt.name] = mt.id;
+      }
+      matchTypeIdMapRef.current = idMap;
+    }
+  }, [serverFilterOptions]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,18 +59,26 @@ function App() {
     setSelectedMap('');
     setSelectedMatchType('');
     setSortDirection('desc');
+    setNextCursor(null);
+    setServerFilterOptions(null);
   }, [profileId]);
 
   const updateMatches = useCallback(async () => {
     if (!profileId) return;
     setIsLoading(true);
     setCurrentPage(1);
+    setNextCursor(null);
     setHasMore(false);
     try {
       // Try full endpoint first, fall back to legacy if it fails
       const [matchResult, statsData] = await Promise.all([
-        getFullMatchHistory(profileId, 1, 50).catch(() =>
-          getMatches(profileId).then(data => ({ matches: data.matches, hasMore: false }))
+        getFullMatchHistory(profileId, { limit: 50 }).catch(() =>
+          getMatches(profileId).then(data => ({
+            matches: data.matches,
+            hasMore: false,
+            nextCursor: undefined as string | undefined,
+            filterOptions: undefined as FilterOptions | undefined,
+          }))
         ),
         getPersonalStats(profileId)
       ]);
@@ -59,7 +86,13 @@ function App() {
       // Store all matches for filtering
       setAllMatches(matchResult.matches);
       setHasMore(matchResult.hasMore);
-      
+      setNextCursor(matchResult.nextCursor || null);
+
+      // Store server filter options if provided
+      if (matchResult.filterOptions) {
+        setServerFilterOptions(matchResult.filterOptions);
+      }
+
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
       let avatarUrl;
@@ -71,7 +104,7 @@ function App() {
       }
 
       const name = playerInfo?.alias || profileId;
-      setProfile({ 
+      setProfile({
         id: String(profileId),
         name: String(name),
         avatarUrl,
@@ -85,41 +118,99 @@ function App() {
     }
   }, [profileId]);
 
+  const fetchWithServerFilters = useCallback(async (cursor?: string | null) => {
+    if (!profileId) return;
+
+    const matchTypeId = selectedMatchType ? matchTypeIdMapRef.current[selectedMatchType] : undefined;
+
+    const result = await getFullMatchHistory(profileId, {
+      limit: 50,
+      cursor: cursor || undefined,
+      map: selectedMap || undefined,
+      matchType: matchTypeId,
+      sort: sortDirection,
+    });
+
+    return result;
+  }, [profileId, selectedMap, selectedMatchType, sortDirection]);
+
   const loadMoreMatches = useCallback(async () => {
     if (!profileId || isLoadingMore || !hasMore) return;
     setIsLoadingMore(true);
     try {
-      const nextPage = currentPage + 1;
-      const result = await getFullMatchHistory(profileId, nextPage, 50);
-      setAllMatches(prev => [...prev, ...result.matches]);
-      setHasMore(result.hasMore);
-      setCurrentPage(nextPage);
+      if (hasServerFilters && nextCursor) {
+        // Cursor-based load more with server filters
+        const result = await fetchWithServerFilters(nextCursor);
+        if (result) {
+          setAllMatches(prev => [...prev, ...result.matches]);
+          setHasMore(result.hasMore);
+          setNextCursor(result.nextCursor || null);
+        }
+      } else if (nextCursor) {
+        // Cursor-based load more without filters (page 2+)
+        const result = await getFullMatchHistory(profileId, {
+          limit: 50,
+          cursor: nextCursor,
+        });
+        setAllMatches(prev => [...prev, ...result.matches]);
+        setHasMore(result.hasMore);
+        setNextCursor(result.nextCursor || null);
+      } else {
+        // Legacy page-based fallback
+        const nextPage = currentPage + 1;
+        const result = await getFullMatchHistory(profileId, nextPage, 50);
+        setAllMatches(prev => [...prev, ...result.matches]);
+        setHasMore(result.hasMore);
+        setNextCursor(result.nextCursor || null);
+        setCurrentPage(nextPage);
+      }
     } catch {
       // Silently fail — existing matches remain visible, user can retry
     } finally {
       setIsLoadingMore(false);
     }
-  }, [profileId, currentPage, isLoadingMore, hasMore]);
+  }, [profileId, currentPage, isLoadingMore, hasMore, nextCursor, hasServerFilters, fetchWithServerFilters]);
 
-  // Effect to filter matches when search term, selected map, selected match type, or all matches change
+  // Effect: when map or matchType filter changes, reset and re-fetch from server
+  useEffect(() => {
+    if (!profileId) return;
+    // Skip the initial render (handled by updateMatches)
+    if (!serverFilterOptions) return;
+
+    if (hasServerFilters) {
+      // Re-fetch from server with filters
+      setIsLoading(true);
+      setAllMatches([]);
+      setNextCursor(null);
+      setHasMore(false);
+      fetchWithServerFilters().then(result => {
+        if (result) {
+          setAllMatches(result.matches);
+          setHasMore(result.hasMore);
+          setNextCursor(result.nextCursor || null);
+        }
+      }).catch(() => {
+        // Silently fail
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      // Filters cleared — re-fetch initial data
+      updateMatches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMap, selectedMatchType]);
+
+  // Effect to filter matches when search term or all matches change
+  // Map/matchType filtering is now server-side, so only text search is client-side
   useEffect(() => {
     let filtered = allMatches;
-    
-    // Apply map filter
-    if (selectedMap) {
-      filtered = filtered.filter(match => match.map === selectedMap);
-    }
-    
-    // Apply match type filter
-    if (selectedMatchType) {
-      filtered = filtered.filter(match => match.diplomacy?.type === selectedMatchType);
-    }
-    
-    // Apply search filter
+
+    // Apply search filter (always client-side)
     if (searchTerm.trim()) {
       filtered = searchMatches(filtered, searchTerm);
     }
-    
+
     // When searching by text OR filtering by map/match type, create flat groups (no date accordion)
     const isFlat = Boolean(searchTerm.trim() || selectedMap || selectedMatchType);
     if (isFlat) {
@@ -129,14 +220,20 @@ function App() {
       const sessions = groupMatchesBySession(filtered);
       setMatchGroups(sortMatchGroupsByDate(sessions, sortDirection));
     }
-    
+
     // Store filtered matches for count
     setFilteredMatches(filtered);
-    
-    // Update maps and match types with counts based on filtered results
-    setMaps(getMapsWithCounts(filtered));
-    setMatchTypes(getMatchTypesWithCounts(filtered));
-  }, [allMatches, searchTerm, selectedMap, selectedMatchType, sortDirection]);
+
+    // Update maps and match types with counts
+    // When server filter options are available and no server filters active, use them
+    if (serverFilterOptions && !hasServerFilters) {
+      setMaps(serverFilterOptions.maps);
+      setMatchTypes(serverFilterOptions.matchTypes.map(mt => ({ name: mt.name, count: mt.count })));
+    } else {
+      setMaps(getMapsWithCounts(filtered));
+      setMatchTypes(getMatchTypesWithCounts(filtered));
+    }
+  }, [allMatches, searchTerm, selectedMap, selectedMatchType, sortDirection, serverFilterOptions, hasServerFilters]);
 
   useEffect(() => {
     updateMatches();
@@ -184,6 +281,31 @@ function App() {
   const handleSortChange = (direction: SortDirection) => {
     setSortDirection(direction);
 
+    if (hasServerFilters) {
+      // Re-fetch from server with new sort direction
+      setIsLoading(true);
+      setAllMatches([]);
+      setNextCursor(null);
+      setHasMore(false);
+
+      const matchTypeId = selectedMatchType ? matchTypeIdMapRef.current[selectedMatchType] : undefined;
+      getFullMatchHistory(profileId!, {
+        limit: 50,
+        map: selectedMap || undefined,
+        matchType: matchTypeId,
+        sort: direction,
+      }).then(result => {
+        setAllMatches(result.matches);
+        setHasMore(result.hasMore);
+        setNextCursor(result.nextCursor || null);
+      }).catch(() => {
+        // Silently fail
+      }).finally(() => {
+        setIsLoading(false);
+      });
+      return;
+    }
+
     const isFlat = Boolean(searchTerm.trim() || selectedMap || selectedMatchType);
 
     if (isFlat) {
@@ -227,16 +349,16 @@ function App() {
               <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
             </Box>
           }
-          <VStack 
+          <VStack
             align="stretch"
             p={layout?.mainContent.padding}
             w={layout.matchList.width}
             mx="auto"
           >
-            <FilterBar 
+            <FilterBar
               onMapChange={handleMapFilter}
               onMatchTypeChange={handleMatchTypeFilter}
-              onSortChange={handleSortChange} 
+              onSortChange={handleSortChange}
               onSearchChange={handleSearchChange}
               onClearSearch={handleClearSearch}
               maps={maps}
@@ -276,4 +398,3 @@ function App() {
   );
 }
 export default App;
-

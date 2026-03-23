@@ -190,7 +190,37 @@ describe('matchService', () => {
       await getFullMatchHistory('4764337');
 
       const calledUrl = fetchMock.mock.calls[0][0] as string;
-      expect(calledUrl).toBe('/api/match-history/4764337/full?page=1&limit=50');
+      // No args = no query params; server uses its own defaults
+      expect(calledUrl).toBe('/api/match-history/4764337/full');
+    });
+
+    it('should pass legacy page and limit params', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ matches: [], hasMore: false }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      });
+
+      await getFullMatchHistory('4764337', 2, 50);
+
+      const calledUrl = fetchMock.mock.calls[0][0] as string;
+      expect(calledUrl).toBe('/api/match-history/4764337/full?page=2&limit=50');
+    });
+
+    it('should pass options object as query params', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ matches: [], hasMore: false }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      });
+
+      await getFullMatchHistory('4764337', { limit: 50, map: 'Arabia', matchType: 6, sort: 'asc' });
+
+      const calledUrl = fetchMock.mock.calls[0][0] as string;
+      expect(calledUrl).toContain('limit=50');
+      expect(calledUrl).toContain('map=Arabia');
+      expect(calledUrl).toContain('matchType=6');
+      expect(calledUrl).toContain('sort=asc');
     });
 
     it('should throw on non-ok response', async () => {

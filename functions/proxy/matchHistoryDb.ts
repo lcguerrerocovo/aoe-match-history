@@ -31,27 +31,137 @@ interface PlayerRow {
   matchurl_size: number | null;
 }
 
+export interface FilterOptions {
+  maps: { name: string; count: number }[];
+  matchTypes: { id: number; name: string; count: number }[];
+}
+
+export interface QueryMatchHistoryOptions {
+  profileId: string;
+  limit: number;
+  cursor?: { startTime: string; matchId: string } | null;
+  mapName?: string;
+  matchTypeId?: number;
+  sort?: 'asc' | 'desc';
+  page?: number;
+}
+
+/**
+ * Query distinct maps and match types for a player from PostgreSQL.
+ * Used to populate filter dropdowns with counts.
+ */
+export async function queryFilterOptions(
+  pool: pg.Pool,
+  profileId: string,
+): Promise<FilterOptions> {
+  const [mapsResult, matchTypesResult] = await Promise.all([
+    pool.query<{ map_name: string; count: string }>(
+      `SELECT m.map_name, COUNT(*)::text AS count
+       FROM match_player mp
+       JOIN match m ON m.match_id = mp.match_id
+       WHERE mp.profile_id = $1 AND m.map_name IS NOT NULL
+       GROUP BY m.map_name
+       ORDER BY COUNT(*) DESC`,
+      [profileId],
+    ),
+    pool.query<{ match_type_id: number; count: string }>(
+      `SELECT m.match_type_id, COUNT(*)::text AS count
+       FROM match_player mp
+       JOIN match m ON m.match_id = mp.match_id
+       WHERE mp.profile_id = $1
+       GROUP BY m.match_type_id
+       ORDER BY COUNT(*) DESC`,
+      [profileId],
+    ),
+  ]);
+
+  const maps = mapsResult.rows.map(r => ({
+    name: r.map_name,
+    count: parseInt(r.count, 10),
+  }));
+
+  const matchTypes = matchTypesResult.rows.map(r => ({
+    id: r.match_type_id,
+    name: getGameType(r.match_type_id) || `Type ${r.match_type_id}`,
+    count: parseInt(r.count, 10),
+  }));
+
+  return { maps, matchTypes };
+}
+
 /**
  * Query match history for a player from PostgreSQL.
- * Returns ProcessedMatch[] in the same format the UI expects.
+ * Supports cursor-based pagination and optional filters.
+ * Falls back to OFFSET pagination when page is provided without cursor.
  */
 export async function queryMatchHistory(
   pool: pg.Pool,
   profileId: string,
   page: number,
   limit: number,
+  options?: Omit<QueryMatchHistoryOptions, 'profileId' | 'limit' | 'page'>,
 ): Promise<{ matches: ProcessedMatch[]; hasMore: boolean }> {
-  const offset = (page - 1) * limit;
+  const cursor = options?.cursor;
+  const mapName = options?.mapName;
+  const matchTypeId = options?.matchTypeId;
+  const sort = options?.sort || 'desc';
 
-  // Step 1: Get match IDs for this player, paginated
+  // Build dynamic WHERE clause
+  const conditions: string[] = ['mp.profile_id = $1'];
+  const params: (string | number)[] = [profileId];
+  let paramIndex = 2;
+
+  if (mapName) {
+    conditions.push(`m.map_name = $${paramIndex}`);
+    params.push(mapName);
+    paramIndex++;
+  }
+
+  if (matchTypeId !== undefined) {
+    conditions.push(`m.match_type_id = $${paramIndex}`);
+    params.push(matchTypeId);
+    paramIndex++;
+  }
+
+  if (cursor) {
+    if (sort === 'desc') {
+      conditions.push(`(m.start_time, m.match_id) < ($${paramIndex}, $${paramIndex + 1})`);
+    } else {
+      conditions.push(`(m.start_time, m.match_id) > ($${paramIndex}, $${paramIndex + 1})`);
+    }
+    params.push(cursor.startTime, cursor.matchId);
+    paramIndex += 2;
+  }
+
+  const whereClause = conditions.join(' AND ');
+  const orderDirection = sort === 'asc' ? 'ASC' : 'DESC';
+
+  // Use OFFSET only when page is provided and no cursor
+  const useCursor = !!cursor || !!(mapName || matchTypeId !== undefined);
+  const offset = !useCursor && !cursor ? (page - 1) * limit : 0;
+
+  params.push(limit + 1);
+  const limitParam = `$${paramIndex}`;
+  paramIndex++;
+
+  let offsetClause = '';
+  if (!cursor && !useCursor && offset > 0) {
+    params.push(offset);
+    offsetClause = `OFFSET $${paramIndex}`;
+    paramIndex++;
+  }
+
+  const matchIdsQuery = `
+    SELECT mp.match_id
+    FROM match_player mp
+    JOIN match m ON m.match_id = mp.match_id
+    WHERE ${whereClause}
+    ORDER BY m.start_time ${orderDirection}, m.match_id ${orderDirection}
+    LIMIT ${limitParam} ${offsetClause}`;
+
   const matchIdsResult = await pool.query<{ match_id: string }>(
-    `SELECT mp.match_id
-     FROM match_player mp
-     JOIN match m ON m.match_id = mp.match_id
-     WHERE mp.profile_id = $1
-     ORDER BY m.start_time DESC
-     LIMIT $2 OFFSET $3`,
-    [profileId, limit + 1, offset],
+    matchIdsQuery,
+    params,
   );
 
   const hasMore = matchIdsResult.rows.length > limit;
@@ -112,7 +222,7 @@ export async function queryMatchHistory(
 
     const teams = groupPlayersIntoTeams(players);
     const { winningTeam, winningTeams } = detectWinningTeams(teams);
-    const matchTypeId = match.match_type_id;
+    const matchTypeIdVal = match.match_type_id;
     const startTime = match.start_time
       ? match.start_time.toISOString()
       : new Date(0).toISOString();
@@ -122,10 +232,10 @@ export async function queryMatchHistory(
       map_id: match.map_id,
       start_time: startTime,
       description: match.description === 'AUTOMATCH'
-        ? getGameType(matchTypeId)
+        ? getGameType(matchTypeIdVal)
         : match.description,
       diplomacy: {
-        type: getGameType(matchTypeId) || 'Unknown',
+        type: getGameType(matchTypeIdVal) || 'Unknown',
         team_size: (match.max_players ?? 0).toString(),
       },
       map: match.map_name || 'Unknown',
@@ -137,8 +247,12 @@ export async function queryMatchHistory(
     };
   });
 
-  // Sort by start_time DESC (preserving the order from the match IDs query)
-  matches.sort((a, b) => b.start_time.localeCompare(a.start_time));
+  // Sort to match query order
+  if (sort === 'asc') {
+    matches.sort((a, b) => a.start_time.localeCompare(b.start_time));
+  } else {
+    matches.sort((a, b) => b.start_time.localeCompare(a.start_time));
+  }
 
   log.debug({ profileId, page, count: matches.length, hasMore }, 'PostgreSQL match history query');
 
