@@ -33,8 +33,9 @@ export function decodeOptions(encoded: string): DecodedOptions {
 
 // ---------------- SlotInfo decoder -----------------
 function parseColor(color: string): number | null {
-  if (color === '4294967295') return null;
-  return parseInt(color, 10) + 1;
+  if (!color || color === '4294967295') return null;
+  const parsed = parseInt(color, 10);
+  return Number.isNaN(parsed) ? null : parsed + 1;
 }
 
 function parsePlayerMetadata(meta: string): PlayerMetadata | null {

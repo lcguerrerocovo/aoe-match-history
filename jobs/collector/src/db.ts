@@ -8,7 +8,7 @@ const log = pino({ name: 'match-collector' });
 
 const INT_MAX = 2147483647;
 function clampInt(val: number | null | undefined): number | null {
-  if (val == null || val > INT_MAX || val < -INT_MAX) return null;
+  if (val == null || Number.isNaN(val) || val > INT_MAX || val < -INT_MAX) return null;
   return val;
 }
 
