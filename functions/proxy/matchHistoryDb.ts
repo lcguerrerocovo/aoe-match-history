@@ -33,7 +33,7 @@ interface PlayerRow {
 
 export interface FilterOptions {
   maps: { name: string; count: number }[];
-  matchTypes: { id: number; name: string; count: number }[];
+  matchTypes: { ids: number[]; name: string; count: number }[];
 }
 
 export interface QueryMatchHistoryOptions {
@@ -41,7 +41,7 @@ export interface QueryMatchHistoryOptions {
   limit: number;
   cursor?: { startTime: string; matchId: string } | null;
   mapName?: string;
-  matchTypeId?: number;
+  matchTypeIds?: number[];
   sort?: 'asc' | 'desc';
   page?: number;
 }
@@ -80,10 +80,23 @@ export async function queryFilterOptions(
     count: parseInt(r.count, 10),
   }));
 
-  const matchTypes = matchTypesResult.rows.map(r => ({
-    id: r.match_type_id,
-    name: getGameType(r.match_type_id) || `Type ${r.match_type_id}`,
-    count: parseInt(r.count, 10),
+  // Merge match type IDs that share the same display name (e.g. IDs 7,8,9 → "RM Team")
+  const matchTypesByName = new Map<string, { ids: number[]; count: number }>();
+  for (const r of matchTypesResult.rows) {
+    const name = getGameType(r.match_type_id) || `Type ${r.match_type_id}`;
+    const count = parseInt(r.count, 10);
+    const existing = matchTypesByName.get(name);
+    if (existing) {
+      existing.ids.push(r.match_type_id);
+      existing.count += count;
+    } else {
+      matchTypesByName.set(name, { ids: [r.match_type_id], count });
+    }
+  }
+  const matchTypes = Array.from(matchTypesByName.entries()).map(([name, { ids, count }]) => ({
+    ids,
+    name,
+    count,
   }));
 
   return { maps, matchTypes };
@@ -103,12 +116,12 @@ export async function queryMatchHistory(
 ): Promise<{ matches: ProcessedMatch[]; hasMore: boolean }> {
   const cursor = options?.cursor;
   const mapName = options?.mapName;
-  const matchTypeId = options?.matchTypeId;
+  const matchTypeIds = options?.matchTypeIds;
   const sort = options?.sort || 'desc';
 
   // Build dynamic WHERE clause
   const conditions: string[] = ['mp.profile_id = $1'];
-  const params: (string | number)[] = [profileId];
+  const params: (string | number | number[])[] = [profileId];
   let paramIndex = 2;
 
   if (mapName) {
@@ -117,9 +130,9 @@ export async function queryMatchHistory(
     paramIndex++;
   }
 
-  if (matchTypeId !== undefined) {
-    conditions.push(`m.match_type_id = $${paramIndex}`);
-    params.push(matchTypeId);
+  if (matchTypeIds && matchTypeIds.length > 0) {
+    conditions.push(`m.match_type_id = ANY($${paramIndex})`);
+    params.push(matchTypeIds);
     paramIndex++;
   }
 
@@ -137,7 +150,7 @@ export async function queryMatchHistory(
   const orderDirection = sort === 'asc' ? 'ASC' : 'DESC';
 
   // Use OFFSET only when page is provided and no cursor
-  const useCursor = !!cursor || !!(mapName || matchTypeId !== undefined);
+  const useCursor = !!cursor || !!(mapName || matchTypeIds);
   const offset = !useCursor && !cursor ? (page - 1) * limit : 0;
 
   params.push(limit + 1);

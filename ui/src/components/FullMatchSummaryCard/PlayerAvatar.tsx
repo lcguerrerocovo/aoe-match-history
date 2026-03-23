@@ -233,7 +233,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
               rel='noopener noreferrer'
               data-testid="download-button"
             >
-              <Icon boxSize={3} asChild><FiDownload /></Icon>
+              <Icon boxSize={3}><FiDownload /></Icon>
               <Text as="span" fontSize="inherit" fontStyle="inherit">replay</Text>
             </Link>
           </Tooltip>

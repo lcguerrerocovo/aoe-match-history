@@ -32,7 +32,7 @@ interface ParsedParams {
   limit: number;
   cursor: { startTime: string; matchId: string } | null;
   mapName?: string;
-  matchTypeId?: number;
+  matchTypeIds?: number[];
   sort: 'asc' | 'desc';
 }
 
@@ -47,14 +47,18 @@ function parseQueryParams(queryString?: string): ParsedParams {
   const mapParam = params.get('map');
   const mapName = mapParam || undefined;
 
+  // matchType accepts comma-separated IDs (e.g. "7,8,9" for all RM Team variants)
   const matchTypeParam = params.get('matchType');
-  const matchTypeId = matchTypeParam ? parseInt(matchTypeParam, 10) : undefined;
-  const validMatchTypeId = matchTypeId !== undefined && !isNaN(matchTypeId) ? matchTypeId : undefined;
+  let matchTypeIds: number[] | undefined;
+  if (matchTypeParam) {
+    matchTypeIds = matchTypeParam.split(',').map(Number).filter(n => !isNaN(n));
+    if (matchTypeIds.length === 0) matchTypeIds = undefined;
+  }
 
   const sortParam = params.get('sort');
   const sort: 'asc' | 'desc' = sortParam === 'asc' ? 'asc' : 'desc';
 
-  return { page, limit, cursor, mapName, matchTypeId: validMatchTypeId, sort };
+  return { page, limit, cursor, mapName, matchTypeIds, sort };
 }
 
 /**
@@ -67,9 +71,9 @@ export async function handleFullMatchHistory(
   profileId: string,
   queryString?: string,
 ): Promise<HandlerResponse<FullMatchHistoryResponse>> {
-  const { page, limit, cursor, mapName, matchTypeId, sort } = parseQueryParams(queryString);
+  const { page, limit, cursor, mapName, matchTypeIds, sort } = parseQueryParams(queryString);
   const pool = getMatchDbPool();
-  const hasFilters = !!(mapName || matchTypeId !== undefined);
+  const hasFilters = !!(mapName || matchTypeIds);
   const hasCursor = !!cursor;
   const isFirstRequest = !hasCursor && page === 1;
 
@@ -98,7 +102,7 @@ export async function handleFullMatchHistory(
     const dbResultPromise = queryMatchHistory(pool, profileId, page, limit, {
       cursor: cursor || undefined,
       mapName,
-      matchTypeId,
+      matchTypeIds,
       sort,
     });
 

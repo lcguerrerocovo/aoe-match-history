@@ -27,7 +27,7 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
         {profile?.avatarUrl ? (
           <Avatar.Root size="full"><Avatar.Fallback /><Avatar.Image src={profile.avatarUrl} /></Avatar.Root>
         ) : (
-          <Icon w="50%" h="50%" asChild><FaUser /></Icon>
+          <Icon w="50%" h="50%"><FaUser /></Icon>
         )}
       </Box>
       <VStack gap="0.25rem">
@@ -37,7 +37,7 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
             {profile?.country ? (
               <ReactCountryFlag countryCode={profile.country} svg style={{ width: '1em', height: '1em' }} />
             ) : (
-              <Icon w={3} h={3} color="brand.inkMuted" asChild><FaFlag /></Icon>
+              <Icon w={3} h={3} color="brand.inkMuted"><FaFlag /></Icon>
             )}
             {profile?.clanlist_name && (
               <Text fontSize="xs" color="brand.inkMuted">Clan: {profile.clanlist_name}</Text>

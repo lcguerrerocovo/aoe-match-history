@@ -40,13 +40,13 @@ function App() {
   // Track whether server-side filters are active (map or matchType selected)
   const hasServerFilters = !!(selectedMap || selectedMatchType);
 
-  // Ref to look up matchType id from name using server filter options
-  const matchTypeIdMapRef = useRef<Record<string, number>>({});
+  // Ref to look up matchType ids (comma-separated) from name using server filter options
+  const matchTypeIdMapRef = useRef<Record<string, string>>({});
   useEffect(() => {
     if (serverFilterOptions) {
-      const idMap: Record<string, number> = {};
+      const idMap: Record<string, string> = {};
       for (const mt of serverFilterOptions.matchTypes) {
-        idMap[mt.name] = mt.id;
+        idMap[mt.name] = mt.ids.join(',');
       }
       matchTypeIdMapRef.current = idMap;
     }

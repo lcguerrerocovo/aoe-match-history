@@ -55,7 +55,7 @@ export async function getMatches(profileId: string = DEFAULT_PROFILE_ID): Promis
 
 export interface FilterOptions {
   maps: { name: string; count: number }[];
-  matchTypes: { id: number; name: string; count: number }[];
+  matchTypes: { ids: number[]; name: string; count: number }[];
 }
 
 export interface FullMatchHistoryResponse {
@@ -69,7 +69,7 @@ export interface FullMatchHistoryOptions {
   limit?: number;
   cursor?: string;
   map?: string;
-  matchType?: number;
+  matchType?: string;
   sort?: 'asc' | 'desc';
   page?: number;
 }

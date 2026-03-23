@@ -303,7 +303,7 @@ describe('handleFullMatchHistory', () => {
       expect(result.data.filterOptions.maps).toHaveLength(2);
       expect(result.data.filterOptions.maps[0]).toEqual({ name: 'Arabia', count: 10 });
       expect(result.data.filterOptions.matchTypes).toHaveLength(2);
-      expect(result.data.filterOptions.matchTypes[0]).toEqual({ id: 6, name: 'RM 1v1', count: 10 });
+      expect(result.data.filterOptions.matchTypes[0]).toEqual({ ids: [6], name: 'RM 1v1', count: 10 });
     });
 
     it('includes nextCursor when hasMore is true', async () => {
@@ -442,7 +442,7 @@ describe('handleFullMatchHistory', () => {
         c => typeof c[0] === 'string' && c[0].includes('SELECT mp.match_id')
       );
       expect(matchIdsCall[0]).toContain('match_type_id');
-      expect(matchIdsCall[1]).toContain(7);
+      expect(matchIdsCall[1]).toContainEqual([7]);
     });
 
     it('handles combined map + matchType filters', async () => {
