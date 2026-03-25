@@ -1,4 +1,4 @@
-import { Box, VStack, Text } from '@chakra-ui/react';
+import { Box, VStack, HStack, Text } from '@chakra-ui/react';
 import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
@@ -360,11 +360,40 @@ function App() {
                 w={layout.matchList.width}
                 maxW={layout.matchList.maxWidth}
                 mx="auto"
-                h="1px"
-                bg={{ base: 'rgba(139, 90, 43, 0.3)', _dark: 'rgba(255, 255, 255, 0.15)' }}
                 mt={2}
                 mb={4}
-              />
+              >
+                {/* Primary rule with centered star */}
+                <HStack gap={3} align="center" w="100%">
+                  <Box
+                    flex={1}
+                    h="1px"
+                    bg={{ base: 'linear-gradient(to right, transparent, rgba(139,90,43,0.3))', _dark: 'linear-gradient(to right, transparent, rgba(255,255,255,0.15))' }}
+                  />
+                  <Text
+                    fontSize="xs"
+                    color="brand.inkMuted"
+                    lineHeight="1"
+                    userSelect="none"
+                  >
+                    ✦
+                  </Text>
+                  <Box
+                    flex={1}
+                    h="1px"
+                    bg={{ base: 'linear-gradient(to left, transparent, rgba(139,90,43,0.3))', _dark: 'linear-gradient(to left, transparent, rgba(255,255,255,0.15))' }}
+                  />
+                </HStack>
+                {/* Secondary rule — desktop only */}
+                <Box
+                  h="1px"
+                  w="80%"
+                  mx="auto"
+                  mt="3px"
+                  bg={{ base: 'rgba(139,90,43,0.15)', _dark: 'rgba(255,255,255,0.1)' }}
+                  display={{ base: 'none', md: 'block' }}
+                />
+              </Box>
             </Box>
           }
           <VStack

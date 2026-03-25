@@ -79,8 +79,22 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
     }
   ];
 
+  const cornerMarkStyles = {
+    position: 'absolute' as const,
+    w: '10px',
+    h: '10px',
+    display: { base: 'none' as const, md: 'block' as const },
+  };
+
+  const cornerBorderColor = { base: 'rgba(139,90,43,0.4)', _dark: 'rgba(255,255,255,0.12)' };
+
   return (
     <Box css={styles.container}>
+      {/* Corner marks */}
+      <Box {...cornerMarkStyles} top="6px" left="6px" borderTop="1.5px solid" borderLeft="1.5px solid" borderColor={cornerBorderColor} />
+      <Box {...cornerMarkStyles} top="6px" right="6px" borderTop="1.5px solid" borderRight="1.5px solid" borderColor={cornerBorderColor} />
+      <Box {...cornerMarkStyles} bottom="6px" left="6px" borderBottom="1.5px solid" borderLeft="1.5px solid" borderColor={cornerBorderColor} />
+      <Box {...cornerMarkStyles} bottom="6px" right="6px" borderBottom="1.5px solid" borderRight="1.5px solid" borderColor={cornerBorderColor} />
       <Box css={styles.statsTable}>
         <StatsTable data={validLeaderboardStats} columns={combinedColumns} />
       </Box>

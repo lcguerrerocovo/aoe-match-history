@@ -32,6 +32,14 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
       </Box>
       <VStack gap="0.25rem">
         <Text css={styles.name} textAlign="center" lineClamp={2}>{playerName}</Text>
+        <Box
+          h="2px"
+          w="80%"
+          mx="auto"
+          borderRadius="1px"
+          mt={1}
+          bg={{ base: 'linear-gradient(to right, transparent, #6B5240 15%, #6B5240 85%, transparent)', _dark: 'linear-gradient(to right, transparent, rgba(255,255,255,0.3) 15%, rgba(255,255,255,0.3) 85%, transparent)' }}
+        />
         <VStack gap={1} align="center">
           <HStack gap="0.5rem" align="center">
             {profile?.country ? (

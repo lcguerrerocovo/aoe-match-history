@@ -33,6 +33,13 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         data-testid="profile-header-stack"
       >
         <Flex flex={1} justify="center">
+            <Box
+              w="1px"
+              alignSelf="stretch"
+              mr={3}
+              bg={{ base: 'linear-gradient(to bottom, transparent, rgba(139,90,43,0.25) 15%, rgba(139,90,43,0.25) 85%, transparent)', _dark: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.1) 15%, rgba(255,255,255,0.1) 85%, transparent)' }}
+              display={{ base: 'none', md: 'block' }}
+            />
             <VStack gap={4} align="center" w="100%">
                 <PlayerProfile
                     profileId={profileId}
@@ -64,18 +71,18 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
         )}
 
         <Box minW={{ md: '420px', lg: '450px'}} w={{ base: '100%', md: 'auto' }}>
-            {isLargeScreen && (
-              <Text
-                fontSize="2xs"
-                textTransform="uppercase"
-                letterSpacing="wider"
-                color="brand.inkMuted"
-                mb={2}
-                fontWeight="bold"
-              >
-                Record
-              </Text>
-            )}
+            <Text
+              fontSize="2xs"
+              textTransform="uppercase"
+              letterSpacing="wider"
+              color="brand.inkMuted"
+              mb={{ base: 1, md: 2 }}
+              fontWeight="bold"
+              lineHeight="1"
+              textAlign={{ base: 'center', md: 'left' }}
+            >
+              Record
+            </Text>
             <PlayerStats stats={stats} />
         </Box>
       </Flex>

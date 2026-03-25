@@ -16,14 +16,18 @@ interface StatsTableProps {
 }
 
 const thStyles = {
-  color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkMuted}' },
+  color: { base: '{colors.brand.inkMuted}', _dark: '{colors.brand.inkMuted}' },
   textTransform: 'uppercase' as const,
   whiteSpace: 'nowrap' as const,
   fontSize: '2xs',
   fontWeight: 'bold',
+  letterSpacing: 'wider',
   padding: '0.35rem 0.15rem',
-  borderBottom: '2px solid',
-  borderColor: { base: '{colors.brand.inkMuted}', _dark: '{colors.brand.borderWarm}' },
+  borderBottom: 'none',
+  backgroundImage: { base: 'linear-gradient(to right, transparent, {colors.brand.inkMuted} 10%, {colors.brand.inkMuted} 90%, transparent)', _dark: 'linear-gradient(to right, transparent, {colors.brand.borderWarm} 10%, {colors.brand.borderWarm} 90%, transparent)' },
+  backgroundSize: '100% 2px',
+  backgroundPosition: 'bottom',
+  backgroundRepeat: 'no-repeat',
 };
 
 const tdStyles = {
@@ -69,6 +73,14 @@ export function StatsTable({ data, columns }: StatsTableProps) {
                   css={{
                     ...(rowIndex === data.length - 1 ? lastRowTdStyles : tdStyles),
                     ...column.cellSx,
+                    ...(colIndex === 0 ? {
+                      fontVariantCaps: 'small-caps',
+                      letterSpacing: '0.03em',
+                      fontWeight: 600,
+                      borderLeft: '2px solid',
+                      borderLeftColor: { base: 'rgba(139,90,43,0.25)', _dark: 'rgba(255,255,255,0.15)' },
+                      paddingLeft: '8px',
+                    } : {}),
                   }}
                 >
                   {column.render(stat)}
