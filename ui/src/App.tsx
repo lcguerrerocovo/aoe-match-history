@@ -356,6 +356,15 @@ function App() {
           {profileId &&
             <Box w="100%">
               <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
+              <Box
+                w={layout.matchList.width}
+                maxW={layout.matchList.maxWidth}
+                mx="auto"
+                h="1px"
+                bg={{ base: 'rgba(139, 90, 43, 0.3)', _dark: 'rgba(255, 255, 255, 0.15)' }}
+                mt={2}
+                mb={4}
+              />
             </Box>
           }
           <VStack

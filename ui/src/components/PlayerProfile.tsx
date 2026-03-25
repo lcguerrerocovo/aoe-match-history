@@ -40,10 +40,10 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
               <Icon w={3} h={3} color="brand.inkMuted"><FaFlag /></Icon>
             )}
             {profile?.clanlist_name && (
-              <Text fontSize="xs" color="brand.inkMuted">Clan: {profile.clanlist_name}</Text>
+              <Text fontSize="xs" color="brand.inkMuted" fontStyle="italic">Clan: {profile.clanlist_name}</Text>
             )}
           </HStack>
-          <Text css={styles.id}>ID: {profileId}</Text>
+          <Text css={styles.id} letterSpacing="wider">ID: {profileId}</Text>
         </VStack>
       </VStack>
     </VStack>

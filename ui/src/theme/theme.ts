@@ -298,10 +298,9 @@ const cardSlotRecipe = defineSlotRecipe({
       },
       filter: {
         root: {
-          bg: '{colors.brand.sessionCardBg}',
-          borderWidth: '1px',
-          borderColor: { base: 'rgba(139, 90, 43, 0.25)', _dark: '{colors.brand.borderWarm}' },
-          borderRadius: 'sm',
+          bg: 'transparent',
+          borderWidth: '0',
+          borderRadius: 'none',
           transition: 'all 0.3s ease',
         },
       },
@@ -371,15 +370,22 @@ const profileHeaderSlotRecipe = defineSlotRecipe({
     },
     avatar: {
       bg: '{colors.brand.stoneLight}',
-      border: '2px solid',
-      borderColor: '{colors.brand.inkMedium}',
+      border: '1px solid',
+      borderColor: '{colors.brand.inkMuted}',
+      boxShadow: {
+        base: '0 0 0 3px {colors.brand.parchment}, 0 0 0 6px {colors.brand.inkMedium}, inset 0 0 8px rgba(139, 90, 43, 0.15)',
+        _dark: '0 0 0 3px #1A1A1A, 0 0 0 6px {colors.brand.inkLight}, inset 0 0 8px rgba(0,0,0,0.4)',
+      },
       width: '100px',
       height: '100px',
     },
     name: {
       color: '{colors.brand.inkDark}',
       fontWeight: 'bold',
-      fontSize: 'lg',
+      fontSize: { base: 'xl', md: '2xl' },
+      letterSpacing: 'wide',
+      fontVariantCaps: 'small-caps',
+      textShadow: { base: '0 1px 0 {colors.brand.textShadowLight}', _dark: '0 1px 2px rgba(0,0,0,0.5)' },
     },
     id: {
       color: '{colors.brand.inkMuted}',
@@ -394,11 +400,8 @@ const playerStatsSlotRecipe = defineSlotRecipe({
   slots: ['container', 'statsTable'],
   base: {
     container: {
-      bg: { base: 'transparent', _dark: '{colors.brand.inkMedium}' },
-      borderColor: { base: 'rgba(107, 82, 64, 0.5)', _dark: '{colors.brand.borderWarm}' },
-      borderRadius: 'sm',
+      bg: 'transparent',
       padding: '1rem',
-      borderWidth: '1px',
       backgroundImage: 'none',
       transition: 'all 0.3s ease',
       position: 'relative',
@@ -415,11 +418,8 @@ const rankingCardSlotRecipe = defineSlotRecipe({
   slots: ['container', 'rankingRow', 'leaderboardName', 'rankText', 'percentileText', 'rankingTable', 'tableHeader', 'tableRow', 'tableCell'],
   base: {
     container: {
-      bg: { base: 'transparent', _dark: '{colors.brand.inkMedium}' },
-      borderColor: { base: 'rgba(107, 82, 64, 0.5)', _dark: '{colors.brand.borderWarm}' },
-      borderRadius: 'sm',
+      bg: 'transparent',
       padding: '0.3rem',
-      borderWidth: '1px',
       backgroundImage: 'none',
       transition: 'all 0.3s ease',
       minW: { base: '100%', md: '220px' },

@@ -1,4 +1,4 @@
-import { Box, Flex, useBreakpointValue, VStack, Separator, useSlotRecipe } from '@chakra-ui/react';
+import { Box, Flex, Text, useBreakpointValue, VStack, useSlotRecipe } from '@chakra-ui/react';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerStats } from './PlayerStats';
 import { RankingCard } from './RankingCard';
@@ -17,11 +17,13 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
   const styles = recipe();
   const layout = useLayoutConfig();
   const isLargeScreen = useBreakpointValue({ base: false, md: true });
-  
+
+  const ruledLineColor = { base: 'rgba(139, 90, 43, 0.3)', _dark: 'rgba(255, 255, 255, 0.15)' };
+
   return (
     <Box css={styles.container}>
-      <Flex 
-        direction={{ base: 'column', md: 'row' }} 
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
         align={{ base: 'stretch', md: 'center' }}
         justify="center"
         maxW={layout.matchList.width}
@@ -32,7 +34,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
       >
         <Flex flex={1} justify="center">
             <VStack gap={4} align="center" w="100%">
-                <PlayerProfile 
+                <PlayerProfile
                     profileId={profileId}
                     profile={profile}
                     isLoading={isLoading}
@@ -43,9 +45,37 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
             </VStack>
         </Flex>
 
-        {isLargeScreen && <Separator orientation="vertical" height="150px" />}
+        {isLargeScreen && (
+          <Box
+            alignSelf="stretch"
+            w="1px"
+            bg={ruledLineColor}
+            my={2}
+          />
+        )}
+
+        {!isLargeScreen && (
+          <Box
+            w="80%"
+            mx="auto"
+            h="1px"
+            bg={ruledLineColor}
+          />
+        )}
 
         <Box minW={{ md: '420px', lg: '450px'}} w={{ base: '100%', md: 'auto' }}>
+            {isLargeScreen && (
+              <Text
+                fontSize="2xs"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="brand.inkMuted"
+                mb={2}
+                fontWeight="bold"
+              >
+                Record
+              </Text>
+            )}
             <PlayerStats stats={stats} />
         </Box>
       </Flex>

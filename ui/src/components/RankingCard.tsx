@@ -83,8 +83,30 @@ export function RankingCard({ stats }: RankingCardProps) {
 
           const ordinalRank = `${stat.rank}${getOrdinalSuffix(stat.rank)}`;
 
+          // Tier illumination — subtle background tint + left border accent for medaled players
+          const illuminationProps = (() => {
+            if (!tier.showCrown) return {};
+            const tierBorderToken = isDark
+              ? tier.name === 'Gold' ? 'colors.brand.tierGoldDark'
+              : tier.name === 'Silver' ? 'colors.brand.tierSilverDark'
+              : 'colors.brand.tierBronzeDark'
+              : tier.name === 'Gold' ? 'colors.brand.tierGoldLight'
+              : tier.name === 'Silver' ? 'colors.brand.tierSilverLight'
+              : 'colors.brand.tierBronzeLight';
+            const tierBgMap: Record<string, Record<string, string>> = {
+              Gold: { base: 'rgba(212, 175, 55, 0.06)', _dark: 'rgba(255, 215, 0, 0.06)' },
+              Silver: { base: 'rgba(192, 192, 192, 0.08)', _dark: 'rgba(192, 192, 192, 0.06)' },
+              Bronze: { base: 'rgba(205, 133, 63, 0.06)', _dark: 'rgba(205, 127, 50, 0.06)' },
+            };
+            return {
+              bg: tierBgMap[tier.name],
+              borderLeft: '2px solid',
+              borderLeftColor: system.token(tierBorderToken, ''),
+            };
+          })();
+
           return (
-            <Box key={index} css={styles.rankingRow} position="relative" pr="60px">
+            <Box key={index} css={styles.rankingRow} position="relative" pr="60px" {...illuminationProps}>
               <HStack align="center" gap={3}>
                 <Text css={styles.leaderboardName} minW="65px">
                   {getLeaderboardName(stat.leaderboard_id)}
