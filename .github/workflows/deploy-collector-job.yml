@@ -49,6 +49,13 @@ jobs:
           echo "Repository already exists"
         fi
 
+    - name: Apply cleanup policy
+      run: |
+        gcloud artifacts repositories set-cleanup-policies match-collector \
+          --location=$REGION \
+          --policy=.github/artifact-registry-cleanup-policy.json \
+          --no-dry-run
+
     - name: Configure Docker for Artifact Registry
       run: |
         gcloud auth configure-docker $REGION-docker.pkg.dev
@@ -98,20 +105,6 @@ jobs:
       run: |
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:${{ github.sha }}
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/match-collector/$IMAGE_NAME:latest
-
-    - name: Cleanup old Docker images
-      run: |
-        echo "Cleaning up old Docker images..."
-        TAGS=$(gcloud artifacts docker images list ${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME} --include-tags --format="value(tags)" | tr ',' '\n' | sort -u)
-
-        if [ -n "$TAGS" ]; then
-          for TAG in $TAGS; do
-            if [ "$TAG" != "latest" ]; then
-              echo "Deleting tag: $TAG"
-              gcloud artifacts docker images delete ${REGION}-docker.pkg.dev/${PROJECT_ID}/match-collector/${IMAGE_NAME}:${TAG} --quiet || echo "Failed to delete tag: $TAG"
-            fi
-          done
-        fi
 
     - name: Run database migrations
       working-directory: jobs/collector

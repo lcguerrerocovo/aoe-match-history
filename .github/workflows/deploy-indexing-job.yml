@@ -39,7 +39,6 @@ jobs:
 
     - name: Create Artifact Registry repository
       run: |
-        # Check if repository exists, create if it doesn't
         if ! gcloud artifacts repositories describe meilisearch --location=$REGION 2>/dev/null; then
           echo "Creating Artifact Registry repository..."
           gcloud artifacts repositories create meilisearch \
@@ -49,6 +48,13 @@ jobs:
         else
           echo "Repository already exists"
         fi
+
+    - name: Apply cleanup policy
+      run: |
+        gcloud artifacts repositories set-cleanup-policies meilisearch \
+          --location=$REGION \
+          --policy=.github/artifact-registry-cleanup-policy.json \
+          --no-dry-run
 
     - name: Configure Docker for Artifact Registry
       run: |
@@ -64,27 +70,6 @@ jobs:
       run: |
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }}
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
-
-    - name: Cleanup old Docker images
-      run: |
-        echo "Cleaning up old Docker images..."
-        # Get all tags for the image
-        TAGS=$(gcloud artifacts docker images list ${REGION}-docker.pkg.dev/${PROJECT_ID}/meilisearch/${IMAGE_NAME} --include-tags --format="value(tags)" | tr ',' '\n' | sort -u)
-        
-        if [ -n "$TAGS" ]; then
-          echo "Found tags: $TAGS"
-          # Delete all tags except 'latest'
-          for TAG in $TAGS; do
-            if [ "$TAG" != "latest" ]; then
-              echo "Deleting tag: $TAG"
-              gcloud artifacts docker images delete ${REGION}-docker.pkg.dev/${PROJECT_ID}/meilisearch/${IMAGE_NAME}:${TAG} --quiet || echo "Failed to delete tag: $TAG"
-            else
-              echo "Keeping tag: $TAG"
-            fi
-          done
-        else
-          echo "No tags found for ${IMAGE_NAME}"
-        fi
 
     - name: Deploy Cloud Run Job
       run: |

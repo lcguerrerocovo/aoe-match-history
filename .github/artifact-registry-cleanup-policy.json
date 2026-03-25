@@ -1,0 +1,17 @@
+[
+  {
+    "name": "delete-untagged",
+    "action": { "type": "Delete" },
+    "condition": {
+      "tagState": "UNTAGGED",
+      "olderThan": "604800s"
+    }
+  },
+  {
+    "name": "keep-latest",
+    "action": { "type": "Keep" },
+    "mostRecentVersions": {
+      "keepCount": 3
+    }
+  }
+]
