@@ -396,9 +396,10 @@ const rankingCardSlotRecipe = defineSlotRecipe({
     },
     leaderboardName: {
       color: { base: '{colors.brand.inkDark}', _dark: '{colors.brand.inkMuted}' },
-      fontSize: '2xs',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
+      fontSize: '11px',
+      fontWeight: 700,
+      fontVariantCaps: 'small-caps',
+      letterSpacing: '0.04em',
       whiteSpace: 'nowrap',
     },
     rankText: {

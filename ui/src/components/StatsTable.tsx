@@ -75,8 +75,9 @@ export function StatsTable({ data, columns }: StatsTableProps) {
                     ...column.cellSx,
                     ...(colIndex === 0 ? {
                       fontVariantCaps: 'small-caps',
-                      letterSpacing: '0.03em',
-                      fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      fontWeight: 700,
+                      fontSize: '11px',
                       borderLeft: '2px solid',
                       borderLeftColor: { base: 'rgba(139,90,43,0.25)', _dark: 'rgba(255,255,255,0.15)' },
                       paddingLeft: '8px',
