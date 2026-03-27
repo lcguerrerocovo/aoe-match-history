@@ -30,7 +30,7 @@ Extracted subdirectories with barrel exports (`index.ts`):
 - **Theme**: `src/theme/theme.ts` — 170+ semantic color tokens, card variants, slot recipes
 - **Breakpoints**: `src/theme/breakpoints.ts` — use `useLayoutConfig()` hook
 - **Rules**: Always use theme tokens (`brand.*`), never hardcode colors or breakpoints
-- Card variants: `match`, `winner`/`loser`, `recordBubble`, `matchesCountBubble`, `filter`, `summary`
+- Card variants: `match`, `winner`/`loser`, `filter`, `summary`
 
 ## Testing
 

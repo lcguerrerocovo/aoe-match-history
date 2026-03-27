@@ -13,7 +13,7 @@ The site uses a **Da Vinci Codex aesthetic** — a leather-bound manuscript brou
 
 1. **Always use theme tokens** from `ui/src/theme/theme.ts` — never hardcode colors or hex values in components
 2. **Use `useLayoutConfig()`** and `ui/src/theme/breakpoints.ts` for responsive layouts — never hardcode breakpoints
-3. **Use existing card variants** (`match`, `recordBubble`, `winner`, `loser`, `filter`, `summary`) before creating new ones
+3. **Use existing card variants** (`match`, `winner`, `loser`, `filter`, `summary`) before creating new ones
 4. **Transitions**: 0.3s ease for layout, 0.2s ease-in-out for interactive elements (links, buttons)
 5. **No container chrome**: Components should be transparent on the body parchment. Use ruled lines (1-2px sepia ink borders) for structure, not distinct backgrounds or gradient stacks.
 

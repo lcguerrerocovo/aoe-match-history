@@ -1,6 +1,5 @@
-import { Box, VStack, Text, HStack, Accordion, Card, Icon, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, HStack, Accordion, Icon, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
 import { system } from '../../theme/theme';
-import { cardVariant } from '../../types/chakra-overrides';
 import type { Match, MatchGroup } from '../../types/match';
 import { FiClock } from 'react-icons/fi';
 import { GiBroadsword } from 'react-icons/gi';
@@ -110,45 +109,112 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                 )}
                 <h2 style={isFlatMode ? { display: 'none' } : undefined}>
                   <Accordion.ItemTrigger>
-                    <VStack flex="1" align="stretch" gap={2}>
-                      {/* Date Header */}
-                      <Box bg="brand.sessionHeaderBg" p={1} borderBottom="2px solid" borderBottomColor="brand.bronze">
-                        {(() => {
-                          const timingData = formatSessionTimingData(group.date, totalReal);
-                          return (
-                            <>
-                              {/* Mobile: Two-line layout */}
-                              <VStack gap={1} display={{ base: "flex", md: "none" }} align="stretch">
-                                {/* Line 1: Drop cap + Date and Time Range */}
-                                <HStack gap={1} alignItems="flex-start">
-                                  <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="1px">
-                                    {timingData.dateDisplay.charAt(0)}
-                                  </Text>
-                                  <VStack gap={0} align="flex-start">
-                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
-                                    {timingData.timeRange && (
-                                      <Text fontWeight="semibold" color="brand.inkDark" fontSize="xs">{timingData.timeRange}</Text>
-                                    )}
-                                  </VStack>
-                                </HStack>
+                    {(() => {
+                      const timingData = formatSessionTimingData(group.date, totalReal);
+                      const diploEntries = Object.entries(byDiplo);
+                      const hasUncategorized = diploEntries.some(([, rec]) => rec.uncategorized > 0);
 
-                                {/* Line 2: Session Duration and Time Played */}
-                                <HStack gap={3} justify="flex-start" fontSize="xs">
-                                  <HStack gap={1}>
-                                    <Icon boxSize="10px" color="brand.bronze"><FiClock /></Icon>
-                                    <Text color="brand.inkMuted">Session:</Text>
-                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.sessionDuration}</Text>
-                                  </HStack>
-                                  <HStack gap={1}>
-                                    <GiBroadsword size={10} color="currentColor" />
-                                    <Text color="brand.inkMuted">Played:</Text>
-                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.timePlayed}</Text>
-                                  </HStack>
-                                </HStack>
-                              </VStack>
-                              {/* Desktop: One line with better hierarchy */}
+                      const recordGrid = (
+                        <Box
+                          borderLeft="2px dotted"
+                          borderLeftColor="brand.inkLight"
+                          pl={{ base: 2, md: 3 }}
+                          ml={{ base: 0, md: '48px' }}
+                        >
+                          {/* Match count annotation */}
+                          <Text
+                            fontFamily="'Lora', serif"
+                            fontStyle="italic"
+                            fontSize={{ base: '10px', md: '11px' }}
+                            color="brand.inkMuted"
+                            mb={1}
+                          >
+                            {toRoman(group.matches.length)} matches played
+                          </Text>
+
+                          {/* Record grid */}
+                          <Box
+                            display="grid"
+                            css={{
+                              gridTemplateColumns: isMobile
+                                ? `72px 30px 30px ${hasUncategorized ? '26px ' : ''}44px`
+                                : `120px 36px 36px ${hasUncategorized ? '30px ' : ''}50px`,
+                              gap: '2px 0',
+                            }}
+                            alignItems="baseline"
+                            fontSize={{ base: '11px', md: '12px' }}
+                          >
+                            {diploEntries.map(([diplo, rec]) => (
+                              <Box key={diplo} display="contents">
+                                <Text
+                                  css={{ fontVariantCaps: 'small-caps' }}
+                                  fontWeight={700}
+                                  fontSize="11px"
+                                  letterSpacing="0.04em"
+                                  color="brand.inkDark"
+                                  overflow="hidden"
+                                  textOverflow="ellipsis"
+                                  whiteSpace="nowrap"
+                                >
+                                  {isMobile ? shortenMatchTypeName(diplo) : diplo}
+                                </Text>
+                                <Text textAlign="right" color="brand.darkWin" fontWeight="bold">
+                                  {rec.wins}W
+                                </Text>
+                                <Text textAlign="right" color="brand.darkLoss" fontWeight="bold">
+                                  {rec.losses}L
+                                </Text>
+                                {hasUncategorized && (
+                                  <Text textAlign="right" color="brand.inkMuted" fontWeight="bold">
+                                    {rec.uncategorized > 0 ? `${rec.uncategorized}?` : ''}
+                                  </Text>
+                                )}
+                                <Text
+                                  textAlign="right"
+                                  fontFamily="mono"
+                                  color={rec.eloChange > 0 ? 'brand.darkWin' : rec.eloChange < 0 ? 'brand.darkLoss' : 'brand.inkMuted'}
+                                >
+                                  {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange !== 0 ? rec.eloChange : '—'}
+                                </Text>
+                              </Box>
+                            ))}
+                          </Box>
+                        </Box>
+                      );
+
+                      const sessionMeta = (
+                        <VStack gap={0} align="flex-end" fontSize={{ base: 'xs', md: 'sm' }} flexShrink={0}>
+                          <HStack gap={1}>
+                            <Icon boxSize={{ base: '10px', md: 3 }} color="brand.bronze"><FiClock /></Icon>
+                            <Text color="brand.inkMuted">{timingData.sessionDuration}</Text>
+                          </HStack>
+                          <HStack gap={1}>
+                            <GiBroadsword size={isMobile ? 10 : 12} color="currentColor" />
+                            <Text color="brand.inkMuted">{timingData.timePlayed}</Text>
+                          </HStack>
+                        </VStack>
+                      );
+
+                      return (
+                        <>
+                          <VStack flex="1" align="stretch" gap={2}>
+                            {/* Date Header */}
+                            <Box bg="brand.sessionHeaderBg" p={1} borderBottom="2px solid" borderBottomColor="brand.bronze">
+                              {/* Mobile: Date row only */}
+                              <HStack gap={1} alignItems="flex-start" display={{ base: "flex", md: "none" }}>
+                                <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="1px">
+                                  {timingData.dateDisplay.charAt(0)}
+                                </Text>
+                                <VStack gap={0} align="flex-start">
+                                  <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
+                                  {timingData.timeRange && (
+                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="xs">{timingData.timeRange}</Text>
+                                  )}
+                                </VStack>
+                              </HStack>
+
+                              {/* Desktop: Date + duration on one line */}
                               <HStack justify="space-between" align="center" display={{ base: "none", md: "flex" }}>
-                                {/* Left: Drop cap + date/time info */}
                                 <HStack gap={1} alignItems="flex-start">
                                   <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="2px">
                                     {timingData.dateDisplay.charAt(0)}
@@ -160,8 +226,6 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                     )}
                                   </VStack>
                                 </HStack>
-
-                                {/* Right: Duration info with labels */}
                                 <HStack gap={4} fontSize="sm">
                                   <HStack gap={1}>
                                     <Icon boxSize={3} color="brand.bronze"><FiClock /></Icon>
@@ -175,83 +239,64 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                   </HStack>
                                 </HStack>
                               </HStack>
-                            </>
-                          );
-                        })()}
-                      </Box>
+                            </Box>
 
-                      {/* Match Stats Row */}
-                      <HStack justify="space-between" align="center" role="group">
-                        <Card.Root variant={cardVariant('matchesCountBubble')}>
-                          <Text as="span">Matches: </Text>
-                          <Text as="span">{group.matches.length}</Text>
-                        </Card.Root>
-                        <HStack gap={2} wrap="wrap" justify="flex-end">
-                          {Object.entries(byDiplo).map(([diplo, rec]) => (
-                            <Card.Root key={diplo} variant={cardVariant('recordBubble')}>
-                              <Text as="span" fontWeight="bold" mr={2} display="inline-block" width={{ base: '60px', md: '120px' }} textAlign="center" verticalAlign="middle" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                                {isMobile ? shortenMatchTypeName(diplo) : diplo}
-                              </Text>
-                              <Text as="span" color="brand.inkMuted" mr={2} verticalAlign="middle">|</Text>
-                              <Text as="span" color="brand.darkWin" mr={1} display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.wins}W</Text>
-                              <Text as="span" color="brand.darkLoss" display="inline-block" minWidth={{ base: '22px', md: '28px' }} verticalAlign="middle" fontWeight="bold">{rec.losses}L</Text>
-                              {rec.uncategorized > 0 && (
-                                <Text as="span" color="brand.inkMuted" ml={1} verticalAlign="middle">{rec.uncategorized}?</Text>
-                              )}
-                              {rec.eloChange !== 0 && (
-                                <>
-                                  <Text as="span" color="brand.inkMuted" ml={2} mr={2} verticalAlign="middle">|</Text>
-                                  <Text
-                                    as="span"
-                                    display="inline-block"
-                                    minWidth={{ base: '30px', md: '35px' }}
-                                    textAlign="right"
-                                    fontFamily="mono"
-                                    color={rec.eloChange > 0 ? 'brand.darkWin' : 'brand.darkLoss'}
-                                    verticalAlign="middle"
-                                  >
-                                    {rec.eloChange > 0 ? `+${rec.eloChange}` : rec.eloChange}
-                                  </Text>
-                                </>
-                              )}
-                            </Card.Root>
-                          ))}
-                        </HStack>
-                      </HStack>
-                    </VStack>
-                    <Box
-                      w="24px"
-                      h="24px"
-                      bg={token('colors.brand.stampBg')}
-                      borderRadius="full"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      color={token('colors.brand.stampText')}
-                      fontSize="lg"
-                      fontWeight="bold"
-                      border="2px solid"
-                      borderColor={token('colors.brand.stampBorder')}
-                      boxShadow={token('colors.brand.stampShadow')}
-                      transition="all 0.2s ease"
-                      position="relative"
-                      right="-8px"
-                      _hover={{
-                        bg: token('colors.brand.stampBgHover'),
-                        color: token('colors.brand.stampText'),
-                        boxShadow: token('colors.brand.stampShadowHover')
-                      }}
-                    >
-                      <Text
-                        fontSize="lg"
-                        fontWeight="bold"
-                        color={token('colors.brand.stampText')}
-                        textShadow={token('colors.brand.stampTextShadow')}
-                        lineHeight="1"
-                      >
-                        {isOpen ? "−" : "+"}
-                      </Text>
-                    </Box>
+                            {/* Mobile: Records + session meta side by side */}
+                            <HStack display={{ base: 'flex', md: 'none' }} align="flex-start" justify="space-between" gap={2}>
+                              <Box flex="1" minW={0}>
+                                {recordGrid}
+                              </Box>
+                              {sessionMeta}
+                            </HStack>
+
+                            {/* Desktop: Records only (meta is in date header) */}
+                            <Box display={{ base: 'none', md: 'block' }}>
+                              {recordGrid}
+                            </Box>
+                          </VStack>
+
+                          {/* Seal toggle */}
+                          <Box
+                            w="28px"
+                            h="28px"
+                            bg={token('colors.brand.stampBg')}
+                            borderRadius="full"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            border="2px solid"
+                            borderColor={token('colors.brand.stampBorder')}
+                            boxShadow={token('colors.brand.stampShadow')}
+                            transition="all 0.2s ease"
+                            position="relative"
+                            right="-8px"
+                            _hover={{
+                              bg: token('colors.brand.stampBgHover'),
+                              boxShadow: token('colors.brand.stampShadowHover')
+                            }}
+                            _after={{
+                              content: '""',
+                              position: 'absolute',
+                              inset: '3px',
+                              borderRadius: 'full',
+                              border: '1px solid',
+                              borderColor: token('colors.brand.stampRing'),
+                              pointerEvents: 'none',
+                            }}
+                          >
+                            <Text
+                              fontSize="md"
+                              fontWeight="bold"
+                              color={token('colors.brand.stampText')}
+                              textShadow={token('colors.brand.stampTextShadow')}
+                              lineHeight="1"
+                            >
+                              {isOpen ? "−" : "+"}
+                            </Text>
+                          </Box>
+                        </>
+                      );
+                    })()}
                   </Accordion.ItemTrigger>
                 </h2>
                 <Accordion.ItemContent pb={4}><Accordion.ItemBody>

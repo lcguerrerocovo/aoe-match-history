@@ -143,36 +143,37 @@ const semanticColors = {
     // Stamp button colors
     stampBg: {
       value: {
-        base: `linear-gradient(135deg, #6B2A2A 0%, #8B3A3A 25%, #6B2A2A 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 40%)`,
-        _dark: `linear-gradient(135deg, #4A5568 0%, #2D3748 25%, #4A5568 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 40%)`,
+        base: `linear-gradient(135deg, #6B2A2A 0%, #8B3A3A 50%, #6B2A2A 100%)`,
+        _dark: `linear-gradient(135deg, #4A5568 0%, #2D3748 50%, #4A5568 100%)`,
       },
     },
     stampBgHover: {
       value: {
-        base: `linear-gradient(135deg, #8B3A3A 0%, #A04040 25%, #8B3A3A 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.15) 0%, transparent 40%)`,
-        _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #2D3748 100%), repeating-linear-gradient(45deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 3px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.25) 0%, transparent 40%)`,
+        base: `linear-gradient(135deg, #8B3A3A 0%, #A04040 50%, #8B3A3A 100%)`,
+        _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 50%, #2D3748 100%)`,
       },
     },
     stampBorder: { value: { base: '#4A1C1C', _dark: '#2D3748' } },
-    stampText: { value: { base: '#654321', _dark: '#E2E8F0' } },
+    stampText: { value: '#F5ECD4' },
     stampTextShadow: {
       value: {
-        base: '1px 1px 0px rgba(255,255,255,0.8), -1px -1px 0px rgba(0,0,0,0.3)',
-        _dark: '1px 1px 0px rgba(0,0,0,0.8), -1px -1px 0px rgba(255,255,255,0.2)',
+        base: '0 1px 2px rgba(0,0,0,0.6)',
+        _dark: '0 1px 2px rgba(0,0,0,0.8)',
       },
     },
     stampShadow: {
       value: {
-        base: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2), inset 0 -1px 1px rgba(255,255,255,0.1)',
-        _dark: 'inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.05)',
+        base: 'inset 0 3px 6px rgba(0,0,0,0.4), inset 0 -2px 3px rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.2)',
+        _dark: 'inset 0 3px 6px rgba(0,0,0,0.6), inset 0 -2px 3px rgba(255,255,255,0.03), 0 1px 2px rgba(0,0,0,0.3)',
       },
     },
     stampShadowHover: {
       value: {
-        base: 'inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 1px rgba(255,255,255,0.15)',
-        _dark: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.08)',
+        base: 'inset 0 3px 6px rgba(0,0,0,0.5), inset 0 -2px 3px rgba(255,255,255,0.08), 0 2px 4px rgba(0,0,0,0.3)',
+        _dark: 'inset 0 3px 6px rgba(0,0,0,0.7), inset 0 -2px 3px rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.4)',
       },
     },
+    stampRing: { value: { base: 'rgba(245, 236, 212, 0.3)', _dark: 'rgba(245, 236, 212, 0.2)' } },
 
     // Parchment textures
     parchmentSurface: {
@@ -302,56 +303,6 @@ const cardSlotRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderRadius: 'none',
           transition: 'all 0.3s ease',
-        },
-      },
-      recordBubble: {
-        root: {
-          bg: 'transparent',
-          color: { base: '{colors.brand.black}', _dark: '{colors.brand.inkMuted}' },
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
-          borderWidth: '1px',
-          borderRadius: 'sm',
-          boxShadow: 'none',
-          px: { base: '1', md: '3' },
-          py: '1',
-          fontSize: '0.8125rem',
-          fontWeight: 'bold',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease',
-          position: 'relative',
-        },
-        body: {
-          padding: '0',
-          position: 'relative',
-          zIndex: 1,
-        },
-      },
-      matchesCountBubble: {
-        root: {
-          bg: 'transparent',
-          color: { base: '{colors.brand.black}', _dark: '{colors.brand.inkMuted}' },
-          borderColor: { base: 'rgba(139, 90, 43, 0.3)', _dark: '{colors.brand.borderWarm}' },
-          borderWidth: '1px',
-          borderRadius: 'sm',
-          px: { base: '1', md: '3' },
-          width: '80px',
-          py: '1',
-          fontSize: '0.8125rem',
-          fontWeight: 'extrabold',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.5',
-          boxShadow: 'none',
-          transition: 'all 0.3s ease',
-          position: 'relative',
-        },
-        body: {
-          padding: '0',
-          position: 'relative',
-          zIndex: 1,
         },
       },
     },

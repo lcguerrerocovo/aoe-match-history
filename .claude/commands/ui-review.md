@@ -1,5 +1,5 @@
 ---
-description: Annotate UI components and get targeted fixes or design exploration
+description: Annotate UI components, take screenshots, or review prod visuals
 ---
 
 # UI Review — $ARGUMENTS
@@ -14,14 +14,89 @@ profile    → /profile_id/:profileId   → App (ProfileHeader, FilterBar, Match
 match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, ApmBreakdownChart)
 ```
 
-## Workflow
+## Prod URL Mapping
 
-### 0. Handle `clear` Argument
+Used by the screenshot workflow. Default profile ID: `197388`.
+
+```
+landing    → https://aoe2.site/
+profile    → https://aoe2.site/profile_id/197388
+match      → https://aoe2.site/match/auto (pick a recent match from the profile page)
+```
+
+If the user provides a full URL, use that instead of the mapping.
+
+## Routing
+
+```
+$ARGUMENTS starts with "screenshot" → Screenshot workflow (Section A)
+$ARGUMENTS is "clear"               → Clear annotations (Section B)
+$ARGUMENTS is a view name           → Interactive overlay (Section C)
+```
+
+---
+
+## Section A: Screenshot Workflow
+
+Triggered when `$ARGUMENTS` starts with `screenshot`. The rest of the arguments can be:
+- A view name (e.g., `screenshot profile`) → resolve via Prod URL Mapping
+- A full URL (e.g., `screenshot https://aoe2.site/profile_id/12345`) → use directly
+- Just `screenshot` with no target → default to `profile`
+
+### A1. Resolve URL
+
+Parse the argument after "screenshot". If it's a view name, look it up in the Prod URL Mapping. If it's a URL, use it directly. If empty, default to `profile`.
+
+### A2. Determine Wait Strategy
+
+Pick the right `--wait-for-selector` based on the view:
+- `profile` → `[data-scope='accordion']` (waits for match data to load)
+- `match` → `[data-part='item-content']` (waits for match detail to render)
+- `landing` → `input` (waits for search input)
+- Custom URL → `body` (generic fallback)
+
+Always add `--wait-for-timeout 5000` after the selector resolves, to let async rendering settle.
+
+### A3. Capture Screenshots
+
+Take 4 screenshots using `npx playwright screenshot`:
+
+```bash
+# Desktop light (full page)
+npx playwright screenshot --wait-for-selector "<selector>" --wait-for-timeout 5000 --full-page --color-scheme light --viewport-size "1440,900" "<url>" /tmp/ui-review-desktop-light.png
+
+# Desktop dark (full page)
+npx playwright screenshot --wait-for-selector "<selector>" --wait-for-timeout 5000 --full-page --color-scheme dark --viewport-size "1440,900" "<url>" /tmp/ui-review-desktop-dark.png
+
+# Mobile light (full page) — use --viewport-size, NOT --device (webkit not installed)
+npx playwright screenshot --wait-for-selector "<selector>" --wait-for-timeout 5000 --full-page --color-scheme light --viewport-size "390,844" "<url>" /tmp/ui-review-mobile-light.png
+
+# Mobile dark (full page)
+npx playwright screenshot --wait-for-selector "<selector>" --wait-for-timeout 5000 --full-page --color-scheme dark --viewport-size "390,844" "<url>" /tmp/ui-review-mobile-dark.png
+```
+
+Run desktop and mobile pairs in parallel (light + dark can also be parallel — maximize concurrency).
+
+### A4. Read and Analyze
+
+Use the Read tool on all 4 PNGs. Present findings organized by:
+
+1. **What's working** — elements that match the Codex/manuscript vision
+2. **What needs work** — elements that break the illusion or hurt legibility
+3. **Specific observations** — per-component notes with actionable detail
+
+If the user asked for screenshots as part of a larger workflow (e.g., master plan assessment), present the screenshots and analysis, then continue with that workflow.
+
+---
+
+## Section B: Clear Annotations
 
 If `$ARGUMENTS` is `clear`:
 1. Delete `.ui-review/annotations.json` from the project root (if it exists)
 2. If the dev server is running, also call: `curl -s -X POST http://localhost:5173/__ui-review/clear`
 3. Respond: "Annotations cleared." and stop — do not continue to subsequent steps.
+
+## Section C: Interactive Overlay
 
 ### 1. Validate
 
