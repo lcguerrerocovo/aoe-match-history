@@ -27,17 +27,28 @@ App                              State owner: matches, filters, profile, stats
     ├── MapCard.tsx               Diamond-rotated map thumbnail (list view)
     ├── TeamCard.tsx              Team layout with player rows
     ├── PlayerRating.tsx          Rating badge
-    └── APMButton.tsx             APM trigger button
+    └── AnalysisButton.tsx        Analysis trigger button
 
-FullMatchSummaryCard/            Single match detail (used by MatchPage)
-├── FullMatchSummaryCard.tsx     Teams, players, ratings
-├── PlayerAvatar.tsx             Steam avatar with link
-├── MapCard.tsx                  Map thumbnail (detail view)
-└── MatchDetails.tsx             Match metadata display
+MatchPage                        Single match detail
+├── FullMatchSummaryCard/        Teams, players, ratings
+│   ├── FullMatchSummaryCard.tsx
+│   ├── PlayerAvatar.tsx         Steam avatar with link
+│   ├── MapCard.tsx              Map thumbnail (detail view)
+│   └── MatchDetails.tsx         Match metadata display
+└── Analysis/                    APM analysis section
+    ├── AnalysisSection.tsx      Container: owns view/player state, renders charts
+    ├── AnalysisHeader.tsx       Title + ChartNav icon toggle
+    ├── ChartNav.tsx             Icon segmented control (APM ↔ Actions)
+    ├── ChartViewport.tsx        Fixed-height scroll frame (data-testid="chart-container")
+    ├── PlayerBar.tsx            Unified player buttons (multi-toggle for APM, single-select for Actions)
+    ├── AnalysisEmptyState.tsx   Inline empty/generate/processing/error states
+    ├── useApmGeneration.ts     Hook: status polling, replay download, generation trigger
+    └── index.ts                 Barrel export (AnalysisSection only)
+        ├── → ApmChart.tsx       Pure APM line chart renderer (no legend/toggle)
+        └── → ApmBreakdownChart/ Action breakdown (stacked bar)
 
-ApmBreakdownChart/               APM chart with player breakdown
-├── ApmBreakdownChart.tsx        Chart container + data processing
-├── PlayerSelector.tsx           Player toggle checkboxes
+ApmBreakdownChart/               APM chart with action breakdown
+├── ApmBreakdownChart.tsx        Chart container (accepts selectedPlayerId, computes chartData)
 ├── ChartArea.tsx                Recharts area chart
 ├── ActionTypeLegend.tsx         Action type color legend
 └── utils.ts                     Chart color/formatting helpers
@@ -115,8 +126,8 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `profile-search` — profile with TopBar search results
 - `profile-expanded` — profile with accordion session expanded
 - `live` — live matches page
-- `match` — match detail with APM tab
-- `match-actions` — match detail with Actions tab
+- `match` — match detail with APM view
+- `match-actions` — match detail with Actions view
 
 **When adding new views or interactive states**, add a corresponding entry to the `VIEWS` array in `scripts/take-screenshots.ts`. Each entry needs a `name`, `path`, `waitForSelector`, and optionally a `beforeCapture` function for interactions (typing, clicking tabs, expanding accordions).
 

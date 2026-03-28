@@ -7,7 +7,7 @@ import { useLayoutConfig } from '../../theme/breakpoints';
 import { parseDuration } from '../../utils/timeUtils';
 import { formatDuration, formatDateTime } from '../../utils/matchUtils';
 import type { Match } from '../../types/match';
-import { APMButton } from './APMButton';
+import { AnalysisButton } from './AnalysisButton';
 
 export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match; profileId: string; groupOpen: boolean }) {
   const layout = useLayoutConfig();
@@ -35,7 +35,7 @@ export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match
           {/* APM button */}
           {profileId && (
             <Box display="flex" alignItems="center" justifyContent="flex-end">
-              <APMButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
+              <AnalysisButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
             </Box>
           )}
         </HStack>

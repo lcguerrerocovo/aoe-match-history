@@ -1,5 +1,6 @@
 import { mount } from 'cypress/react';
 import { ApmChart } from './ApmChart';
+import { ChartViewport } from './Analysis/ChartViewport';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
 
 describe('ApmChart Viewport Behavior', () => {
@@ -35,11 +36,13 @@ describe('ApmChart Viewport Behavior', () => {
   beforeEach(() => {
     mount(
       <CustomThemeProvider>
-        <ApmChart 
-          apm={mockApmData}
-          nameByProfile={mockNameByProfile}
-          colorByProfile={mockColorByProfile}
-        />
+        <ChartViewport dataPointCount={33}>
+          <ApmChart
+            apm={mockApmData}
+            nameByProfile={mockNameByProfile}
+            colorByProfile={mockColorByProfile}
+          />
+        </ChartViewport>
       </CustomThemeProvider>
     );
   });

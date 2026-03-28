@@ -14,6 +14,7 @@ interface ActionTypeLegendProps {
   activeActionTypes: Set<string>;
   actionTypeColorMap: Record<string, number>;
   onToggleActionType: (actionType: string) => void;
+  hidden?: boolean;
 }
 
 export function ActionTypeLegend({
@@ -21,10 +22,17 @@ export function ActionTypeLegend({
   activeActionTypes,
   actionTypeColorMap,
   onToggleActionType,
+  hidden,
 }: ActionTypeLegendProps) {
   return (
-    <Box mt={2} px={2} overflow="visible" minH="60px">
-      <Flex wrap="wrap" justify="center" align="center" gap={2} w="100%">
+    <Box
+      borderTop="1px solid"
+      borderColor={hidden ? 'transparent' : 'brand.borderWarm'}
+      pt={2}
+      px={2}
+      visibility={hidden ? 'hidden' : 'visible'}
+    >
+      <Flex wrap="wrap" justify="center" align="center" gap={1.5} w="100%">
         {allActionTypesWithStats.map((actionStat) => {
           const actionType = actionStat.actionType;
           const isActive = activeActionTypes.has(actionType);
@@ -47,11 +55,9 @@ export function ActionTypeLegend({
             >
               <Flex
                 align="center"
-                gap={2}
-                px={2}
-                py={1}
-                flexShrink={0}
-                minW="fit-content"
+                gap={1.5}
+                px={1.5}
+                py={0.5}
                 bg={isActive ? 'brand.stoneLight' : 'brand.fadedParchment'}
                 borderRadius="md"
                 border="1px solid"
@@ -66,28 +72,26 @@ export function ActionTypeLegend({
               >
                 <Box
                   bg={getColorByIndex(actionTypeColorMap[actionType] || 0)}
-                  w="16px"
-                  h="16px"
+                  w="14px"
+                  h="14px"
                   borderRadius="sm"
                   flexShrink={0}
                 />
                 <Text
                   color="brand.inkDark"
-                  fontSize="sm"
+                  fontSize="xs"
                   fontWeight="semibold"
-                  maxW="140px"
+                  maxW="120px"
                   truncate
                   whiteSpace="nowrap"
-                  flexShrink={0}
                 >
                   {actionType}
                 </Text>
                 {actionStat.percentage !== null && (
                   <Text
-                    color="brand.inkDark"
+                    color="brand.inkMuted"
                     fontSize="xs"
                     fontWeight="bold"
-                    flexShrink={0}
                   >
                     {actionStat.percentage}%
                   </Text>
