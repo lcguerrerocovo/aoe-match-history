@@ -7,7 +7,6 @@ export function AnalysisButton({ matchId, profileId, groupOpen }: { matchId: str
     <APMGenerator
       matchId={matchId}
       profileId={profileId}
-      variant="button"
     />
   );
 }

@@ -1,13 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, VStack } from '@chakra-ui/react';
 import { cardVariant } from '../../types/chakra-overrides';
 import { Watermark } from '../Watermark';
 import { ApmChart } from '../ApmChart';
 import { ApmBreakdownChart } from '../ApmBreakdownChart';
-import { APMGenerator, type APMStatus } from '../APMGenerator';
 import { AnalysisHeader } from './AnalysisHeader';
 import { PlayerBar } from './PlayerBar';
 import { ChartViewport } from './ChartViewport';
+import { AnalysisEmptyState } from './AnalysisEmptyState';
+import { useApmGeneration } from './useApmGeneration';
 import type { AnalysisView } from './ChartNav';
 import type { Match } from '../../types/match';
 import { getMatch } from '../../services/matchService';
@@ -131,69 +132,58 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
   const matchId = match.match_id;
   const profileId = match.players?.[0]?.user_id?.toString() || '';
 
-  const handleStatusChange = async (status: APMStatus | null) => {
-    if (status?.state === 'bronzeStatus') {
-      try {
-        const updatedMatch = await getMatch(matchId);
-        onMatchUpdate?.(updatedMatch);
-      } catch (err) {
-        console.error('Failed to refresh match data:', err);
-      }
+  const handleBronzeStatus = useCallback(async () => {
+    try {
+      const updatedMatch = await getMatch(matchId);
+      onMatchUpdate?.(updatedMatch);
+    } catch (err) {
+      console.error('Failed to refresh match data:', err);
     }
-  };
+  }, [matchId, onMatchUpdate]);
 
-  const apmChart = (
-    <ChartViewport dataPointCount={dataPointCount}>
-      <ApmChart
+  const { status, isLoading, isProcessing, error, generate, containerRef } =
+    useApmGeneration(matchId, profileId, { onBronzeStatus: handleBronzeStatus });
+
+  const renderChart = () => {
+    if (!hasApm) {
+      return (
+        <ChartViewport dataPointCount={0}>
+          <AnalysisEmptyState
+            status={status}
+            isLoading={isLoading}
+            isProcessing={isProcessing}
+            error={error}
+            onGenerate={generate}
+          />
+        </ChartViewport>
+      );
+    }
+
+    if (activeView === 'apm') {
+      return (
+        <ChartViewport dataPointCount={dataPointCount}>
+          <ApmChart
+            apm={match.apm!}
+            colorByProfile={colorMap}
+            nameByProfile={nameMap}
+            activePids={activePids}
+          />
+        </ChartViewport>
+      );
+    }
+
+    return (
+      <ApmBreakdownChart
         apm={match.apm!}
+        selectedPlayerId={actionsSelectedPid}
         colorByProfile={colorMap}
         nameByProfile={nameMap}
-        activePids={activePids}
       />
-    </ChartViewport>
-  );
-
-  const actionsChart = (
-    <ApmBreakdownChart
-      apm={match.apm!}
-      selectedPlayerId={actionsSelectedPid}
-      colorByProfile={colorMap}
-      nameByProfile={nameMap}
-    />
-  );
-
-  const renderApmView = () => {
-    if (hasApm) return apmChart;
-    return (
-      <APMGenerator
-        matchId={matchId}
-        profileId={profileId}
-        variant="card"
-        skipBronzeState={true}
-        onStatusChange={handleStatusChange}
-      >
-        {apmChart}
-      </APMGenerator>
-    );
-  };
-
-  const renderActionsView = () => {
-    if (hasApm) return actionsChart;
-    return (
-      <APMGenerator
-        matchId={matchId}
-        profileId={profileId}
-        variant="card"
-        skipBronzeState={true}
-        onStatusChange={handleStatusChange}
-      >
-        {actionsChart}
-      </APMGenerator>
     );
   };
 
   return (
-    <Card.Root variant={cardVariant('match')} w="100%" p={{ base: 4, md: 6 }} position="relative" overflow="hidden">
+    <Card.Root ref={containerRef} variant={cardVariant('match')} w="100%" p={{ base: 4, md: 6 }} position="relative" overflow="hidden">
       <Watermark
         variant="trebuchet"
         size={240}
@@ -212,7 +202,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
             onToggle={activeView === 'apm' ? togglePid : (pid: string) => setActionsSelectedPid(pid)}
           />
         )}
-        {activeView === 'apm' ? renderApmView() : renderActionsView()}
+        {renderChart()}
       </VStack>
     </Card.Root>
   );
