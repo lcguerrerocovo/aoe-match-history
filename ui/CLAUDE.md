@@ -7,6 +7,7 @@ Vite + React 18 + TypeScript + Chakra UI v3.
 - `/` — `LandingPage` (player search)
 - `/profile_id/:profileId` — `App` (match history for a player)
 - `/match/:matchId` — `MatchPage` (single match detail with APM)
+- `/live` — `LivePage` (live matches from observable advertisements)
 
 When adding or removing routes, update the screenshot tool views in `scripts/take-screenshots.ts`.
 
@@ -14,8 +15,10 @@ When adding or removing routes, update the screenshot tool views in `scripts/tak
 
 ```
 App                              State owner: matches, filters, profile, stats
-├── TopBar                       Nav bar with search
+├── TopBar                       Nav bar with search + pulsing Live link
 ├── ProfileHeader                Player info + ranking cards (fixed sidebar on desktop)
+├── ProfileLiveMatch             Live match banner (polls /api/live?profile_ids=, hidden when not in game)
+│   └── LiveMatchCard            Shared card component (→ LiveMatchCard.tsx)
 ├── FilterBar                    Search, map/type dropdowns, sort toggle
 └── MatchList/                   Accordion of date-grouped sessions
     ├── MatchList.tsx             Session grouping, accordion container
@@ -38,6 +41,18 @@ ApmBreakdownChart/               APM chart with player breakdown
 ├── ChartArea.tsx                Recharts area chart
 ├── ActionTypeLegend.tsx         Action type color legend
 └── utils.ts                     Chart color/formatting helpers
+
+LivePage                         Live matches page (auto-refresh, polls /api/live)
+├── GameTypeTabs                 Filter tabs by game type category (RM 1v1, RM Team, etc.)
+├── Civ filter (Input+datalist)  Typeahead civilization filter
+├── ActivityPanel                Stats panel with clickable map bars, ELO histogram, and match freshness
+└── LiveMatchCard                Shared card component (→ LiveMatchCard.tsx)
+
+LiveMatchCard.tsx                 Shared live match card (used by LivePage + ProfileLiveMatch)
+├── LiveMatchCard                Card: dark header (game type, map, elapsed, LIVE pill), diamond map + teams with "vs", avg ELO footer, spectate CTA
+├── PulsingDot                   Reusable animated red dot (used by LivePage header + TopBar Live links)
+├── PlayerRow                    Player name + civ icon + rating in a live match
+└── LiveMatchCardSkeleton        Skeleton placeholder matching card structure (dark header + diamond + rows)
 ```
 
 Note: Two `MapCard` components exist — `MatchList/MapCard.tsx` (list view, smaller) and
@@ -99,6 +114,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `profile` — profile with match history
 - `profile-search` — profile with TopBar search results
 - `profile-expanded` — profile with accordion session expanded
+- `live` — live matches page
 - `match` — match detail with APM tab
 - `match-actions` — match detail with Actions tab
 
@@ -107,6 +123,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 ## Key Services
 
 - `matchService.ts` — API client (`getFullMatchHistory` for cursor-paginated + server-filtered history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, replay/APM helpers)
+- `liveMatchService.ts` — Live matches API client (`getLiveMatches`, `getLiveMatchForPlayer`)
 - `playerSearchService.ts` — Player search API client (`searchPlayers`)
 
 ## Key Utils

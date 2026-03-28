@@ -1,5 +1,6 @@
 import type { Map, MatchType, Match } from '../types/match';
 import type { PersonalStats } from '../types/stats';
+import type { LiveMatch, LiveMatchPlayer } from '../types/liveMatch';
 
 // Mock data for FilterBar
 export const mockMaps: Map[] = [
@@ -282,4 +283,151 @@ export const mockMatchGroup = {
       ],
     },
   ],
-}; 
+};
+
+// Mock data for LiveMatchCard / LivePage / ActivityPanel
+const now = Math.floor(Date.now() / 1000);
+
+function makeLivePlayer(overrides: Partial<LiveMatchPlayer> & Pick<LiveMatchPlayer, 'name' | 'profile_id' | 'team'>): LiveMatchPlayer {
+  return { rating: null, civ: '0', ...overrides };
+}
+
+export const mockLiveMatch: LiveMatch = {
+  match_id: 90001,
+  map: 'Arabia',
+  map_id: 0,
+  matchtype_id: 6, // RM 1v1
+  game_type: 'RM 1v1',
+  num_players: 2,
+  start_time: now - 600, // 10 min ago
+  server: 'US East',
+  teams: [
+    [makeLivePlayer({ name: 'AlphaWolf', profile_id: 1001, team: 0, civ: 'Britons', rating: 1350 })],
+    [makeLivePlayer({ name: 'BetaStrike', profile_id: 1002, team: 1, civ: 'Franks', rating: 1280 })],
+  ],
+  players: [
+    makeLivePlayer({ name: 'AlphaWolf', profile_id: 1001, team: 0, civ: 'Britons', rating: 1350 }),
+    makeLivePlayer({ name: 'BetaStrike', profile_id: 1002, team: 1, civ: 'Franks', rating: 1280 }),
+  ],
+};
+
+export const mockLiveMatches: LiveMatch[] = [
+  mockLiveMatch,
+  {
+    match_id: 90002,
+    map: 'Arena',
+    map_id: 0,
+    matchtype_id: 7, // RM Team
+    game_type: 'RM Team',
+    num_players: 4,
+    start_time: now - 120, // 2 min ago (< 5 min freshness)
+    server: 'EU West',
+    teams: [
+      [
+        makeLivePlayer({ name: 'Player3', profile_id: 1003, team: 0, civ: 'Mongols', rating: 1600 }),
+        makeLivePlayer({ name: 'Player4', profile_id: 1004, team: 0, civ: 'Chinese', rating: 1550 }),
+      ],
+      [
+        makeLivePlayer({ name: 'Player5', profile_id: 1005, team: 1, civ: 'Vikings', rating: 1620 }),
+        makeLivePlayer({ name: 'Player6', profile_id: 1006, team: 1, civ: 'Aztecs', rating: 1580 }),
+      ],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player3', profile_id: 1003, team: 0, civ: 'Mongols', rating: 1600 }),
+      makeLivePlayer({ name: 'Player4', profile_id: 1004, team: 0, civ: 'Chinese', rating: 1550 }),
+      makeLivePlayer({ name: 'Player5', profile_id: 1005, team: 1, civ: 'Vikings', rating: 1620 }),
+      makeLivePlayer({ name: 'Player6', profile_id: 1006, team: 1, civ: 'Aztecs', rating: 1580 }),
+    ],
+  },
+  {
+    match_id: 90003,
+    map: 'Black Forest',
+    map_id: 0,
+    matchtype_id: 18, // QM RM
+    game_type: 'QM RM',
+    num_players: 2,
+    start_time: now - 1200, // 20 min ago (> 15 min freshness)
+    server: 'Asia',
+    teams: [
+      [makeLivePlayer({ name: 'Player7', profile_id: 1007, team: 0, civ: 'Huns', rating: 900 })],
+      [makeLivePlayer({ name: 'Player8', profile_id: 1008, team: 1, civ: 'Goths', rating: 850 })],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player7', profile_id: 1007, team: 0, civ: 'Huns', rating: 900 }),
+      makeLivePlayer({ name: 'Player8', profile_id: 1008, team: 1, civ: 'Goths', rating: 850 }),
+    ],
+  },
+  {
+    match_id: 90004,
+    map: 'Nomad',
+    map_id: 0,
+    matchtype_id: 26, // EW 1v1
+    game_type: 'EW 1v1',
+    num_players: 2,
+    start_time: now - 480, // 8 min ago (5-15 min freshness)
+    server: 'US West',
+    teams: [
+      [makeLivePlayer({ name: 'Player9', profile_id: 1009, team: 0, civ: 'Celts', rating: 1900 })],
+      [makeLivePlayer({ name: 'Player10', profile_id: 1010, team: 1, civ: 'Teutons', rating: 1850 })],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player9', profile_id: 1009, team: 0, civ: 'Celts', rating: 1900 }),
+      makeLivePlayer({ name: 'Player10', profile_id: 1010, team: 1, civ: 'Teutons', rating: 1850 }),
+    ],
+  },
+  {
+    match_id: 90005,
+    map: 'Islands',
+    map_id: 0,
+    matchtype_id: 99, // Other
+    game_type: 'Custom',
+    num_players: 2,
+    start_time: now - 300, // 5 min ago
+    server: 'EU East',
+    teams: [
+      [makeLivePlayer({ name: 'Player11', profile_id: 1011, team: 0, civ: 'Japanese', rating: 1100 })],
+      [makeLivePlayer({ name: 'Player12', profile_id: 1012, team: 1, civ: 'Persians', rating: 1150 })],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player11', profile_id: 1011, team: 0, civ: 'Japanese', rating: 1100 }),
+      makeLivePlayer({ name: 'Player12', profile_id: 1012, team: 1, civ: 'Persians', rating: 1150 }),
+    ],
+  },
+  // Extra matches to get >5 unique maps for ActivityPanel "Other" row test
+  {
+    match_id: 90006,
+    map: 'Hideout',
+    map_id: 0,
+    matchtype_id: 6,
+    game_type: 'RM 1v1',
+    num_players: 2,
+    start_time: now - 400,
+    server: 'US East',
+    teams: [
+      [makeLivePlayer({ name: 'Player13', profile_id: 1013, team: 0, civ: 'Mayans', rating: 1400 })],
+      [makeLivePlayer({ name: 'Player14', profile_id: 1014, team: 1, civ: 'Incas', rating: 1380 })],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player13', profile_id: 1013, team: 0, civ: 'Mayans', rating: 1400 }),
+      makeLivePlayer({ name: 'Player14', profile_id: 1014, team: 1, civ: 'Incas', rating: 1380 }),
+    ],
+  },
+  {
+    match_id: 90007,
+    map: 'MegaRandom',
+    map_id: 0,
+    matchtype_id: 6,
+    game_type: 'RM 1v1',
+    num_players: 2,
+    start_time: now - 700,
+    server: 'EU West',
+    teams: [
+      [makeLivePlayer({ name: 'Player15', profile_id: 1015, team: 0, civ: 'Turks', rating: 2100 })],
+      [makeLivePlayer({ name: 'Player16', profile_id: 1016, team: 1, civ: 'Slavs', rating: 2050 })],
+    ],
+    players: [
+      makeLivePlayer({ name: 'Player15', profile_id: 1015, team: 0, civ: 'Turks', rating: 2100 }),
+      makeLivePlayer({ name: 'Player16', profile_id: 1016, team: 1, civ: 'Slavs', rating: 2050 }),
+    ],
+  },
+];
