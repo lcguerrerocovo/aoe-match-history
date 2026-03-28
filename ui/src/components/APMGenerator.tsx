@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
 
-interface APMStatus {
+export interface APMStatus {
   hasSaveGame: boolean;
   isProcessed: boolean;
   state: 'greyStatus' | 'silverStatus' | 'bronzeStatus';

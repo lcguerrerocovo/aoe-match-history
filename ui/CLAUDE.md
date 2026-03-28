@@ -29,11 +29,20 @@ App                              State owner: matches, filters, profile, stats
     ├── PlayerRating.tsx          Rating badge
     └── APMButton.tsx             APM trigger button
 
-FullMatchSummaryCard/            Single match detail (used by MatchPage)
-├── FullMatchSummaryCard.tsx     Teams, players, ratings
-├── PlayerAvatar.tsx             Steam avatar with link
-├── MapCard.tsx                  Map thumbnail (detail view)
-└── MatchDetails.tsx             Match metadata display
+MatchPage                        Single match detail
+├── FullMatchSummaryCard/        Teams, players, ratings
+│   ├── FullMatchSummaryCard.tsx
+│   ├── PlayerAvatar.tsx         Steam avatar with link
+│   ├── MapCard.tsx              Map thumbnail (detail view)
+│   └── MatchDetails.tsx         Match metadata display
+└── Analysis/                    APM analysis section
+    ├── AnalysisSection.tsx      Container: owns view/player state, renders charts
+    ├── AnalysisHeader.tsx       Title + ChartNav icon toggle
+    ├── ChartNav.tsx             Icon segmented control (APM ↔ Actions)
+    ├── ChartViewport.tsx        Fixed-height scroll frame (shared by both charts)
+    └── index.ts                 Barrel export (AnalysisSection only)
+        ├── → ApmChart.tsx       APM line chart with player legend
+        └── → ApmBreakdownChart/ Action breakdown (stacked bar)
 
 ApmBreakdownChart/               APM chart with player breakdown
 ├── ApmBreakdownChart.tsx        Chart container + data processing
