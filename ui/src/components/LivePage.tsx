@@ -1,22 +1,10 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
-import { keyframes } from '@emotion/react';
 import TopBar from './TopBar';
 import { LiveMatchCard, LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
-import { ActivityPanel, getMatchAvgRating, getEloBracketLabel } from './live';
+import { ActivityPanel, getMatchAvgRating, getEloBracketLabel, VirtualMatchList } from './live';
 import { getLiveMatches } from '../services/liveMatchService';
 import type { LiveMatch } from '../types/liveMatch';
-
-const cardEnter = keyframes`
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const cardFlash = keyframes`
-  0% { background-color: transparent; }
-  30% { background-color: var(--chakra-colors-brand-parchmentDark); }
-  100% { background-color: transparent; }
-`;
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -347,34 +335,18 @@ export function LivePage() {
           )}
 
           {!isLoading && filteredMatches.length > 0 && (
-            <Box w="100%">
-              {filteredMatches.map((match) => {
-                const isNew = newMatchIds.has(match.match_id);
-                return (
-                  <Box
-                    key={match.match_id}
-                    css={isNew ? {
-                      animation: `${cardEnter} 0.4s ease-out, ${cardFlash} 1.2s ease-out`,
-                    } : undefined}
-                    onAnimationEnd={(e) => {
-                      // Only act on the longer animation (cardFlash 1.2s) to avoid double state updates
-                      if (isNew && e.animationName === cardFlash.name) {
-                        setNewMatchIds(prev => {
-                          const next = new Set(prev);
-                          next.delete(match.match_id);
-                          return next;
-                        });
-                      }
-                    }}
-                  >
-                    <LiveMatchCard
-                      match={match}
-                      avgRating={allAvgRatings.get(match.match_id)}
-                    />
-                  </Box>
-                );
-              })}
-            </Box>
+            <VirtualMatchList
+              matches={filteredMatches}
+              avgRatings={allAvgRatings}
+              newMatchIds={newMatchIds}
+              onNewMatchAnimated={(matchId) => {
+                setNewMatchIds(prev => {
+                  const next = new Set(prev);
+                  next.delete(matchId);
+                  return next;
+                });
+              }}
+            />
           )}
 
           {!isLoading && matches.length > 0 && filteredMatches.length === 0 && (
