@@ -20,7 +20,7 @@ const cardFlash = keyframes`
 
 const REFRESH_INTERVAL_MS = 30_000;
 
-const GAME_TYPE_CATEGORIES = ['All', 'RM 1v1', 'RM Team', 'QM RM', 'QM RM Team', 'EW 1v1', 'EW Team', 'QM EW', 'QM EW Team', 'Other'] as const;
+const GAME_TYPE_CATEGORIES = ['RM 1v1', 'RM Team', 'QM RM', 'QM RM Team', 'EW 1v1', 'EW Team', 'QM EW', 'QM EW Team', 'Other'] as const;
 type GameTypeCategory = typeof GAME_TYPE_CATEGORIES[number];
 
 function categorizeMatchType(matchtypeId: number): GameTypeCategory {
@@ -48,7 +48,6 @@ const GameTypeTabs = memo(function GameTypeTabs({
 }) {
   const counts = useMemo(() => {
     const map = new Map<GameTypeCategory, number>();
-    map.set('All', matches.length);
     for (const m of matches) {
       const cat = categorizeMatchType(m.matchtype_id);
       map.set(cat, (map.get(cat) || 0) + 1);
@@ -61,7 +60,7 @@ const GameTypeTabs = memo(function GameTypeTabs({
       {GAME_TYPE_CATEGORIES.map((cat) => {
         const count = counts.get(cat) || 0;
         const isActive = selected === cat;
-        if (cat !== 'All' && count === 0) return null;
+        if (count === 0) return null;
         return (
           <Box
             key={cat}
@@ -94,7 +93,7 @@ export function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<GameTypeCategory>('All');
+  const [selectedCategory, setSelectedCategory] = useState<GameTypeCategory>('RM 1v1');
   const [selectedMap, setSelectedMap] = useState('');
   const [selectedEloBracket, setSelectedEloBracket] = useState('');
   const [civFilter, setCivFilter] = useState('');
@@ -121,7 +120,6 @@ export function LivePage() {
 
   // Matches filtered by game type tab only (used for filter option counts)
   const categoryFilteredMatches = useMemo(() => {
-    if (selectedCategory === 'All') return matches;
     return matches.filter((m) => categorizeMatchType(m.matchtype_id) === selectedCategory);
   }, [matches, selectedCategory]);
 

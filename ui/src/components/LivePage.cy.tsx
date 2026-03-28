@@ -48,7 +48,6 @@ describe('LivePage', () => {
     cy.contains('Arabia').should('be.visible');
 
     // Tabs
-    cy.contains('All').should('be.visible');
     cy.contains('RM 1v1').should('be.visible');
 
     // ActivityPanel
