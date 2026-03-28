@@ -4,9 +4,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
 import TopBar from './TopBar';
 
-const mountWithChakra = (children: React.ReactNode) => {
+const mountWithChakra = (children: React.ReactNode, initialRoute = '/') => {
   mount(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialRoute]}>
       <CustomThemeProvider>{children}</CustomThemeProvider>
     </MemoryRouter>
   );
@@ -87,6 +87,47 @@ describe('TopBar responsiveness', () => {
         expect(Math.abs(titleTop - toggleTop)).to.be.lessThan(20);
       });
     });
+  });
+
+  it('shows mobile nav row with Live link', () => {
+    cy.viewport(375, 667);
+    mountWithChakra(<TopBar />);
+
+    // Nav row should exist with a Live link pointing to /live
+    cy.get('[data-testid="mobile-nav"]').should('be.visible');
+    cy.get('[data-testid="mobile-nav"]').contains('a', 'Live')
+      .should('be.visible')
+      .and('have.attr', 'href', '/live');
+  });
+
+  it('shows active state on Live nav link when on /live route', () => {
+    cy.viewport(375, 667);
+    mountWithChakra(<TopBar />, '/live');
+
+    cy.get('[data-testid="mobile-nav"]').contains('a', 'Live').then($link => {
+      const opacity = parseFloat($link.css('opacity'));
+      expect(opacity).to.eq(1);
+      // Active link should have a visible (non-transparent) bottom border
+      const borderColor = $link.css('border-bottom-color');
+      expect(borderColor).to.not.eq('rgba(0, 0, 0, 0)');
+    });
+  });
+
+  it('shows inactive state on Live nav link when on other routes', () => {
+    cy.viewport(375, 667);
+    mountWithChakra(<TopBar />, '/');
+
+    cy.get('[data-testid="mobile-nav"]').contains('a', 'Live').then($link => {
+      const opacity = parseFloat($link.css('opacity'));
+      expect(opacity).to.be.lessThan(1);
+    });
+  });
+
+  it('hides mobile nav row on desktop', () => {
+    cy.viewport(1280, 800);
+    mountWithChakra(<TopBar />, '/live');
+
+    cy.get('[data-testid="mobile-nav"]').should('not.be.visible');
   });
 
   it('maintains responsive behavior when switching viewports', () => {

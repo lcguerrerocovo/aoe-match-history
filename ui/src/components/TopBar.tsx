@@ -4,7 +4,7 @@ import { system } from "../theme/theme";
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
 import type { PlayerSearchResult } from './PlayerSearch';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
@@ -14,7 +14,12 @@ const TopBar = () => {
   const layout = useLayoutConfig();
   const contentMaxWidth = layout?.matchList?.width || '100%';
   const navigate = useNavigate();
+  const location = useLocation();
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const mobileNavItems = [
+    { label: 'Live', path: '/live', dot: true },
+  ];
 
   function handlePlayerSelect(player: PlayerSearchResult) {
     navigate(`/profile_id/${player.id}`);
@@ -148,24 +153,42 @@ const TopBar = () => {
           </Box>
         </Flex>
 
-        {/* Mobile: Live link */}
-        <Box
-          display={{ base: 'block', md: 'none' }}
-          textAlign="center"
+        {/* Mobile: Nav row */}
+        <Flex
+          display={{ base: 'flex', md: 'none' }}
+          justify="center"
+          gap={5}
           mb={2}
+          overflowX="auto"
+          data-testid="mobile-nav"
         >
-          <Flex
-            align="center"
-            gap={1.5}
-            justify="center"
-            fontSize="xs"
-            color="brand.topbarText"
-            opacity={0.8}
-            letterSpacing="wide"
-            textTransform="uppercase"
-            asChild
-          ><RouterLink to="/live"><PulsingDot size="6px" />Live Matches</RouterLink></Flex>
-        </Box>
+          {mobileNavItems.map(({ label, path, dot }) => {
+            const isActive = location.pathname === path;
+            return (
+              <Flex
+                key={path}
+                align="center"
+                gap={1.5}
+                fontSize="xs"
+                color={isActive ? 'brand.redChalk' : 'brand.topbarText'}
+                opacity={isActive ? 1 : 0.6}
+                letterSpacing="wide"
+                textTransform="uppercase"
+                borderBottomWidth="2px"
+                borderBottomStyle="solid"
+                borderColor={isActive ? 'brand.redChalk' : 'transparent'}
+                pb={0.5}
+                _hover={{ opacity: 1 }}
+                asChild
+              >
+                <RouterLink to={path}>
+                  {dot && <PulsingDot size="6px" />}
+                  {label}
+                </RouterLink>
+              </Flex>
+            );
+          })}
+        </Flex>
 
         {/* Mobile search bar - below title */}
         <Box
