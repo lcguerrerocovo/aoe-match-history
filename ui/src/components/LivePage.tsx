@@ -356,7 +356,7 @@ export function LivePage() {
                     css={isNew ? {
                       animation: `${cardEnter} 0.4s ease-out, ${cardFlash} 1.2s ease-out`,
                     } : undefined}
-                    onAnimationEnd={(e: React.AnimationEvent) => {
+                    onAnimationEnd={(e) => {
                       // Only act on the longer animation (cardFlash 1.2s) to avoid double state updates
                       if (isNew && e.animationName === cardFlash.name) {
                         setNewMatchIds(prev => {

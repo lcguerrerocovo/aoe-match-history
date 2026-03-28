@@ -158,10 +158,8 @@ export function LiveMatchCard({
 }) {
   // When tick is provided (from LivePage), use it to drive elapsed updates via a single parent timer.
   // When not provided (ProfileLiveMatch), fall back to an internal interval.
-  const externalElapsed = useMemo(
-    () => formatElapsed(match.start_time),
-    [match.start_time, tick],
-  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- tick intentionally triggers recalculation
+  const externalElapsed = useMemo(() => formatElapsed(match.start_time), [match.start_time, tick]);
 
   const [internalElapsed, setInternalElapsed] = useState(formatElapsed(match.start_time));
   useEffect(() => {
