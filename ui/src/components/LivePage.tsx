@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import TopBar from './TopBar';
 import { LiveMatchCard, LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
 import { ActivityPanel, getMatchAvgRating, getEloBracketLabel, VirtualMatchList } from './live';
-import { getLiveMatches } from '../services/liveMatchService';
+import { getLiveMatches, getLiveRatings } from '../services/liveMatchService';
 import type { LiveMatch } from '../types/liveMatch';
 
 const REFRESH_INTERVAL_MS = 30_000;
@@ -179,6 +179,27 @@ export function LivePage() {
       setMatches(data);
       setError(null);
       setIsLoading(false);
+
+      // Async ratings enrichment (non-blocking)
+      const allProfileIds = [...new Set(data.flatMap(m => m.players.map(p => p.profile_id)))];
+      if (allProfileIds.length > 0) {
+        getLiveRatings(allProfileIds).then(ratings => {
+          if (ratings.size === 0) return;
+          setMatches(prev => prev.map(match => ({
+            ...match,
+            players: match.players.map(p => ({
+              ...p,
+              rating: ratings.get(p.profile_id) ?? p.rating,
+            })),
+            teams: match.teams.map(team =>
+              team.map(p => ({
+                ...p,
+                rating: ratings.get(p.profile_id) ?? p.rating,
+              }))
+            ),
+          })));
+        });
+      }
     } catch (err) {
       // Ignore aborted fetches (superseded by a newer request)
       if (err instanceof DOMException && err.name === 'AbortError') return;

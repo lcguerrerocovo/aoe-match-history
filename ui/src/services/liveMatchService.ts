@@ -32,6 +32,27 @@ export async function getLiveMatches(): Promise<LiveMatch[]> {
   }
 }
 
+export async function getLiveRatings(profileIds: number[]): Promise<Map<number, number>> {
+  if (profileIds.length === 0) return new Map();
+
+  const url = `${API_URL}/live/ratings?profile_ids=${profileIds.join(',')}`;
+  const response = await fetch(url, {
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!response.ok) {
+    console.warn('Failed to fetch live ratings:', response.status);
+    return new Map();
+  }
+
+  const data: Record<string, number> = await response.json();
+  const map = new Map<number, number>();
+  for (const [id, rating] of Object.entries(data)) {
+    map.set(Number(id), rating);
+  }
+  return map;
+}
+
 export async function getLiveMatchForPlayer(profileId: number): Promise<LiveMatch | null> {
   try {
     const response = await fetch(`${API_URL}/live?profile_ids=${profileId}`, {
