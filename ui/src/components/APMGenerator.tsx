@@ -115,14 +115,14 @@ export function APMGenerator({
   const tooltipLabel = error
     ? error
     : processing
-      ? 'Processing replay...'
+      ? 'Processing...'
       : isLoading
-        ? 'Checking APM status...'
+        ? 'Checking...'
         : isBronze
-          ? 'APM Ready'
+          ? 'View analysis'
           : ready
-            ? 'Download & Process Replay'
-            : 'Replay not found';
+            ? 'Generate analysis'
+            : 'Replay not available';
 
   const clickable = (ready && !processing && !isLoading) || isBronze;
   const borderColor = error
@@ -161,7 +161,9 @@ export function APMGenerator({
           <Spinner size="xs" color="brand.stoneLight" />
         ) : (
           <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
-            <polyline points="1,8 4,3 7,6 9,2" stroke="currentColor" strokeWidth={1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <rect x="1" y="5" width="2" height="4" rx="0.5" fill="currentColor" />
+            <rect x="4" y="3" width="2" height="6" rx="0.5" fill="currentColor" />
+            <rect x="7" y="1" width="2" height="8" rx="0.5" fill="currentColor" />
           </svg>
         )}
       </Box>

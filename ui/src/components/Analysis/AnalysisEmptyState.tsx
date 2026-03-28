@@ -29,7 +29,7 @@ export function AnalysisEmptyState({
     return (
       <Flex direction="column" align="center" justify="center" h="100%" w="100%" gap={3}>
         <Spinner size="md" color="brand.inkMuted" />
-        <Text fontSize="sm" color="brand.inkMuted">Processing replay...</Text>
+        <Text fontSize="sm" color="brand.inkMuted">Processing match...</Text>
       </Flex>
     );
   }

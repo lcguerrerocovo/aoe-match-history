@@ -1,5 +1,4 @@
-import { HStack, IconButton, Box } from '@chakra-ui/react';
-import { Tooltip } from '../ui/tooltip';
+import { HStack, Box, Text, Flex } from '@chakra-ui/react';
 export type AnalysisView = 'apm' | 'actions';
 
 interface ChartNavProps {
@@ -10,7 +9,7 @@ interface ChartNavProps {
 
 function ApmIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
       <polyline points="1,8 4,3 7,6 9,2" />
     </svg>
   );
@@ -18,7 +17,7 @@ function ApmIcon() {
 
 function ActionsIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5}>
+    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <rect x="1" y="1" width="3" height="8" rx="0.5" />
       <rect x="5" y="3" width="3" height="6" rx="0.5" />
       <line x1="2.5" y1="5" x2="2.5" y2="5.01" strokeWidth={2} />
@@ -27,15 +26,12 @@ function ActionsIcon() {
   );
 }
 
-export function ChartNav({ activeView, onChangeView, disabled }: ChartNavProps) {
-  const buttonStyle = (isActive: boolean) => ({
-    bg: isActive ? 'brand.parchmentDark' : 'transparent',
-    color: isActive ? 'brand.inkDark' : 'brand.inkMuted',
-    borderRadius: 'sm',
-    boxShadow: isActive ? 'sm' : 'none',
-    _hover: isActive ? {} : { color: 'brand.redChalk' },
-  });
+const navItems: Array<{ view: AnalysisView; label: string; icon: React.FC }> = [
+  { view: 'apm', label: 'APM', icon: ApmIcon },
+  { view: 'actions', label: 'Actions', icon: ActionsIcon },
+];
 
+export function ChartNav({ activeView, onChangeView, disabled }: ChartNavProps) {
   return (
     <HStack
       bg="brand.stoneLight"
@@ -45,42 +41,32 @@ export function ChartNav({ activeView, onChangeView, disabled }: ChartNavProps) 
       p="2px"
       gap="2px"
     >
-      <Tooltip content="APM over time">
-        <Box>
-          <IconButton
-            aria-label="APM over time"
-            size="xs"
-            variant="ghost"
-            w="32px"
-            h="32px"
-            onClick={() => onChangeView('apm')}
-            disabled={disabled}
+      {navItems.map(({ view, label, icon: Icon }) => {
+        const isActive = activeView === view;
+        return (
+          <Box
+            key={view}
+            as="button"
+            onClick={() => !disabled && onChangeView(view)}
+            aria-disabled={disabled || undefined}
+            bg={isActive ? 'brand.parchmentDark' : 'transparent'}
+            color={isActive ? 'brand.inkDark' : 'brand.inkMuted'}
+            borderRadius="sm"
+            boxShadow={isActive ? 'sm' : 'none'}
+            _hover={isActive || disabled ? {} : { color: 'brand.redChalk' }}
             opacity={disabled ? 0.4 : 1}
             cursor={disabled ? 'not-allowed' : 'pointer'}
-            {...buttonStyle(activeView === 'apm')}
+            px={2}
+            py={1}
+            transition="all 0.15s"
           >
-            <ApmIcon />
-          </IconButton>
-        </Box>
-      </Tooltip>
-      <Tooltip content="Action breakdown">
-        <Box>
-          <IconButton
-            aria-label="Action breakdown"
-            size="xs"
-            variant="ghost"
-            w="32px"
-            h="32px"
-            onClick={() => onChangeView('actions')}
-            disabled={disabled}
-            opacity={disabled ? 0.4 : 1}
-            cursor={disabled ? 'not-allowed' : 'pointer'}
-            {...buttonStyle(activeView === 'actions')}
-          >
-            <ActionsIcon />
-          </IconButton>
-        </Box>
-      </Tooltip>
+            <Flex align="center" gap={1.5}>
+              <Icon />
+              <Text fontSize="xs" fontWeight="semibold" lineHeight="1">{label}</Text>
+            </Flex>
+          </Box>
+        );
+      })}
     </HStack>
   );
 }
