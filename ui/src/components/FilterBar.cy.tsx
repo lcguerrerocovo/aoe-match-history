@@ -22,13 +22,13 @@ describe('FilterBar Responsive Layout', () => {
 
     // Test mobile view
     cy.viewport(400, 600);
-    cy.get('input[placeholder="Search matches..."]').should('be.visible');
+    cy.get('input[placeholder="Filter matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
     cy.get('button[aria-label*="Sort"]').should('be.visible');
 
     // Test desktop view
     cy.viewport(1200, 800);
-    cy.get('input[placeholder="Search matches..."]').should('be.visible');
+    cy.get('input[placeholder="Filter matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
     cy.get('button[aria-label*="Sort"]').should('be.visible');
   });
@@ -65,7 +65,7 @@ describe('FilterBar Responsive Layout', () => {
     });
 
     // All filter elements should be visible
-    cy.get('input[placeholder="Search matches..."]').should('be.visible');
+    cy.get('input[placeholder="Filter matches..."]').should('be.visible');
     cy.get('select').should('have.length', 2);
     cy.get('button[aria-label*="Sort"]').should('be.visible');
   });
