@@ -189,43 +189,41 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                             {/* Date Header */}
                             <Box bg="brand.sessionHeaderBg" p={1} borderBottom="2px solid" borderBottomColor="brand.bronze">
                               {/* Mobile */}
-                              <HStack gap={1} alignItems="flex-start" display={{ base: "flex", md: "none" }}>
-                                <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="1px">
+                              <HStack gap={1} alignItems="baseline" display={{ base: "flex", md: "none" }}>
+                                <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif">
                                   {timingData.dateDisplay.charAt(0)}
                                 </Text>
-                                <VStack gap={0} align="flex-start">
-                                  <HStack gap={1} align="center">
-                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
-                                    {timingData.isCrossDay && (
-                                      <svg width="14" height="14" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
-                                      </svg>
-                                    )}
-                                  </HStack>
-                                  {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="xs">{timingData.timeRange}</Text>
-                                  )}
-                                </VStack>
+                                <Text fontWeight="bold" color="brand.inkDark" fontSize="sm" fontFamily="'Lora', serif">{timingData.dateDisplay.slice(1)}</Text>
+                                {timingData.isCrossDay && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
+                                  </svg>
+                                )}
+                                {timingData.timeRange && (
+                                  <>
+                                    <Text color="brand.inkMuted" fontSize="xs">·</Text>
+                                    <Text fontStyle="italic" color="brand.inkMuted" fontSize="xs" fontFamily="'Lora', serif">{timingData.timeRange}</Text>
+                                  </>
+                                )}
                               </HStack>
 
                               {/* Desktop */}
-                              <HStack gap={1} alignItems="flex-start" display={{ base: "none", md: "flex" }}>
-                                <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="2px">
+                              <HStack gap={1} alignItems="baseline" display={{ base: "none", md: "flex" }}>
+                                <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif">
                                   {timingData.dateDisplay.charAt(0)}
                                 </Text>
-                                <VStack gap={0} align="flex-start">
-                                  <HStack gap="6px" align="center">
-                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="md">{timingData.dateDisplay.slice(1)}</Text>
-                                    {timingData.isCrossDay && (
-                                      <svg width="18" height="18" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
-                                      </svg>
-                                    )}
-                                  </HStack>
-                                  {timingData.timeRange && (
-                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
-                                  )}
-                                </VStack>
+                                <Text fontWeight="bold" color="brand.inkDark" fontSize="md" fontFamily="'Lora', serif">{timingData.dateDisplay.slice(1)}</Text>
+                                {timingData.isCrossDay && (
+                                  <svg width="18" height="18" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
+                                  </svg>
+                                )}
+                                {timingData.timeRange && (
+                                  <>
+                                    <Text color="brand.inkMuted" fontSize="sm">·</Text>
+                                    <Text fontStyle="italic" color="brand.inkMuted" fontSize="13px" fontFamily="'Lora', serif">{timingData.timeRange}</Text>
+                                  </>
+                                )}
                               </HStack>
                             </Box>
 
