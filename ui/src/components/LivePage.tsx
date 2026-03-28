@@ -183,7 +183,11 @@ export function LivePage() {
 
   const hasActiveFilters = selectedMap !== '' || selectedEloBracket !== '' || civFilter !== '';
 
-  const fetchMatches = async () => {
+  const fetchingRef = useRef(false);
+
+  const fetchMatches = useCallback(async () => {
+    if (fetchingRef.current) return; // skip if previous fetch still in-flight
+    fetchingRef.current = true;
     try {
       const data = await getLiveMatches();
       // Detect newly appeared matches for enter animation
@@ -196,11 +200,14 @@ export function LivePage() {
       setMatches(data);
       setError(null);
     } catch (err) {
+      // Ignore aborted fetches (superseded by a newer request)
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Failed to load live matches');
     } finally {
       setIsLoading(false);
+      fetchingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMatches();
@@ -208,7 +215,7 @@ export function LivePage() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [fetchMatches]);
 
   return (
     <>

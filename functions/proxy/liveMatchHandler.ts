@@ -301,7 +301,7 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
     }
 
     const headers = {
-        'Cache-Control': 'public, max-age=30',
+        'Cache-Control': 'public, s-maxage=30, max-age=10',
         'Vary': 'Accept-Encoding',
     };
 
