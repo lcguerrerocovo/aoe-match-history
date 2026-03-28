@@ -250,16 +250,6 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
 
     const matches = await normalizeMatches(allRawMatches, allRawPlayers);
 
-    // Enrich players with ELO ratings from PostgreSQL
-    const allProfileIds = [...new Set(matches.flatMap(m => m.players.map(p => p.profile_id)))];
-    const ratings = await fetchPlayerRatings(allProfileIds);
-    for (const match of matches) {
-        for (const player of match.players) {
-            const rating = ratings.get(player.profile_id);
-            if (rating != null) player.rating = rating;
-        }
-    }
-
     log.info({ matchCount: matches.length, pages: page + 1 }, 'Live matches normalized');
     return matches;
 }
@@ -311,6 +301,39 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
     }
 
     return pendingFetch;
+}
+
+export async function handleLiveRatings(queryString?: string): Promise<HandlerResponse<Record<string, number>>> {
+    const profileIds: number[] = [];
+    if (queryString) {
+        const params = new URLSearchParams(queryString.replace(/^\?/, ''));
+        const raw = params.get('profile_ids');
+        if (raw) {
+            profileIds.push(...raw.split(',').map(Number).filter(id => !isNaN(id) && id > 0));
+        }
+    }
+
+    if (profileIds.length === 0 || profileIds.length > 2000) {
+        return {
+            data: {},
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+        };
+    }
+
+    const ratings = await fetchPlayerRatings(profileIds);
+
+    const ratingsObj: Record<string, number> = {};
+    ratings.forEach((rating, profileId) => {
+        ratingsObj[String(profileId)] = rating;
+    });
+
+    return {
+        data: ratingsObj,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, s-maxage=60, max-age=30',
+        },
+    };
 }
 
 export async function handleLiveMatches(queryString?: string): Promise<HandlerResponse<LiveMatch[]>> {

@@ -11,7 +11,7 @@ import { handleFullMatchHistory } from './fullMatchHistoryHandler';
 import { handleGameMatchHistory, handleProcessedGameMatchHistory } from './gameMatchHandlers';
 import { handleReplayDownload } from './replayDownloadHandler';
 import { checkReplayAvailability, checkApmStatus } from './replayService';
-import { handleLiveMatches } from './liveMatchHandler';
+import { handleLiveMatches, handleLiveRatings } from './liveMatchHandler';
 import type { HandlerResponse } from './types';
 
 const corsMiddleware = cors({
@@ -140,6 +140,10 @@ const routes: Route[] = [
         }
       };
     }
+  },
+  {
+    pattern: /^\/api\/live\/ratings(\?.*)?$/,
+    handler: handleLiveRatings
   },
   {
     pattern: /^\/api\/live(\?.*)?$/,
