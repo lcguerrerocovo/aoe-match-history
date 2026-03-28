@@ -21,6 +21,7 @@ describe('LivePage', () => {
     cy.clock();
   });
 
+
   it('shows crafted empty state when no matches', () => {
     cy.intercept('GET', '/api/live', { body: [] }).as('live');
     mountWithProviders(<LivePage />);
