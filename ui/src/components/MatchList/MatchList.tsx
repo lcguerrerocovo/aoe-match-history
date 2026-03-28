@@ -72,9 +72,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             return (
               <Accordion.Item
                 key={group.date}
-                border={isFlatMode ? 'none' : '1px solid'}
-                borderColor="brand.inkLight"
-                mb={isFlatMode ? 0 : 1}
+                borderBottom={isFlatMode ? 'none' : '1px solid'}
+                borderBottomColor="brand.inkLight"
                 position="relative"
                 value={group.date}>
                 {/* Margin annotation — desktop only, hidden in flat mode */}
