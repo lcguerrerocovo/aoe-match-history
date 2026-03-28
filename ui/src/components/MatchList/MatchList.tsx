@@ -127,7 +127,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                             color="brand.inkMuted"
                             mb={1}
                           >
-                            {toRoman(group.matches.length)} matches played · {timingData.sessionDuration}
+                            <Text as="span" fontSize={{ base: '12px', md: '13px' }} fontStyle="normal">{toRoman(group.matches.length)}</Text> matches played · {timingData.sessionDuration}
                             {timingData.avgGapMinutes >= 2 && group.matches.length > 1 && ` (~${timingData.avgGapMinutes}m between games)`}
                           </Text>
 
