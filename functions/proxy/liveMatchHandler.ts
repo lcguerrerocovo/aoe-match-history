@@ -8,7 +8,8 @@ const log = logger.child({ module: 'LiveMatches' });
 
 const PAGE_SIZE = 200;
 const MAX_PAGES = 5; // 1000 matches max
-const CACHE_TTL_MS = 25_000; // serve cached results for 25s (UI polls every 30s)
+const CACHE_TTL_MS = 25_000; // fresh: serve immediately
+const CACHE_STALE_TTL_MS = 60_000; // stale: serve while revalidating in background
 
 let cachedResponse: { data: LiveMatch[]; timestamp: number } | null = null;
 let pendingFetch: Promise<LiveMatch[]> | null = null;
@@ -268,16 +269,39 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
  * Concurrent requests share the same in-flight fetch.
  */
 async function getCachedLiveMatches(): Promise<LiveMatch[]> {
-    if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_TTL_MS) {
-        log.debug({ age: Date.now() - cachedResponse.timestamp, matchCount: cachedResponse.data.length }, 'Serving cached live matches');
+    const now = Date.now();
+    const age = cachedResponse ? now - cachedResponse.timestamp : Infinity;
+
+    // Fresh cache — serve immediately
+    if (cachedResponse && age < CACHE_TTL_MS) {
+        log.debug({ age, matchCount: cachedResponse.data.length }, 'Serving cached live matches');
         return cachedResponse.data;
     }
 
-    // Coalesce concurrent requests — share the same in-flight fetch
+    // Stale cache — serve immediately but trigger background refresh
+    if (cachedResponse && age < CACHE_STALE_TTL_MS) {
+        log.debug({ age, matchCount: cachedResponse.data.length }, 'Serving stale live matches, refreshing in background');
+        if (!pendingFetch) {
+            pendingFetch = fetchAllLiveMatches()
+                .then(data => {
+                    if (data.length > 0) {
+                        cachedResponse = { data, timestamp: Date.now() };
+                    }
+                    return data;
+                })
+                .catch(err => {
+                    log.warn({ error: (err as Error).message }, 'Background live matches refresh failed');
+                    return cachedResponse?.data ?? [];
+                })
+                .finally(() => { pendingFetch = null; });
+        }
+        return cachedResponse.data;
+    }
+
+    // No cache or expired — must wait for fresh data
     if (!pendingFetch) {
         pendingFetch = fetchAllLiveMatches()
             .then(data => {
-                // Don't cache empty responses — they may be transient Relic API blips
                 if (data.length > 0) {
                     cachedResponse = { data, timestamp: Date.now() };
                 }

@@ -26,15 +26,16 @@ describe('SessionManager', () => {
       _data: { callNumber: 5 },
       data: jest.fn(function() { return this._data; }),
       set: jest.fn(function(obj) { this._data = obj; }),
-      update: jest.fn(function(obj) { 
+      update: jest.fn(function(obj) {
         if (obj.callNumber && typeof obj.callNumber === 'object' && obj.callNumber.increment) {
           // Handle Firestore.FieldValue.increment(1)
           this._data.callNumber = (this._data.callNumber || 0) + 1;
         } else {
           Object.assign(this._data, obj);
         }
+        return Promise.resolve();
       }),
-      delete: jest.fn(),
+      delete: jest.fn().mockResolvedValue(undefined),
       get: jest.fn(() => Promise.resolve(mockDoc))
     };
 
