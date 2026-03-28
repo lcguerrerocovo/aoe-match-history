@@ -188,7 +188,11 @@ export function APMGenerator({
           transition="all 0.2s ease-in-out"
           {...linkProps}
         >
-          {processing ? <Spinner size="xs" color="brand.inkMuted" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : 'APM'}
+          {processing ? <Spinner size="xs" color="brand.inkMuted" /> : isLoading ? <Spinner size="xs" color="brand.stoneLight" /> : (
+                    <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+                      <polyline points="1,8 4,3 7,6 9,2" stroke="currentColor" strokeWidth={1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
         </Box>
       </Tooltip>
     );

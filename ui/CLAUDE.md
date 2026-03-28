@@ -27,7 +27,7 @@ App                              State owner: matches, filters, profile, stats
     ├── MapCard.tsx               Diamond-rotated map thumbnail (list view)
     ├── TeamCard.tsx              Team layout with player rows
     ├── PlayerRating.tsx          Rating badge
-    └── APMButton.tsx             APM trigger button
+    └── AnalysisButton.tsx        Analysis trigger button
 
 MatchPage                        Single match detail
 ├── FullMatchSummaryCard/        Teams, players, ratings
