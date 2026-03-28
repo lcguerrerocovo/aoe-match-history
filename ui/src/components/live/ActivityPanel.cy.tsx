@@ -4,8 +4,14 @@ import React from 'react';
 import { mount } from '@cypress/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CustomThemeProvider } from '../../theme/ThemeProvider';
-import { ActivityPanel } from './ActivityPanel';
+import { ActivityPanel, getMatchAvgRating } from './ActivityPanel';
 import { mockLiveMatches } from '../../test/mocks';
+
+function buildAvgRatings(matches: typeof mockLiveMatches) {
+  const map = new Map<number, number | null>();
+  for (const m of matches) map.set(m.match_id, getMatchAvgRating(m));
+  return map;
+}
 
 const mountWithProviders = (children: React.ReactNode) => {
   mount(
@@ -18,6 +24,7 @@ const mountWithProviders = (children: React.ReactNode) => {
 describe('ActivityPanel', () => {
   const defaultProps = {
     matches: mockLiveMatches,
+    avgRatings: buildAvgRatings(mockLiveMatches),
     selectedMap: '',
     selectedEloBracket: '',
     onMapSelect: () => {},

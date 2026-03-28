@@ -1,5 +1,5 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import { keyframes } from '@emotion/react';
 import TopBar from './TopBar';
 import { LiveMatchCard, LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
@@ -37,7 +37,7 @@ function categorizeMatchType(matchtypeId: number): GameTypeCategory {
   }
 }
 
-function GameTypeTabs({
+const GameTypeTabs = memo(function GameTypeTabs({
   matches,
   selected,
   onSelect,
@@ -88,7 +88,7 @@ function GameTypeTabs({
       })}
     </HStack>
   );
-}
+});
 
 export function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
@@ -101,13 +101,6 @@ export function LivePage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevMatchIdsRef = useRef<Set<number>>(new Set());
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());
-  const [tick, setTick] = useState(0);
-
-  // Single 1s timer for all card elapsed counters
-  useEffect(() => {
-    const timer = setInterval(() => setTick(t => t + 1), 1_000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Reset map/ELO filters when game type tab changes
   const handleCategorySelect = useCallback((cat: GameTypeCategory) => {
@@ -116,6 +109,15 @@ export function LivePage() {
     setSelectedEloBracket('');
     setCivFilter('');
   }, []);
+
+  // Pre-compute avg ratings ONCE for all matches — shared across all filter chains
+  const allAvgRatings = useMemo(() => {
+    const map = new Map<number, number | null>();
+    for (const m of matches) {
+      map.set(m.match_id, getMatchAvgRating(m));
+    }
+    return map;
+  }, [matches]);
 
   // Matches filtered by game type tab only (used for filter option counts)
   const categoryFilteredMatches = useMemo(() => {
@@ -131,7 +133,7 @@ export function LivePage() {
     }
     if (selectedEloBracket) {
       source = source.filter((m) => {
-        const avg = getMatchAvgRating(m);
+        const avg = allAvgRatings.get(m.match_id);
         return avg != null && getEloBracketLabel(avg) === selectedEloBracket;
       });
     }
@@ -142,7 +144,7 @@ export function LivePage() {
       }
     }
     return Array.from(civs).sort();
-  }, [categoryFilteredMatches, selectedMap, selectedEloBracket]);
+  }, [categoryFilteredMatches, selectedMap, selectedEloBracket, allAvgRatings]);
 
   // Civ suggestions filtered by typed text
   const civSuggestions = useMemo(() => {
@@ -159,7 +161,7 @@ export function LivePage() {
     }
     if (selectedEloBracket) {
       result = result.filter((m) => {
-        const avg = getMatchAvgRating(m);
+        const avg = allAvgRatings.get(m.match_id);
         return avg != null && getEloBracketLabel(avg) === selectedEloBracket;
       });
     }
@@ -170,16 +172,7 @@ export function LivePage() {
       );
     }
     return result;
-  }, [categoryFilteredMatches, selectedMap, selectedEloBracket, civFilter]);
-
-  // Pre-compute avg ratings for filtered matches
-  const avgRatings = useMemo(() => {
-    const map = new Map<number, number | null>();
-    for (const m of filteredMatches) {
-      map.set(m.match_id, getMatchAvgRating(m));
-    }
-    return map;
-  }, [filteredMatches]);
+  }, [categoryFilteredMatches, selectedMap, selectedEloBracket, civFilter, allAvgRatings]);
 
   const hasActiveFilters = selectedMap !== '' || selectedEloBracket !== '' || civFilter !== '';
 
@@ -264,6 +257,7 @@ export function LivePage() {
             <ActivityPanel
               key={selectedCategory}
               matches={categoryFilteredMatches}
+              avgRatings={allAvgRatings}
               selectedMap={selectedMap}
               selectedEloBracket={selectedEloBracket}
               onMapSelect={setSelectedMap}
@@ -377,8 +371,7 @@ export function LivePage() {
                   >
                     <LiveMatchCard
                       match={match}
-                      avgRating={avgRatings.get(match.match_id)}
-                      tick={tick}
+                      avgRating={allAvgRatings.get(match.match_id)}
                     />
                   </Box>
                 );

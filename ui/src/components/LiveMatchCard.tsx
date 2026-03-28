@@ -1,6 +1,6 @@
 import { Box, VStack, Text, Flex, Link, Icon } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useRef, memo } from 'react';
 import { keyframes } from '@emotion/react';
 import { FiEye } from 'react-icons/fi';
 import type { LiveMatch, LiveMatchPlayer } from '../types/liveMatch';
@@ -49,7 +49,7 @@ function formatElapsed(startTime: number): string {
   return `${minutes}:${pad(secs)}`;
 }
 
-export function PlayerRow({ player, isHighlighted, rowIndex = 0 }: { player: LiveMatchPlayer; isHighlighted?: boolean; rowIndex?: number }) {
+export const PlayerRow = memo(function PlayerRow({ player, isHighlighted, rowIndex = 0 }: { player: LiveMatchPlayer; isHighlighted?: boolean; rowIndex?: number }) {
   const hasCiv = typeof player.civ === 'string' && player.civ !== '0';
 
   return (
@@ -111,7 +111,7 @@ export function PlayerRow({ player, isHighlighted, rowIndex = 0 }: { player: Liv
       )}
     </Flex>
   );
-}
+});
 
 function DiamondMap({ mapName }: { mapName: string }) {
   const [imgError, setImgError] = useState(false);
@@ -145,33 +145,26 @@ function DiamondMap({ mapName }: { mapName: string }) {
   );
 }
 
-export function LiveMatchCard({
+export const LiveMatchCard = memo(function LiveMatchCard({
   match,
   highlightProfileId,
   avgRating,
-  tick,
 }: {
   match: LiveMatch;
   highlightProfileId?: number;
   avgRating?: number | null;
-  tick?: number;
 }) {
-  // When tick is provided (from LivePage), use it to drive elapsed updates via a single parent timer.
-  // When not provided (ProfileLiveMatch), fall back to an internal interval.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- tick intentionally triggers recalculation
-  const externalElapsed = useMemo(() => formatElapsed(match.start_time), [match.start_time, tick]);
+  const elapsedRef = useRef<HTMLSpanElement>(null);
 
-  const [internalElapsed, setInternalElapsed] = useState(formatElapsed(match.start_time));
+  // Update elapsed time via DOM ref — no React re-render needed
   useEffect(() => {
-    if (tick != null) return; // parent drives updates
-    setInternalElapsed(formatElapsed(match.start_time));
-    const timer = setInterval(() => {
-      setInternalElapsed(formatElapsed(match.start_time));
-    }, 1_000);
+    const update = () => {
+      if (elapsedRef.current) elapsedRef.current.textContent = formatElapsed(match.start_time);
+    };
+    update();
+    const timer = setInterval(update, 1_000);
     return () => clearInterval(timer);
-  }, [match.start_time, tick]);
-
-  const elapsed = tick != null ? externalElapsed : internalElapsed;
+  }, [match.start_time]);
 
   return (
     <Box
@@ -206,7 +199,7 @@ export function LiveMatchCard({
             fontVariantNumeric="tabular-nums"
             letterSpacing="wide"
           >
-            {elapsed}
+            <span ref={elapsedRef} />
           </Text>
           <Text
             fontSize="2xs"
@@ -295,7 +288,7 @@ export function LiveMatchCard({
       </Flex>
     </Box>
   );
-}
+});
 
 function SkeletonBar({ w, h = '14px' }: { w: string; h?: string }) {
   return (

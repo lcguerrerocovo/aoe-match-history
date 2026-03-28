@@ -29,6 +29,7 @@ function getEloBracketLabel(avgRating: number): string {
 
 interface ActivityPanelProps {
   matches: LiveMatch[];
+  avgRatings: Map<number, number | null>;
   selectedMap: string;
   selectedEloBracket: string;
   onMapSelect: (map: string) => void;
@@ -37,6 +38,7 @@ interface ActivityPanelProps {
 
 export function ActivityPanel({
   matches,
+  avgRatings,
   selectedMap,
   selectedEloBracket,
   onMapSelect,
@@ -66,7 +68,7 @@ export function ActivityPanel({
     let source = matches;
     if (selectedEloBracket) {
       source = source.filter((m) => {
-        const avg = getAvgRating(m);
+        const avg = avgRatings.get(m.match_id);
         return avg != null && getEloBracketLabel(avg) === selectedEloBracket;
       });
     }
@@ -79,7 +81,7 @@ export function ActivityPanel({
     const top5 = sorted.slice(0, 5).map(([name, count]) => ({ name, count }));
     const remaining = sorted.slice(5).reduce((sum, [, c]) => sum + c, 0);
     return { top5, remaining, remainingMapCount: Math.max(0, sorted.length - 5) };
-  }, [matches, selectedEloBracket]);
+  }, [matches, selectedEloBracket, avgRatings]);
 
   // ELO counts reflect active map filter
   const eloBuckets = useMemo(() => {
@@ -90,7 +92,7 @@ export function ActivityPanel({
     const counts = new Map<string, number>();
     let hasAny = false;
     for (const m of source) {
-      const avg = getAvgRating(m);
+      const avg = avgRatings.get(m.match_id);
       if (avg == null) continue;
       hasAny = true;
       for (const b of ELO_BRACKETS) {
@@ -104,7 +106,7 @@ export function ActivityPanel({
     return ELO_BRACKETS
       .map((b) => ({ ...b, count: counts.get(b.label) || 0 }))
       .filter((b) => b.count > 0);
-  }, [matches, selectedMap]);
+  }, [matches, selectedMap, avgRatings]);
 
   if (matchCount === 0) return null;
 
