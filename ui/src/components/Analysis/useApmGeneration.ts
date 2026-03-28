@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../../services/matchService';
-import type { APMStatus } from '../APMGenerator';
+
+export interface APMStatus {
+  hasSaveGame: boolean;
+  isProcessed: boolean;
+  state: 'greyStatus' | 'silverStatus' | 'bronzeStatus';
+  profileId?: string;
+}
 
 interface UseApmGenerationOptions {
   onBronzeStatus?: () => void;

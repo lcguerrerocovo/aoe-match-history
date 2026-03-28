@@ -1,5 +1,5 @@
 import { Button, Flex, Spinner, Text } from '@chakra-ui/react';
-import type { APMStatus } from '../APMGenerator';
+import type { APMStatus } from './useApmGeneration';
 
 interface AnalysisEmptyStateProps {
   status: APMStatus | null;

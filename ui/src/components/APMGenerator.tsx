@@ -3,13 +3,7 @@ import { Tooltip } from './ui/tooltip';
 import { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { checkApmStatus, checkApmStatusForMatch, downloadReplay } from '../services/matchService';
-
-export interface APMStatus {
-  hasSaveGame: boolean;
-  isProcessed: boolean;
-  state: 'greyStatus' | 'silverStatus' | 'bronzeStatus';
-  profileId?: string;
-}
+import type { APMStatus } from './Analysis/useApmGeneration';
 
 interface APMGeneratorProps {
   matchId: string;
