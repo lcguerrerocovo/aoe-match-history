@@ -152,6 +152,12 @@ jobs:
             gsutil -m cp -r src/assets/civ_icons/* gs://aoe2.site/assets/civ_icons/
             gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/assets/civ_icons/*.png
           fi
+
+          # Upload civ emblems (full heraldic crests) with cache headers
+          if [ -d "src/assets/civ_emblems" ]; then
+            gsutil -m cp -r src/assets/civ_emblems/* gs://aoe2.site/assets/civ_emblems/
+            gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/assets/civ_emblems/*.png
+          fi
           
           # Upload logos with cache headers
           if [ -d "src/assets/logo" ]; then

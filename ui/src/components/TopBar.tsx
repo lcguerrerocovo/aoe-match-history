@@ -8,6 +8,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { PulsingDot } from './LiveMatchCard';
 
 const TopBar = () => {
   const layout = useLayoutConfig();
@@ -89,10 +90,23 @@ const TopBar = () => {
               </Box>
             </RouterLink></Text>
 
-          {/* Right: Search bar */}
-          <Box w="220px" ref={searchContainerRef}>
-            <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
-          </Box>
+          {/* Right: Live link + Search bar */}
+          <Flex align="center" gap={4}>
+            <Flex
+              align="center"
+              gap={1.5}
+              fontSize="sm"
+              color="brand.topbarText"
+              opacity={0.8}
+              _hover={{ opacity: 1 }}
+              letterSpacing="wide"
+              textTransform="uppercase"
+              asChild
+            ><RouterLink to="/live"><PulsingDot size="6px" />Live</RouterLink></Flex>
+            <Box w="220px" ref={searchContainerRef}>
+              <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
+            </Box>
+          </Flex>
         </Flex>
 
         {/* Mobile layout */}
@@ -133,6 +147,25 @@ const TopBar = () => {
             <ThemeToggle />
           </Box>
         </Flex>
+
+        {/* Mobile: Live link */}
+        <Box
+          display={{ base: 'block', md: 'none' }}
+          textAlign="center"
+          mb={2}
+        >
+          <Flex
+            align="center"
+            gap={1.5}
+            justify="center"
+            fontSize="xs"
+            color="brand.topbarText"
+            opacity={0.8}
+            letterSpacing="wide"
+            textTransform="uppercase"
+            asChild
+          ><RouterLink to="/live"><PulsingDot size="6px" />Live Matches</RouterLink></Flex>
+        </Box>
 
         {/* Mobile search bar - below title */}
         <Box

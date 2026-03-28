@@ -13,6 +13,7 @@ import { groupMatchesBySession, searchMatches, createFlatMatchGroup, sortMatches
 import TopBar from './components/TopBar';
 import { WatermarkTiled } from './components/Watermark';
 import { CornerFlourishes } from './components/CornerFlourishes';
+import { ProfileLiveMatch } from './components/ProfileLiveMatch';
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -396,6 +397,11 @@ function App() {
               </Box>
             </Box>
           }
+          {profileId && (
+            <Box w={layout.matchList.width} maxW={layout.matchList.maxWidth} mx="auto">
+              <ProfileLiveMatch profileId={Number(profileId)} />
+            </Box>
+          )}
           <VStack
             align="stretch"
             p={layout?.mainContent.padding}

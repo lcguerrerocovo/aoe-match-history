@@ -12,6 +12,7 @@ You are running the UI Review workflow. The user wants to review and improve the
 landing    → /                        → LandingPage
 profile    → /profile_id/:profileId   → App (ProfileHeader, FilterBar, MatchList)
 match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, ApmBreakdownChart)
+live       → /live                    → LivePage (LiveMatchCard, PlayerRow)
 ```
 
 ## Prod URL Mapping
@@ -22,6 +23,7 @@ Used by the screenshot workflow. Default profile ID: `197388`.
 landing    → https://aoe2.site/
 profile    → https://aoe2.site/profile_id/197388
 match      → https://aoe2.site/match/auto (pick a recent match from the profile page)
+live       → https://aoe2.site/live
 ```
 
 If the user provides a full URL, use that instead of the mapping.

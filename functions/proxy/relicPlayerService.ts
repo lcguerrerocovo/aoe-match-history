@@ -1,7 +1,7 @@
 import SessionManager from './sessionManager';
 import { logger } from './config';
 import { decodeOptions, doubleBase64Decode, decodeSlotInfo } from './decoders';
-import type { FindProfilesResult, SinglePlayerHistoryResult, SinglePlayerMatch, DecodedOptions, SlotInfoPlayer } from './types';
+import type { FindProfilesResult, SinglePlayerHistoryResult, SinglePlayerMatch, DecodedOptions, SlotInfoPlayer, LiveMatchesResult } from './types';
 
 const RELIC_API_HOST = "https://aoe-api.worldsedgelink.com/";
 
@@ -76,6 +76,9 @@ class RelicPlayerService {
 
             if (!response.ok) {
                 await response.text();
+                if (response.status === 401 || response.status === 403) {
+                    return await this.handleApiError(response.status);
+                }
                 throw new Error(`API responded with status ${response.status}`);
             }
             const responseData = await response.json() as unknown[];
@@ -108,7 +111,7 @@ class RelicPlayerService {
                     return {
                         id: playerArray[1] as number, // Profile ID
                         name: playerArray[4] as string, // Player name
-                        matches: playerArray[7] as number // TODO: Determine correct field for match count
+                        matches: playerArray[7] as number // Total games played
                     };
                 }) || [];
 
@@ -185,6 +188,9 @@ class RelicPlayerService {
 
             if (!response.ok) {
                 await response.text();
+                if (response.status === 401 || response.status === 403) {
+                    return await this.handleApiError(response.status);
+                }
                 throw new Error(`API responded with status ${response.status}`);
             }
             const respData = await response.json() as unknown[];
@@ -229,6 +235,101 @@ class RelicPlayerService {
             }
         } catch (error) {
             this.log.error({ error: (error as Error).message }, 'SinglePlayerHistory request failed');
+            throw error;
+        }
+    }
+    async findObservableAdvertisements(gameVersion: number, count: number = 50, start: number = 0, profileIds?: number[]): Promise<LiveMatchesResult> {
+        const startTime = Date.now();
+        const session = await this.sessionManager.getSession();
+        if (!session) {
+            throw new Error('No valid session available');
+        }
+
+        const callNumber = await this.sessionManager.incrementCallNumber();
+        const prevLastCallTime = session.lastCallTime || Date.now();
+        const now = Date.now();
+
+        const ENDPOINT = 'game/advertisement/findObservableAdvertisements';
+        const FULL_URL = RELIC_API_HOST + ENDPOINT;
+
+        const params: Record<string, string> = {
+            appBinaryChecksum: String(gameVersion),
+            callNum: String(callNumber),
+            connect_id: session.sessionId,
+            count: String(count),
+            dataChecksum: '0',
+            desc: '1',
+            lastCallTime: String(prevLastCallTime),
+            matchType_id: '0',
+            modDLLChecksum: '0',
+            modDLLFile: 'INVALID',
+            modName: 'INVALID',
+            modVersion: 'INVALID',
+            sessionID: session.sessionId,
+            sortOrder: '1',
+            start: String(start),
+            versionFlags: '56950784',
+        };
+
+        if (profileIds && profileIds.length > 0) {
+            params.profile_ids = JSON.stringify(profileIds);
+        }
+
+        this.log.debug({ url: FULL_URL, gameVersion, count, start, profileIds }, 'Making findObservableAdvertisements request');
+
+        try {
+            const requestStart = Date.now();
+            const queryString = new URLSearchParams(params).toString();
+            const response = await fetch(`${FULL_URL}?${queryString}`, {
+                headers: {
+                    'Accept-Encoding': 'identity',
+                    'Accept': '*/*',
+                    'Pragma': 'no-cache',
+                    'Cache-Control': 'no-store',
+                },
+                signal: AbortSignal.timeout(30000),
+            });
+            const duration = Date.now() - requestStart;
+
+            await this.sessionManager.updateLastCallTime(now);
+
+            if (!response.ok) {
+                await response.text();
+                if (response.status === 401 || response.status === 403) {
+                    return await this.handleApiError(response.status);
+                }
+                throw new Error(`API responded with status ${response.status}`);
+            }
+            const respData = await response.json() as unknown[];
+            this.log.info({
+                status: response.status,
+                apiStatus: respData[0],
+                duration,
+                totalDuration: Date.now() - startTime,
+            }, 'findObservableAdvertisements response');
+
+            if (response.status === 200 && respData[0] === 0) {
+                const matches = (respData[1] || []) as unknown[][];
+                const players = (respData[2] || []) as unknown[][];
+                this.log.info({ matchCount: matches.length, playerCount: players.length }, 'Observable advertisements fetched');
+
+                // Log first match and player for field mapping discovery
+                if (matches.length > 0) {
+                    this.log.debug({ firstMatch: JSON.stringify(matches[0]) }, 'First match structure');
+                }
+                if (players.length > 0) {
+                    this.log.debug({ firstPlayer: JSON.stringify(players[0]) }, 'First player structure');
+                }
+
+                return {
+                    success: true,
+                    data: { matches, players },
+                };
+            } else {
+                return await this.handleApiError(respData[0] as number);
+            }
+        } catch (error) {
+            this.log.error({ error: (error as Error).message }, 'findObservableAdvertisements request failed');
             throw error;
         }
     }

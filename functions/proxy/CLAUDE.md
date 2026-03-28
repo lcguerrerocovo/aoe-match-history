@@ -22,6 +22,8 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `decoders.ts` | Options/SlotInfo decoding (base64 + zlib) |
 | `relicAuth.ts` | Steam → Relic authentication flow |
 | `relicPlayerService.ts` | Authenticated Relic API calls |
+| `liveMatchHandler.ts` | Live match handler: paginated fetch of observable advertisements (up to 5 pages / 1000 matches), 25s in-memory cache with request coalescing, match deduplication, ELO enrichment from PostgreSQL (batched), normalizes to typed `LiveMatch[]` |
+| `gameVersion.ts` | Auto-detects AoE2 game build version from Steam RSS feed (used as `appBinaryChecksum`) |
 | `concurrencyLimiter.ts` | Generic async concurrency limiter (queue-based, used for batch operations) |
 | `sessionManager.ts` | Firestore-backed session persistence |
 
@@ -39,6 +41,7 @@ npm run test:coverage
 
 | Method | Path | Purpose | Cache |
 |--------|------|---------|-------|
+| GET | `/api/live` | Live matches via `findObservableAdvertisements` (authenticated, paginated up to 5 pages / 1000 matches). 25s in-memory cache with request coalescing; ELO ratings from PostgreSQL. Optional `?profile_ids=` filters to matches containing those players (single page, no cache). | 30s |
 | GET | `/api/player-search?name=` | Meilisearch player search (Firestore fallback) | 30 min |
 | GET | `/api/match-history/:profileId` | Processed automatch history | 5 min |
 | GET | `/api/match-history/:profileId/full` | Full match history (Relic + PostgreSQL, cursor-paginated). Query params: `cursor`, `limit`, `map`, `matchType`, `sort` (asc/desc), `page` (legacy). Returns `filterOptions` on first request. | 5 min |
