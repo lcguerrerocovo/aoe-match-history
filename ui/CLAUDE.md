@@ -39,14 +39,14 @@ MatchPage                        Single match detail
     ├── AnalysisSection.tsx      Container: owns view/player state, renders charts
     ├── AnalysisHeader.tsx       Title + ChartNav icon toggle
     ├── ChartNav.tsx             Icon segmented control (APM ↔ Actions)
-    ├── ChartViewport.tsx        Fixed-height scroll frame (shared by both charts)
+    ├── ChartViewport.tsx        Fixed-height scroll frame (data-testid="chart-container")
+    ├── PlayerBar.tsx            Unified player buttons (multi-toggle for APM, single-select for Actions)
     └── index.ts                 Barrel export (AnalysisSection only)
-        ├── → ApmChart.tsx       APM line chart with player legend
+        ├── → ApmChart.tsx       Pure APM line chart renderer (no legend/toggle)
         └── → ApmBreakdownChart/ Action breakdown (stacked bar)
 
-ApmBreakdownChart/               APM chart with player breakdown
-├── ApmBreakdownChart.tsx        Chart container + data processing
-├── PlayerSelector.tsx           Player toggle checkboxes
+ApmBreakdownChart/               APM chart with action breakdown
+├── ApmBreakdownChart.tsx        Chart container (accepts selectedPlayerId, uses ChartViewport)
 ├── ChartArea.tsx                Recharts area chart
 ├── ActionTypeLegend.tsx         Action type color legend
 └── utils.ts                     Chart color/formatting helpers

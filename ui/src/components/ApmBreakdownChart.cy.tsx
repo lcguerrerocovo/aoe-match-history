@@ -28,8 +28,9 @@ describe('ApmBreakdownChart Viewport Behavior', () => {
   beforeEach(() => {
     mount(
       <CustomThemeProvider>
-        <ApmBreakdownChart 
+        <ApmBreakdownChart
           apm={mockApmData}
+          selectedPlayerId="123"
           nameByProfile={mockNameByProfile}
           colorByProfile={mockColorByProfile}
         />

@@ -6,6 +6,8 @@ import { ApmChart } from '../ApmChart';
 import { ApmBreakdownChart } from '../ApmBreakdownChart';
 import { APMGenerator, type APMStatus } from '../APMGenerator';
 import { AnalysisHeader } from './AnalysisHeader';
+import { PlayerBar } from './PlayerBar';
+import { ChartViewport } from './ChartViewport';
 import type { AnalysisView } from './ChartNav';
 import type { Match } from '../../types/match';
 import { getMatch } from '../../services/matchService';
@@ -71,6 +73,61 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
     });
   };
 
+  // Actions view: single-select player
+  const [actionsSelectedPid, setActionsSelectedPid] = useState<string>('');
+
+  useEffect(() => {
+    if (match?.apm?.players) {
+      const pids = Object.keys(match.apm.players);
+      if (pids.length && !pids.includes(actionsSelectedPid)) {
+        const best = pids.reduce((b, pid) => {
+          return (match.apm!.players[pid]?.length ?? 0) > (match.apm!.players[b]?.length ?? 0) ? pid : b;
+        }, pids[0]);
+        setActionsSelectedPid(best);
+      }
+    }
+  }, [match?.apm?.players]);
+
+  // Average APM per player (simple total, not filtered by action types)
+  const averages = useMemo(() => {
+    const avg: Record<string, number> = {};
+    Object.entries(match?.apm?.players ?? {}).forEach(([pid, series]) => {
+      if (!Array.isArray(series) || !series.length) return;
+      const sum = (series as Array<Record<string, number>>).reduce((acc, pt) => {
+        const val = typeof pt.total === 'number'
+          ? pt.total
+          : Object.entries(pt).reduce((a, [k, v]) => (k !== 'minute' && k !== 'total' && typeof v === 'number' ? a + v : a), 0);
+        return acc + val;
+      }, 0);
+      avg[pid] = Math.round(sum / series.length);
+    });
+    return avg;
+  }, [match?.apm]);
+
+  // Player data for PlayerBar (pre-sorted by avgApm desc)
+  const playerBarData = useMemo(() => {
+    const pids = Object.keys(match?.apm?.players ?? {});
+    return pids
+      .map((pid) => ({
+        pid,
+        name: nameMap[pid] ?? pid,
+        colorId: colorMap[pid] ?? 1,
+        avgApm: averages[pid] ?? 0,
+      }))
+      .sort((a, b) => b.avgApm - a.avgApm);
+  }, [match?.apm, nameMap, colorMap, averages]);
+
+  // Max data points across all players (for ChartViewport width)
+  const dataPointCount = useMemo(() => {
+    if (!match?.apm?.players) return 0;
+    let maxMinute = 0;
+    Object.values(match.apm.players).forEach((series: any[]) => {
+      const last = series[series.length - 1];
+      if (last && last.minute > maxMinute) maxMinute = last.minute;
+    });
+    return maxMinute + 1;
+  }, [match?.apm]);
+
   const matchId = match.match_id;
   const profileId = match.players?.[0]?.user_id?.toString() || '';
 
@@ -85,18 +142,28 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
     }
   };
 
+  const apmChart = (
+    <ChartViewport dataPointCount={dataPointCount}>
+      <ApmChart
+        apm={match.apm!}
+        colorByProfile={colorMap}
+        nameByProfile={nameMap}
+        activePids={activePids}
+      />
+    </ChartViewport>
+  );
+
+  const actionsChart = (
+    <ApmBreakdownChart
+      apm={match.apm!}
+      selectedPlayerId={actionsSelectedPid}
+      colorByProfile={colorMap}
+      nameByProfile={nameMap}
+    />
+  );
+
   const renderApmView = () => {
-    if (hasApm) {
-      return (
-        <ApmChart
-          apm={match.apm!}
-          colorByProfile={colorMap}
-          nameByProfile={nameMap}
-          activePids={activePids}
-          onToggle={togglePid}
-        />
-      );
-    }
+    if (hasApm) return apmChart;
     return (
       <APMGenerator
         matchId={matchId}
@@ -105,27 +172,13 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
         skipBronzeState={true}
         onStatusChange={handleStatusChange}
       >
-        <ApmChart
-          apm={match.apm!}
-          colorByProfile={colorMap}
-          nameByProfile={nameMap}
-          activePids={activePids}
-          onToggle={togglePid}
-        />
+        {apmChart}
       </APMGenerator>
     );
   };
 
   const renderActionsView = () => {
-    if (hasApm) {
-      return (
-        <ApmBreakdownChart
-          apm={match.apm!}
-          colorByProfile={colorMap}
-          nameByProfile={nameMap}
-        />
-      );
-    }
+    if (hasApm) return actionsChart;
     return (
       <APMGenerator
         matchId={matchId}
@@ -134,11 +187,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
         skipBronzeState={true}
         onStatusChange={handleStatusChange}
       >
-        <ApmBreakdownChart
-          apm={match.apm!}
-          colorByProfile={colorMap}
-          nameByProfile={nameMap}
-        />
+        {actionsChart}
       </APMGenerator>
     );
   };
@@ -156,6 +205,13 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
           onChangeView={setActiveView}
           disabled={!hasApm}
         />
+        {hasApm && (
+          <PlayerBar
+            players={playerBarData}
+            activePids={activeView === 'apm' ? activePids : [actionsSelectedPid]}
+            onToggle={activeView === 'apm' ? togglePid : (pid: string) => setActionsSelectedPid(pid)}
+          />
+        )}
         {activeView === 'apm' ? renderApmView() : renderActionsView()}
       </VStack>
     </Card.Root>

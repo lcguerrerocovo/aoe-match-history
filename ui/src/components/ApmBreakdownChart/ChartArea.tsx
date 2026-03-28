@@ -27,12 +27,7 @@ interface ChartAreaProps {
 
 export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeColorMap }: ChartAreaProps) {
   const { isDark } = useThemeMode();
-  const chartAreaHeight = useBreakpointValue({ base: '450px', md: '400px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
-
-  // Viewport configuration for horizontal scrolling
-  const minBarWidth = 20;
-  const chartWidth = Math.max(800, chartData.length * minBarWidth);
 
   // Custom tooltip for stacked bar chart
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -90,8 +85,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
   };
 
   return (
-    <Box h={chartAreaHeight} minH="500px" overflowX="auto" overflowY="hidden" data-testid="chart-container">
-      <Box minW={`${chartWidth}px`} h="100%">
+    <Box w="full" h="100%">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -147,7 +141,6 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
           ))}
         </BarChart>
       </ResponsiveContainer>
-      </Box>
     </Box>
   );
 }

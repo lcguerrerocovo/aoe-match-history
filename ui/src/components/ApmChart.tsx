@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import type { TooltipProps } from 'recharts';
-import { Box, Text, Flex, useBreakpointValue, Button } from '@chakra-ui/react';
+import { Box, Text, Flex, useBreakpointValue } from '@chakra-ui/react';
 import { useThemeMode } from '../theme/ThemeProvider';
 import { PLAYER_COLORS } from '../utils/playerColors';
 
@@ -33,8 +33,6 @@ interface ApmChartProps {
   nameByProfile?: Record<string, string | undefined>;
   // Currently active (visible) profileIds
   activePids?: string[];
-  // Toggle callback when legend entry clicked
-  onToggle?: (pid: string) => void;
 }
 
 // Resolved color values for non-Chakra (Recharts SVG) usage.
@@ -56,7 +54,7 @@ const colors = {
 
 const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token].dark : colors[token].light;
 
-export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids, onToggle }) => {
+export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids }) => {
   const { isDark } = useThemeMode();
 
 
@@ -90,37 +88,10 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
     return rows;
   }, [apm]);
 
-  // Fixed height for chart area - will be matched by breakdown chart
-  const chartAreaHeight = useBreakpointValue({ base: '550px', md: '500px' });
   const showAxisLabel = useBreakpointValue({ base: false, md: true });
-
-  // Viewport configuration for horizontal scrolling (same as breakdown chart)
-  const minBarWidth = 20; // Minimum width per minute in pixels
-  const chartWidth = Math.max(800, data.length * minBarWidth); // Minimum 800px, or minutes * minBarWidth
 
   const playerIds = Object.keys(apm?.players ?? {});
   const visibleIds = activePids ?? playerIds;
-
-  // Average APM per player (always calculate our own)
-  const averages = React.useMemo(() => {
-    const avg: Record<string, number> = {};
-    Object.entries(apm?.players ?? {}).forEach(([pid, series]) => {
-      if (!Array.isArray(series) || !series.length) return;
-      const sum = series.reduce((acc, pt) => {
-        const val = typeof pt.total === 'number'
-          ? pt.total
-          : Object.entries(pt).reduce((a, [k, v]) => (k !== 'minute' && k !== 'total' && typeof v === 'number' ? a + v : a), 0);
-        return acc + val;
-      }, 0);
-      avg[pid] = Math.round(sum / series.length);
-    });
-    return avg;
-  }, [apm]);
-
-  // Sort playerIds by average APM descending for legend
-  const sortedPlayerIds = React.useMemo(() => {
-    return [...playerIds].sort((a, b) => (averages[b] ?? 0) - (averages[a] ?? 0));
-  }, [playerIds, averages]);
 
   if (!playerIds.length) return null;
 
@@ -169,10 +140,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
   };
 
   return (
-    <Box w="full">
-      {/* Chart Area - Fixed Height with Horizontal Scroll */}
-      <Box h={chartAreaHeight} minH="500px" overflowX="auto" overflowY="hidden" data-testid="chart-container">
-        <Box minW={`${chartWidth}px`} h="100%">
+    <Box w="full" h="100%">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 0, bottom: showAxisLabel ? 45 : 20, left: showAxisLabel ? 0 : -20 }}>
           <CartesianGrid
@@ -260,91 +228,6 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
           })}
         </LineChart>
       </ResponsiveContainer>
-        </Box>
-      </Box>
-      {/* Legend Area - Dynamic Height */}
-      <Box mt={2}>
-        <Flex
-          wrap="wrap"
-          justify={{ base: 'flex-start', md: 'center' }}
-          align="center"
-          gap={1}
-          w="100%"
-          minH="40px"
-        >
-          {sortedPlayerIds.map((pid) => {
-            const name = nameByProfile[pid] ?? pid;
-            const avg = averages[pid];
-            const colorId = colorByProfile[pid];
-            const playerColor = colorId ? PLAYER_COLORS[colorId] || c('chartFallback', isDark) : c('chartFallback', isDark);
-            const inactive = !visibleIds.includes(pid);
-
-            return (
-              <Button
-                key={pid}
-                size="sm"
-                variant="outline"
-                colorPalette="brand"
-                bg={inactive ? (isDark ? 'transparent' : 'brand.stoneLight') : 'brand.parchmentDark'}
-                color={isDark ? 'brand.parchment' : 'brand.inkDark'}
-                borderColor={inactive ? 'brand.borderWarm' : (isDark ? 'brand.parchment' : 'brand.inkDark')}
-                _hover={{
-                  bg: 'brand.parchmentDark',
-                }}
-                onClick={() => onToggle?.(pid)}
-                maxW="200px"
-                h="auto"
-                py={1.5}
-                px={2}
-                opacity={inactive ? 0.5 : 1}
-              >
-                <Flex align="center" justify="space-between" w="100%" gap={2}>
-                  <Flex align="center" gap={2}>
-                    <Box
-                      w="10px"
-                      h="10px"
-                      borderRadius="full"
-                      bg={playerColor}
-                      border="1px solid"
-                      borderColor="brand.borderWarm"
-                      flexShrink={0}
-                    />
-                    <Text
-                      fontSize="xs"
-                      fontWeight={inactive ? 'medium' : 'bold'}
-                      flexShrink={0}
-                      maxW="100px"
-                      truncate
-                      color={isDark ? 'brand.parchment' : 'brand.inkDark'}
-                    >
-                      {name}
-                    </Text>
-                  </Flex>
-                  {avg !== undefined && avg !== null && (
-                    <Box
-                      bg="brand.stoneLight"
-                      border="1px solid"
-                      borderColor="brand.borderWarm"
-                      borderRadius="sm"
-                      px={1.5}
-                      py={0.5}
-                      flexShrink={0}
-                    >
-                      <Text
-                        fontSize="xs"
-                        fontWeight="bold"
-                        color="brand.inkDark"
-                      >
-                        {avg}
-                      </Text>
-                    </Box>
-                  )}
-                </Flex>
-              </Button>
-            );
-          })}
-        </Flex>
-      </Box>
     </Box>
   );
 };

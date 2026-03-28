@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { extractActionTypes, calculateActionTypeTotals } from './utils';
-import { PlayerSelector } from './PlayerSelector';
 import { ChartArea } from './ChartArea';
 import { ActionTypeLegend } from './ActionTypeLegend';
+import { ChartViewport } from '../Analysis/ChartViewport';
 
 interface ApmActionData {
   minute: number;
@@ -17,24 +17,14 @@ interface ApmBreakdownChartProps {
   };
   nameByProfile?: Record<string, string | undefined>;
   colorByProfile?: Record<string, number | undefined>;
+  selectedPlayerId: string;
 }
 
 export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
   apm,
-  nameByProfile = {},
-  colorByProfile = {}
+  selectedPlayerId,
 }) => {
   const playerIds = Object.keys(apm?.players ?? {});
-  // Default to player with the most data entries (longest game participation)
-  const defaultPlayerId = useMemo(() => {
-    if (!playerIds.length) return '';
-    return playerIds.reduce((best, pid) => {
-      const bestLen = apm?.players?.[best]?.length ?? 0;
-      const curLen = apm?.players?.[pid]?.length ?? 0;
-      return curLen > bestLen ? pid : best;
-    }, playerIds[0]);
-  }, [playerIds, apm]);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(defaultPlayerId);
   const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
 
   // Get current player data
@@ -70,13 +60,6 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
 
     return map;
   }, [currentPlayerData, allActionTypes]);
-
-  // Update selected player when playerIds change
-  React.useEffect(() => {
-    if (playerIds.length > 0 && !playerIds.includes(selectedPlayerId)) {
-      setSelectedPlayerId(defaultPlayerId);
-    }
-  }, [playerIds, selectedPlayerId, defaultPlayerId]);
 
   // Initialize active action types when player changes
   React.useEffect(() => {
@@ -156,66 +139,17 @@ export const ApmBreakdownChart: React.FC<ApmBreakdownChartProps> = ({
       .sort((a, b) => b.total - a.total);
   }, [currentPlayerData, allActionTypes, activeActionTypes]);
 
-  // Calculate average APM for each player
-  const playerAverages = useMemo(() => {
-    const averages: Record<string, number> = {};
-
-    playerIds.forEach((pid) => {
-      const playerData = apm?.players?.[pid];
-      if (!Array.isArray(playerData) || playerData.length === 0) {
-        averages[pid] = 0;
-        return;
-      }
-
-      const sum = playerData.reduce((acc, pt) => {
-        if (activeActionTypes.size > 0) {
-          return acc + Object.entries(pt).reduce((a, [k, v]) => {
-            if (k !== 'minute' && k !== 'total' && typeof v === 'number' && activeActionTypes.has(k)) {
-              return a + v;
-            }
-            return a;
-          }, 0);
-        } else {
-          const val = typeof pt.total === 'number'
-            ? pt.total
-            : Object.entries(pt).reduce((a, [k, v]) => (k !== 'minute' && k !== 'total' && typeof v === 'number' ? a + v : a), 0);
-          return acc + val;
-        }
-      }, 0);
-
-      averages[pid] = Math.round(sum / playerData.length);
-    });
-
-    return averages;
-  }, [playerIds, apm, activeActionTypes]);
-
-  // Sort player IDs by average APM (descending)
-  const sortedPlayerIds = useMemo(() => {
-    return [...playerIds].sort((a, b) => {
-      const avgA = playerAverages[a] || 0;
-      const avgB = playerAverages[b] || 0;
-      return avgB - avgA;
-    });
-  }, [playerIds, playerAverages]);
-
   if (!playerIds.length) return null;
 
   return (
     <Box w="full">
-      <PlayerSelector
-        sortedPlayerIds={sortedPlayerIds}
-        selectedPlayerId={selectedPlayerId}
-        onSelectPlayer={setSelectedPlayerId}
-        nameByProfile={nameByProfile}
-        colorByProfile={colorByProfile}
-        playerAverages={playerAverages}
-      />
-
-      <ChartArea
-        chartData={chartData}
-        activeActionTypesWithStats={activeActionTypesWithStats}
-        actionTypeColorMap={actionTypeColorMap}
-      />
+      <ChartViewport dataPointCount={chartData.length}>
+        <ChartArea
+          chartData={chartData}
+          activeActionTypesWithStats={activeActionTypesWithStats}
+          actionTypeColorMap={actionTypeColorMap}
+        />
+      </ChartViewport>
 
       <ActionTypeLegend
         allActionTypesWithStats={allActionTypesWithStats}
