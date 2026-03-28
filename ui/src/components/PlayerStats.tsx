@@ -70,9 +70,9 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
       isNumeric: true,
       render: (stat: LeaderboardStats) => {
         if (stat.streak > 0) {
-          return <Text as="span" className="streak">+{stat.streak}</Text>;
+          return <Text as="span" className="streak" fontSize="13px" fontWeight={700}>+{stat.streak}</Text>;
         } else if (stat.streak < 0) {
-          return <Text as="span" className="loss">{stat.streak}</Text>;
+          return <Text as="span" className="loss" fontSize="13px" fontWeight={700}>{stat.streak}</Text>;
         }
         return stat.streak;
       }
