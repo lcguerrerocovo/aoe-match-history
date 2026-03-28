@@ -72,8 +72,9 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             return (
               <Accordion.Item
                 key={group.date}
-                borderBottom={isFlatMode ? 'none' : '2px solid'}
-                borderBottomColor="brand.bronzeLight"
+                border={isFlatMode ? 'none' : '1px solid'}
+                borderColor="brand.inkLight"
+                mb={isFlatMode ? 0 : 1}
                 position="relative"
                 value={group.date}>
                 {/* Margin annotation — desktop only, hidden in flat mode */}
@@ -275,7 +276,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     })()}
                   </Accordion.ItemTrigger>
                 </h2>
-                <Accordion.ItemContent pb={4}><Accordion.ItemBody>
+                <Accordion.ItemContent pb={4} bg="brand.expandedBg"><Accordion.ItemBody>
                     {renderMatches(group.matches, isOpen)}
                   </Accordion.ItemBody></Accordion.ItemContent>
               </Accordion.Item>
