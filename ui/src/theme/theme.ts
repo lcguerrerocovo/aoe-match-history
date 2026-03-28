@@ -27,8 +27,8 @@ const semanticColors = {
     pureBlack: { value: '#111' },
 
     // Status colors
-    darkWin: { value: { base: '#2E7D32', _dark: '#48BB78' } },
-    darkLoss: { value: { base: '#D32F2F', _dark: '#F56565' } },
+    darkWin: { value: { base: '#4A7C59', _dark: '#48BB78' } },
+    darkLoss: { value: { base: '#8B3A3A', _dark: '#F56565' } },
     win: { value: { base: '#3AA76D', _dark: '#48BB78' } },
     loss: { value: { base: '#D64545', _dark: '#F56565' } },
     inkAccent: { value: { base: '#8B4513', _dark: '#90CDF4' } },
@@ -96,6 +96,13 @@ const semanticColors = {
       value: {
         base: 'transparent',
         _dark: `linear-gradient(135deg, #2D3748 0%, #1A202C 25%, #171923 50%, #1A202C 75%, #2D3748 100%), repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px)`,
+      },
+    },
+
+    expandedBg: {
+      value: {
+        base: '#FBF7ED',
+        _dark: '#1E1E1E',
       },
     },
 
