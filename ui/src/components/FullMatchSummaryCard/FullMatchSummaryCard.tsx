@@ -91,8 +91,8 @@ export function FullMatchSummaryCard({ match }: FullMatchSummaryCardProps) {
     : 1;
 
   return (
-    <Card.Root variant={cardVariant('match')} w="100%" p={6} data-testid="enlarged-match-card">
-      <VStack gap={6} align="stretch">
+    <Card.Root variant={cardVariant('match')} w="100%" p={{ base: 4, lg: 5, xl: 6 }} data-testid="enlarged-match-card">
+      <VStack gap={{ base: 4, lg: 5, xl: 6 }} align="stretch">
         {/* Match Details */}
         <MatchDetails match={match} />
 
@@ -114,7 +114,7 @@ export function FullMatchSummaryCard({ match }: FullMatchSummaryCardProps) {
         {/* Main Content: Team 1 | Map/VS | Team 2 */}
         <Flex
           direction={{ base: 'column', md: 'row' }}
-          gap={{ base: 6, md: 6 }}
+          gap={{ base: 4, md: 3, xl: 6 }}
           align="stretch"
           data-testid="match-card-content"
         >

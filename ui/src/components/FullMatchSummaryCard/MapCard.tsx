@@ -24,8 +24,8 @@ export function MapCard({ match }: { match: Match }) {
         p="2px"
       >
         <Box
-          w={{ base: '160px', md: '180px', lg: '200px' }}
-          h={{ base: '160px', md: '180px', lg: '200px' }}
+          w={{ base: '160px', md: '140px', xl: '200px' }}
+          h={{ base: '160px', md: '140px', xl: '200px' }}
           border="1px solid"
           borderColor="brand.inkMuted"
           overflow="hidden"

@@ -20,11 +20,13 @@ const CONFIG = {
   searchQuery: 'torna', // Query used for search screenshots
   viewports: {
     desktop: { width: 1440, height: 1400 },
+    tablet: { width: 1024, height: 1366 },   // iPad (portrait)
     mobile: { width: 390, height: 844 },
   },
 } as const;
 
 type Source = keyof typeof SOURCES;
+type Viewport = keyof typeof CONFIG.viewports;
 
 interface ViewConfig {
   name: string;
@@ -32,9 +34,9 @@ interface ViewConfig {
   /** CSS selector to wait for before capturing — confirms the view has rendered */
   waitForSelector: string;
   /** Use viewport-only capture instead of full-page (for fixed-position layouts) */
-  viewportOnly?: (viewport: 'desktop' | 'mobile') => boolean;
+  viewportOnly?: (viewport: Viewport) => boolean;
   /** Actions to perform before capturing (e.g., type in search, click a tab) */
-  beforeCapture?: (page: Page, viewport: 'desktop' | 'mobile') => Promise<void>;
+  beforeCapture?: (page: Page, viewport: Viewport) => Promise<void>;
 }
 
 function buildViews(): ViewConfig[] {
@@ -67,8 +69,8 @@ function buildViews(): ViewConfig[] {
       path: `/profile_id/${CONFIG.profileId}`,
       waitForSelector: '[data-testid="floating-box-container"]',
       viewportOnly: () => true,
-      beforeCapture: async (page, viewport) => {
-        const searchSelector = viewport === 'mobile'
+      beforeCapture: async (page, vp) => {
+        const searchSelector = vp === 'mobile'
           ? '[data-testid="mobile-search"] input'
           : 'input[placeholder]';
         const input = await page.waitForSelector(searchSelector, { timeout: 5000 });
@@ -128,7 +130,7 @@ async function waitAndCapture(
   url: string,
   outputPath: string,
   view: ViewConfig,
-  viewport: 'desktop' | 'mobile',
+  viewport: Viewport,
 ): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
@@ -212,7 +214,7 @@ async function captureSource(
     });
 
     const viewportEntries = Object.entries(CONFIG.viewports) as [
-      'desktop' | 'mobile',
+      Viewport,
       { width: number; height: number },
     ][];
 

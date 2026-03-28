@@ -219,7 +219,7 @@ export function LivePage() {
           gap={4}
           mx="auto"
           px={{ base: 2, lg: 4 }}
-          maxW={{ md: '90%', xl: '1100px' }}
+          maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
         >
           {/* Page header — centered */}
           <VStack gap={1} pt={4} w="100%">

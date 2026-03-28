@@ -111,7 +111,7 @@ export function MatchPage() {
             px={{ base: 2, lg: 4 }}
             py={{ base: 4, lg: 6 }}
             w="100%"
-            maxW={{ md: '90%', xl: '1100px' }}
+            maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
             borderWidth={0}
@@ -137,7 +137,7 @@ export function MatchPage() {
             px={{ base: 2, lg: 4 }}
             py={{ base: 4, lg: 6 }}
             w="100%"
-            maxW={{ md: '90%', xl: '1100px' }}
+            maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
             borderWidth={0}
@@ -163,7 +163,7 @@ export function MatchPage() {
             px={{ base: 2, lg: 4 }}
             py={{ base: 4, lg: 6 }}
             w="100%"
-            maxW={{ md: '90%', xl: '1100px' }}
+            maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
             bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
 
             borderWidth={0}
@@ -188,7 +188,7 @@ export function MatchPage() {
           px={{ base: 2, lg: 4 }}
           py={{ base: 4, lg: 6 }}
           w="100%"
-          maxW={{ md: '90%', xl: '1100px' }}
+          maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
           bg={{ base: 'transparent', md: 'brand.parchmentSurface' }}
           borderRadius={{ md: 'sm' }}
           borderWidth={{ base: 0, md: '1px' }}

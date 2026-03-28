@@ -108,7 +108,7 @@ npm run screenshots:compare   # Both side-by-side (screenshots/dev/ + screenshot
 
 Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev captures.
 
-**Current views captured** (each at desktop 1440x1400 + mobile 390x844):
+**Current views captured** (each at desktop 1440x1400, tablet 1024x1366, and mobile 390x844):
 - `landing` — landing page at rest
 - `landing-search` — search dropdown with results
 - `profile` — profile with match history

@@ -44,7 +44,7 @@ export function LandingPage() {
         w="100%"
         minH={{ base: '100vh', md: 'auto' }}
         justifyContent="center"
-        maxW={{ md: '90%', xl: '1100px' }}
+        maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
         position="relative"
       >
         {/* Logo */}

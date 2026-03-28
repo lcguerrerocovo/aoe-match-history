@@ -223,11 +223,11 @@ const sharedValues = {
   lg: {
     container: {
       maxWidth: 'container.lg',
-      padding: '0.5rem',
+      padding: '1rem',
       marginLeft: '320px',
     },
     mainContent: {
-      padding: '0.5rem',
+      padding: '1rem',
     },
     matchCard: {
       width: '100%',
@@ -315,13 +315,13 @@ const sharedValues = {
       inputWidth: '200px',
     },
     matchList: {
-      width: '700px',
-      maxWidth: '700px',
+      width: '100%',
+      maxWidth: '100%',
       overflow: 'hidden',
-      accordionWidth: '700px',
-      groupWidth: '700px',
+      accordionWidth: '100%',
+      groupWidth: '100%',
       groupMinHeight: '180px',
-      matchWidth: '660px',
+      matchWidth: '100%',
       groupGap: '0.1rem',
       groupPadding: '1rem',
     },

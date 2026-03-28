@@ -343,7 +343,7 @@ function App() {
           px={{ base: 2, lg: 4 }}
           py={{ base: 4, lg: 6 }}
           w="100%"
-          maxW={{ md: '90%', xl: '1100px' }}
+          maxW={{ md: '90%', lg: '960px', xl: '1100px' }}
           bg="brand.parchmentSurface"
           borderRadius={{ base: '0', md: 'sm' }}
           borderWidth={{ base: 0, md: '4px' }}
