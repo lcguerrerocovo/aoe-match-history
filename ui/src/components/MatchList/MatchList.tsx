@@ -157,10 +157,10 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                                 >
                                   {isMobile ? shortenMatchTypeName(diplo) : diplo}
                                 </Text>
-                                <Text textAlign="right" color={rec.wins === 0 ? 'brand.inkMuted' : 'brand.darkWin'} fontWeight="bold" display="flex" alignItems="center" justifyContent="flex-end">
+                                <Text textAlign="right" color={rec.wins === 0 ? 'brand.inkMuted' : 'brand.darkWin'} fontWeight="bold" display="flex" alignItems="baseline" justifyContent="flex-end">
                                   {rec.wins === 0 ? '—' : <>{rec.wins}<Text as="span" fontSize="0.75em" fontWeight={700}>W</Text></>}
                                 </Text>
-                                <Text textAlign="right" color={rec.losses === 0 ? 'brand.inkMuted' : 'brand.darkLoss'} fontWeight="bold" display="flex" alignItems="center" justifyContent="flex-end">
+                                <Text textAlign="right" color={rec.losses === 0 ? 'brand.inkMuted' : 'brand.darkLoss'} fontWeight="bold" display="flex" alignItems="baseline" justifyContent="flex-end">
                                   {rec.losses === 0 ? '—' : <>{rec.losses}<Text as="span" fontSize="0.75em" fontWeight={700}>L</Text></>}
                                 </Text>
                                 {hasUncategorized && (
