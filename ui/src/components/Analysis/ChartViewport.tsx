@@ -14,7 +14,7 @@ export function ChartViewport({ children, dataPointCount }: ChartViewportProps) 
       h={{ base: '480px', md: '440px' }}
       minH="440px"
       overflowX="auto"
-      overflowY="hidden"
+      overflowY="clip"
       data-testid="chart-container"
     >
       <Box minW={`${innerWidth}px`} h="100%">

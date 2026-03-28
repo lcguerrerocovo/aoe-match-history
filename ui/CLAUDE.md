@@ -41,6 +41,8 @@ MatchPage                        Single match detail
     ├── ChartNav.tsx             Icon segmented control (APM ↔ Actions)
     ├── ChartViewport.tsx        Fixed-height scroll frame (data-testid="chart-container")
     ├── PlayerBar.tsx            Unified player buttons (multi-toggle for APM, single-select for Actions)
+    ├── AnalysisEmptyState.tsx   Inline empty/generate/processing/error states
+    ├── useApmGeneration.ts     Hook: status polling, replay download, generation trigger
     └── index.ts                 Barrel export (AnalysisSection only)
         ├── → ApmChart.tsx       Pure APM line chart renderer (no legend/toggle)
         └── → ApmBreakdownChart/ Action breakdown (stacked bar)

@@ -13,6 +13,8 @@ const colors = {
 
 const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token].dark : colors[token].light;
 
+const TOOLTIP_TEXT_SHADOW = '0 1px 2px rgba(0,0,0,0.6)';
+
 interface ActionTypeStat {
   actionType: string;
   total: number;
@@ -72,7 +74,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
                 fontWeight="bold"
                 color="#fff"
                 style={{
-                  textShadow: '0 1px 2px rgba(0,0,0,0.6)'
+                  textShadow: TOOLTIP_TEXT_SHADOW
                 }}
               >
                 {entry.value}
@@ -127,7 +129,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
           <Tooltip
             content={<CustomTooltip />}
             wrapperStyle={{ fontFamily: 'inherit' }}
-            offset={30}
+            offset={20}
           />
           {activeActionTypesWithStats.map((actionStat) => (
             <Bar

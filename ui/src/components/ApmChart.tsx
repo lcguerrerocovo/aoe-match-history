@@ -54,6 +54,8 @@ const colors = {
 
 const c = (token: keyof typeof colors, isDark: boolean) => isDark ? colors[token].dark : colors[token].light;
 
+const TOOLTIP_TEXT_SHADOW = '0 1px 2px rgba(0,0,0,0.6)';
+
 export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, nameByProfile = {}, activePids }) => {
   const { isDark } = useThemeMode();
 
@@ -127,7 +129,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
                   fontSize="xs"
                   fontWeight="bold"
                   color="#fff"
-                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                  style={{ textShadow: TOOLTIP_TEXT_SHADOW }}
                 >
                   {entry.value}
                 </Text>
@@ -171,7 +173,7 @@ export const ApmChart: React.FC<ApmChartProps> = ({ apm, colorByProfile = {}, na
               fontWeight: 'bold',
             } : undefined}
           />
-          <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} />
+          <Tooltip content={<CustomTooltip />} wrapperStyle={{ fontFamily: 'inherit' }} offset={20} />
           {playerIds.map((pid) => {
             const colorId = colorByProfile[pid];
             const stroke = colorId ? PLAYER_COLORS[colorId] || c('chartFallback', isDark) : c('chartFallback', isDark);

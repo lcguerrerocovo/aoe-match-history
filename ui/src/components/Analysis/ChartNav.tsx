@@ -1,3 +1,4 @@
+import React from 'react';
 import { HStack, Box, Text, Flex } from '@chakra-ui/react';
 export type AnalysisView = 'apm' | 'actions';
 
@@ -26,7 +27,7 @@ function ActionsIcon() {
   );
 }
 
-const navItems: Array<{ view: AnalysisView; label: string; icon: React.FC }> = [
+const navItems: Array<{ view: AnalysisView; label: string; icon: () => React.JSX.Element }> = [
   { view: 'apm', label: 'APM', icon: ApmIcon },
   { view: 'actions', label: 'Actions', icon: ActionsIcon },
 ];

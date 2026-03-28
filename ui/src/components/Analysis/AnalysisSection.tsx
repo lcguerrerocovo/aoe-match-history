@@ -3,7 +3,8 @@ import { Card, VStack } from '@chakra-ui/react';
 import { cardVariant } from '../../types/chakra-overrides';
 import { Watermark } from '../Watermark';
 import { ApmChart } from '../ApmChart';
-import { ApmBreakdownChart } from '../ApmBreakdownChart';
+import { ApmBreakdownChart, ActionTypeLegend } from '../ApmBreakdownChart';
+import { extractActionTypes, calculateActionTypeTotals } from '../ApmBreakdownChart/utils';
 import { AnalysisHeader } from './AnalysisHeader';
 import { PlayerBar } from './PlayerBar';
 import { ChartViewport } from './ChartViewport';
@@ -144,31 +145,79 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
   const { status, isLoading, isProcessing, error, generate, containerRef } =
     useApmGeneration(matchId, profileId, { onBronzeStatus: handleBronzeStatus });
 
-  const renderChart = () => {
+  // Action type legend — computed eagerly so layout is stable on both views
+  const selectedPlayerData = useMemo(() => {
+    if (!actionsSelectedPid || !match?.apm?.players?.[actionsSelectedPid]) return null;
+    const data = match.apm.players[actionsSelectedPid];
+    return Array.isArray(data) ? data : null;
+  }, [match?.apm, actionsSelectedPid]);
+
+  const allActionTypes = useMemo(() => {
+    if (!selectedPlayerData) return [];
+    return extractActionTypes(selectedPlayerData);
+  }, [selectedPlayerData]);
+
+  const [activeActionTypes, setActiveActionTypes] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setActiveActionTypes(new Set(allActionTypes));
+  }, [allActionTypes]);
+
+  const toggleActionType = useCallback((actionType: string) => {
+    setActiveActionTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(actionType)) next.delete(actionType);
+      else next.add(actionType);
+      return next;
+    });
+  }, []);
+
+  const actionTypeColorMap = useMemo(() => {
+    if (!selectedPlayerData) return {};
+    const totals = calculateActionTypeTotals(selectedPlayerData, allActionTypes);
+    const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a).map(([t]) => t);
+    const map: Record<string, number> = {};
+    sorted.forEach((t, i) => { map[t] = i; });
+    return map;
+  }, [selectedPlayerData, allActionTypes]);
+
+  const allActionTypesWithStats = useMemo(() => {
+    if (!selectedPlayerData) return [];
+    const totals = calculateActionTypeTotals(selectedPlayerData, allActionTypes);
+    const all = Object.entries(totals).map(([actionType, total]) => ({ actionType, total }));
+    const activeTotals = all.filter((s) => activeActionTypes.has(s.actionType));
+    const totalActive = activeTotals.reduce((sum, s) => sum + s.total, 0);
+    return all
+      .map((s) => ({
+        ...s,
+        percentage: activeActionTypes.has(s.actionType) && totalActive > 0
+          ? Math.round((s.total / totalActive) * 100)
+          : null,
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [selectedPlayerData, allActionTypes, activeActionTypes]);
+
+  const renderChartContent = () => {
     if (!hasApm) {
       return (
-        <ChartViewport dataPointCount={0}>
-          <AnalysisEmptyState
-            status={status}
-            isLoading={isLoading}
-            isProcessing={isProcessing}
-            error={error}
-            onGenerate={generate}
-          />
-        </ChartViewport>
+        <AnalysisEmptyState
+          status={status}
+          isLoading={isLoading}
+          isProcessing={isProcessing}
+          error={error}
+          onGenerate={generate}
+        />
       );
     }
 
     if (activeView === 'apm') {
       return (
-        <ChartViewport dataPointCount={dataPointCount}>
-          <ApmChart
-            apm={match.apm!}
-            colorByProfile={colorMap}
-            nameByProfile={nameMap}
-            activePids={activePids}
-          />
-        </ChartViewport>
+        <ApmChart
+          apm={match.apm!}
+          colorByProfile={colorMap}
+          nameByProfile={nameMap}
+          activePids={activePids}
+        />
       );
     }
 
@@ -176,8 +225,8 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
       <ApmBreakdownChart
         apm={match.apm!}
         selectedPlayerId={actionsSelectedPid}
-        colorByProfile={colorMap}
-        nameByProfile={nameMap}
+        activeActionTypes={activeActionTypes}
+        actionTypeColorMap={actionTypeColorMap}
       />
     );
   };
@@ -202,7 +251,18 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
             onToggle={activeView === 'apm' ? togglePid : (pid: string) => setActionsSelectedPid(pid)}
           />
         )}
-        {renderChart()}
+        <ChartViewport dataPointCount={dataPointCount}>
+          {renderChartContent()}
+        </ChartViewport>
+        {hasApm && allActionTypesWithStats.length > 0 && (
+          <ActionTypeLegend
+            allActionTypesWithStats={allActionTypesWithStats}
+            activeActionTypes={activeActionTypes}
+            actionTypeColorMap={actionTypeColorMap}
+            onToggleActionType={toggleActionType}
+            hidden={activeView !== 'actions'}
+          />
+        )}
       </VStack>
     </Card.Root>
   );

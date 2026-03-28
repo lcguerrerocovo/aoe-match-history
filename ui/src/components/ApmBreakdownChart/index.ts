@@ -1,1 +1,1 @@
-export { ApmBreakdownChart } from './ApmBreakdownChart';
+export { ApmBreakdownChart, ActionTypeLegend } from './ApmBreakdownChart';
