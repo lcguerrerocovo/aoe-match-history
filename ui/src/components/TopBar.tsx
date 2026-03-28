@@ -170,7 +170,7 @@ const TopBar = () => {
                 align="center"
                 gap={1.5}
                 fontSize="xs"
-                color={isActive ? 'brand.redChalk' : 'brand.topbarText'}
+                color="brand.topbarText"
                 opacity={isActive ? 1 : 0.6}
                 letterSpacing="wide"
                 textTransform="uppercase"
