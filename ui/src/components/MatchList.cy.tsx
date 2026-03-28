@@ -309,15 +309,15 @@ describe('MatchCard Responsive Layout', () => {
 describe('Session Header Alignment', () => {
   const mockMatchGroups: MatchGroup[] = [mockMatchGroup];
 
-  it('should align content correctly on desktop', () => {
+  it('should render date header and record grid on desktop', () => {
     mount(
       <BrowserRouter>
         <CustomThemeProvider>
-          <MatchList 
-            matchGroups={mockMatchGroups} 
-            openDates={['2024-01-01']} 
-            onOpenDatesChange={() => {}} 
-            profileId="123" 
+          <MatchList
+            matchGroups={mockMatchGroups}
+            openDates={['2024-01-01']}
+            onOpenDatesChange={() => {}}
+            profileId="123"
           />
         </CustomThemeProvider>
       </BrowserRouter>
@@ -325,14 +325,14 @@ describe('Session Header Alignment', () => {
 
     cy.viewport(1200, 800);
 
-    // First verify the component is rendering
+    // Verify the component is rendering
     cy.contains('Matches:').should('exist');
-    
-    // Check that the match stats row uses space-between alignment
+
+    // Check that the session header contains date and record grid
     cy.get('h2').first().within(() => {
-      // Look for any element with role="group"
       cy.get('[role="group"]').should('exist');
-      cy.get('[role="group"]').first().should('have.css', 'justify-content', 'space-between');
+      // Session annotation line should contain match count and duration
+      cy.contains('matches played').should('exist');
     });
   });
 
@@ -340,11 +340,11 @@ describe('Session Header Alignment', () => {
     mount(
       <BrowserRouter>
         <CustomThemeProvider>
-          <MatchList 
-            matchGroups={mockMatchGroups} 
-            openDates={['2024-01-01']} 
-            onOpenDatesChange={() => {}} 
-            profileId="123" 
+          <MatchList
+            matchGroups={mockMatchGroups}
+            openDates={['2024-01-01']}
+            onOpenDatesChange={() => {}}
+            profileId="123"
           />
         </CustomThemeProvider>
       </BrowserRouter>
@@ -352,14 +352,13 @@ describe('Session Header Alignment', () => {
 
     cy.viewport(400, 600);
 
-    // First verify the component is rendering
+    // Verify the component is rendering
     cy.contains('Matches:').should('exist');
-    
-    // On mobile, the layout should still use space-between but wrap properly
+
+    // Mobile should also show the combined annotation line
     cy.get('h2').first().within(() => {
-      // Look for any element with role="group"
       cy.get('[role="group"]').should('exist');
-      cy.get('[role="group"]').first().should('have.css', 'justify-content', 'space-between');
+      cy.contains('matches played').should('exist');
     });
   });
 }); 

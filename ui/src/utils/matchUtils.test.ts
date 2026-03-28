@@ -43,7 +43,7 @@ const mockMatch = (start: string, duration: number, players: Player[] = [], dipl
 
 describe('matchUtils', () => {
   describe('groupMatchesBySession', () => {
-    it('should group matches within one hour into a single session', () => {
+    it('should group matches within 90 minutes into a single session', () => {
       const matches = [
         mockMatch('2023-01-01T13:00:00Z', 1800), // 1:00 PM, 30min duration
         mockMatch('2023-01-01T12:30:00Z', 1200), // 12:30 PM, 20min duration
@@ -54,7 +54,7 @@ describe('matchUtils', () => {
       expect(sessions[0].matches).toHaveLength(3);
     });
 
-    it('should create two sessions for matches more than an hour apart', () => {
+    it('should create two sessions for matches more than 90 minutes apart', () => {
       const matches = [
         mockMatch('2023-01-01T15:00:00Z', 1800), // Session 1
         mockMatch('2023-01-01T12:30:00Z', 1200), // Session 2
@@ -353,7 +353,7 @@ describe('matchUtils', () => {
       const end = '2023-06-20T16:30:00Z';
       const sessionId = `${start}_${end}`;
 
-      const result = formatSessionTimingData(sessionId, 7200);
+      const result = formatSessionTimingData(sessionId, 7200, 5);
 
       expect(result.isCrossDay).toBe(false);
       expect(result.timePlayed).toBe('2h 0m');
@@ -362,18 +362,41 @@ describe('matchUtils', () => {
       expect(result.timeRange.length).toBeGreaterThan(0);
     });
 
-    it('should detect cross-day sessions', () => {
+    it('should detect cross-day sessions and use start date only', () => {
       // Use dates far enough apart that they span days in any timezone
       const start = '2023-06-20T10:00:00Z';
       const end = '2023-06-21T14:00:00Z';
       const sessionId = `${start}_${end}`;
 
-      const result = formatSessionTimingData(sessionId, 5400);
+      const result = formatSessionTimingData(sessionId, 5400, 3);
 
       expect(result.isCrossDay).toBe(true);
       expect(result.timePlayed).toBe('1h 30m');
       // 28 hours
       expect(result.sessionDuration).toBe('28h 0m');
+      // Cross-day should use start date format (with year), not "Jun 20–21"
+      expect(result.dateDisplay).not.toContain('–');
+    });
+
+    it('should calculate avgGapMinutes for multi-match sessions', () => {
+      const start = '2023-06-20T14:00:00Z';
+      const end = '2023-06-20T16:30:00Z';
+      const sessionId = `${start}_${end}`;
+      // Session: 2h 30m = 9000s, played: 7200s, idle: 1800s = 30m, 5 matches = 4 gaps
+      // avgGap = 30 / 4 = 7.5 → rounds to 8
+      const result = formatSessionTimingData(sessionId, 7200, 5);
+
+      expect(result.avgGapMinutes).toBe(8);
+    });
+
+    it('should return avgGapMinutes 0 for single-match sessions', () => {
+      const start = '2023-06-20T14:00:00Z';
+      const end = '2023-06-20T14:30:00Z';
+      const sessionId = `${start}_${end}`;
+
+      const result = formatSessionTimingData(sessionId, 1800, 1);
+
+      expect(result.avgGapMinutes).toBe(0);
     });
 
     it('should handle fallback for single-value session ID', () => {
@@ -383,6 +406,7 @@ describe('matchUtils', () => {
       expect(result.timePlayed).toBe('1h 0m');
       expect(result.timeRange).toBe('');
       expect(result.sessionDuration).toBe('');
+      expect(result.avgGapMinutes).toBe(0);
     });
 
     it('should handle invalid date strings gracefully', () => {
@@ -392,6 +416,7 @@ describe('matchUtils', () => {
       expect(result.dateDisplay).toBe('invalid_alsoInvalid');
       expect(result.timeRange).toBe('');
       expect(result.timePlayed).toBe('10m');
+      expect(result.avgGapMinutes).toBe(0);
     });
   });
 

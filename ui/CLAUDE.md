@@ -51,7 +51,7 @@ All state in `App.tsx` — no global store. Props drilled to children.
 - Matches fetched via `getFullMatchHistory` (cursor-paginated, merges Relic API + PostgreSQL). Falls back to legacy `getMatches` if `/full` endpoint fails.
 - Pagination: cursor-based via `nextCursor` + `hasMore` + `isLoadingMore` state in App.tsx. `currentPage` kept only as legacy fallback. "Load More" button in MatchList appends next batch.
 - Server-side filtering: `selectedMap` and `selectedMatchType` trigger server-side filtered queries (DB only, no Relic merge). `serverFilterOptions` (maps + matchTypes with counts) returned on first request.
-- Session grouping: matches within 1 hour are grouped together
+- Session grouping: matches within 90 minutes are grouped together
 - Flat mode (no grouping) when any filter is active
 
 ## Styling

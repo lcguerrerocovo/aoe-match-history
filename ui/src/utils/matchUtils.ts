@@ -20,9 +20,9 @@ export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
       // Check if this match is within 1 hour of the most recent match in the session
       const lastMatchTime = new Date(currentSession[currentSession.length - 1].start_time);
       const timeDiff = Math.abs(new Date(match.start_time).getTime() - lastMatchTime.getTime());
-      const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-      
-      if (timeDiff <= oneHour) {
+      const sessionGap = 90 * 60 * 1000; // 90 minutes in milliseconds
+
+      if (timeDiff <= sessionGap) {
         // Add to current session
         currentSession.push(match);
       } else {
@@ -131,7 +131,7 @@ export function formatDayDate(dateStr: string): string {
   });
 }
 
-export function formatSessionTimingData(sessionId: string, timePlayedSec: number): { dateDisplay: string; timeRange: string; sessionDuration: string; timePlayed: string; isCrossDay: boolean } {
+export function formatSessionTimingData(sessionId: string, timePlayedSec: number, matchCount: number = 1): { dateDisplay: string; timeRange: string; sessionDuration: string; timePlayed: string; avgGapMinutes: number; isCrossDay: boolean } {
   // Session ID format is "startISO_endISO"
   try {
     const [startIso, endIso] = sessionId.split('_');
@@ -144,6 +144,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
         timeRange: '',
         sessionDuration: '',
         timePlayed: formatDuration(timePlayedSec),
+        avgGapMinutes: 0,
         isCrossDay: false
       };
     }
@@ -157,6 +158,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
         timeRange: '',
         sessionDuration: '',
         timePlayed: formatDuration(timePlayedSec),
+        avgGapMinutes: 0,
         isCrossDay: false
       };
     }
@@ -165,20 +167,21 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
     const sessionDurationMs = endDate.getTime() - startDate.getTime();
     const sessionDurationSec = Math.floor(sessionDurationMs / 1000);
 
+    // Calculate average gap between games
+    const idleSec = Math.max(0, sessionDurationSec - timePlayedSec);
+    const avgGapMinutes = matchCount > 1 ? Math.round(idleSec / 60 / (matchCount - 1)) : 0;
+
     // Check if session spans across days in the local timezone
     const isCrossDay = startDate.getDate() !== endDate.getDate();
 
-    if (isCrossDay) {
-      // Cross-day format
-      const startDateFormatted = startDate.toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-      });
-      
-      const endDateFormatted = endDate.toLocaleString(undefined, {
-        day: 'numeric',
-      });
+    // Date formatting — always use start date (cross-day is indicated by moon icon)
+    const dateFormatted = startDate.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
 
+    if (isCrossDay) {
       const startTimeFormatted = startDate.toLocaleString(undefined, {
         hour: 'numeric',
         minute: '2-digit',
@@ -192,20 +195,14 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
       });
 
       return {
-        dateDisplay: `${startDateFormatted}–${endDateFormatted}`,
+        dateDisplay: dateFormatted,
         timeRange: `${startTimeFormatted}–${endTimeFormatted}`,
         sessionDuration: formatDuration(sessionDurationSec),
         timePlayed: formatDuration(timePlayedSec),
+        avgGapMinutes,
         isCrossDay: true
       };
     } else {
-      // Same-day format
-      const dateFormatted = startDate.toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-
       // Get hour periods for both times
       const startHourPeriod = startDate.getHours() >= 12 ? 'PM' : 'AM';
       const endHourPeriod = endDate.getHours() >= 12 ? 'PM' : 'AM';
@@ -223,7 +220,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
       });
 
       // Only show AM/PM on end time if different from start, otherwise show on both
-      const timeRange = startHourPeriod !== endHourPeriod 
+      const timeRange = startHourPeriod !== endHourPeriod
         ? `${startTime12} ${startHourPeriod}–${endTimeFormatted}`
         : `${startTime12}–${endTimeFormatted}`;
 
@@ -232,6 +229,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
         timeRange: timeRange,
         sessionDuration: formatDuration(sessionDurationSec),
         timePlayed: formatDuration(timePlayedSec),
+        avgGapMinutes,
         isCrossDay: false
       };
     }
@@ -241,6 +239,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
       timeRange: '',
       sessionDuration: '',
       timePlayed: formatDuration(timePlayedSec),
+      avgGapMinutes: 0,
       isCrossDay: false
     };
   }

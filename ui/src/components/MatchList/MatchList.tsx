@@ -1,8 +1,6 @@
-import { Box, VStack, Text, HStack, Accordion, Icon, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, HStack, Accordion, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
 import { system } from '../../theme/theme';
 import type { Match, MatchGroup } from '../../types/match';
-import { FiClock } from 'react-icons/fi';
-import { GiBroadsword } from 'react-icons/gi';
 import { useLayoutConfig } from '../../theme/breakpoints';
 import { sumDurations, countByDiplomacy, formatSessionTimingData } from '../../utils/matchUtils';
 import { shortenMatchTypeName } from '../../utils/gameUtils';
@@ -110,7 +108,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                 <h2 style={isFlatMode ? { display: 'none' } : undefined}>
                   <Accordion.ItemTrigger>
                     {(() => {
-                      const timingData = formatSessionTimingData(group.date, totalReal);
+                      const timingData = formatSessionTimingData(group.date, totalReal, group.matches.length);
                       const diploEntries = Object.entries(byDiplo);
                       const hasUncategorized = diploEntries.some(([, rec]) => rec.uncategorized > 0);
 
@@ -121,7 +119,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                           pl={{ base: 2, md: 3 }}
                           ml={{ base: 0, md: '48px' }}
                         >
-                          {/* Match count annotation */}
+                          {/* Session annotation: match count · duration (~gap between games) */}
                           <Text
                             fontFamily="'Lora', serif"
                             fontStyle="italic"
@@ -129,7 +127,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                             color="brand.inkMuted"
                             mb={1}
                           >
-                            {toRoman(group.matches.length)} matches played
+                            {toRoman(group.matches.length)} matches played · {timingData.sessionDuration}
+                            {timingData.avgGapMinutes >= 2 && group.matches.length > 1 && ` (~${timingData.avgGapMinutes}m between games)`}
                           </Text>
 
                           {/* Record grid */}
@@ -182,77 +181,56 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                         </Box>
                       );
 
-                      const sessionMeta = (
-                        <VStack gap={0} align="flex-end" fontSize={{ base: 'xs', md: 'sm' }} flexShrink={0}>
-                          <HStack gap={1}>
-                            <Icon boxSize={{ base: '10px', md: 3 }} color="brand.bronze"><FiClock /></Icon>
-                            <Text color="brand.inkMuted">{timingData.sessionDuration}</Text>
-                          </HStack>
-                          <HStack gap={1}>
-                            <GiBroadsword size={isMobile ? 10 : 12} color="currentColor" />
-                            <Text color="brand.inkMuted">{timingData.timePlayed}</Text>
-                          </HStack>
-                        </VStack>
-                      );
+                      const moonColor = system.token('colors.brand.redChalk', '#8B3A3A');
 
                       return (
                         <>
                           <VStack flex="1" align="stretch" gap={2}>
                             {/* Date Header */}
                             <Box bg="brand.sessionHeaderBg" p={1} borderBottom="2px solid" borderBottomColor="brand.bronze">
-                              {/* Mobile: Date row only */}
+                              {/* Mobile */}
                               <HStack gap={1} alignItems="flex-start" display={{ base: "flex", md: "none" }}>
                                 <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="1px">
                                   {timingData.dateDisplay.charAt(0)}
                                 </Text>
                                 <VStack gap={0} align="flex-start">
-                                  <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
+                                  <HStack gap={1} align="center">
+                                    <Text fontWeight="bold" color="brand.inkDark" fontSize="sm">{timingData.dateDisplay.slice(1)}</Text>
+                                    {timingData.isCrossDay && (
+                                      <svg width="14" height="14" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
+                                      </svg>
+                                    )}
+                                  </HStack>
                                   {timingData.timeRange && (
                                     <Text fontWeight="semibold" color="brand.inkDark" fontSize="xs">{timingData.timeRange}</Text>
                                   )}
                                 </VStack>
                               </HStack>
 
-                              {/* Desktop: Date + duration on one line */}
-                              <HStack justify="space-between" align="center" display={{ base: "none", md: "flex" }}>
-                                <HStack gap={1} alignItems="flex-start">
-                                  <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="2px">
-                                    {timingData.dateDisplay.charAt(0)}
-                                  </Text>
-                                  <VStack gap={0} align="flex-start">
+                              {/* Desktop */}
+                              <HStack gap={1} alignItems="flex-start" display={{ base: "none", md: "flex" }}>
+                                <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif" mt="2px">
+                                  {timingData.dateDisplay.charAt(0)}
+                                </Text>
+                                <VStack gap={0} align="flex-start">
+                                  <HStack gap="6px" align="center">
                                     <Text fontWeight="bold" color="brand.inkDark" fontSize="md">{timingData.dateDisplay.slice(1)}</Text>
-                                    {timingData.timeRange && (
-                                      <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
+                                    {timingData.isCrossDay && (
+                                      <svg width="18" height="18" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
+                                      </svg>
                                     )}
-                                  </VStack>
-                                </HStack>
-                                <HStack gap={4} fontSize="sm">
-                                  <HStack gap={1}>
-                                    <Icon boxSize={3} color="brand.bronze"><FiClock /></Icon>
-                                    <Text color="brand.inkMuted">Session:</Text>
-                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.sessionDuration}</Text>
                                   </HStack>
-                                  <HStack gap={1}>
-                                    <GiBroadsword size={12} color="currentColor" />
-                                    <Text color="brand.inkMuted">Played:</Text>
-                                    <Text fontWeight="medium" color="brand.inkMuted">{timingData.timePlayed}</Text>
-                                  </HStack>
-                                </HStack>
+                                  {timingData.timeRange && (
+                                    <Text fontWeight="semibold" color="brand.inkDark" fontSize="sm">{timingData.timeRange}</Text>
+                                  )}
+                                </VStack>
                               </HStack>
                             </Box>
 
-                            {/* Mobile: Records + session meta side by side */}
-                            <HStack display={{ base: 'flex', md: 'none' }} align="flex-start" justify="space-between" gap={2}>
-                              <Box flex="1" minW={0}>
-                                {recordGrid}
-                              </Box>
-                              {sessionMeta}
-                            </HStack>
-
-                            {/* Desktop: Records only (meta is in date header) */}
-                            <Box display={{ base: 'none', md: 'block' }}>
-                              {recordGrid}
-                            </Box>
+                            {/* Record grid — same layout for mobile and desktop */}
+                            {recordGrid}
                           </VStack>
 
                           {/* Seal toggle */}
