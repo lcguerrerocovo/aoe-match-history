@@ -28,8 +28,10 @@ function TeamColumn({
       align="stretch"
       gap={playerGap}
       flex="1"
-      px={3}
+      minW={0}
+      px={{ base: 2, xl: 3 }}
       py={2}
+      overflow="hidden"
       bg={isWinner ? 'brand.cardWinnerBg' : 'brand.cardLoserBg'}
       borderTop="2px solid"
       borderTopColor={isWinner ? 'brand.redChalk' : 'transparent'}

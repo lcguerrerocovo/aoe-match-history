@@ -67,10 +67,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
   return (
     <Box w="full">
       <HStack
-        gap={{ base: 2, md: 3 }}
+        gap={{ base: 2, md: 2, xl: 3 }}
         align="stretch"
         w="full"
-        minH={{ base: '60px', md: '68px' }}
+        minH={{ base: '60px', md: '56px', xl: '68px' }}
       >
         {/* Vertical color stripe */}
         <Box
@@ -85,7 +85,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
 
         {/* Avatar */}
         <Avatar.Root
-          size={isExpansive ? { base: "md", md: "lg" } : { base: "sm", md: "md" }}
+          size={isExpansive ? { base: "md", md: "md", xl: "lg" } : { base: "sm", md: "sm", xl: "md" }}
           bg="brand.inkMuted"
           color="brand.parchment"
           border="1px solid"
@@ -102,7 +102,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
           {/* Player name link */}
           <Tooltip content={player.name}>
             <Link
-              fontSize={isExpansive ? { base: "sm", md: "md" } : { base: "xs", md: "sm" }}
+              fontSize={isExpansive ? { base: "sm", md: "sm", xl: "md" } : { base: "xs", md: "xs", xl: "sm" }}
               fontWeight="semibold"
               color="brand.inkDark"
               _hover={{ color: "brand.inkAccent", textDecoration: "underline" }}
@@ -167,7 +167,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
 
           {/* Rating and change */}
           {player.rating && (
-            <Text fontSize={isExpansive ? { base: "xs", md: "sm" } : { base: "2xs", md: "xs", lg: "sm" }} color="brand.inkDark" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
+            <Text fontSize={isExpansive ? { base: "xs", md: "xs", xl: "sm" } : { base: "2xs", md: "2xs", xl: "xs" }} color="brand.inkDark" fontFamily="mono" fontWeight="bold" data-testid="player-rating">
               {player.rating}
               {player.rating_change && (
                 <Text as="span" fontSize={{ base: '2xs', md: '2xs', lg: 'xs' }} color={player.rating_change > 0 ? 'brand.darkWin' : 'brand.darkLoss'} ml={1} fontWeight="semibold">
