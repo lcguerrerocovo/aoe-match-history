@@ -56,4 +56,4 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
       </VStack>
     </VStack>
   );
-} 
+}

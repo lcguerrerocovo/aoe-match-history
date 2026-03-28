@@ -102,8 +102,13 @@ export function TeamCard({ match }: { match: Match }) {
                       borderRadius: '0'
                     }}
                     onError={(e) => {
-                      // Fallback to text if image fails to load
                       const target = e.target as HTMLImageElement;
+                      // Try emblem as fallback before showing text
+                      const emblemUrl = assetManager.getCivEmblem(String(p.civ || 'unknown'));
+                      if (target.src !== emblemUrl) {
+                        target.src = emblemUrl;
+                        return;
+                      }
                       target.style.display = 'none';
                       const textElement = target.parentElement?.querySelector('.civ-fallback') as HTMLElement;
                       if (textElement) {

@@ -64,7 +64,8 @@ describe('ProfileHeader Responsive Layout', () => {
       </CustomThemeProvider>
     );
 
-    cy.contains('Loading...').should('be.visible');
+    cy.get('[data-testid="profile-header-stack"]').should('be.visible');
+    cy.get('.chakra-skeleton').should('exist');
     cy.contains('ID: 12345').should('be.visible');
   });
 

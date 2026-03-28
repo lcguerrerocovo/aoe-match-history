@@ -75,6 +75,12 @@ describe('assetManager', () => {
         { civName: 'Wei', expected: 'wei.png' },
         { civName: 'Shu', expected: 'shu.png' },
         { civName: 'Wu', expected: 'wu.png' },
+        { civName: 'Mapuche', expected: 'mapuche.png' },
+        { civName: 'Muisca', expected: 'muisca.png' },
+        { civName: 'Puru', expected: 'puru.png' },
+        { civName: 'Thracians', expected: 'thracians.png' },
+        { civName: 'Tupi', expected: 'tupi.png' },
+        { civName: 'Hindustanis', expected: 'indians.png' },
       ];
 
       testCases.forEach(({ civName, expected }) => {
@@ -91,6 +97,24 @@ describe('assetManager', () => {
     it('should handle empty civ names', () => {
       const url = assetManager.getCivIcon('');
       expect(url).toContain('civ_icons/.png');
+    });
+  });
+
+  describe('getCivEmblem', () => {
+    it('should return emblem URLs from civ_emblems directory', () => {
+      const url = assetManager.getCivEmblem('Britons');
+      expect(url).toContain('civ_emblems/britons.png');
+    });
+
+    it('should handle special cases', () => {
+      expect(assetManager.getCivEmblem('Aztec')).toContain('civ_emblems/aztecs.png');
+      expect(assetManager.getCivEmblem('Lac Viet')).toContain('civ_emblems/lacviet.png');
+      expect(assetManager.getCivEmblem('Macedonians')).toContain('civ_emblems/macedonian.png');
+    });
+
+    it('should NOT map Hindustanis to indians for emblems', () => {
+      const url = assetManager.getCivEmblem('Hindustanis');
+      expect(url).toContain('civ_emblems/hindustanis.png');
     });
   });
 

@@ -129,7 +129,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
               borderWidth={0}
             >
               <img
-                src={assetManager.getCivIcon(String(player.civ || 'unknown'))}
+                src={assetManager.getCivEmblem(String(player.civ || 'unknown'))}
                 alt={String(player.civ || 'Unknown')}
                 style={{
                   width: '100%',

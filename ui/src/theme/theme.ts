@@ -551,6 +551,20 @@ const config = defineConfig({
       link: linkRecipe,
       button: buttonRecipe,
       separator: separatorRecipe,
+      skeleton: defineRecipe({
+        className: 'skeleton',
+        variants: {
+          variant: {
+            shine: {
+              '--start-color': { base: 'colors.brand.parchment', _dark: 'colors.brand.inkLight' },
+              '--end-color': { base: 'colors.brand.parchmentDark', _dark: '#374151' },
+            },
+            pulse: {
+              background: { base: '{colors.brand.parchmentDark}', _dark: '{colors.brand.inkLight}' },
+            },
+          },
+        },
+      }),
     },
     slotRecipes: {
       card: cardSlotRecipe,

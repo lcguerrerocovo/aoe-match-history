@@ -1,4 +1,4 @@
-import { Box, VStack, Text } from '@chakra-ui/react';
+import { Box, VStack, Flex, Text } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
@@ -6,6 +6,7 @@ import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { PulsingDot } from './LiveMatchCard';
 import { responsiveSpacing } from '../theme/theme';
 import { Watermark } from './Watermark';
 
@@ -106,9 +107,30 @@ export function LandingPage() {
               Analyze your recent Age of Empires II ranked match history with detailed performance
               metrics. View player statistics and performance, as well as detailed match APM insights
               broken down by action types from your latest games in a clean, competitive-focused interface.
-              <br /> <br /> <Text as="span" color="brand.redChalk">More features coming soon!</Text>
             </Text>
           </Box>
+          <RouterLink to="/live">
+            <Flex
+              align="center"
+              justify="center"
+              gap={2}
+              py={3}
+              px={5}
+              mx="auto"
+              borderWidth="1px"
+              borderColor="brand.borderWarm"
+              borderRadius="sm"
+              transition="all 0.2s ease"
+              _hover={{ borderColor: 'brand.redChalk', bg: 'brand.parchmentDark' }}
+              cursor="pointer"
+              w="fit-content"
+            >
+              <PulsingDot size="6px" />
+              <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
+                Live Matches
+              </Text>
+            </Flex>
+          </RouterLink>
         </VStack>
       </VStack>
     </Box>

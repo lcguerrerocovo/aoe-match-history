@@ -52,24 +52,32 @@ class AssetManager {
   }
 
   /**
-   * Get civilization icon URL
+   * Get civilization icon URL (mod-style icons for match list)
    */
   getCivIcon(civName: string): string {
-    // Handle special cases first
     const specialCases: Record<string, string> = {
       'Lac Viet': 'lacviet.png',
       'Aztec': 'aztecs.png',
       'Hindustanis': 'indians.png',
       'Macedonians': 'macedonian.png',
     };
-    
-    if (specialCases[civName]) {
-      return this.buildAssetUrl(`civ_icons/${specialCases[civName]}`);
-    }
-    
-    // Default normalization
-    const normalizedName = civName.toLowerCase().replace(/\s+/g, '_');
-    return this.buildAssetUrl(`civ_icons/${normalizedName}.png`);
+
+    const filename = specialCases[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
+    return this.buildAssetUrl(`civ_icons/${filename}`);
+  }
+
+  /**
+   * Get civilization emblem URL (full heraldic crest for match summary)
+   */
+  getCivEmblem(civName: string): string {
+    const specialCases: Record<string, string> = {
+      'Lac Viet': 'lacviet.png',
+      'Aztec': 'aztecs.png',
+      'Macedonians': 'macedonian.png',
+    };
+
+    const filename = specialCases[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
+    return this.buildAssetUrl(`civ_emblems/${filename}`);
   }
 
   /**
