@@ -275,7 +275,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                     })()}
                   </Accordion.ItemTrigger>
                 </h2>
-                <Accordion.ItemContent pb={4} bg="brand.expandedBg"><Accordion.ItemBody>
+                <Accordion.ItemContent pb={4}><Accordion.ItemBody>
                     {renderMatches(group.matches, isOpen)}
                   </Accordion.ItemBody></Accordion.ItemContent>
               </Accordion.Item>
