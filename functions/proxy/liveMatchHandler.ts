@@ -277,7 +277,10 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
     if (!pendingFetch) {
         pendingFetch = fetchAllLiveMatches()
             .then(data => {
-                cachedResponse = { data, timestamp: Date.now() };
+                // Don't cache empty responses — they may be transient Relic API blips
+                if (data.length > 0) {
+                    cachedResponse = { data, timestamp: Date.now() };
+                }
                 return data;
             })
             .finally(() => { pendingFetch = null; });
@@ -340,5 +343,11 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
 
     // Unfiltered: use cached + paginated fetch
     const matches = await getCachedLiveMatches();
+
+    // Short CDN TTL for empty responses — they're likely transient Relic API blips
+    if (matches.length === 0) {
+        headers['Cache-Control'] = 'public, s-maxage=5, max-age=3';
+    }
+
     return { data: matches, headers };
 }

@@ -199,12 +199,13 @@ export function LivePage() {
       prevMatchIdsRef.current = new Set(data.map(m => m.match_id));
       setMatches(data);
       setError(null);
+      setIsLoading(false);
     } catch (err) {
       // Ignore aborted fetches (superseded by a newer request)
       if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Failed to load live matches');
-    } finally {
       setIsLoading(false);
+    } finally {
       fetchingRef.current = false;
     }
   }, []);
