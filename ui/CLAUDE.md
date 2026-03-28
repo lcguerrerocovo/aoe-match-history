@@ -48,7 +48,7 @@ MatchPage                        Single match detail
         └── → ApmBreakdownChart/ Action breakdown (stacked bar)
 
 ApmBreakdownChart/               APM chart with action breakdown
-├── ApmBreakdownChart.tsx        Chart container (accepts selectedPlayerId, uses ChartViewport)
+├── ApmBreakdownChart.tsx        Chart container (accepts selectedPlayerId, computes chartData)
 ├── ChartArea.tsx                Recharts area chart
 ├── ActionTypeLegend.tsx         Action type color legend
 └── utils.ts                     Chart color/formatting helpers
@@ -126,8 +126,8 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `profile-search` — profile with TopBar search results
 - `profile-expanded` — profile with accordion session expanded
 - `live` — live matches page
-- `match` — match detail with APM tab
-- `match-actions` — match detail with Actions tab
+- `match` — match detail with APM view
+- `match-actions` — match detail with Actions view
 
 **When adding new views or interactive states**, add a corresponding entry to the `VIEWS` array in `scripts/take-screenshots.ts`. Each entry needs a `name`, `path`, `waitForSelector`, and optionally a `beforeCapture` function for interactions (typing, clicking tabs, expanding accordions).
 
