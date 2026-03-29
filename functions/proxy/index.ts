@@ -2,7 +2,7 @@ import cors from 'cors';
 import type { Request, Response } from 'express';
 
 // Import from extracted modules
-import { log, getFirestoreClient } from './config';
+import { getFirestoreClient } from './config';
 import { handlePlayerSearch } from './playerSearch';
 import { handleSteamAvatar } from './steamHandler';
 import { __setPlayerService, __resetPlayerService } from './authService';
