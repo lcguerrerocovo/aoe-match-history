@@ -11,7 +11,7 @@ import { ChartViewport } from './ChartViewport';
 import { AnalysisEmptyState } from './AnalysisEmptyState';
 import { useAutoAnalysis } from './useAutoAnalysis';
 import type { AnalysisView } from './ChartNav';
-import type { Match, ApmData } from '../../types/match';
+import type { Match } from '../../types/match';
 import { getMatch } from '../../services/matchService';
 
 interface AnalysisSectionProps {
@@ -199,7 +199,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
 
   const renderChartContent = () => {
     if (!hasApm) {
-      return <AnalysisEmptyState status={analysisStatus} />;
+      return <AnalysisEmptyState status={analysisStatus === 'complete' ? 'unavailable' : analysisStatus} />;
     }
 
     if (activeView === 'apm') {

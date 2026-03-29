@@ -17,7 +17,7 @@ interface MatchSummaryCardProps {
   onAnalysisAnimationEnd?: () => void;
 }
 
-export function MatchSummaryCard({ match, profileId, groupOpen, analysisState, onAnalysisAnimationEnd }: MatchSummaryCardProps) {
+export function MatchSummaryCard({ match, analysisState, onAnalysisAnimationEnd }: MatchSummaryCardProps) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
   const gameTimeSec = Math.round(durationSec * 1.7);

@@ -18,7 +18,7 @@ interface AnalysisIndicatorProps {
 }
 
 export function AnalysisIndicator({ state, onAnimationEnd }: AnalysisIndicatorProps) {
-  if (state === 'none') return null;
+  if (state === 'none') return <Box w="24px" h="24px" flexShrink={0} />;
 
   const isAnimating = state === 'processing';
   const isNew = state === 'new';
