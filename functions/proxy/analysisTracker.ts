@@ -1,20 +1,31 @@
 /**
  * Tracks which match IDs are currently being processed to avoid duplicate work.
+ * Entries expire after TTL_MS so crashed processing attempts don't block retries.
  */
-class AnalysisTracker {
-  private inFlight = new Set<string>();
+const TTL_MS = 60_000;
 
-  isInFlight(matchId: string): boolean {
-    return this.inFlight.has(matchId);
-  }
+const inFlight = new Map<string, number>();
 
-  markInFlight(matchId: string): void {
-    this.inFlight.add(matchId);
+function isInFlight(matchId: string): boolean {
+  const timestamp = inFlight.get(matchId);
+  if (timestamp === undefined) return false;
+  if (Date.now() - timestamp > TTL_MS) {
+    inFlight.delete(matchId);
+    return false;
   }
-
-  markDone(matchId: string): void {
-    this.inFlight.delete(matchId);
-  }
+  return true;
 }
 
-export const analysisTracker = new AnalysisTracker();
+function markInFlight(matchId: string): void {
+  inFlight.set(matchId, Date.now());
+}
+
+function markDone(matchId: string): void {
+  inFlight.delete(matchId);
+}
+
+function clear(): void {
+  inFlight.clear();
+}
+
+export const analysisTracker = { isInFlight, markInFlight, markDone, clear };
