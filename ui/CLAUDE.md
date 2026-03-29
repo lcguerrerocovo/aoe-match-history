@@ -21,13 +21,14 @@ App                              State owner: matches, filters, profile, stats
 │   └── LiveMatchCard            Shared card component (→ LiveMatchCard.tsx)
 ├── FilterBar                    Search, map/type dropdowns, sort toggle
 └── MatchList/                   Accordion of date-grouped sessions
-    ├── MatchList.tsx             Session grouping, accordion container
+    ├── MatchList.tsx             Session grouping, accordion container, batch analysis hook
     ├── MatchCard.tsx             Single match row
-    ├── MatchSummaryCard.tsx      Match header (map, type, result link)
+    ├── MatchSummaryCard.tsx      Match header (map, type, result link, analysis indicator)
+    ├── AnalysisIndicator.tsx     Passive indicator: none/processing/new/ready states with animations
     ├── MapCard.tsx               Diamond-rotated map thumbnail (list view)
     ├── TeamCard.tsx              Team layout with player rows
     ├── PlayerRating.tsx          Rating badge
-    └── AnalysisButton.tsx        Analysis trigger button
+    └── useBatchAnalysis.ts       Hook: batch trigger + sidecar polling (in hooks/)
 
 MatchPage                        Single match detail
 ├── FullMatchSummaryCard/        Teams, players, ratings
@@ -41,8 +42,8 @@ MatchPage                        Single match detail
     ├── ChartNav.tsx             Icon segmented control (APM ↔ Actions)
     ├── ChartViewport.tsx        Fixed-height scroll frame (data-testid="chart-container")
     ├── PlayerBar.tsx            Unified player buttons (multi-toggle for APM, single-select for Actions)
-    ├── AnalysisEmptyState.tsx   Inline empty/generate/processing/error states
-    ├── useApmGeneration.ts     Hook: status polling, replay download, generation trigger
+    ├── AnalysisEmptyState.tsx   Inline loading/processing/unavailable states (no manual trigger)
+    ├── useAutoAnalysis.ts      Hook: auto-trigger match analysis, polls /api/match-analysis
     └── index.ts                 Barrel export (AnalysisSection only)
         ├── → ApmChart.tsx       Pure APM line chart renderer (no legend/toggle)
         └── → ApmBreakdownChart/ Action breakdown (stacked bar)

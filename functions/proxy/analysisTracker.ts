@@ -2,7 +2,7 @@
  * Tracks which match IDs are currently being processed to avoid duplicate work.
  * Entries expire after TTL_MS so crashed processing attempts don't block retries.
  */
-const TTL_MS = 60_000;
+const TTL_MS = 5 * 60_000; // 5 minutes — covers aoe.ms rate limiting + backoff
 
 const inFlight = new Map<string, number>();
 

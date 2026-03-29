@@ -15,10 +15,14 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `fullMatchHistoryHandler.ts` | Full match history handler: merges Relic API + PostgreSQL, deduplicates, cursor-paginates, server-side map/matchType filtering |
 | `matchHistoryDb.ts` | PostgreSQL queries for historical match data, filter options, transforms DB rows to ProcessedMatch |
 | `gameMatchHandlers.ts` | Authenticated single-player match history (Relic API), alias resolution |
-| `replayDownloadHandler.ts` | Replay download → APM processing pipeline |
 | `matchProcessing.ts` | Civ/map mappings, team grouping, match transformation (`processMatch`) |
 | `playerSearch.ts` | Meilisearch + Firestore player search |
-| `replayService.ts` | Replay availability checks, APM status, `invokeExternalAPM` |
+| `replayService.ts` | aoe.ms replay download, APM processing via `processReplayForMatch`, priority queue limiter |
+| `priorityLimiter.ts` | Serial priority queue for aoe.ms requests (5s min delay, `run`/`runPriority`, global backoff) |
+| `analysisTracker.ts` | In-memory dedup tracker for in-flight match analysis (5-minute TTL) |
+| `matchAnalysisHandler.ts` | Match-detail auto-trigger: `GET /api/match-analysis/:matchId` |
+| `analysisStatusHandler.ts` | Sidecar status check: `POST /api/analysis-status` (Firestore batch read) |
+| `batchAnalysisHandler.ts` | Batch replay processing: `POST /api/process-recent/:profileId` (server-side debounce, two-pass) |
 | `decoders.ts` | Options/SlotInfo decoding (base64 + zlib) |
 | `relicAuth.ts` | Steam → Relic authentication flow |
 | `relicPlayerService.ts` | Authenticated Relic API calls |
@@ -53,10 +57,9 @@ npm run test:coverage
 | GET | `/api/raw-match/:matchId` | Raw cached match from Firestore | 24h |
 | GET | `/api/personal-stats/:profileId` | Player stats from Relic | 1 min |
 | GET | `/api/steam/avatar/:steamId` | Steam profile avatar | 24h |
-| GET | `/api/check-replay/:gameId/:profileId` | Replay availability check | 5 min |
-| GET | `/api/apm-status/:gameId/:profileId` | APM processing state (grey/silver/bronze) | no-cache |
-| GET | `/api/apm-status-match/:gameId` | APM status across all players in a match | no-cache |
-| POST | `/api/replay-download/:gameId/:profileId` | Download replay → APM processing. Accepts `{replayData}` body (client-side download) or falls back to server-side. | — |
+| GET | `/api/match-analysis/:matchId` | Auto-trigger analysis for a match. Returns `{status, apm?}`. Kicks off background processing with priority queue if no APM exists. | no-cache |
+| POST | `/api/analysis-status` | Batch check which matches have analysis. Accepts `{matchIds: string[]}`, returns `{analyzed: string[]}`. Firestore `getAll`. | no-cache |
+| POST | `/api/process-recent/:profileId` | Trigger batch analysis for player's recent matches. Server-side 10-min debounce. Two-pass: owner first, then others. | no-cache |
 
 ## Authentication Flow
 

@@ -20,7 +20,7 @@ describe('analysisTracker', () => {
   it('expires entries after TTL', () => {
     jest.useFakeTimers();
     analysisTracker.markInFlight('123');
-    jest.advanceTimersByTime(61_000);
+    jest.advanceTimersByTime(5 * 60_000 + 1000); // 5 minutes + 1s
     expect(analysisTracker.isInFlight('123')).toBe(false);
     jest.useRealTimers();
   });
