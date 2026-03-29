@@ -29,12 +29,13 @@ process.env.APM_API_URL = 'https://test-apm-api.com';
 process.env.STEAM_API_KEY = 'test-steam-key';
 
 const mockGetAll = jest.fn();
+const mockDocSet = jest.fn().mockResolvedValue({});
 jest.mock('./config', () => ({
   log: { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
   getFirestoreClient: jest.fn(() => ({
     getAll: mockGetAll,
     collection: jest.fn().mockReturnValue({
-      doc: jest.fn((id) => ({ id })),
+      doc: jest.fn((id) => ({ id, set: mockDocSet })),
     }),
   })),
   getMatchDbPool: jest.fn(() => null),
@@ -110,6 +111,50 @@ describe('handleBatchAnalysis', () => {
     const result2 = await handleBatchAnalysis('12345');
     expect(result2.data.accepted).toBe(true);
     expect(result2.data.debounced).toBe(true);
+  });
+
+  it('skips matches already marked as noReplay', async () => {
+    handleRawMatchHistory.mockResolvedValue({
+      data: {
+        matchHistoryStats: [
+          { id: 100, matchhistoryreportresults: [{ profile_id: 12345 }] },
+          { id: 101, matchhistoryreportresults: [{ profile_id: 12345 }] },
+        ],
+        profiles: [],
+      },
+    });
+
+    mockGetAll.mockResolvedValue([
+      { exists: true, id: '100', data: () => ({ noReplay: true }) },
+      { exists: false, id: '101' },
+    ]);
+
+    processReplayForMatch.mockResolvedValue('success');
+
+    await handleBatchAnalysis('12345');
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(processReplayForMatch).toHaveBeenCalledWith('101', '12345');
+    expect(processReplayForMatch).not.toHaveBeenCalledWith('100', expect.anything());
+  });
+
+  it('marks unprocessed matches as noReplay after both passes', async () => {
+    handleRawMatchHistory.mockResolvedValue({
+      data: {
+        matchHistoryStats: [
+          { id: 100, matchhistoryreportresults: [{ profile_id: 12345 }] },
+        ],
+        profiles: [],
+      },
+    });
+
+    mockGetAll.mockResolvedValue([]);
+    processReplayForMatch.mockResolvedValue('not_found');
+
+    await handleBatchAnalysis('12345');
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(mockDocSet).toHaveBeenCalledWith({ noReplay: true }, { merge: true });
   });
 
   it('pass 1 tries profile owner, pass 2 tries one other player', async () => {

@@ -8,14 +8,7 @@ mockFetch.mockImplementation((url) => {
 });
 
 jest.mock('@google-cloud/firestore', () => ({
-  Firestore: jest.fn(() => ({
-    collection: jest.fn().mockReturnValue({
-      doc: jest.fn().mockReturnValue({
-        get: jest.fn().mockResolvedValue({ exists: false, data: () => ({}) }),
-        set: jest.fn().mockResolvedValue({}),
-      }),
-    }),
-  })),
+  Firestore: jest.fn(() => ({})),
 }));
 
 jest.mock('cors', () => () => (req, res, callback) => callback());
@@ -25,6 +18,20 @@ jest.mock('pino', () => () => ({
 
 process.env.APM_API_URL = 'https://test-apm-api.com';
 process.env.STEAM_API_KEY = 'test-steam-key';
+
+const mockDocGet = jest.fn();
+const mockDocSet = jest.fn();
+jest.mock('./config', () => ({
+  log: { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
+  getFirestoreClient: jest.fn(() => ({
+    collection: jest.fn().mockReturnValue({
+      doc: jest.fn().mockReturnValue({
+        get: mockDocGet,
+        set: mockDocSet,
+      }),
+    }),
+  })),
+}));
 
 jest.mock('./matchHandlers', () => ({
   handleMatch: jest.fn(),
@@ -42,6 +49,8 @@ describe('handleMatchAnalysis', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     analysisTracker.clear();
+    mockDocGet.mockResolvedValue({ exists: false, data: () => ({}) });
+    mockDocSet.mockResolvedValue({});
 
     handleMatch.mockResolvedValue({
       data: {
@@ -76,6 +85,14 @@ describe('handleMatchAnalysis', () => {
     expect(result.data.apm.players['111']).toBeDefined();
   });
 
+  it('returns unavailable when noReplay marker exists in Firestore', async () => {
+    mockDocGet.mockResolvedValue({ exists: true, data: () => ({ noReplay: true }) });
+
+    const result = await handleMatchAnalysis('100');
+    expect(result.data.status).toBe('unavailable');
+    expect(processReplayForMatch).not.toHaveBeenCalled();
+  });
+
   it('returns processing and kicks off background analysis when no APM exists', async () => {
     processReplayForMatch.mockResolvedValue('success');
 
@@ -98,5 +115,15 @@ describe('handleMatchAnalysis', () => {
 
     const result = await handleMatchAnalysis('100');
     expect(result.data.status).toBe('unavailable');
+  });
+
+  it('marks noReplay in Firestore when no player has a replay', async () => {
+    processReplayForMatch.mockResolvedValue('not_found');
+
+    await handleMatchAnalysis('100');
+    // Wait for background processing
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(mockDocSet).toHaveBeenCalledWith({ noReplay: true }, { merge: true });
   });
 });
