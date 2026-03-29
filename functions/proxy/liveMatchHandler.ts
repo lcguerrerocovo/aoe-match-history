@@ -12,9 +12,20 @@ const MAX_PAGES = 10; // fetch up to 2000 matches in background
 const CACHE_TTL_MS = 25_000; // fresh: serve immediately
 const CACHE_STALE_TTL_MS = 60_000; // stale: serve while revalidating in background
 
-let cachedResponse: { data: LiveMatch[]; timestamp: number; partial: boolean; generation: number } | null = null;
-let pendingFetch: Promise<LiveMatch[]> | null = null;
-let pendingBackgroundPages: Promise<void> | null = null;
+interface CacheEntry {
+    data: LiveMatch[];
+    timestamp: number;
+    generation: number;
+    phase: 'fast' | 'complete';
+}
+
+interface FetchResult {
+    matches: LiveMatch[];
+    exhausted: boolean;
+}
+
+let cache: CacheEntry | null = null;
+let pendingFetch: Promise<FetchResult> | null = null;
 let fetchGeneration = 0;
 
 /**
@@ -270,8 +281,11 @@ async function fetchPages(
  * 1. Fast phase: first FAST_PAGES pages (~400 matches) — returned immediately
  * 2. Background phase: remaining pages fetched async, merged into cache silently
  *    so the next refresh cycle serves the full dataset
+ *
+ * Returns { matches, exhausted } so the caller knows whether background pages
+ * were started. The background phase writes directly to cache with phase: 'complete'.
  */
-async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
+async function fetchAllLiveMatches(): Promise<FetchResult> {
     const myGeneration = ++fetchGeneration;
     const gameVersion = await getGameVersion();
     log.info({ gameVersion, generation: myGeneration }, 'Fetching live matches (fast phase)');
@@ -287,93 +301,99 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
 
     // If the fast pages didn't fill up, there are no more matches — done
     if (fast.exhausted) {
-        return fastMatches;
+        return { matches: fastMatches, exhausted: true };
     }
 
     // Phase 2: fetch remaining pages in the background, merge into cache
-    if (!pendingBackgroundPages) {
-        pendingBackgroundPages = (async () => {
-            try {
-                const remaining = await fetchPages(gameVersion, FAST_PAGES, MAX_PAGES, seenMatchIds, seenPlayerIds);
-                if (remaining.matches.length === 0) return;
+    // Always start background fetch — generation counter prevents stale writes
+    (async () => {
+        try {
+            const remaining = await fetchPages(gameVersion, FAST_PAGES, MAX_PAGES, seenMatchIds, seenPlayerIds);
+            if (remaining.matches.length === 0) return;
 
-                const remainingMatches = await normalizeMatches(remaining.matches, remaining.players);
-                const fullData = [...fastMatches, ...remainingMatches];
+            const remainingMatches = await normalizeMatches(remaining.matches, remaining.players);
+            const fullData = [...fastMatches, ...remainingMatches];
 
-                // Only update cache if no newer fetch cycle has started
-                if (myGeneration === fetchGeneration) {
-                    cachedResponse = { data: fullData, timestamp: Date.now(), partial: false, generation: myGeneration };
-                    log.info({
-                        fastCount: fastMatches.length,
-                        remainingCount: remainingMatches.length,
-                        totalCount: fullData.length,
-                    }, 'Background pages merged into cache');
-                } else {
-                    log.info({ myGeneration, currentGeneration: fetchGeneration }, 'Background pages discarded — newer fetch cycle exists');
-                }
-            } catch (err) {
-                log.warn({ error: (err as Error).message }, 'Background page fetch failed');
-            } finally {
-                pendingBackgroundPages = null;
+            // Only update cache if no newer fetch cycle has started
+            if (myGeneration === fetchGeneration) {
+                cache = { data: fullData, timestamp: Date.now(), phase: 'complete', generation: myGeneration };
+                log.info({
+                    fastCount: fastMatches.length,
+                    remainingCount: remainingMatches.length,
+                    totalCount: fullData.length,
+                }, 'Background pages merged into cache');
+            } else {
+                log.info({ myGeneration, currentGeneration: fetchGeneration }, 'Background pages discarded — newer fetch cycle exists');
             }
-        })();
-    }
+        } catch (err) {
+            log.warn({ error: (err as Error).message }, 'Background page fetch failed');
+        }
+    })();
 
-    return fastMatches;
+    return { matches: fastMatches, exhausted: false };
 }
 
 /**
  * Get cached live matches, fetching fresh data if cache is stale.
  * Concurrent requests share the same in-flight fetch.
+ *
+ * Cache lifecycle per generation:
+ *   null → fast (immediate) → complete (background)
+ * A newer generation resets to fast. complete → fast is impossible.
  */
 async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: boolean }> {
     const now = Date.now();
-    const age = cachedResponse ? now - cachedResponse.timestamp : Infinity;
+    const age = cache ? now - cache.timestamp : Infinity;
 
     // Fresh cache — serve immediately
-    if (cachedResponse && age < CACHE_TTL_MS) {
-        log.debug({ age, matchCount: cachedResponse.data.length, partial: cachedResponse.partial }, 'Serving cached live matches');
-        return { matches: cachedResponse.data, partial: cachedResponse.partial };
+    if (cache && age < CACHE_TTL_MS) {
+        log.debug({ age, matchCount: cache.data.length, phase: cache.phase }, 'Serving cached live matches');
+        return { matches: cache.data, partial: cache.phase === 'fast' };
     }
 
     // Stale cache — serve immediately but trigger background refresh
-    // Don't write fast-phase data to cache here — the stale full dataset is
-    // better than fresh partial data. Background pages will update the cache
-    // with the full dataset when they complete.
-    if (cachedResponse && age < CACHE_STALE_TTL_MS) {
-        log.debug({ age, matchCount: cachedResponse.data.length }, 'Serving stale live matches, refreshing in background');
+    if (cache && age < CACHE_STALE_TTL_MS) {
+        log.debug({ age, matchCount: cache.data.length }, 'Serving stale live matches, refreshing in background');
         if (!pendingFetch) {
             pendingFetch = fetchAllLiveMatches()
-                .then(data => {
-                    // Only update cache if the fast phase got everything (no background pending)
-                    if (data.length > 0 && !pendingBackgroundPages) {
-                        cachedResponse = { data, timestamp: Date.now(), partial: false, generation: fetchGeneration };
+                .then(result => {
+                    // Only write to cache if fast phase got everything (exhausted).
+                    // If not exhausted, background pages will write phase: 'complete'
+                    // directly to cache when they finish — no need to write fast-phase
+                    // partial data over potentially-fuller stale data.
+                    if (result.matches.length > 0 && result.exhausted) {
+                        cache = { data: result.matches, timestamp: Date.now(), phase: 'complete', generation: fetchGeneration };
                     }
-                    return data;
+                    return result;
                 })
                 .catch(err => {
                     log.warn({ error: (err as Error).message }, 'Background live matches refresh failed');
-                    return cachedResponse?.data ?? [];
+                    return { matches: cache?.data ?? [], exhausted: true } as FetchResult;
                 })
                 .finally(() => { pendingFetch = null; });
         }
-        return { matches: cachedResponse.data, partial: cachedResponse.partial };
+        return { matches: cache.data, partial: cache.phase === 'fast' };
     }
 
     // No cache or expired — must wait for fresh data
     if (!pendingFetch) {
         pendingFetch = fetchAllLiveMatches()
-            .then(data => {
-                if (data.length > 0) {
-                    cachedResponse = { data, timestamp: Date.now(), partial: !!pendingBackgroundPages, generation: fetchGeneration };
+            .then(result => {
+                if (result.matches.length > 0) {
+                    cache = {
+                        data: result.matches,
+                        timestamp: Date.now(),
+                        phase: result.exhausted ? 'complete' : 'fast',
+                        generation: fetchGeneration,
+                    };
                 }
-                return data;
+                return result;
             })
             .finally(() => { pendingFetch = null; });
     }
 
-    const matches = await pendingFetch;
-    return { matches, partial: cachedResponse?.partial ?? false };
+    const result = await pendingFetch;
+    return { matches: result.matches, partial: cache?.phase === 'fast' };
 }
 
 export async function handleLiveRatings(queryStringOrBody?: string | { profile_ids?: number[] }): Promise<HandlerResponse<Record<string, number>>> {
