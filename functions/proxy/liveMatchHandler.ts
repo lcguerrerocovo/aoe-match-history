@@ -7,7 +7,7 @@ import type { HandlerResponse, LiveMatch, LiveMatchPlayer } from './types';
 const log = logger.child({ module: 'LiveMatches' });
 
 const PAGE_SIZE = 200;
-const FAST_PAGES = 2; // return after 2 pages (~400 matches) for fast initial render
+const FAST_PAGES = 5; // return after 5 pages (~1000 matches) for fast initial render
 const MAX_PAGES = 10; // fetch up to 2000 matches in background
 const CACHE_TTL_MS = 25_000; // fresh: serve immediately
 const CACHE_STALE_TTL_MS = 60_000; // stale: serve while revalidating in background
