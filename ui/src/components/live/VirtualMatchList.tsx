@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Box } from '@chakra-ui/react';
 import { keyframes } from '@emotion/react';
 import { LiveMatchCard } from '../LiveMatchCard';
@@ -29,11 +29,10 @@ export function VirtualMatchList({
   newMatchIds,
   onNewMatchAnimated,
 }: VirtualMatchListProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const virtualizer = useVirtualizer({
+  const virtualizer = useWindowVirtualizer({
     count: matches.length,
-    getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
       const match = matches[index];
       const maxTeamSize = match.teams.reduce(
@@ -44,20 +43,11 @@ export function VirtualMatchList({
       return 40 + maxTeamSize * 30 + 28 + 12;
     },
     overscan: 3,
-    measureElement: (el) => el.getBoundingClientRect().height,
+    scrollMargin: listRef.current?.offsetTop ?? 0,
   });
 
   return (
-    <Box
-      ref={parentRef}
-      overflow="auto"
-      w="100%"
-      h="calc(100vh - 260px)"
-      css={{
-        '&::-webkit-scrollbar': { display: 'none' },
-        scrollbarWidth: 'none',
-      }}
-    >
+    <Box ref={listRef} w="100%">
       <Box
         h={`${virtualizer.getTotalSize()}px`}
         w="100%"
@@ -75,7 +65,7 @@ export function VirtualMatchList({
               top={0}
               left={0}
               w="100%"
-              transform={`translateY(${virtualRow.start}px)`}
+              transform={`translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)`}
               css={
                 isNew
                   ? {

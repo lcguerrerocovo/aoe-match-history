@@ -5,7 +5,12 @@ const FETCH_TIMEOUT_MS = 15_000;
 
 let abortController: AbortController | null = null;
 
-export async function getLiveMatches(): Promise<LiveMatch[]> {
+export interface LiveMatchResult {
+  matches: LiveMatch[];
+  partial: boolean;
+}
+
+export async function getLiveMatches(): Promise<LiveMatchResult> {
   // Cancel any in-flight request before starting a new one
   if (abortController) abortController.abort();
   const controller = new AbortController();
@@ -26,7 +31,9 @@ export async function getLiveMatches(): Promise<LiveMatch[]> {
     if (!contentType || !contentType.includes('application/json')) {
       throw new Error('Invalid response format');
     }
-    return response.json();
+    const partial = response.headers.get('X-Partial') === '1';
+    const matches: LiveMatch[] = await response.json();
+    return { matches, partial };
   } finally {
     clearTimeout(timeoutId);
   }

@@ -56,8 +56,9 @@ ApmBreakdownChart/               APM chart with action breakdown
 LivePage                         Live matches page (auto-refresh, polls /api/live)
 ├── GameTypeTabs                 Filter tabs by game type category (RM 1v1, RM Team, etc.)
 ├── Civ filter (Input+datalist)  Typeahead civilization filter
-├── ActivityPanel                Stats panel with clickable map bars, ELO histogram, and match freshness
-└── LiveMatchCard                Shared card component (→ LiveMatchCard.tsx)
+├── ActivityPanel                Stats panel with clickable map bars, ELO histogram (shimmer skeleton while loading), and match freshness
+└── VirtualMatchList             Window-scrolled virtualized card list (@tanstack/react-virtual)
+    └── LiveMatchCard            Shared card component (→ LiveMatchCard.tsx)
 
 LiveMatchCard.tsx                 Shared live match card (used by LivePage + ProfileLiveMatch)
 ├── LiveMatchCard                Card: dark header (game type, map, elapsed, LIVE pill), diamond map + teams with "vs", avg ELO footer, spectate CTA
@@ -134,7 +135,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 ## Key Services
 
 - `matchService.ts` — API client (`getFullMatchHistory` for cursor-paginated + server-filtered history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, replay/APM helpers)
-- `liveMatchService.ts` — Live matches API client (`getLiveMatches`, `getLiveMatchForPlayer`)
+- `liveMatchService.ts` — Live matches API client (`getLiveMatches`, `getLiveRatings`, `getLiveMatchForPlayer`)
 - `playerSearchService.ts` — Player search API client (`searchPlayers`)
 
 ## Key Utils

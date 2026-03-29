@@ -19,7 +19,8 @@ const corsMiddleware = cors({
     /^http:\/\/localhost:\d+$/,
     'https://aoe2.site',
     'https://api.aoe2.site'
-  ]
+  ],
+  exposedHeaders: ['X-Partial'],
 });
 
 interface Route {

@@ -89,6 +89,7 @@ export function LivePage() {
   const prevMatchIdsRef = useRef<Set<number>>(new Set());
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());
   const [ratingsLoaded, setRatingsLoaded] = useState(false);
+  const [isPartial, setIsPartial] = useState(false);
   const ratingsRef = useRef<Map<number, number>>(new Map());
 
   // Reset map/ELO filters when game type tab changes
@@ -170,7 +171,8 @@ export function LivePage() {
     if (fetchingRef.current) return; // skip if previous fetch still in-flight
     fetchingRef.current = true;
     try {
-      const data = await getLiveMatches();
+      const { matches: data, partial } = await getLiveMatches();
+      setIsPartial(partial);
       // Detect newly appeared matches for enter animation
       const prev = prevMatchIdsRef.current;
       if (prev.size > 0) {
@@ -215,6 +217,15 @@ export function LivePage() {
       }
 
       if (ordered.length > 0) {
+        // Prune ratingsRef to only current players to prevent unbounded growth
+        const currentPlayers = new Set(ordered);
+        const pruned = new Map<number, number>();
+        for (const id of currentPlayers) {
+          const r = ratingsRef.current.get(id);
+          if (r != null) pruned.set(id, r);
+        }
+        ratingsRef.current = pruned;
+
         const FIRST_BATCH = 150; // ~first 75 matches worth of players
         const first = ordered.slice(0, FIRST_BATCH);
         const rest = ordered.slice(FIRST_BATCH);
@@ -293,7 +304,7 @@ export function LivePage() {
               {isLoading
                 ? ''
                 : matches.length > 0
-                  ? `${matches.reduce((sum, m) => sum + m.players.length, 0)} players in ${matches.length} match${matches.length !== 1 ? 'es' : ''}`
+                  ? `${matches.reduce((sum, m) => sum + m.players.length, 0)} players in ${matches.length} match${matches.length !== 1 ? 'es' : ''}${isPartial ? ' · discovering more…' : ''}`
                   : ''}
             </Text>
           </VStack>

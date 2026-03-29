@@ -7,12 +7,15 @@ import type { HandlerResponse, LiveMatch, LiveMatchPlayer } from './types';
 const log = logger.child({ module: 'LiveMatches' });
 
 const PAGE_SIZE = 200;
-const MAX_PAGES = 5; // 1000 matches max
+const FAST_PAGES = 2; // return after 2 pages (~400 matches) for fast initial render
+const MAX_PAGES = 10; // fetch up to 2000 matches in background
 const CACHE_TTL_MS = 25_000; // fresh: serve immediately
 const CACHE_STALE_TTL_MS = 60_000; // stale: serve while revalidating in background
 
-let cachedResponse: { data: LiveMatch[]; timestamp: number } | null = null;
+let cachedResponse: { data: LiveMatch[]; timestamp: number; partial: boolean; generation: number } | null = null;
 let pendingFetch: Promise<LiveMatch[]> | null = null;
+let pendingBackgroundPages: Promise<void> | null = null;
+let fetchGeneration = 0;
 
 /**
  * Clean a raw map filename into a display name.
@@ -215,20 +218,22 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
 }
 
 /**
- * Fetch all live matches with pagination, normalize, and enrich with ELO ratings.
- * Results are cached in memory and concurrent requests are coalesced.
+ * Fetch pages from the Relic API, deduplicating matches and players.
+ * Returns { matches, players, lastPage, exhausted } where exhausted=true
+ * means the last page was partial (no more data).
  */
-async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
-    const gameVersion = await getGameVersion();
-    log.info({ gameVersion }, 'Fetching all live matches (paginated)');
+async function fetchPages(
+    gameVersion: number,
+    startPage: number,
+    maxPage: number,
+    seenMatchIds: Set<number>,
+    seenPlayerIds: Set<number>,
+): Promise<{ matches: unknown[][]; players: unknown[][]; lastPage: number; exhausted: boolean }> {
+    const rawMatches: unknown[][] = [];
+    const rawPlayers: unknown[][] = [];
+    let page = startPage;
 
-    const allRawMatches: unknown[][] = [];
-    const seenMatchIds = new Set<number>();
-    const seenPlayerIds = new Set<number>();
-    const allRawPlayers: unknown[][] = [];
-    let page = 0;
-
-    while (page < MAX_PAGES) {
+    while (page < maxPage) {
         const start = page * PAGE_SIZE;
         const result = await withAuthRetry(async () => {
             const svc = await getAuthenticatedPlayerService();
@@ -236,9 +241,9 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
         });
 
         if (!result.success || !result.data) {
-            if (page === 0) {
+            if (page === startPage && startPage === 0) {
                 log.warn({ error: result.error }, 'Failed to fetch live matches');
-                return [];
+                return { matches: [], players: [], lastPage: page, exhausted: true };
             }
             log.warn({ error: result.error, page }, 'Failed to fetch page, using partial results');
             break;
@@ -246,12 +251,11 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
 
         const { matches: pageMatches, players: pagePlayers } = result.data;
 
-        // Deduplicate matches by match_id across pages
         for (const m of pageMatches) {
             const mid = m[0] as number;
             if (!seenMatchIds.has(mid)) {
                 seenMatchIds.add(mid);
-                allRawMatches.push(m);
+                rawMatches.push(m);
             }
         }
 
@@ -259,34 +263,90 @@ async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
             const pid = p[1] as number;
             if (!seenPlayerIds.has(pid)) {
                 seenPlayerIds.add(pid);
-                allRawPlayers.push(p);
+                rawPlayers.push(p);
             }
         }
 
-        log.info({ page, pageMatches: pageMatches.length, totalSoFar: allRawMatches.length }, 'Fetched live matches page');
+        log.info({ page, pageMatches: pageMatches.length, totalSoFar: rawMatches.length }, 'Fetched live matches page');
 
-        if (pageMatches.length < PAGE_SIZE) break;
+        if (pageMatches.length < PAGE_SIZE) {
+            return { matches: rawMatches, players: rawPlayers, lastPage: page, exhausted: true };
+        }
         page++;
     }
 
-    const matches = await normalizeMatches(allRawMatches, allRawPlayers);
+    return { matches: rawMatches, players: rawPlayers, lastPage: page - 1, exhausted: false };
+}
 
-    log.info({ matchCount: matches.length, pages: page + 1 }, 'Live matches normalized');
-    return matches;
+/**
+ * Fetch live matches in two phases:
+ * 1. Fast phase: first FAST_PAGES pages (~400 matches) — returned immediately
+ * 2. Background phase: remaining pages fetched async, merged into cache silently
+ *    so the next refresh cycle serves the full dataset
+ */
+async function fetchAllLiveMatches(): Promise<LiveMatch[]> {
+    const myGeneration = ++fetchGeneration;
+    const gameVersion = await getGameVersion();
+    log.info({ gameVersion, generation: myGeneration }, 'Fetching live matches (fast phase)');
+
+    const seenMatchIds = new Set<number>();
+    const seenPlayerIds = new Set<number>();
+
+    // Phase 1: fast pages
+    const fast = await fetchPages(gameVersion, 0, FAST_PAGES, seenMatchIds, seenPlayerIds);
+    const fastMatches = await normalizeMatches(fast.matches, fast.players);
+
+    log.info({ matchCount: fastMatches.length, pages: fast.lastPage + 1, exhausted: fast.exhausted }, 'Fast phase complete');
+
+    // If the fast pages didn't fill up, there are no more matches — done
+    if (fast.exhausted) {
+        return fastMatches;
+    }
+
+    // Phase 2: fetch remaining pages in the background, merge into cache
+    if (!pendingBackgroundPages) {
+        pendingBackgroundPages = (async () => {
+            try {
+                const remaining = await fetchPages(gameVersion, FAST_PAGES, MAX_PAGES, seenMatchIds, seenPlayerIds);
+                if (remaining.matches.length === 0) return;
+
+                const remainingMatches = await normalizeMatches(remaining.matches, remaining.players);
+                const fullData = [...fastMatches, ...remainingMatches];
+
+                // Only update cache if no newer fetch cycle has started
+                if (myGeneration === fetchGeneration) {
+                    cachedResponse = { data: fullData, timestamp: Date.now(), partial: false, generation: myGeneration };
+                    log.info({
+                        fastCount: fastMatches.length,
+                        remainingCount: remainingMatches.length,
+                        totalCount: fullData.length,
+                    }, 'Background pages merged into cache');
+                } else {
+                    log.info({ myGeneration, currentGeneration: fetchGeneration }, 'Background pages discarded — newer fetch cycle exists');
+                }
+            } catch (err) {
+                log.warn({ error: (err as Error).message }, 'Background page fetch failed');
+            } finally {
+                pendingBackgroundPages = null;
+            }
+        })();
+    }
+
+    return fastMatches;
 }
 
 /**
  * Get cached live matches, fetching fresh data if cache is stale.
  * Concurrent requests share the same in-flight fetch.
  */
-async function getCachedLiveMatches(): Promise<LiveMatch[]> {
+async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: boolean }> {
     const now = Date.now();
     const age = cachedResponse ? now - cachedResponse.timestamp : Infinity;
 
     // Fresh cache — serve immediately
     if (cachedResponse && age < CACHE_TTL_MS) {
-        log.debug({ age, matchCount: cachedResponse.data.length }, 'Serving cached live matches');
-        return cachedResponse.data;
+        log.debug({ age, matchCount: cachedResponse.data.length, partial: cachedResponse.partial }, 'Serving cached live matches');
+        return { matches: cachedResponse.data, partial: cachedResponse.partial };
     }
 
     // Stale cache — serve immediately but trigger background refresh
@@ -296,7 +356,7 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
             pendingFetch = fetchAllLiveMatches()
                 .then(data => {
                     if (data.length > 0) {
-                        cachedResponse = { data, timestamp: Date.now() };
+                        cachedResponse = { data, timestamp: Date.now(), partial: !!pendingBackgroundPages, generation: fetchGeneration };
                     }
                     return data;
                 })
@@ -306,7 +366,7 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
                 })
                 .finally(() => { pendingFetch = null; });
         }
-        return cachedResponse.data;
+        return { matches: cachedResponse.data, partial: cachedResponse.partial };
     }
 
     // No cache or expired — must wait for fresh data
@@ -314,14 +374,15 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
         pendingFetch = fetchAllLiveMatches()
             .then(data => {
                 if (data.length > 0) {
-                    cachedResponse = { data, timestamp: Date.now() };
+                    cachedResponse = { data, timestamp: Date.now(), partial: !!pendingBackgroundPages, generation: fetchGeneration };
                 }
                 return data;
             })
             .finally(() => { pendingFetch = null; });
     }
 
-    return pendingFetch;
+    const matches = await pendingFetch;
+    return { matches, partial: cachedResponse?.partial ?? false };
 }
 
 export async function handleLiveRatings(queryStringOrBody?: string | { profile_ids?: number[] }): Promise<HandlerResponse<Record<string, number>>> {
@@ -376,7 +437,7 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
         }
     }
 
-    const headers = {
+    const headers: Record<string, string> = {
         'Cache-Control': 'public, s-maxage=30, max-age=10',
         'Vary': 'Accept-Encoding',
     };
@@ -415,11 +476,15 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
     }
 
     // Unfiltered: use cached + paginated fetch
-    const matches = await getCachedLiveMatches();
+    const { matches, partial } = await getCachedLiveMatches();
 
     // Short CDN TTL for empty responses — they're likely transient Relic API blips
     if (matches.length === 0) {
         headers['Cache-Control'] = 'public, s-maxage=5, max-age=3';
+    }
+
+    if (partial) {
+        headers['X-Partial'] = '1';
     }
 
     return { data: matches, headers };
