@@ -35,9 +35,10 @@ export async function getLiveMatches(): Promise<LiveMatch[]> {
 export async function getLiveRatings(profileIds: number[]): Promise<Map<number, number>> {
   if (profileIds.length === 0) return new Map();
 
-  const url = `${API_URL}/live/ratings?profile_ids=${profileIds.join(',')}`;
-  const response = await fetch(url, {
-    headers: { 'Accept': 'application/json' },
+  const response = await fetch(`${API_URL}/live/ratings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ profile_ids: profileIds }),
   });
 
   if (!response.ok) {

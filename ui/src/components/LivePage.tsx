@@ -1,7 +1,7 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import TopBar from './TopBar';
-import { LiveMatchCard, LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
+import { LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
 import { ActivityPanel, getMatchAvgRating, getEloBracketLabel, VirtualMatchList } from './live';
 import { getLiveMatches, getLiveRatings } from '../services/liveMatchService';
 import type { LiveMatch } from '../types/liveMatch';
@@ -88,6 +88,8 @@ export function LivePage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevMatchIdsRef = useRef<Set<number>>(new Set());
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());
+  const [ratingsLoaded, setRatingsLoaded] = useState(false);
+  const ratingsRef = useRef<Map<number, number>>(new Map());
 
   // Reset map/ELO filters when game type tab changes
   const handleCategorySelect = useCallback((cat: GameTypeCategory) => {
@@ -176,15 +178,50 @@ export function LivePage() {
         if (fresh.size > 0) setNewMatchIds(fresh);
       }
       prevMatchIdsRef.current = new Set(data.map(m => m.match_id));
-      setMatches(data);
+
+      // Apply cached ratings from previous cycle so histogram stays populated
+      const cached = ratingsRef.current;
+      const enriched = cached.size > 0
+        ? data.map(match => ({
+            ...match,
+            players: match.players.map(p => ({
+              ...p,
+              rating: cached.get(p.profile_id) ?? p.rating,
+            })),
+            teams: match.teams.map(team =>
+              team.map(p => ({
+                ...p,
+                rating: cached.get(p.profile_id) ?? p.rating,
+              }))
+            ),
+          }))
+        : data;
+
+      setMatches(enriched);
       setError(null);
       setIsLoading(false);
 
-      // Async ratings enrichment (non-blocking)
-      const allProfileIds = [...new Set(data.flatMap(m => m.players.map(p => p.profile_id)))];
-      if (allProfileIds.length > 0) {
-        getLiveRatings(allProfileIds).then(ratings => {
+      // Fetch ratings in two batches: visible-first, then the rest
+      // Collect profile IDs in match order (first matches = top of list)
+      const seen = new Set<number>();
+      const ordered: number[] = [];
+      for (const m of data) {
+        for (const p of m.players) {
+          if (!seen.has(p.profile_id)) {
+            seen.add(p.profile_id);
+            ordered.push(p.profile_id);
+          }
+        }
+      }
+
+      if (ordered.length > 0) {
+        const FIRST_BATCH = 150; // ~first 75 matches worth of players
+        const first = ordered.slice(0, FIRST_BATCH);
+        const rest = ordered.slice(FIRST_BATCH);
+
+        const mergeRatings = (ratings: Map<number, number>) => {
           if (ratings.size === 0) return;
+          ratings.forEach((r, id) => ratingsRef.current.set(id, r));
           setMatches(prev => prev.map(match => ({
             ...match,
             players: match.players.map(p => ({
@@ -198,6 +235,17 @@ export function LivePage() {
               }))
             ),
           })));
+        };
+
+        // First batch — visible matches, resolves fast
+        getLiveRatings(first).then(ratings => {
+          mergeRatings(ratings);
+          setRatingsLoaded(true);
+
+          // Second batch — remaining matches
+          if (rest.length > 0) {
+            getLiveRatings(rest).then(mergeRatings);
+          }
         });
       }
     } catch (err) {
@@ -265,6 +313,7 @@ export function LivePage() {
               key={selectedCategory}
               matches={categoryFilteredMatches}
               avgRatings={allAvgRatings}
+              ratingsLoaded={ratingsLoaded}
               selectedMap={selectedMap}
               selectedEloBracket={selectedEloBracket}
               onMapSelect={setSelectedMap}

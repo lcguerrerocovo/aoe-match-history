@@ -25,6 +25,7 @@ describe('ActivityPanel', () => {
   const defaultProps = {
     matches: mockLiveMatches,
     avgRatings: buildAvgRatings(mockLiveMatches),
+    ratingsLoaded: true,
     selectedMap: '',
     selectedEloBracket: '',
     onMapSelect: () => {},

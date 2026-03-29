@@ -51,6 +51,7 @@ export function VirtualMatchList({
     <Box
       ref={parentRef}
       overflow="auto"
+      w="100%"
       h="calc(100vh - 260px)"
       css={{
         '&::-webkit-scrollbar': { display: 'none' },

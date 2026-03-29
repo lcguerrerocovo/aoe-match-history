@@ -180,6 +180,10 @@ const proxy = async (req: Request, res: Response): Promise<void> => {
       // Handle player-search route specially since it uses query parameters
       if (req.url.startsWith('/api/player-search')) {
         response = await (route.handler as (req: Request, res: Response) => Promise<HandlerResponse<unknown>>)(req, res);
+      } else if (req.url.startsWith('/api/live/ratings')) {
+        // POST with JSON body, or GET with query string
+        const arg = req.method === 'POST' ? req.body : req.url.match(route.pattern)?.[1];
+        response = await (route.handler as (a: unknown) => Promise<HandlerResponse<unknown>>)(arg);
       } else {
         // Handle other routes with path parameters
         const match = req.url.match(route.pattern);

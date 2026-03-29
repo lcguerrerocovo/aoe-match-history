@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Flex, Link, Icon } from '@chakra-ui/react';
+import { Box, VStack, Text, Flex, Link } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useEffect, useState, useRef, memo } from 'react';
 import { keyframes } from '@emotion/react';
@@ -96,7 +96,7 @@ export const PlayerRow = memo(function PlayerRow({ player, isHighlighted, rowInd
       </Text>
 
       {/* Rating — mono, right-aligned like PlayerRating */}
-      {player.rating != null && (
+      {player.rating != null ? (
         <Text
           fontWeight="semibold"
           fontSize="xs"
@@ -108,6 +108,16 @@ export const PlayerRow = memo(function PlayerRow({ player, isHighlighted, rowInd
         >
           {player.rating}
         </Text>
+      ) : (
+        <Box
+          ml="auto"
+          w="28px"
+          h="10px"
+          borderRadius="sm"
+          bg="brand.stone"
+          opacity={0.4}
+          css={{ animation: `${skeletonPulse} 1.5s ease-in-out infinite` }}
+        />
       )}
     </Flex>
   );
@@ -265,11 +275,16 @@ export const LiveMatchCard = memo(function LiveMatchCard({
         borderTopWidth="1px"
         borderColor="brand.borderWarm"
       >
-        {avgRating != null && (
-          <Text fontSize="xs" color="brand.inkMuted" mr="auto">
-            ~{avgRating} avg
-          </Text>
-        )}
+        <Text
+          fontSize="xs"
+          color="brand.inkMuted"
+          mr="auto"
+          visibility={avgRating != null ? 'visible' : 'hidden'}
+          transition="opacity 0.3s ease"
+          opacity={avgRating != null ? 1 : 0}
+        >
+          ~{avgRating ?? '----'} avg
+        </Text>
         <Link
           href={`aoe2de://1/${match.match_id}`}
           display="flex"
@@ -282,7 +297,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
           textDecoration="none"
           transition="color 0.2s ease"
         >
-          <Icon boxSize={3.5}><FiEye /></Icon>
+          <FiEye size={14} />
           Spectate
         </Link>
       </Flex>

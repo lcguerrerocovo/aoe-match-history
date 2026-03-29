@@ -43,9 +43,9 @@ describe('LiveMatchCard', () => {
     cy.contains('~1315 avg').should('be.visible');
   });
 
-  it('does not show avgRating when not provided', () => {
+  it('hides avgRating visually when not provided', () => {
     mountWithProviders(<LiveMatchCard match={mockLiveMatch} />);
-    cy.contains('avg').should('not.exist');
+    cy.contains('avg').should('have.css', 'visibility', 'hidden');
   });
 
   it('highlights a specific player', () => {

@@ -1,6 +1,12 @@
 import { Box, Text, Flex, HStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
+import { keyframes } from '@emotion/react';
 import type { LiveMatch } from '../../types/liveMatch';
+
+const shimmerWave = keyframes`
+  0%, 100% { opacity: 0.2; transform: scaleY(0.7); }
+  50% { opacity: 0.5; transform: scaleY(1); }
+`;
 
 const ELO_BRACKETS = [
   { label: '< 1000', abbr: '<1k', min: 0, max: 999 },
@@ -30,6 +36,7 @@ function getEloBracketLabel(avgRating: number): string {
 interface ActivityPanelProps {
   matches: LiveMatch[];
   avgRatings: Map<number, number | null>;
+  ratingsLoaded: boolean;
   selectedMap: string;
   selectedEloBracket: string;
   onMapSelect: (map: string) => void;
@@ -39,6 +46,7 @@ interface ActivityPanelProps {
 export function ActivityPanel({
   matches,
   avgRatings,
+  ratingsLoaded,
   selectedMap,
   selectedEloBracket,
   onMapSelect,
@@ -246,19 +254,45 @@ export function ActivityPanel({
 
           {/* ELO Distribution + Freshness — side by side on desktop */}
           <Flex direction={{ base: 'column', md: 'row' }} gap={6}>
-            {/* ELO Distribution — clickable columns */}
-            {eloBuckets && eloBuckets.length > 0 && (
-              <Box flex="1">
-                <Text
-                  fontSize="2xs"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  color="brand.inkMuted"
-                  fontWeight="bold"
-                  mb={2}
-                >
-                  ELO Distribution
-                </Text>
+            {/* ELO Distribution — skeleton while loading, histogram when ready */}
+            <Box flex="1">
+              <Text
+                fontSize="2xs"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="brand.inkMuted"
+                fontWeight="bold"
+                mb={2}
+              >
+                ELO Distribution
+              </Text>
+              {!ratingsLoaded ? (
+                <HStack gap={1} align="flex-end" h="72px">
+                  {ELO_BRACKETS.map((b, i) => (
+                    <Flex
+                      key={b.label}
+                      direction="column"
+                      align="center"
+                      flex="1"
+                      h="100%"
+                      justify="flex-end"
+                    >
+                      <Box
+                        h={`${[16, 28, 38, 44, 32, 20, 12][i]}px`}
+                        bg="brand.stone"
+                        borderRadius="sm"
+                        w="100%"
+                        maxW="32px"
+                        transformOrigin="bottom"
+                        css={{ animation: `${shimmerWave} 1.8s ease-in-out ${i * 0.15}s infinite` }}
+                      />
+                      <Text fontSize="2xs" color="brand.inkMuted" mt={1} lineHeight="1" opacity={0.4}>
+                        {b.abbr}
+                      </Text>
+                    </Flex>
+                  ))}
+                </HStack>
+              ) : eloBuckets && eloBuckets.length > 0 ? (
                 <HStack gap={1} align="flex-end" h="72px">
                   {eloBuckets.map((b) => {
                     const barH = Math.max((b.count / maxEloBucket) * 48, 4);
@@ -311,8 +345,10 @@ export function ActivityPanel({
                     );
                   })}
                 </HStack>
-              </Box>
-            )}
+              ) : (
+                <HStack gap={1} align="flex-end" h="72px" />
+              )}
+            </Box>
 
             {/* Match Age — stacked horizontal bar */}
             <Box flex="1">

@@ -146,27 +146,46 @@ async function normalizeMatches(
     return matches;
 }
 
+// In-memory rating cache: profile_id → { rating, timestamp }
+const ratingCache = new Map<number, { rating: number; ts: number }>();
+const RATING_CACHE_TTL_MS = 90_000; // 90s — ratings only change when a match finishes
+
 /**
  * Fetch the most recent ELO rating for each profile_id from PostgreSQL.
+ * Uses an in-memory per-player cache to avoid repeated DB queries.
  * Returns a map of profile_id → rating. Gracefully returns empty map if DB unavailable.
  */
 async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, number>> {
     const pool = getMatchDbPool();
     if (!pool || profileIds.length === 0) return new Map();
 
+    const now = Date.now();
+    const results = new Map<number, number>();
+    const uncached: number[] = [];
+
+    for (const id of profileIds) {
+        const entry = ratingCache.get(id);
+        if (entry && now - entry.ts < RATING_CACHE_TTL_MS) {
+            results.set(id, entry.rating);
+        } else {
+            uncached.push(id);
+        }
+    }
+
+    if (uncached.length === 0) {
+        log.info({ cached: results.size, total: profileIds.length }, 'All ratings served from cache');
+        return results;
+    }
+
     const BATCH_SIZE = 500;
-    const ratings = new Map<number, number>();
 
     try {
-        // Run batched queries in parallel to reduce latency over SSH tunnel
         const batches: number[][] = [];
-        for (let i = 0; i < profileIds.length; i += BATCH_SIZE) {
-            batches.push(profileIds.slice(i, i + BATCH_SIZE));
+        for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
+            batches.push(uncached.slice(i, i + BATCH_SIZE));
         }
 
-        // match_id is sequential (higher = more recent), so we can avoid
-        // the expensive JOIN on match.start_time and use match_id instead
-        const results = await Promise.all(batches.map(batch =>
+        const dbResults = await Promise.all(batches.map(batch =>
             pool.query<{ profile_id: string; new_rating: number }>(
                 `SELECT DISTINCT ON (profile_id)
                         profile_id, new_rating
@@ -179,17 +198,19 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
             ),
         ));
 
-        for (const result of results) {
+        for (const result of dbResults) {
             for (const row of result.rows) {
-                ratings.set(Number(row.profile_id), row.new_rating);
+                const id = Number(row.profile_id);
+                results.set(id, row.new_rating);
+                ratingCache.set(id, { rating: row.new_rating, ts: now });
             }
         }
 
-        log.info({ found: ratings.size, requested: profileIds.length, batches: batches.length }, 'Fetched player ratings from DB');
-        return ratings;
+        log.info({ found: results.size, fromCache: profileIds.length - uncached.length, fromDb: uncached.length, batches: batches.length }, 'Fetched player ratings');
+        return results;
     } catch (err) {
         log.warn({ error: (err as Error).message }, 'Failed to fetch player ratings from DB');
-        return ratings; // return partial results
+        return results; // return cached + partial DB results
     }
 }
 
@@ -303,17 +324,22 @@ async function getCachedLiveMatches(): Promise<LiveMatch[]> {
     return pendingFetch;
 }
 
-export async function handleLiveRatings(queryString?: string): Promise<HandlerResponse<Record<string, number>>> {
+export async function handleLiveRatings(queryStringOrBody?: string | { profile_ids?: number[] }): Promise<HandlerResponse<Record<string, number>>> {
     const profileIds: number[] = [];
-    if (queryString) {
-        const params = new URLSearchParams(queryString.replace(/^\?/, ''));
+
+    if (typeof queryStringOrBody === 'object' && queryStringOrBody?.profile_ids) {
+        // POST body: { profile_ids: [123, 456, ...] }
+        profileIds.push(...queryStringOrBody.profile_ids.filter(id => typeof id === 'number' && id > 0));
+    } else if (typeof queryStringOrBody === 'string') {
+        // GET query string fallback
+        const params = new URLSearchParams(queryStringOrBody.replace(/^\?/, ''));
         const raw = params.get('profile_ids');
         if (raw) {
             profileIds.push(...raw.split(',').map(Number).filter(id => !isNaN(id) && id > 0));
         }
     }
 
-    if (profileIds.length === 0 || profileIds.length > 2000) {
+    if (profileIds.length === 0 || profileIds.length > 5000) {
         return {
             data: {},
             headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
