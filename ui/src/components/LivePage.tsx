@@ -220,11 +220,9 @@ export function LivePage() {
         }
         ratingsRef.current = pruned;
 
-        const FIRST_BATCH = 150; // ~first 75 matches worth of players
-        const first = ordered.slice(0, FIRST_BATCH);
-        const rest = ordered.slice(FIRST_BATCH);
-
-        const mergeRatings = (ratings: Map<number, number>) => {
+        // Fetch all ratings in one request — simpler than batching and
+        // ensures ELO histogram appears complete on first render
+        getLiveRatings(ordered).then(ratings => {
           if (ratings.size === 0) return;
           ratings.forEach((r, id) => ratingsRef.current.set(id, r));
           setMatches(prev => prev.map(match => ({
@@ -234,17 +232,7 @@ export function LivePage() {
               rating: ratings.get(p.profile_id) ?? p.rating,
             })),
           })));
-        };
-
-        // First batch — visible matches, resolves fast
-        getLiveRatings(first).then(ratings => {
-          mergeRatings(ratings);
           setRatingsLoaded(true);
-
-          // Second batch — remaining matches
-          if (rest.length > 0) {
-            getLiveRatings(rest).then(mergeRatings);
-          }
         });
       }
     } catch (err) {
