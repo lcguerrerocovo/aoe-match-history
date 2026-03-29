@@ -53,7 +53,7 @@ export function ChartArea({ chartData, activeActionTypesWithStats, actionTypeCol
         <Text fontSize="xs" color="brand.inkDark" mb={1}>
           Total: {totalActions} actions
         </Text>
-        {payload.map((entry) => (
+        {payload.filter((entry) => (entry.value as number) > 0).map((entry) => (
           <Flex key={entry.dataKey} align="center" justify="space-between" mb={0.5} gap={2}>
             <Text color="brand.inkDark" fontSize="xs">
               {entry.dataKey}
