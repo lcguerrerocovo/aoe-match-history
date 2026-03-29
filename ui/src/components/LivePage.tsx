@@ -220,10 +220,7 @@ export function LivePage() {
         }
         ratingsRef.current = pruned;
 
-        // Two batches: first batch populates visible player rows quickly,
-        // ratingsLoaded set after ALL ratings arrive so ELO histogram
-        // appears complete (shimmer stays until then)
-        const FIRST_BATCH = 500;
+        const FIRST_BATCH = 150; // ~first 75 matches worth of players
         const first = ordered.slice(0, FIRST_BATCH);
         const rest = ordered.slice(FIRST_BATCH);
 
@@ -239,16 +236,14 @@ export function LivePage() {
           })));
         };
 
+        // First batch — visible matches, resolves fast
         getLiveRatings(first).then(ratings => {
           mergeRatings(ratings);
+          setRatingsLoaded(true);
 
+          // Second batch — remaining matches
           if (rest.length > 0) {
-            getLiveRatings(rest).then(ratings => {
-              mergeRatings(ratings);
-              setRatingsLoaded(true);
-            });
-          } else {
-            setRatingsLoaded(true);
+            getLiveRatings(rest).then(mergeRatings);
           }
         });
       }
