@@ -231,7 +231,6 @@ export interface LiveMatch {
   num_players: number;
   start_time: number;
   server: string;
-  teams: LiveMatchPlayer[][];
   players: LiveMatchPlayer[];
 }
 
