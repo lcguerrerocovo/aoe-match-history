@@ -7,7 +7,7 @@ import { useThemeMode } from '../../theme/ThemeProvider';
 import type { Player } from '../../types/match';
 import { assetManager } from '../../utils/assetManager';
 import { PLAYER_COLORS } from '../../utils/playerColors';
-import { getSteamAvatar, extractSteamId, checkReplayAvailability } from '../../services/matchService';
+import { getSteamAvatar, extractSteamId } from '../../services/matchService';
 
 interface PlayerAvatarProps {
   player: Player;
@@ -19,7 +19,6 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
   const { isDark } = useThemeMode();
   const isExpansive = teamSize <= 2;
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
-  const [replayAvailable, setReplayAvailable] = useState<boolean | null>(null); // null = loading, true/false = result
 
   useEffect(() => {
     const loadAvatar = async () => {
@@ -37,28 +36,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
     loadAvatar();
   }, [player.original_name, player.name]);
 
-  useEffect(() => {
-    const checkReplay = async () => {
-      try {
-        // Add a small stagger delay based on player index to avoid rate limiting
-        // This spreads out the requests over time instead of all at once
-        const delay = (player.color_id || 0) * 200; // 200ms between each request
-        await new Promise(resolve => setTimeout(resolve, delay));
-
-        const available = await checkReplayAvailability(matchId, player.user_id.toString());
-        setReplayAvailable(available);
-      } catch (error) {
-        console.error('Failed to check replay availability:', error);
-        setReplayAvailable(true); // Default to available on error
-      }
-    };
-
-    checkReplay();
-  }, [matchId, player.user_id, player.color_id]);
-
   const replayUrl = `https://aoe.ms/replay/?gameId=${matchId}&profileId=${player.user_id}`;
-  const isReplayDisabled = replayAvailable === false;
-  const isReplayLoading = replayAvailable === null;
 
   // Determine player color for the vertical stripe
   const steelHex = isDark ? '#CBD5E0' : '#5A6478';
@@ -198,34 +176,23 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
 
           {/* Replay annotation */}
           <Tooltip
-            content={
-              isReplayLoading
-                ? 'Checking replay availability...'
-                : isReplayDisabled
-                  ? 'Replay file not available'
-                  : `Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`
-            }
+            content={`Download Replay File${player.save_game_size ? ` (${Math.round(player.save_game_size / 1024)} KB)` : ''}`}
           >
             <Link
               href={replayUrl}
               fontSize={{ base: "2xs", md: "xs" }}
               fontStyle="italic"
               fontFamily="body"
-              color={isReplayLoading || isReplayDisabled ? 'brand.inkMuted' : 'brand.redChalk'}
-              opacity={isReplayLoading || isReplayDisabled ? 0.35 : 0.8}
-              cursor={isReplayLoading || isReplayDisabled ? 'not-allowed' : 'pointer'}
-              pointerEvents={isReplayLoading || isReplayDisabled ? 'none' : 'auto'}
+              color="brand.redChalk"
+              opacity={0.8}
+              cursor="pointer"
               textDecoration="none"
               transition="all 0.2s ease-in-out"
-              _hover={
-                isReplayLoading || isReplayDisabled
-                  ? {}
-                  : {
-                      opacity: 1,
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '2px',
-                    }
-              }
+              _hover={{
+                opacity: 1,
+                textDecoration: 'underline',
+                textUnderlineOffset: '2px',
+              }}
               display="flex"
               alignItems="center"
               gap={1}

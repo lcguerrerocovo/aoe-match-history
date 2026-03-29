@@ -9,9 +9,9 @@ import { AnalysisHeader } from './AnalysisHeader';
 import { PlayerBar } from './PlayerBar';
 import { ChartViewport } from './ChartViewport';
 import { AnalysisEmptyState } from './AnalysisEmptyState';
-import { useApmGeneration } from './useApmGeneration';
+import { useAutoAnalysis } from './useAutoAnalysis';
 import type { AnalysisView } from './ChartNav';
-import type { Match } from '../../types/match';
+import type { Match, ApmData } from '../../types/match';
 import { getMatch } from '../../services/matchService';
 
 interface AnalysisSectionProps {
@@ -131,9 +131,8 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
   }, [match?.apm]);
 
   const matchId = match.match_id;
-  const profileId = match.players?.[0]?.user_id?.toString() || '';
 
-  const handleBronzeStatus = useCallback(async () => {
+  const handleAnalysisReady = useCallback(async () => {
     try {
       const updatedMatch = await getMatch(matchId);
       onMatchUpdate?.(updatedMatch);
@@ -142,8 +141,9 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
     }
   }, [matchId, onMatchUpdate]);
 
-  const { status, isLoading, isProcessing, error, generate, containerRef } =
-    useApmGeneration(matchId, profileId, { onBronzeStatus: handleBronzeStatus });
+  const { status: analysisStatus } = useAutoAnalysis(matchId, hasApm, {
+    onAnalysisReady: handleAnalysisReady,
+  });
 
   // Action type legend — computed eagerly so layout is stable on both views
   const selectedPlayerData = useMemo(() => {
@@ -199,15 +199,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
 
   const renderChartContent = () => {
     if (!hasApm) {
-      return (
-        <AnalysisEmptyState
-          status={status}
-          isLoading={isLoading}
-          isProcessing={isProcessing}
-          error={error}
-          onGenerate={generate}
-        />
-      );
+      return <AnalysisEmptyState status={analysisStatus} />;
     }
 
     if (activeView === 'apm') {
@@ -232,7 +224,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
   };
 
   return (
-    <Card.Root ref={containerRef} variant={cardVariant('match')} w="100%" p={{ base: 4, md: 6 }} position="relative" overflow="hidden">
+    <Card.Root variant={cardVariant('match')} w="100%" p={{ base: 4, md: 6 }} position="relative" overflow="hidden">
       <Watermark
         variant="trebuchet"
         size={240}
