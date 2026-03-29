@@ -33,11 +33,14 @@ export function useBatchAnalysis({
       setAnalyzedIds(status);
       prevAnalyzed.current = status;
 
-      // Trigger batch processing
-      const accepted = await triggerBatchAnalysis(profileId);
-      if (cancelled || !accepted) return;
+      // Trigger batch processing (fire-and-forget)
+      triggerBatchAnalysis(profileId);
 
-      // Batch was accepted (not debounced) — start polling
+      // If not all matches are analyzed, poll for updates
+      // (batch may still be running from a previous trigger even if debounced)
+      const allAlreadyDone = matchIds.every(id => status.has(id));
+      if (cancelled || allAlreadyDone) return;
+
       setIsProcessing(true);
       pollCount.current = 0;
 
