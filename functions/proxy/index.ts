@@ -9,8 +9,8 @@ import { __setPlayerService, __resetPlayerService } from './authService';
 import { handleRawMatchHistory, handleMatchHistory, handlePersonalStats, handleRawMatch, handleMatch } from './matchHandlers';
 import { handleFullMatchHistory } from './fullMatchHistoryHandler';
 import { handleGameMatchHistory, handleProcessedGameMatchHistory } from './gameMatchHandlers';
-import { handleReplayDownload } from './replayDownloadHandler';
-import { checkReplayAvailability, checkApmStatus } from './replayService';
+import { handleMatchAnalysis } from './matchAnalysisHandler';
+import { handleAnalysisStatus } from './analysisStatusHandler';
 import { handleBatchAnalysis } from './batchAnalysisHandler';
 import { handleLiveMatches, handleLiveRatings } from './liveMatchHandler';
 import type { HandlerResponse } from './types';
@@ -68,80 +68,12 @@ const routes: Route[] = [
     handler: handleProcessedGameMatchHistory
   },
   {
-    pattern: /^\/api\/check-replay\/(\d+)\/(\d+)(\?.*)?$/,
-    handler: async (gameId: string, profileId: string) => {
-      const available = await checkReplayAvailability(gameId, profileId);
-      return {
-        data: { gameId, profileId, available },
-        headers: {
-          'Cache-Control': 'public, max-age=300',
-          'Vary': 'Accept-Encoding'
-        }
-      };
-    }
+    pattern: /^\/api\/match-analysis\/(\d+)(\?.*)?$/,
+    handler: handleMatchAnalysis
   },
   {
-    pattern: /^\/api\/apm-status\/(\d+)\/(\d+)(\?.*)?$/,
-    handler: async (gameId: string, profileId: string) => {
-      const status = await checkApmStatus(gameId, profileId);
-      return {
-        data: { gameId, profileId, ...status },
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      };
-    }
-  },
-  {
-    pattern: /^\/api\/apm-status-match\/(\d+)(\?.*)?$/,
-    handler: async (gameId: string) => {
-      // Get match data to extract player IDs
-      const matchData = await handleMatch(gameId);
-      if (!matchData.data || !matchData.data.players) {
-        return {
-          data: { gameId, hasSaveGame: false, isProcessed: false, state: 'greyStatus' },
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        };
-      }
-
-      // Extract all player IDs
-      const playerIds = matchData.data.players.map(p => p.user_id?.toString()).filter(Boolean);
-
-      // Check each player until we find one with available replay
-      for (const profileId of playerIds) {
-        try {
-          const status = await checkApmStatus(gameId, profileId);
-          if (status.state !== 'greyStatus') {
-            return {
-              data: { gameId, profileId, ...status },
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
-            };
-          }
-        } catch (error) {
-          log.warn({ err: (error as Error).message, gameId, profileId }, 'Failed to check APM status for player');
-        }
-      }
-
-      // If no player has a replay, return grey status
-      return {
-        data: { gameId, hasSaveGame: false, isProcessed: false, state: 'greyStatus' },
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      };
-    }
+    pattern: /^\/api\/analysis-status(\?.*)?$/,
+    handler: handleAnalysisStatus
   },
   {
     pattern: /^\/api\/live\/ratings(\?.*)?$/,
@@ -165,11 +97,6 @@ const routes: Route[] = [
     pattern: /^\/api\/process-recent\/(\d+)(\?.*)?$/,
     handler: handleBatchAnalysis
   },
-  {
-    pattern: /^\/api\/replay-download\/(\d+)\/(\d+)(\?.*)?$/,
-    handler: (gameId: string, profileId: string, body?: Record<string, unknown>) =>
-      handleReplayDownload(gameId, profileId, body?.replayData as string | undefined)
-  }
 ];
 
 const proxy = async (req: Request, res: Response): Promise<void> => {
@@ -186,6 +113,8 @@ const proxy = async (req: Request, res: Response): Promise<void> => {
       // Handle player-search route specially since it uses query parameters
       if (req.url.startsWith('/api/player-search')) {
         response = await (route.handler as (req: Request, res: Response) => Promise<HandlerResponse<unknown>>)(req, res);
+      } else if (req.url.startsWith('/api/analysis-status')) {
+        response = await handleAnalysisStatus(req.body);
       } else if (req.url.startsWith('/api/live/ratings')) {
         // POST with JSON body, or GET with query string
         const arg = req.method === 'POST' ? req.body : req.url.match(route.pattern)?.[1];
@@ -194,9 +123,7 @@ const proxy = async (req: Request, res: Response): Promise<void> => {
         // Handle other routes with path parameters
         const match = req.url.match(route.pattern);
         if (match && match.length >= 3) {
-          // Routes with two captured parameters (e.g., check-replay, replay-download)
-          // req.body is passed so replay-download can receive client-provided replayData;
-          // other two-param routes simply ignore the extra argument
+          // Routes with two captured parameters
           response = await (route.handler as (a: string, b: string, body?: Record<string, unknown>) => Promise<HandlerResponse<unknown>>)(match[1], match[2], req.body);
         } else {
           response = await (route.handler as (a: string) => Promise<HandlerResponse<unknown>>)(match![1]);
@@ -217,11 +144,8 @@ const proxy = async (req: Request, res: Response): Promise<void> => {
 
 export {
   proxy,
-  checkApmStatus,
   getFirestoreClient,
-  checkReplayAvailability,
   handleMatch,
-  handleReplayDownload,
   routes,
 };
 
