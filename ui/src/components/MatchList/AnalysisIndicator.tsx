@@ -23,8 +23,7 @@ export function AnalysisIndicator({ state, onAnimationEnd }: AnalysisIndicatorPr
   const isAnimating = state === 'processing';
   const isNew = state === 'new';
 
-  return (
-    <Tooltip content="Analysis available" fontSize="xs" disabled={isAnimating}>
+  const indicator = (
       <Box
         w="24px"
         h="24px"
@@ -50,6 +49,13 @@ export function AnalysisIndicator({ state, onAnimationEnd }: AnalysisIndicatorPr
           <rect x="8.5" y="1" width="2.5" height="10" rx="0.5" fill="white" opacity={isAnimating ? 0.5 : 0.9} />
         </svg>
       </Box>
+  );
+
+  if (isAnimating) return indicator;
+
+  return (
+    <Tooltip content="Analysis available" fontSize="xs">
+      {indicator}
     </Tooltip>
   );
 }
