@@ -117,18 +117,6 @@ async function normalizeMatches(
                 }
             }
 
-            // Group players into teams
-            const teamMap = new Map<number, LiveMatchPlayer[]>();
-            for (const player of matchPlayers) {
-                if (!teamMap.has(player.team)) {
-                    teamMap.set(player.team, []);
-                }
-                teamMap.get(player.team)!.push(player);
-            }
-            const teams = Array.from(teamMap.entries())
-                .sort((a, b) => a[0] - b[0])
-                .map(([, v]) => v);
-
             matches.push({
                 match_id: matchId,
                 map: mapDisplayName,
@@ -138,7 +126,6 @@ async function normalizeMatches(
                 num_players: numPlayers || matchPlayers.length,
                 start_time: startTime,
                 server: serverName,
-                teams,
                 players: matchPlayers,
             });
         } catch (err) {
