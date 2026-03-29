@@ -13,11 +13,11 @@ interface MatchSummaryCardProps {
   match: Match;
   profileId: string;
   groupOpen: boolean;
-  analysisState: 'none' | 'processing' | 'new' | 'ready';
+  analysisState?: 'none' | 'processing' | 'new' | 'ready';
   onAnalysisAnimationEnd?: () => void;
 }
 
-export function MatchSummaryCard({ match, analysisState, onAnalysisAnimationEnd }: MatchSummaryCardProps) {
+export function MatchSummaryCard({ match, analysisState = 'none', onAnalysisAnimationEnd }: MatchSummaryCardProps) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
   const gameTimeSec = Math.round(durationSec * 1.7);

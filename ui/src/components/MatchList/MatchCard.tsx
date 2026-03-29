@@ -10,11 +10,11 @@ interface MatchCardProps {
   match: Match;
   profileId: string;
   groupOpen: boolean;
-  analysisState: 'none' | 'processing' | 'new' | 'ready';
+  analysisState?: 'none' | 'processing' | 'new' | 'ready';
   onAnalysisAnimationEnd?: () => void;
 }
 
-export function MatchCard({ match, profileId, groupOpen, analysisState, onAnalysisAnimationEnd }: MatchCardProps) {
+export function MatchCard({ match, profileId, groupOpen, analysisState = 'none', onAnalysisAnimationEnd }: MatchCardProps) {
   const layout = useLayoutConfig();
 
   return (
