@@ -1,29 +1,105 @@
-import { useEffect, useRef } from 'react';
-import { processRecentMatches } from '../services/matchService';
-import type { Match } from '../types/match';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  triggerBatchAnalysis,
+  getAnalysisStatus,
+} from '../services/matchService';
 
-/**
- * Automatically triggers batch analysis for the newest match
- * if it doesn't already have APM data.
- * Fires once per profile, only when matches are loaded.
- */
-export function useBatchAnalysis(profileId: string | undefined, matches: Match[]) {
-  const triggeredRef = useRef<string | null>(null);
+interface UseBatchAnalysisOptions {
+  profileId: string;
+  matchIds: string[];
+}
 
+export function useBatchAnalysis({
+  profileId,
+  matchIds,
+}: UseBatchAnalysisOptions) {
+  const [analyzedIds, setAnalyzedIds] = useState<Set<string>>(new Set());
+  const [newlyAnalyzed, setNewlyAnalyzed] = useState<Set<string>>(new Set());
+  const [isProcessing, setIsProcessing] = useState(false);
+  const pollCount = useRef(0);
+  const pollTimer = useRef<ReturnType<typeof setInterval>>();
+  const prevAnalyzed = useRef<Set<string>>(new Set());
+
+  // Initial status check + batch trigger
   useEffect(() => {
-    if (!profileId || !matches.length) return;
+    if (!profileId || !matchIds.length) return;
 
-    // Only trigger once per profile
-    if (triggeredRef.current === profileId) return;
+    let cancelled = false;
 
-    const newest = matches[0];
-    const hasApm = Boolean(newest?.has_apm);
+    (async () => {
+      // Get current analysis status
+      const status = await getAnalysisStatus(matchIds);
+      if (cancelled) return;
+      setAnalyzedIds(status);
+      prevAnalyzed.current = status;
 
-    if (!hasApm) {
-      triggeredRef.current = profileId;
-      processRecentMatches(profileId).catch(() => {
-        // Silently ignore — batch analysis is best-effort
-      });
-    }
-  }, [profileId, matches]);
+      // Trigger batch processing
+      const accepted = await triggerBatchAnalysis(profileId);
+      if (cancelled || !accepted) return;
+
+      // Batch was accepted (not debounced) — start polling
+      setIsProcessing(true);
+      pollCount.current = 0;
+
+      pollTimer.current = setInterval(async () => {
+        pollCount.current++;
+        if (pollCount.current > 4) {
+          clearInterval(pollTimer.current);
+          setIsProcessing(false);
+          return;
+        }
+
+        const updated = await getAnalysisStatus(matchIds);
+        if (cancelled) return;
+
+        // Diff: find newly analyzed
+        const newIds = new Set<string>();
+        for (const id of updated) {
+          if (!prevAnalyzed.current.has(id)) {
+            newIds.add(id);
+          }
+        }
+
+        if (newIds.size > 0) {
+          setNewlyAnalyzed((prev) => {
+            const merged = new Set(prev);
+            for (const id of newIds) merged.add(id);
+            return merged;
+          });
+        }
+
+        setAnalyzedIds(updated);
+        prevAnalyzed.current = updated;
+
+        // Stop if all visible matches are analyzed
+        const allDone = matchIds.every((id) => updated.has(id));
+        if (allDone) {
+          clearInterval(pollTimer.current);
+          setIsProcessing(false);
+        }
+      }, 15_000);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer.current) clearInterval(pollTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, matchIds.join(',')]);
+
+  // Clear "newly analyzed" animation state after transition completes
+  const clearNewlyAnalyzed = useCallback((matchId: string) => {
+    setNewlyAnalyzed((prev) => {
+      const next = new Set(prev);
+      next.delete(matchId);
+      return next;
+    });
+  }, []);
+
+  return {
+    analyzedIds,
+    newlyAnalyzed,
+    isProcessing,
+    clearNewlyAnalyzed,
+  };
 }
