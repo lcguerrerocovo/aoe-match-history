@@ -11,6 +11,7 @@ import { handleFullMatchHistory } from './fullMatchHistoryHandler';
 import { handleGameMatchHistory, handleProcessedGameMatchHistory } from './gameMatchHandlers';
 import { handleReplayDownload } from './replayDownloadHandler';
 import { checkReplayAvailability, checkApmStatus } from './replayService';
+import { handleBatchAnalysis } from './batchAnalysisHandler';
 import { handleLiveMatches, handleLiveRatings } from './liveMatchHandler';
 import type { HandlerResponse } from './types';
 
@@ -159,6 +160,10 @@ const routes: Route[] = [
       }
       return handlePlayerSearch(name);
     }
+  },
+  {
+    pattern: /^\/api\/process-recent\/(\d+)(\?.*)?$/,
+    handler: handleBatchAnalysis
   },
   {
     pattern: /^\/api\/replay-download\/(\d+)\/(\d+)(\?.*)?$/,

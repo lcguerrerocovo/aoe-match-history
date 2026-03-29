@@ -1,4 +1,4 @@
-import { log, getFirestoreClient, SIMULATE_LATENCY_MS, sleep } from './config';
+import { log, getFirestoreClient, getMatchDbPool, SIMULATE_LATENCY_MS, sleep } from './config';
 import { invokeExternalAPM, aoeMsLimiter, invokeExternalAPMWithBase64 } from './replayService';
 import { handleMatch } from './matchHandlers';
 import type { HandlerResponse } from './types';
@@ -51,6 +51,13 @@ export async function handleReplayDownload(gameId: string, profileId: string, re
           }
         } catch (persistErr) {
           log.warn({ err: (persistErr as Error).message, gameId }, 'Failed to persist APM data');
+        }
+
+        // Also mark has_apm in PostgreSQL (fire-and-forget)
+        const pool = getMatchDbPool();
+        if (pool) {
+          pool.query('UPDATE match SET has_apm = TRUE WHERE match_id = $1', [gameId])
+            .catch((dbErr: Error) => log.warn({ gameId, err: dbErr.message }, 'Failed to update has_apm in PostgreSQL'));
         }
       }
 
@@ -127,6 +134,13 @@ export async function handleReplayDownload(gameId: string, profileId: string, re
               }
             } catch (persistErr) {
               log.warn({ err: (persistErr as Error).message, gameId }, 'Failed to persist APM data');
+            }
+
+            // Also mark has_apm in PostgreSQL (fire-and-forget)
+            const pool = getMatchDbPool();
+            if (pool) {
+              pool.query('UPDATE match SET has_apm = TRUE WHERE match_id = $1', [gameId])
+                .catch((dbErr: Error) => log.warn({ gameId, err: dbErr.message }, 'Failed to update has_apm in PostgreSQL'));
             }
           }
 

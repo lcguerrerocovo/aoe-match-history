@@ -1,4 +1,4 @@
-import { log, APM_API_URL, getFirestoreClient } from './config';
+import { log, APM_API_URL, getFirestoreClient, getMatchDbPool } from './config';
 import { createLimiter } from './concurrencyLimiter';
 import type { Firestore } from '@google-cloud/firestore';
 import type { ApmStatus, ApmData } from './types';
@@ -189,6 +189,71 @@ export async function invokeExternalAPMWithBase64(base64Data: string, gameId: st
     log.error({ err: (e as Error).message }, 'Failed to call APM service');
     return { error: (e as Error).message };
   }
+}
+
+/**
+ * Download and process a replay for a specific match+player.
+ * Persists APM data to Firestore and marks has_apm in PostgreSQL.
+ * Returns true if replay was successfully processed.
+ */
+export async function processReplayForMatch(gameId: string, profileId: string): Promise<boolean> {
+  const url = `https://aoe.ms/replay/?gameId=${gameId}&profileId=${profileId}`;
+
+  let response: Response | undefined;
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
+    }
+
+    try {
+      response = await aoeMsLimiter.run(() => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        return fetch(url, {
+          headers: { 'Accept': 'application/octet-stream', 'User-Agent': 'aoe2-site' },
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
+      });
+    } catch (err) {
+      log.debug({ gameId, profileId, attempt, err: (err as Error).message }, 'Replay fetch error');
+      if (attempt === maxRetries) return false;
+      continue;
+    }
+
+    if (response.status !== 429) break;
+    log.warn({ gameId, profileId, attempt }, 'Rate limited on replay download, retrying');
+  }
+
+  if (!response || !response.ok) {
+    return false;
+  }
+
+  const buffer = await response.arrayBuffer();
+  const apmData = await invokeExternalAPM(buffer, gameId, profileId);
+  const apmSuccess = apmData !== null && !apmData.error;
+
+  if (apmSuccess) {
+    // Persist to Firestore
+    try {
+      const db = getFirestoreClient();
+      if (db) {
+        await db.collection('matches').doc(String(gameId)).set({ apm: apmData }, { merge: true });
+        log.info({ gameId, profileId }, 'APM data persisted to Firestore');
+      }
+    } catch (persistErr) {
+      log.warn({ err: (persistErr as Error).message, gameId }, 'Failed to persist APM data to Firestore');
+    }
+
+    // Also mark has_apm in PostgreSQL for match list queries (fire-and-forget)
+    const pool = getMatchDbPool();
+    if (pool) {
+      pool.query('UPDATE match SET has_apm = TRUE WHERE match_id = $1', [gameId])
+        .catch((dbErr: Error) => log.warn({ gameId, err: dbErr.message }, 'Failed to update has_apm in PostgreSQL'));
+    }
+  }
+
+  return apmSuccess;
 }
 
 export { safeJsonParse };

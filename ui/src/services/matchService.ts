@@ -219,6 +219,23 @@ export async function checkApmStatusForMatch(gameId: string): Promise<{ hasSaveG
   }
 }
 
+// Trigger batch analysis of recent matches for a player
+export async function processRecentMatches(profileId: string): Promise<{ started: boolean }> {
+  try {
+    const response = await fetch(`${API_URL}/process-recent/${profileId}`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      console.error('Batch analysis request failed', response.statusText);
+      return { started: false };
+    }
+    return await response.json();
+  } catch (e) {
+    console.error('Batch analysis request failed', e);
+    return { started: false };
+  }
+}
+
 // Trigger replay download & APM processing
 // Downloads replay client-side from aoe.ms, then sends to proxy for APM processing
 export async function downloadReplay(gameId: string, profileId: string): Promise<{ success: boolean; error?: string }> {

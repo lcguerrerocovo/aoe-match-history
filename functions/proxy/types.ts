@@ -101,6 +101,7 @@ export interface ProcessedMatch {
   winning_team: number | undefined;
   winning_teams: number[];
   apm?: ApmData;
+  has_apm?: boolean;
 }
 
 // --- Handler response ---
