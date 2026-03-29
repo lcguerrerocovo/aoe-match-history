@@ -220,9 +220,14 @@ export function LivePage() {
         }
         ratingsRef.current = pruned;
 
-        // Fetch all ratings in one request — simpler than batching and
-        // ensures ELO histogram appears complete on first render
-        getLiveRatings(ordered).then(ratings => {
+        // Two batches: first batch populates visible player rows quickly,
+        // ratingsLoaded set after ALL ratings arrive so ELO histogram
+        // appears complete (shimmer stays until then)
+        const FIRST_BATCH = 500;
+        const first = ordered.slice(0, FIRST_BATCH);
+        const rest = ordered.slice(FIRST_BATCH);
+
+        const mergeRatings = (ratings: Map<number, number>) => {
           if (ratings.size === 0) return;
           ratings.forEach((r, id) => ratingsRef.current.set(id, r));
           setMatches(prev => prev.map(match => ({
@@ -232,7 +237,19 @@ export function LivePage() {
               rating: ratings.get(p.profile_id) ?? p.rating,
             })),
           })));
-          setRatingsLoaded(true);
+        };
+
+        getLiveRatings(first).then(ratings => {
+          mergeRatings(ratings);
+
+          if (rest.length > 0) {
+            getLiveRatings(rest).then(ratings => {
+              mergeRatings(ratings);
+              setRatingsLoaded(true);
+            });
+          } else {
+            setRatingsLoaded(true);
+          }
         });
       }
     } catch (err) {
