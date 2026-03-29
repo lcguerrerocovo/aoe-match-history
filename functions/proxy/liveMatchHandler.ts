@@ -489,8 +489,9 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
     // Unfiltered: use cached + paginated fetch
     const { matches, partial } = await getCachedLiveMatches();
 
-    // Short CDN TTL for empty responses — they're likely transient Relic API blips
-    if (matches.length === 0) {
+    // Short CDN TTL for empty or partial responses — complete data is usually
+    // available within seconds, so don't let CDN cache stale partial results
+    if (matches.length === 0 || partial) {
         headers['Cache-Control'] = 'public, s-maxage=5, max-age=3';
     }
 
