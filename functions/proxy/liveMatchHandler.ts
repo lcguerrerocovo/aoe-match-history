@@ -350,13 +350,17 @@ async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: 
     }
 
     // Stale cache — serve immediately but trigger background refresh
+    // Don't write fast-phase data to cache here — the stale full dataset is
+    // better than fresh partial data. Background pages will update the cache
+    // with the full dataset when they complete.
     if (cachedResponse && age < CACHE_STALE_TTL_MS) {
         log.debug({ age, matchCount: cachedResponse.data.length }, 'Serving stale live matches, refreshing in background');
         if (!pendingFetch) {
             pendingFetch = fetchAllLiveMatches()
                 .then(data => {
-                    if (data.length > 0) {
-                        cachedResponse = { data, timestamp: Date.now(), partial: !!pendingBackgroundPages, generation: fetchGeneration };
+                    // Only update cache if the fast phase got everything (no background pending)
+                    if (data.length > 0 && !pendingBackgroundPages) {
+                        cachedResponse = { data, timestamp: Date.now(), partial: false, generation: fetchGeneration };
                     }
                     return data;
                 })
