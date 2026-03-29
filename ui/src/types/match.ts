@@ -41,7 +41,6 @@ export interface Match {
   winning_team?: number;
   winning_teams?: number[];
   apm?: ApmData;
-  has_apm?: boolean;
 }
 
 export type SortDirection = 'asc' | 'desc';

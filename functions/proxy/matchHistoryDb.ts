@@ -14,7 +14,6 @@ interface MatchRow {
   description: string | null;
   max_players: number | null;
   winning_team: number | null;
-  has_apm: boolean;
 }
 
 interface PlayerRow {
@@ -189,7 +188,7 @@ export async function queryMatchHistory(
   const [matchesResult, playersResult] = await Promise.all([
     pool.query<MatchRow>(
       `SELECT match_id, map_id, map_name, match_type_id, start_time,
-              completion_time, duration, description, max_players, winning_team, has_apm
+              completion_time, duration, description, max_players, winning_team
        FROM match
        WHERE match_id = ANY($1)`,
       [matchIds],
@@ -258,7 +257,6 @@ export async function queryMatchHistory(
       players,
       winning_team: winningTeam,
       winning_teams: winningTeams,
-      has_apm: match.has_apm || false,
     };
   });
 
@@ -285,7 +283,7 @@ export async function querySingleMatch(
   const [matchResult, playersResult] = await Promise.all([
     pool.query<MatchRow>(
       `SELECT match_id, map_id, map_name, match_type_id, start_time,
-              completion_time, duration, description, max_players, winning_team, has_apm
+              completion_time, duration, description, max_players, winning_team
        FROM match
        WHERE match_id = $1`,
       [matchId],
@@ -346,6 +344,5 @@ export async function querySingleMatch(
     players,
     winning_team: winningTeam,
     winning_teams: winningTeams,
-    has_apm: match.has_apm || false,
   };
 }
