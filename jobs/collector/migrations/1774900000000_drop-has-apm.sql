@@ -1,0 +1,1 @@
+ALTER TABLE match DROP COLUMN IF EXISTS has_apm;
