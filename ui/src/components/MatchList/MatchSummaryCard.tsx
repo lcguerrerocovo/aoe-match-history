@@ -7,9 +7,17 @@ import { useLayoutConfig } from '../../theme/breakpoints';
 import { parseDuration } from '../../utils/timeUtils';
 import { formatDuration, formatDateTime } from '../../utils/matchUtils';
 import type { Match } from '../../types/match';
-import { AnalysisButton } from './AnalysisButton';
+import { AnalysisIndicator } from './AnalysisIndicator';
 
-export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match; profileId: string; groupOpen: boolean }) {
+interface MatchSummaryCardProps {
+  match: Match;
+  profileId: string;
+  groupOpen: boolean;
+  analysisState: 'none' | 'processing' | 'new' | 'ready';
+  onAnalysisAnimationEnd?: () => void;
+}
+
+export function MatchSummaryCard({ match, profileId, groupOpen, analysisState, onAnalysisAnimationEnd }: MatchSummaryCardProps) {
   const layout = useLayoutConfig();
   const durationSec = parseDuration(match.duration);
   const gameTimeSec = Math.round(durationSec * 1.7);
@@ -32,12 +40,7 @@ export function MatchSummaryCard({ match, profileId, groupOpen }: { match: Match
             asChild><RouterLink to={`/match/${match.match_id}`}>
               {match.description}
             </RouterLink></Link>
-          {/* APM button */}
-          {profileId && (
-            <Box display="flex" alignItems="center" justifyContent="flex-end">
-              <AnalysisButton matchId={match.match_id} profileId={profileId} groupOpen={groupOpen} />
-            </Box>
-          )}
+          <AnalysisIndicator state={analysisState} onAnimationEnd={onAnalysisAnimationEnd} />
         </HStack>
         <Separator />
         <Box

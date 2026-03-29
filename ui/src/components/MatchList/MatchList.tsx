@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Box, VStack, Text, HStack, Accordion, useBreakpointValue, Button, Spinner } from '@chakra-ui/react';
 import { system } from '../../theme/theme';
 import type { Match, MatchGroup } from '../../types/match';
@@ -5,6 +6,7 @@ import { useLayoutConfig } from '../../theme/breakpoints';
 import { sumDurations, countByDiplomacy, formatSessionTimingData } from '../../utils/matchUtils';
 import { shortenMatchTypeName } from '../../utils/gameUtils';
 import { MatchCard } from './MatchCard';
+import { useBatchAnalysis } from '../../hooks/useBatchAnalysis';
 
 // Convert number to Roman numerals (handles up to ~20)
 function toRoman(num: number): string {
@@ -36,6 +38,16 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
   const isFlatMode = matchGroups.length === 1 && matchGroups[0].date === 'flat';
   const isMobile = useBreakpointValue({ base: true, md: false });
 
+  const allMatchIds = useMemo(
+    () => matchGroups.flatMap(g => g.matches.map(m => m.match_id)),
+    [matchGroups]
+  );
+
+  const { analyzedIds, newlyAnalyzed, isProcessing, clearNewlyAnalyzed } = useBatchAnalysis({
+    profileId,
+    matchIds: allMatchIds,
+  });
+
   // Render matches for a group
   const renderMatches = (matches: Match[], groupOpen: boolean) => (
     <VStack gap={layout?.matchList.groupGap} align="stretch" width="100%" mx="auto">
@@ -48,7 +60,18 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
           display="flex"
           flexDirection="column"
         >
-          <MatchCard match={match} profileId={profileId} groupOpen={groupOpen} />
+          <MatchCard
+            match={match}
+            profileId={profileId}
+            groupOpen={groupOpen}
+            analysisState={
+              newlyAnalyzed.has(match.match_id) ? 'new'
+              : analyzedIds.has(match.match_id) ? 'ready'
+              : isProcessing ? 'processing'
+              : 'none'
+            }
+            onAnalysisAnimationEnd={() => clearNewlyAnalyzed(match.match_id)}
+          />
         </Box>
       ))}
     </VStack>

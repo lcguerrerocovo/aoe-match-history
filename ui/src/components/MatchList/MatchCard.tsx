@@ -6,12 +6,20 @@ import { MatchSummaryCard } from './MatchSummaryCard';
 import { MapCard } from './MapCard';
 import { TeamCard } from './TeamCard';
 
-export function MatchCard({ match, profileId, groupOpen }: { match: Match; profileId: string; groupOpen: boolean }) {
+interface MatchCardProps {
+  match: Match;
+  profileId: string;
+  groupOpen: boolean;
+  analysisState: 'none' | 'processing' | 'new' | 'ready';
+  onAnalysisAnimationEnd?: () => void;
+}
+
+export function MatchCard({ match, profileId, groupOpen, analysisState, onAnalysisAnimationEnd }: MatchCardProps) {
   const layout = useLayoutConfig();
 
   return (
     <Card.Root variant={cardVariant('match')} role="group">
-      <MatchSummaryCard match={match} profileId={profileId} groupOpen={groupOpen} />
+      <MatchSummaryCard match={match} profileId={profileId} groupOpen={groupOpen} analysisState={analysisState} onAnalysisAnimationEnd={onAnalysisAnimationEnd} />
       <Box
         display="flex"
         flexDirection={layout?.matchCard.flexDirection}
