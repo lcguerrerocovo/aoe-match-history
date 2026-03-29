@@ -52,11 +52,6 @@ export function ProfileLiveMatch({ profileId, matches = [] }: ProfileLiveMatchPr
     // Clone and override the rating for this player
     return {
       ...match,
-      teams: match.teams.map(team =>
-        team.map(p =>
-          p.profile_id === profileId ? { ...p, rating: latestPlayer.rating } : p
-        )
-      ),
       players: match.players.map(p =>
         p.profile_id === profileId ? { ...p, rating: latestPlayer.rating } : p
       ),

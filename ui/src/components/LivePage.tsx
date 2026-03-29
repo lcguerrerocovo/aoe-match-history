@@ -190,12 +190,6 @@ export function LivePage() {
               ...p,
               rating: cached.get(p.profile_id) ?? p.rating,
             })),
-            teams: match.teams.map(team =>
-              team.map(p => ({
-                ...p,
-                rating: cached.get(p.profile_id) ?? p.rating,
-              }))
-            ),
           }))
         : data;
 
@@ -239,12 +233,6 @@ export function LivePage() {
               ...p,
               rating: ratings.get(p.profile_id) ?? p.rating,
             })),
-            teams: match.teams.map(team =>
-              team.map(p => ({
-                ...p,
-                rating: ratings.get(p.profile_id) ?? p.rating,
-              }))
-            ),
           })));
         };
 
