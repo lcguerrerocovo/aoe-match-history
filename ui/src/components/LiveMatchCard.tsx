@@ -1,10 +1,11 @@
 import { Box, VStack, Text, Flex, Link } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useEffect, useState, useRef, memo } from 'react';
+import { useEffect, useState, useRef, memo, useMemo } from 'react';
 import { keyframes } from '@emotion/react';
 import { FiEye } from 'react-icons/fi';
 import type { LiveMatch, LiveMatchPlayer } from '../types/liveMatch';
 import { assetManager } from '../utils/assetManager';
+import { groupByTeam } from '../utils/liveMatchUtils';
 
 const livePulse = keyframes`
   0%, 100% { opacity: 0.85; box-shadow: 0 0 3px var(--chakra-colors-brand-red-chalk); }
@@ -164,6 +165,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
   highlightProfileId?: number;
   avgRating?: number | null;
 }) {
+  const teams = useMemo(() => groupByTeam(match.players), [match.players]);
   const elapsedRef = useRef<HTMLSpanElement>(null);
 
   // Update elapsed time via DOM ref — no React re-render needed
@@ -238,9 +240,9 @@ export const LiveMatchCard = memo(function LiveMatchCard({
 
         {/* Teams — side by side like match history */}
         <Flex flex="1" minW={0} gap={2} direction={{ base: 'column', md: 'row' }} data-testid="teams-container">
-          {match.teams.map((team, teamIdx) => {
+          {teams.map((team, teamIdx) => {
             let teamStartIdx = 0;
-            for (let i = 0; i < teamIdx; i++) teamStartIdx += match.teams[i].length;
+            for (let i = 0; i < teamIdx; i++) teamStartIdx += teams[i].length;
             return (
               <Box
                 key={teamIdx}
