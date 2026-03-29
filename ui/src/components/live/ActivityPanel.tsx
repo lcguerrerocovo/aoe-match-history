@@ -312,15 +312,6 @@ export function ActivityPanel({
                         onClick={() => onEloBracketSelect(isSelected ? '' : b.label)}
                         _hover={{ opacity: isDimmed ? 0.7 : 1 }}
                       >
-                        <Text
-                          fontSize="2xs"
-                          color="brand.inkMuted"
-                          lineHeight="1"
-                          mb={1}
-                          transition="opacity 0.3s ease"
-                        >
-                          {b.count}
-                        </Text>
                         <Box
                           h={`${barH}px`}
                           bgGradient="to-t"
