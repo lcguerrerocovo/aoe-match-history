@@ -71,9 +71,12 @@ export function ActivityPanel({
     return { under5, under15, over15, total };
   }, [matches]);
 
-  // Map counts reflect active ELO filter
+  // Map counts reflect active ELO filter and exclude unrated matches
+  // so totals stay consistent with the ELO histogram
   const topMaps = useMemo(() => {
-    let source = matches;
+    let source = ratingsLoaded
+      ? matches.filter(m => avgRatings.get(m.match_id) != null)
+      : matches;
     if (selectedEloBracket) {
       source = source.filter((m) => {
         const avg = avgRatings.get(m.match_id);
