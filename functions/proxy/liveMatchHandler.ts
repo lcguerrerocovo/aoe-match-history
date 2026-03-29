@@ -8,7 +8,7 @@ const log = logger.child({ module: 'LiveMatches' });
 
 const PAGE_SIZE = 200;
 const FAST_PAGES = 5; // return after 5 pages (~1000 matches) for fast initial render
-const MAX_PAGES = 10; // fetch up to 2000 matches in background
+const MAX_PAGES = 15; // fetch up to 3000 matches in background
 const CACHE_TTL_MS = 25_000; // fresh: serve immediately
 const CACHE_STALE_TTL_MS = 60_000; // stale: serve while revalidating in background
 
