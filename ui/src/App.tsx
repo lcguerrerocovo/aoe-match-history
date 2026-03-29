@@ -399,7 +399,7 @@ function App() {
           }
           {profileId && (
             <Box w={layout.matchList.width} maxW={layout.matchList.maxWidth} mx="auto">
-              <ProfileLiveMatch profileId={Number(profileId)} />
+              <ProfileLiveMatch profileId={Number(profileId)} matches={allMatches} />
             </Box>
           )}
           <VStack
