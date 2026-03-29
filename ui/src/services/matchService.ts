@@ -1,4 +1,4 @@
-import type { Match } from '../types/match';
+import type { Match, ApmData } from '../types/match';
 import type { PersonalStats } from '../types/stats';
 import type { PlayerSearchResult } from '../components/PlayerSearch';
 
@@ -164,123 +164,52 @@ export async function searchPlayers(query: string): Promise<PlayerSearchResult[]
   }
 }
 
-export async function checkReplayAvailability(gameId: string, profileId: string): Promise<boolean> {
+// Auto-trigger analysis for a match (match detail page)
+export interface MatchAnalysisResponse {
+  status: 'complete' | 'processing' | 'unavailable';
+  apm?: ApmData;
+}
+
+export async function getMatchAnalysis(matchId: string): Promise<MatchAnalysisResponse> {
   try {
-    const response = await fetch(`/api/check-replay/${gameId}/${profileId}`);
+    const response = await fetch(`${API_URL}/match-analysis/${matchId}`);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return { status: 'unavailable' };
     }
-    const data = await response.json();
-    return data.available;
-  } catch (error) {
-    console.error('Failed to check replay availability:', error);
-    return true; // Default to available on error
+    return await response.json();
+  } catch {
+    return { status: 'unavailable' };
   }
 }
 
-// Check APM processing status
-export async function checkApmStatus(gameId: string, profileId: string): Promise<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus' }> {
+// Check which matches have analysis (sidecar)
+export async function getAnalysisStatus(matchIds: string[]): Promise<Set<string>> {
+  if (!matchIds.length) return new Set();
   try {
-    const response = await fetch(`${API_URL}/apm-status/${gameId}/${profileId}`);
-    if (!response.ok) {
-      console.error('APM status check failed', response.statusText);
-      return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
-    }
+    const response = await fetch(`${API_URL}/analysis-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchIds }),
+    });
+    if (!response.ok) return new Set();
     const data = await response.json();
-    return {
-      hasSaveGame: data.hasSaveGame || false,
-      isProcessed: data.isProcessed || false,
-      state: data.state || 'greyStatus'
-    };
-  } catch (e) {
-    console.error('APM status check failed', e);
-    return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
+    return new Set(data.analyzed || []);
+  } catch {
+    return new Set();
   }
 }
 
-// Check APM status for any player in a match
-export async function checkApmStatusForMatch(gameId: string): Promise<{ hasSaveGame: boolean; isProcessed: boolean; state: 'greyStatus' | 'silverStatus' | 'bronzeStatus'; profileId?: string }> {
-  try {
-    const response = await fetch(`${API_URL}/apm-status-match/${gameId}`);
-    if (!response.ok) {
-      console.error('APM status check for match failed', response.statusText);
-      return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
-    }
-    const data = await response.json();
-    return {
-      hasSaveGame: data.hasSaveGame || false,
-      isProcessed: data.isProcessed || false,
-      state: data.state || 'greyStatus',
-      profileId: data.profileId
-    };
-  } catch (e) {
-    console.error('APM status check for match failed', e);
-    return { hasSaveGame: false, isProcessed: false, state: 'greyStatus' };
-  }
-}
-
-// Trigger batch analysis of recent matches for a player
-export async function processRecentMatches(profileId: string): Promise<{ started: boolean }> {
+// Trigger batch analysis (fire-and-forget)
+export async function triggerBatchAnalysis(profileId: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/process-recent/${profileId}`, {
       method: 'POST',
     });
-    if (!response.ok) {
-      console.error('Batch analysis request failed', response.statusText);
-      return { started: false };
-    }
-    return await response.json();
-  } catch (e) {
-    console.error('Batch analysis request failed', e);
-    return { started: false };
-  }
-}
-
-// Trigger replay download & APM processing
-// Downloads replay client-side from aoe.ms, then sends to proxy for APM processing
-export async function downloadReplay(gameId: string, profileId: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Step 1: Download replay directly (browser fetch, avoids shared Cloud Run IP rate limits)
-    // Use api.ageofempires.com directly — aoe.ms 301-redirects here but without CORS headers,
-    // which causes the browser to block the cross-origin redirect
-    const replayUrl = `https://api.ageofempires.com/api/GameStats/AgeII/GetMatchReplay/?gameId=${gameId}&profileId=${profileId}&matchId=${gameId}`;
-    let replayResponse: Response;
-    try {
-      replayResponse = await fetch(replayUrl);
-    } catch {
-      return { success: false, error: 'Failed to download replay' };
-    }
-
-    if (!replayResponse.ok) {
-      const errorMsg = replayResponse.status === 429
-        ? 'Replay server busy — try again later'
-        : 'Replay not available';
-      return { success: false, error: errorMsg };
-    }
-
-    // Step 2: Convert to base64
-    const buffer = await replayResponse.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-
-    // Step 3: Send to proxy for APM processing + Firestore persistence
-    const response = await fetch(`${API_URL}/replay-download/${gameId}/${profileId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ replayData: base64 })
-    });
-
-    if (!response.ok) {
-      console.error('Replay processing request failed', response.statusText);
-      return { success: false, error: 'Replay processing failed' };
-    }
-
+    if (!response.ok) return false;
     const data = await response.json();
-    return { success: data.downloaded || false, error: data.error };
-  } catch (e) {
-    console.error('Replay download/processing failed', e);
-    return { success: false, error: 'Network error' };
+    return data.accepted && !data.debounced;
+  } catch {
+    return false;
   }
 }
 
