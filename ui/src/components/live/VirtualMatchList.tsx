@@ -4,6 +4,7 @@ import { Box } from '@chakra-ui/react';
 import { keyframes } from '@emotion/react';
 import { LiveMatchCard } from '../LiveMatchCard';
 import type { LiveMatch } from '../../types/liveMatch';
+import { groupByTeam } from '../../utils/liveMatchUtils';
 
 const cardEnter = keyframes`
   from { opacity: 0; transform: translateY(-8px); }
@@ -35,7 +36,8 @@ export function VirtualMatchList({
     count: matches.length,
     estimateSize: (index) => {
       const match = matches[index];
-      const maxTeamSize = match.teams.reduce(
+      const teams = groupByTeam(match.players);
+      const maxTeamSize = teams.reduce(
         (max, t) => Math.max(max, t.length),
         0,
       );
