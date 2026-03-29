@@ -43,7 +43,7 @@ export function useBatchAnalysis({
 
       pollTimer.current = setInterval(async () => {
         pollCount.current++;
-        if (pollCount.current > 4) {
+        if (pollCount.current > 8) {
           clearInterval(pollTimer.current);
           setIsProcessing(false);
           return;

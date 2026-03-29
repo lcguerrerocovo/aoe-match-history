@@ -3,8 +3,8 @@ import { createPriorityLimiter } from './priorityLimiter';
 import type { Firestore } from '@google-cloud/firestore';
 import type { ApmStatus, ApmData } from './types';
 
-// Serial priority queue for aoe.ms — one request at a time, 3s min delay
-export const aoeMsLimiter = createPriorityLimiter({ minDelayMs: 3000 });
+// Serial priority queue for aoe.ms — one request at a time, 5s min delay
+export const aoeMsLimiter = createPriorityLimiter({ minDelayMs: 5000 });
 
 export async function checkReplayAvailability(gameId: string, profileId: string): Promise<boolean> {
   const maxRetries = 1;
