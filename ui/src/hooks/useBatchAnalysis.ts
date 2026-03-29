@@ -14,6 +14,7 @@ export function useBatchAnalysis({
   matchIds,
 }: UseBatchAnalysisOptions) {
   const [analyzedIds, setAnalyzedIds] = useState<Set<string>>(new Set());
+  const [noReplayIds, setNoReplayIds] = useState<Set<string>>(new Set());
   const [newlyAnalyzed, setNewlyAnalyzed] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const pollCount = useRef(0);
@@ -28,18 +29,18 @@ export function useBatchAnalysis({
 
     (async () => {
       // Get current analysis status
-      const status = await getAnalysisStatus(matchIds);
+      const { analyzed, noReplay } = await getAnalysisStatus(matchIds);
       if (cancelled) return;
-      setAnalyzedIds(status);
-      prevAnalyzed.current = status;
+      setAnalyzedIds(analyzed);
+      setNoReplayIds(noReplay);
+      prevAnalyzed.current = analyzed;
 
       // Trigger batch processing (fire-and-forget)
       triggerBatchAnalysis(profileId);
 
-      // If not all matches are analyzed, poll for updates
-      // (batch may still be running from a previous trigger even if debounced)
-      const allAlreadyDone = matchIds.every(id => status.has(id));
-      if (cancelled || allAlreadyDone) return;
+      // If all matches are resolved (analyzed or noReplay), no need to poll
+      const allResolved = matchIds.every(id => analyzed.has(id) || noReplay.has(id));
+      if (cancelled || allResolved) return;
 
       setIsProcessing(true);
       pollCount.current = 0;
@@ -57,7 +58,7 @@ export function useBatchAnalysis({
 
         // Diff: find newly analyzed
         const newIds = new Set<string>();
-        for (const id of updated) {
+        for (const id of updated.analyzed) {
           if (!prevAnalyzed.current.has(id)) {
             newIds.add(id);
           }
@@ -71,11 +72,12 @@ export function useBatchAnalysis({
           });
         }
 
-        setAnalyzedIds(updated);
-        prevAnalyzed.current = updated;
+        setAnalyzedIds(updated.analyzed);
+        setNoReplayIds(updated.noReplay);
+        prevAnalyzed.current = updated.analyzed;
 
-        // Stop if all visible matches are analyzed
-        const allDone = matchIds.every((id) => updated.has(id));
+        // Stop if all matches are resolved
+        const allDone = matchIds.every(id => updated.analyzed.has(id) || updated.noReplay.has(id));
         if (allDone) {
           clearInterval(pollTimer.current);
           setIsProcessing(false);
@@ -101,6 +103,7 @@ export function useBatchAnalysis({
 
   return {
     analyzedIds,
+    noReplayIds,
     newlyAnalyzed,
     isProcessing,
     clearNewlyAnalyzed,

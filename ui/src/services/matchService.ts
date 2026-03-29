@@ -182,20 +182,29 @@ export async function getMatchAnalysis(matchId: string): Promise<MatchAnalysisRe
   }
 }
 
-// Check which matches have analysis (sidecar)
-export async function getAnalysisStatus(matchIds: string[]): Promise<Set<string>> {
-  if (!matchIds.length) return new Set();
+// Check which matches have analysis or no replay (sidecar)
+export interface AnalysisStatusResult {
+  analyzed: Set<string>;
+  noReplay: Set<string>;
+}
+
+export async function getAnalysisStatus(matchIds: string[]): Promise<AnalysisStatusResult> {
+  const empty = { analyzed: new Set<string>(), noReplay: new Set<string>() };
+  if (!matchIds.length) return empty;
   try {
     const response = await fetch(`${API_URL}/analysis-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matchIds }),
     });
-    if (!response.ok) return new Set();
+    if (!response.ok) return empty;
     const data = await response.json();
-    return new Set(data.analyzed || []);
+    return {
+      analyzed: new Set(data.analyzed || []),
+      noReplay: new Set(data.noReplay || []),
+    };
   } catch {
-    return new Set();
+    return empty;
   }
 }
 

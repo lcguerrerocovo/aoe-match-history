@@ -1,4 +1,4 @@
-import { log } from './config';
+import { log, getFirestoreClient } from './config';
 import { handleMatch } from './matchHandlers';
 import { processReplayForMatch } from './replayService';
 import { analysisTracker } from './analysisTracker';
@@ -28,6 +28,19 @@ export async function handleMatchAnalysis(matchId: string): Promise<HandlerRespo
     return { data: { status: 'complete', apm: match.apm }, headers: noCache };
   }
 
+  // Check Firestore for noReplay marker
+  const db = getFirestoreClient();
+  if (db) {
+    try {
+      const doc = await db.collection('matches').doc(matchId).get();
+      if (doc.exists && doc.data()?.noReplay) {
+        return { data: { status: 'unavailable' }, headers: noCache };
+      }
+    } catch (err) {
+      log.warn({ matchId, err: (err as Error).message }, 'noReplay check failed');
+    }
+  }
+
   // Already being processed by batch or a prior request
   if (analysisTracker.isInFlight(matchId)) {
     return { data: { status: 'processing' }, headers: noCache };
@@ -50,7 +63,11 @@ export async function handleMatchAnalysis(matchId: string): Promise<HandlerRespo
           return;
         }
       }
-      log.info({ matchId }, 'Match analysis: no replay found');
+      // No player had a replay — mark as noReplay
+      log.info({ matchId }, 'Match analysis: no replay found, marking noReplay');
+      if (db) {
+        await db.collection('matches').doc(matchId).set({ noReplay: true }, { merge: true });
+      }
     } catch (err) {
       log.error({ matchId, err: (err as Error).message }, 'Match analysis error');
     } finally {

@@ -7,6 +7,7 @@ interface AnalysisStatusRequest {
 
 interface AnalysisStatusResponse {
   analyzed: string[];
+  noReplay: string[];
 }
 
 export async function handleAnalysisStatus(body: AnalysisStatusRequest): Promise<HandlerResponse<AnalysisStatusResponse>> {
@@ -18,12 +19,12 @@ export async function handleAnalysisStatus(body: AnalysisStatusRequest): Promise
 
   const matchIds = body?.matchIds || [];
   if (!matchIds.length) {
-    return { data: { analyzed: [] }, headers: noCache };
+    return { data: { analyzed: [], noReplay: [] }, headers: noCache };
   }
 
   const db = getFirestoreClient();
   if (!db) {
-    return { data: { analyzed: [] }, headers: noCache };
+    return { data: { analyzed: [], noReplay: [] }, headers: noCache };
   }
 
   try {
@@ -31,19 +32,22 @@ export async function handleAnalysisStatus(body: AnalysisStatusRequest): Promise
     const docs = await db.getAll(...refs);
 
     const analyzed: string[] = [];
+    const noReplay: string[] = [];
     for (const doc of docs) {
       if (doc.exists) {
         const data = doc.data();
         if (data?.apm) {
           analyzed.push(doc.id);
+        } else if (data?.noReplay) {
+          noReplay.push(doc.id);
         }
       }
     }
 
-    log.debug({ requested: matchIds.length, analyzed: analyzed.length }, 'Analysis status check');
-    return { data: { analyzed }, headers: noCache };
+    log.debug({ requested: matchIds.length, analyzed: analyzed.length, noReplay: noReplay.length }, 'Analysis status check');
+    return { data: { analyzed, noReplay }, headers: noCache };
   } catch (err) {
     log.error({ err: (err as Error).message }, 'Analysis status check failed');
-    return { data: { analyzed: [] }, headers: noCache };
+    return { data: { analyzed: [], noReplay: [] }, headers: noCache };
   }
 }

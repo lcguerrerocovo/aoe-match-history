@@ -43,7 +43,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
     [matchGroups]
   );
 
-  const { analyzedIds, newlyAnalyzed, isProcessing, clearNewlyAnalyzed } = useBatchAnalysis({
+  const { analyzedIds, noReplayIds, newlyAnalyzed, isProcessing, clearNewlyAnalyzed } = useBatchAnalysis({
     profileId,
     matchIds: allMatchIds,
   });
@@ -67,6 +67,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             analysisState={
               newlyAnalyzed.has(match.match_id) ? 'new'
               : analyzedIds.has(match.match_id) ? 'ready'
+              : noReplayIds.has(match.match_id) ? 'none'
               : isProcessing ? 'processing'
               : 'none'
             }

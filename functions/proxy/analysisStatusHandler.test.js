@@ -33,28 +33,32 @@ describe('handleAnalysisStatus', () => {
     jest.clearAllMocks();
   });
 
-  it('returns analyzed match IDs that have apm field', async () => {
+  it('returns analyzed and noReplay match IDs', async () => {
     mockGetAll.mockResolvedValue([
       { exists: true, id: '100', data: () => ({ apm: { players: {} } }) },
-      { exists: true, id: '200', data: () => ({ raw: {} }) },
-      { exists: false, id: '300' },
+      { exists: true, id: '200', data: () => ({ noReplay: true }) },
+      { exists: true, id: '300', data: () => ({ raw: {} }) },
+      { exists: false, id: '400' },
     ]);
 
-    const result = await handleAnalysisStatus({ matchIds: ['100', '200', '300'] });
+    const result = await handleAnalysisStatus({ matchIds: ['100', '200', '300', '400'] });
     expect(result.data.analyzed).toEqual(['100']);
+    expect(result.data.noReplay).toEqual(['200']);
   });
 
-  it('returns empty array when no matches have analysis', async () => {
+  it('returns empty arrays when no matches have analysis or noReplay', async () => {
     mockGetAll.mockResolvedValue([
       { exists: true, id: '100', data: () => ({ raw: {} }) },
     ]);
 
     const result = await handleAnalysisStatus({ matchIds: ['100'] });
     expect(result.data.analyzed).toEqual([]);
+    expect(result.data.noReplay).toEqual([]);
   });
 
-  it('returns empty array for empty input', async () => {
+  it('returns empty arrays for empty input', async () => {
     const result = await handleAnalysisStatus({ matchIds: [] });
     expect(result.data.analyzed).toEqual([]);
+    expect(result.data.noReplay).toEqual([]);
   });
 });

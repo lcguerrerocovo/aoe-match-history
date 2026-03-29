@@ -45,9 +45,9 @@ async function processRecentMatches(profileId: string): Promise<void> {
     return;
   }
 
-  // Check Firestore for existing analysis
+  // Check Firestore for existing analysis or known no-replay
   const matchIds = matches.map(m => String(m.id));
-  const alreadyProcessed = new Set<string>();
+  const skipIds = new Set<string>();
 
   const db = getFirestoreClient();
   if (db) {
@@ -55,8 +55,11 @@ async function processRecentMatches(profileId: string): Promise<void> {
       const refs = matchIds.map(id => db.collection('matches').doc(id));
       const docs = await db.getAll(...refs);
       for (const doc of docs) {
-        if (doc.exists && doc.data()?.apm) {
-          alreadyProcessed.add(doc.id);
+        if (doc.exists) {
+          const data = doc.data();
+          if (data?.apm || data?.noReplay) {
+            skipIds.add(doc.id);
+          }
         }
       }
     } catch (err) {
@@ -68,7 +71,7 @@ async function processRecentMatches(profileId: string): Promise<void> {
   const workList: { matchId: string; playerIds: string[] }[] = [];
   for (const rawMatch of matches) {
     const matchId = String(rawMatch.id);
-    if (alreadyProcessed.has(matchId)) continue;
+    if (skipIds.has(matchId)) continue;
     if (analysisTracker.isInFlight(matchId)) continue;
 
     const playerIds = (rawMatch.matchhistoryreportresults || [])
@@ -122,6 +125,25 @@ async function processRecentMatches(profileId: string): Promise<void> {
       log.warn({ matchId, err: (err as Error).message }, 'Batch pass 2 failed');
     } finally {
       analysisTracker.markDone(matchId);
+    }
+  }
+
+  // Mark unprocessed matches as noReplay in Firestore
+  if (db) {
+    const noReplayIds = workList
+      .filter(({ matchId }) => !processed.has(matchId))
+      .map(({ matchId }) => matchId);
+
+    for (const matchId of noReplayIds) {
+      try {
+        await db.collection('matches').doc(matchId).set({ noReplay: true }, { merge: true });
+      } catch (err) {
+        log.warn({ matchId, err: (err as Error).message }, 'Failed to mark noReplay');
+      }
+    }
+
+    if (noReplayIds.length) {
+      log.info({ profileId, noReplay: noReplayIds.length }, 'Marked matches as noReplay');
     }
   }
 
