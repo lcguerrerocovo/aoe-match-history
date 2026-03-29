@@ -248,8 +248,6 @@ export function LivePage() {
         });
       }
     } catch (err) {
-      // Ignore aborted fetches (superseded by a newer request)
-      if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Failed to load live matches');
       setIsLoading(false);
     } finally {
