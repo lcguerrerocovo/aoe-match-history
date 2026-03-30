@@ -397,17 +397,17 @@ function App() {
               </Box>
             </Box>
           }
-          {profileId && (
-            <Box w={layout.matchList.width} maxW={layout.matchList.maxWidth} mx="auto">
-              <ProfileLiveMatch profileId={Number(profileId)} matches={allMatches} />
-            </Box>
-          )}
           <VStack
             align="stretch"
             p={layout?.mainContent.padding}
             w={layout.matchList.width}
             mx="auto"
           >
+            {profileId && (
+              <Box w={layout?.matchList.accordionWidth} mx="auto">
+                <ProfileLiveMatch profileId={Number(profileId)} matches={allMatches} />
+              </Box>
+            )}
             <FilterBar
               onMapChange={handleMapFilter}
               onMatchTypeChange={handleMatchTypeFilter}

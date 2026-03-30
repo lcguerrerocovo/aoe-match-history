@@ -66,7 +66,8 @@ export function ProfileLiveMatch({ profileId, matches = [] }: ProfileLiveMatchPr
       borderColor="brand.borderWarm"
       borderRadius="md"
       overflow="hidden"
-      mb={4}
+      bg="brand.cardBg"
+      css={{ '& > div': { border: 'none', marginBottom: 0, borderRadius: 0 } }}
     >
       <LiveMatchCard match={enrichedMatch} highlightProfileId={profileId} avgRating={getMatchAvgRating(enrichedMatch)} />
     </Box>
