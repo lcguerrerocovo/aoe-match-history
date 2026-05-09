@@ -1,6 +1,6 @@
 import pino from 'pino';
 import { scanAllLeaderboards, fetchMatchHistory } from './api.js';
-import { getCivMap, getMapMap } from './mappings.js';
+import { getCivMap, getCivMapForDateSync, getMapMap } from './mappings.js';
 import { Database, processMatch } from './db.js';
 import { RawArchive } from './raw-archive.js';
 
@@ -105,7 +105,7 @@ export class Collector {
 
           // Archive raw matches to Parquet
           for (const match of matchStats) {
-            const pm = processMatch(match, profiles, civMap, mapMap);
+            const pm = processMatch(match, profiles, getCivMapForDateSync(match.startgametime), mapMap);
             await archive.append({
               match_id: pm.matchId,
               map_id: pm.mapId,
@@ -126,7 +126,7 @@ export class Collector {
             profiles,
             batchProfileIds,
             batchLastMatchTimes,
-            civMap,
+            getCivMapForDateSync,
             mapMap,
           );
           totalMatches += count;

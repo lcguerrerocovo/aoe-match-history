@@ -2,29 +2,29 @@ import { decodeOptions, decodeSlotInfo } from './decoders';
 import { log } from './config';
 import type { RawMatch, RawProfile, ProcessedMatch, ProcessedPlayer, DecodedOptions, IdNameMap, ResolveMapInput, ResolvedMap } from './types';
 
+interface VersionEntry {
+  key: string;
+  startDate: string | null;
+  startUnix: number;
+}
+
 interface RlMappings {
+  versions?: { aoe2?: Array<{ key: string; startDate: string | null }> };
   civs?: { aoe2?: Record<string, Record<string, number>> };
   maps?: { aoe2?: Record<string, Record<string, number>> };
 }
 
-// Mapping version boundaries (unix seconds)
-// v1→v2: Romans added at id 33 (patch 59165, 2022-02-22)
-// v3→v4: Armenians(0) + Georgians(16) inserted, all IDs shifted (patch 95810, 2023-10-30)
-// v4→v5: 9 new civs appended at end, no shifts (patch 162286, 2025-12-02)
-const V2_BOUNDARY = Date.UTC(2022, 1, 22) / 1000; // 2022-02-22
-const V4_BOUNDARY = Date.UTC(2023, 9, 30) / 1000; // 2023-10-30
-
-type MappingVersion = 1 | 2 | 4;
-
-function getMappingVersion(matchTimeUnix: number): MappingVersion {
-  if (matchTimeUnix < V2_BOUNDARY) return 1;
-  if (matchTimeUnix < V4_BOUNDARY) return 2;
-  return 4;
-}
+const LEGACY_VERSIONS: VersionEntry[] = [
+  { key: '1', startDate: null, startUnix: 0 },
+  { key: '3', startDate: '2022-02-22T00:00:00Z', startUnix: Math.floor(Date.UTC(2022, 1, 22) / 1000) },
+  { key: '4', startDate: '2023-10-30T00:00:00Z', startUnix: Math.floor(Date.UTC(2023, 9, 30) / 1000) },
+  { key: '5', startDate: '2025-12-02T00:00:00Z', startUnix: Math.floor(Date.UTC(2025, 11, 2) / 1000) },
+];
 
 // Module-level caches
 let rlMappings: RlMappings | null = null;
-let civMaps: Record<MappingVersion, IdNameMap> | null = null;
+let civMaps: Record<string, IdNameMap> | null = null;
+let versionEntries: VersionEntry[] = [];
 let mapMap: IdNameMap | null = null;
 
 export async function loadMappings(): Promise<RlMappings> {
@@ -38,36 +38,60 @@ export async function loadMappings(): Promise<RlMappings> {
   return rlMappings as RlMappings;
 }
 
-async function buildCivMaps(): Promise<Record<MappingVersion, IdNameMap>> {
+function parseVersionEntries(mappings: RlMappings): VersionEntry[] {
+  const raw = mappings.versions?.aoe2;
+  if (raw && raw.length > 0) {
+    return raw
+      .map(v => ({
+        key: v.key,
+        startDate: v.startDate,
+        startUnix: v.startDate ? Math.floor(new Date(v.startDate).getTime() / 1000) : 0,
+      }))
+      .sort((a, b) => a.startUnix - b.startUnix);
+  }
+  return LEGACY_VERSIONS;
+}
+
+function getMappingVersion(matchTimeUnix: number): string {
+  for (let i = versionEntries.length - 1; i >= 0; i--) {
+    if (matchTimeUnix >= versionEntries[i].startUnix) {
+      return versionEntries[i].key;
+    }
+  }
+  return versionEntries[0]?.key || '1';
+}
+
+async function buildCivMaps(): Promise<Record<string, IdNameMap>> {
   if (civMaps) return civMaps;
   const mappings = await loadMappings();
-  if (!mappings?.civs?.aoe2) {
-    civMaps = { 1: {}, 2: {}, 4: {} };
-    return civMaps;
+  versionEntries = parseVersionEntries(mappings);
+
+  const maps: Record<string, IdNameMap> = {};
+  for (const entry of versionEntries) {
+    maps[entry.key] = {};
   }
-  const v1: IdNameMap = {};
-  const v2: IdNameMap = {};
-  const v4: IdNameMap = {};
-  for (const [civName, versions] of Object.entries(mappings.civs.aoe2)) {
-    if (typeof versions !== 'object' || versions === null) continue;
-    const v = versions as Record<string, number>;
-    const maxVer = Math.max(...Object.keys(v).map(Number));
-    if (v['1'] !== undefined && v['1'] >= 0) v1[v['1'].toString()] = civName;
-    // v2 and v3 have same mapping
-    const v2Key = v['3'] ?? v['2'];
-    if (v2Key !== undefined && v2Key >= 0) v2[v2Key.toString()] = civName;
-    // v4+: prefer v5, then v4, then highest available
-    const v4Key = v['5'] ?? v['4'] ?? v[maxVer.toString()];
-    if (v4Key !== undefined && v4Key >= 0) v4[v4Key.toString()] = civName;
+
+  if (mappings?.civs?.aoe2) {
+    for (const [civName, versions] of Object.entries(mappings.civs.aoe2)) {
+      if (typeof versions !== 'object' || versions === null) continue;
+      const v = versions as Record<string, number>;
+      for (const entry of versionEntries) {
+        const id = v[entry.key];
+        if (id !== undefined && id >= 0) {
+          maps[entry.key][id.toString()] = civName;
+        }
+      }
+    }
   }
-  civMaps = { 1: v1, 2: v2, 4: v4 };
+
+  civMaps = maps;
   return civMaps;
 }
 
-/** Current civ map (v4+) — use for live matches and current-version lookups */
+/** Current civ map — use for live matches and current-version lookups */
 export async function getCivMap(): Promise<IdNameMap> {
   const maps = await buildCivMaps();
-  return maps[4];
+  return maps[versionEntries[versionEntries.length - 1].key];
 }
 
 /** Version-aware civ map — use for historical match data */

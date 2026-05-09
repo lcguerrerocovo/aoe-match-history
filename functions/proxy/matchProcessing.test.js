@@ -19,11 +19,17 @@ const { decodeOptions, decodeSlotInfo } = require('./decoders');
 
 // Sample rl_api_mappings fixture
 const MOCK_MAPPINGS = {
+  versions: {
+    aoe2: [
+      { key: '1', startDate: null },
+      { key: '2', startDate: '2022-02-22T00:00:00Z' },
+    ]
+  },
   civs: {
     aoe2: {
-      Franks: { '1': 1, '2': 5 },    // latest version 2 → id 5
-      Britons: { '1': 3 },            // latest version 1 → id 3
-      Vikings: { '1': 7 }             // latest version 1 → id 7
+      Franks: { '1': 1, '2': 5 },    // v1 → id 1, v2 → id 5
+      Britons: { '1': 3, '2': 3 },   // same id across versions
+      Vikings: { '1': 7, '2': 7 }    // same id across versions
     }
   },
   maps: {

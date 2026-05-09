@@ -168,7 +168,7 @@ export class Database {
     profiles: RawProfile[],
     profileIds: number[],
     lastMatchTimes: Map<number, number>,
-    civMap: IdNameMap,
+    getCivMapForTime: (time: number) => IdNameMap,
     mapMap: IdNameMap,
   ): Promise<number> {
     const client = await this.pool.connect();
@@ -177,7 +177,7 @@ export class Database {
       await client.query('BEGIN');
 
       // Pre-process and deduplicate matches (same match can appear for multiple profiles in a batch)
-      const allProcessed = matches.map(match => processMatch(match, profiles, civMap, mapMap));
+      const allProcessed = matches.map(match => processMatch(match, profiles, getCivMapForTime(match.startgametime), mapMap));
       const seen = new Set<number>();
       const processed: ProcessedMatch[] = [];
       // Sort by match_id for consistent lock ordering (prevents deadlocks across concurrent workers)
