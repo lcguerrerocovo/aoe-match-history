@@ -3,7 +3,7 @@ import { groupByTeam } from './liveMatchUtils';
 import type { LiveMatchPlayer } from '../types/liveMatch';
 
 function makePlayer(overrides: Partial<LiveMatchPlayer> & Pick<LiveMatchPlayer, 'name' | 'profile_id' | 'team'>): LiveMatchPlayer {
-  return { rating: null, civ: '0', ...overrides };
+  return { rating: null, civ: '0', color_id: 0, ...overrides };
 }
 
 describe('groupByTeam', () => {

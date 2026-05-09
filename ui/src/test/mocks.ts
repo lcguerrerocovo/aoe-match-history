@@ -289,7 +289,7 @@ export const mockMatchGroup = {
 const now = Math.floor(Date.now() / 1000);
 
 function makeLivePlayer(overrides: Partial<LiveMatchPlayer> & Pick<LiveMatchPlayer, 'name' | 'profile_id' | 'team'>): LiveMatchPlayer {
-  return { rating: null, civ: '0', ...overrides };
+  return { rating: null, civ: '0', color_id: 0, ...overrides };
 }
 
 export const mockLiveMatch: LiveMatch = {
