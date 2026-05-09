@@ -89,6 +89,22 @@ export class RawArchive {
       await writer.close();
 
       const stats = fs.statSync(localPath);
+      const minExpectedBytes = batch.length * 50;
+      if (stats.size < minExpectedBytes) {
+        log.error({ size: stats.size, minExpected: minExpectedBytes, rows: batch.length, part }, 'Parquet file too small — skipping upload');
+        return;
+      }
+
+      // Verify Parquet footer magic bytes (PAR1) — ensures writer.close() completed
+      const fd = fs.openSync(localPath, 'r');
+      const footer = Buffer.alloc(4);
+      fs.readSync(fd, footer, 0, 4, stats.size - 4);
+      fs.closeSync(fd);
+      if (footer.toString() !== 'PAR1') {
+        log.error({ part, footer: footer.toString('hex') }, 'Parquet file missing footer magic — skipping upload');
+        return;
+      }
+
       log.info({ sizeMB: (stats.size / 1024 / 1024).toFixed(1), part }, 'Parquet part written');
 
       await this.storage.bucket(this.bucket).upload(localPath, {
