@@ -43,16 +43,17 @@ jobs:
       
       - name: Wait for startup script to complete
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          echo "⏳ Waiting for startup script to complete..."
+          echo "⏳ Waiting for Meilisearch to become healthy..."
           for i in {1..60}; do
-            if curl -f "http://$EXTERNAL_IP:7700/health" > /dev/null 2>&1; then
-              echo "✅ Startup script completed - Meilisearch is ready!"
-              break
+            if gcloud compute ssh aoe-search --zone=us-central1-a --command="curl -sf http://localhost:7700/health" 2>/dev/null; then
+              echo "✅ Meilisearch is ready!"
+              exit 0
             fi
             echo "Waiting for startup script... (attempt $i/60)"
             sleep 10
           done
+          echo "❌ Meilisearch failed to become healthy after 10 minutes"
+          exit 1
       
       - name: Get latest snapshot from GCS
         id: get-snapshot
