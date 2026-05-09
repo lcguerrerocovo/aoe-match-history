@@ -193,6 +193,16 @@ export function LivePage() {
           }))
         : data;
 
+      // If the newest match is older than 5 minutes, data is stale — trigger a retry
+      const newestStartTime = Math.max(...data.map(m => m.start_time));
+      const ageSeconds = Date.now() / 1000 - newestStartTime;
+      if (data.length > 0 && ageSeconds > 300) {
+        setIsLoading(true);
+        fetchingRef.current = false;
+        setTimeout(() => fetchMatches(), 3000);
+        return;
+      }
+
       setMatches(enriched);
       setError(null);
       setIsLoading(false);
