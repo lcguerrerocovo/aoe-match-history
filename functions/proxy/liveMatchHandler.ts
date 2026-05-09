@@ -1,6 +1,6 @@
 import { logger, getMatchDbPool } from './config';
 import { withAuthRetry, getAuthenticatedPlayerService } from './authService';
-import { getGameVersion } from './gameVersion';
+import { getGameVersion, reportEmptyResults, reportNonEmptyResults } from './gameVersion';
 import { getCivMap, getGameType } from './matchProcessing';
 import type { HandlerResponse, LiveMatch, LiveMatchPlayer } from './types';
 
@@ -298,6 +298,12 @@ async function fetchAllLiveMatches(): Promise<FetchResult> {
     const fastMatches = await normalizeMatches(fast.matches, fast.players);
 
     log.info({ matchCount: fastMatches.length, pages: fast.lastPage + 1, exhausted: fast.exhausted }, 'Fast phase complete');
+
+    if (fastMatches.length === 0) {
+        reportEmptyResults();
+    } else {
+        reportNonEmptyResults();
+    }
 
     // If the fast pages didn't fill up, there are no more matches — done
     if (fast.exhausted) {

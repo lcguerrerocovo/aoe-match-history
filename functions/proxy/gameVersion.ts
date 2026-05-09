@@ -3,11 +3,12 @@ import { logger } from './config';
 const log = logger.child({ module: 'GameVersion' });
 
 const STEAM_RSS_URL = 'https://store.steampowered.com/feeds/news/app/813780/';
-const FALLBACK_VERSION = 170934;
+const FALLBACK_VERSION = 175278;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 let cachedVersion: number | null = null;
 let cacheTimestamp = 0;
+let consecutiveEmpties = 0;
 
 async function fetchVersionFromSteam(): Promise<number | null> {
     try {
@@ -19,14 +20,16 @@ async function fetchVersionFromSteam(): Promise<number | null> {
             return null;
         }
         const xml = await response.text();
-        // Match <title>...Update NNNNNN...</title> — grab the first (most recent) one
-        const match = xml.match(/<title>[^<]*Update\s+(\d+)[^<]*<\/title>/i);
-        if (!match) {
+        // Scan entire feed for version numbers: "Update NNNNNN", "Patch NNNNNN", etc.
+        // Minor/hotfix updates sometimes only appear inside a description body,
+        // not in their own <title>, so we take the highest version found.
+        const matches = [...xml.matchAll(/(?:Update|Patch|Hotfix)\s+(\d{5,})/gi)];
+        if (matches.length === 0) {
             log.warn('No update version found in Steam RSS feed');
             return null;
         }
-        const version = parseInt(match[1], 10);
-        log.info({ version }, 'Resolved game version from Steam RSS');
+        const version = Math.max(...matches.map(m => parseInt(m[1], 10)));
+        log.info({ version, candidates: matches.length }, 'Resolved game version from Steam RSS');
         return version;
     } catch (error) {
         log.error({ error: (error as Error).message }, 'Failed to fetch Steam RSS');
@@ -47,7 +50,6 @@ export async function getGameVersion(): Promise<number> {
         return version;
     }
 
-    // Use cached value even if stale, or fall back to hardcoded
     if (cachedVersion) {
         log.warn({ cachedVersion }, 'Using stale cached version');
         return cachedVersion;
@@ -55,4 +57,25 @@ export async function getGameVersion(): Promise<number> {
 
     log.warn({ fallback: FALLBACK_VERSION }, 'Using fallback version');
     return FALLBACK_VERSION;
+}
+
+/**
+ * Called by the live match handler when the Relic API returns 0 matches.
+ * After 3 consecutive empty responses, forces an RSS re-fetch on the next call
+ * to pick up version changes the cache might be masking.
+ */
+export function reportEmptyResults(): void {
+    consecutiveEmpties++;
+    if (consecutiveEmpties >= 3 && cachedVersion) {
+        log.warn(
+            { consecutiveEmpties, staleCachedVersion: cachedVersion },
+            'Multiple empty responses — invalidating cached game version',
+        );
+        cacheTimestamp = 0;
+        consecutiveEmpties = 0;
+    }
+}
+
+export function reportNonEmptyResults(): void {
+    consecutiveEmpties = 0;
 }
