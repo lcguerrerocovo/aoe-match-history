@@ -1,7 +1,8 @@
 import { logger, getMatchDbPool } from './config';
 import { withAuthRetry, getAuthenticatedPlayerService } from './authService';
 import { getGameVersion, reportEmptyResults, reportNonEmptyResults } from './gameVersion';
-import { getCivMap, getGameType } from './matchProcessing';
+import { getCivMap, getGameType, getMapMap, resolveMap } from './matchProcessing';
+import { decodeOptions } from './decoders';
 import type { HandlerResponse, LiveMatch, LiveMatchPlayer } from './types';
 
 const log = logger.child({ module: 'LiveMatches' });
@@ -28,17 +29,6 @@ let cache: CacheEntry | null = null;
 let pendingFetch: Promise<FetchResult> | null = null;
 let fetchGeneration = 0;
 
-/**
- * Clean a raw map filename into a display name.
- * "Arabia.rms" → "Arabia", "Black_Forest.rms" → "Black Forest",
- * "megarandom.rms2" → "Megarandom", "my map" → "My Map"
- */
-function cleanMapName(raw: string): string {
-    return raw
-        .replace(/\.rms2?$/i, '')  // strip .rms / .rms2 extension
-        .replace(/_/g, ' ')        // underscores to spaces
-        .replace(/\b\w/g, c => c.toUpperCase()); // title case
-}
 
 /**
  * Normalize the positional array response from findObservableAdvertisements
@@ -52,6 +42,7 @@ async function normalizeMatches(
     rawPlayers: unknown[][],
 ): Promise<LiveMatch[]> {
     const civMap = await getCivMap();
+    const mapMap = await getMapMap();
 
     // Build player lookup by profile_id from the players array.
     // Player array positions:
@@ -92,13 +83,22 @@ async function normalizeMatches(
         const m = rawMatches[i];
         try {
             const matchId = m[0] as number;
-            const rawMapName = (m[8] as string) || '';
+            const rawOptions = (m[9] as string) || '';
             const startTime = m[21] as number;
             const serverName = (m[23] as string) || '';
             const numPlayers = (m[11] as number) || 0;
             const matchTypeId = (m[13] as number) || 0;
 
-            const mapDisplayName = cleanMapName(rawMapName) || 'Unknown Map';
+            let mapDisplayName = 'Unknown Map';
+            let mapId = 0;
+            try {
+                const options = decodeOptions(rawOptions);
+                const resolved = resolveMap(mapMap, { options });
+                if (resolved.name) mapDisplayName = resolved.name;
+                if (resolved.id) mapId = resolved.id;
+            } catch {
+                // Options decode can fail for some matches
+            }
             const gameType = getGameType(matchTypeId) || `Type ${matchTypeId}`;
 
             // Extract players from the roster
@@ -131,7 +131,7 @@ async function normalizeMatches(
             matches.push({
                 match_id: matchId,
                 map: mapDisplayName,
-                map_id: 0,
+                map_id: mapId,
                 matchtype_id: matchTypeId,
                 game_type: gameType,
                 num_players: numPlayers || matchPlayers.length,
