@@ -131,7 +131,7 @@ async function normalizeMatches(
             matches.push({
                 match_id: matchId,
                 map: mapDisplayName,
-                map_id: 0, // live API provides filenames, not IDs
+                map_id: 0,
                 matchtype_id: matchTypeId,
                 game_type: gameType,
                 num_players: numPlayers || matchPlayers.length,

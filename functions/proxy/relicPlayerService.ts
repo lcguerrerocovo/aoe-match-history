@@ -313,9 +313,9 @@ class RelicPlayerService {
                 const players = (respData[2] || []) as unknown[][];
                 this.log.info({ matchCount: matches.length, playerCount: players.length }, 'Observable advertisements fetched');
 
-                // Log first match for field mapping discovery (temporary: info level)
+                // Log first match for field mapping discovery
                 if (matches.length > 0) {
-                    this.log.info({ firstMatch: JSON.stringify(matches[0]) }, 'First match structure');
+                    this.log.debug({ firstMatch: JSON.stringify(matches[0]) }, 'First match structure');
                 }
 
                 return {
