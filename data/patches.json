@@ -1,0 +1,542 @@
+[
+  {
+    "version": 32911,
+    "date": "2019-11-16",
+    "title": "Age of Empires II: Definitive Edition — Update 32911",
+    "type": "major"
+  },
+  {
+    "version": 33059,
+    "date": "2019-11-20",
+    "title": "Age of Empires II: Definitive Edition — Update 33059",
+    "type": "major"
+  },
+  {
+    "version": 33164,
+    "date": "2019-11-22",
+    "title": "Age of Empires II: Definitive Edition — Update 33164",
+    "type": "major"
+  },
+  {
+    "version": 33315,
+    "date": "2019-11-27",
+    "title": "Age of Empires II: Definitive Edition — Update 33315",
+    "type": "major"
+  },
+  {
+    "version": 34055,
+    "date": "2020-01-13",
+    "title": "Hotfix 34055",
+    "type": "hotfix"
+  },
+  {
+    "version": 34223,
+    "date": "2019-12-20",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 34223",
+    "type": "hotfix"
+  },
+  {
+    "version": 34397,
+    "date": "2020-01-13",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 34397",
+    "type": "hotfix"
+  },
+  {
+    "version": 34699,
+    "date": "2020-01-21",
+    "title": "Age of Empires II: Definitive Edition — Update 34699",
+    "type": "major"
+  },
+  {
+    "version": 34793,
+    "date": "2020-01-24",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 34793",
+    "type": "hotfix"
+  },
+  {
+    "version": 35209,
+    "date": "2020-02-13",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 35209",
+    "type": "hotfix"
+  },
+  {
+    "version": 35584,
+    "date": "2020-02-27",
+    "title": "Age of Empires II: Definitive Edition — Update 35584",
+    "type": "major"
+  },
+  {
+    "version": 36202,
+    "date": "2020-03-31",
+    "title": "Age of Empires II: Definitive Edition — Update 36202",
+    "type": "major"
+  },
+  {
+    "version": 36906,
+    "date": "2020-04-30",
+    "title": "Age of Empires II: Definitive Edition — Update 36906",
+    "type": "major"
+  },
+  {
+    "version": 37650,
+    "date": "2020-05-28",
+    "title": "Age of Empires II: Definitive Edition — Update 37650",
+    "type": "major"
+  },
+  {
+    "version": 37906,
+    "date": "2020-06-03",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 37906",
+    "type": "hotfix"
+  },
+  {
+    "version": 39284,
+    "date": "2020-07-28",
+    "title": "Hotfix 39284",
+    "type": "hotfix"
+  },
+  {
+    "version": 39515,
+    "date": "2020-07-28",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 39515",
+    "type": "hotfix"
+  },
+  {
+    "version": 40220,
+    "date": "2020-08-25",
+    "title": "Age of Empires II: Definitive Edition — Update 40220",
+    "type": "major"
+  },
+  {
+    "version": 40874,
+    "date": "2020-09-23",
+    "title": "Age of Empires II: Definitive Edition — Update 40874",
+    "type": "major"
+  },
+  {
+    "version": 41855,
+    "date": "2020-10-21",
+    "title": "Age of Empires II: Definitive Edition — Update 41855",
+    "type": "major"
+  },
+  {
+    "version": 42848,
+    "date": "2020-11-17",
+    "title": "Age of Empires II: Definitive Edition — Update 42848",
+    "type": "major"
+  },
+  {
+    "version": 43210,
+    "date": "2020-11-25",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 43210",
+    "type": "hotfix"
+  },
+  {
+    "version": 44725,
+    "date": "2021-02-11",
+    "title": "Hotfix 44725",
+    "type": "hotfix"
+  },
+  {
+    "version": 44834,
+    "date": "2021-01-28",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 44834",
+    "type": "hotfix"
+  },
+  {
+    "version": 45185,
+    "date": "2021-02-11",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 45185",
+    "type": "hotfix"
+  },
+  {
+    "version": 46295,
+    "date": "2021-03-24",
+    "title": "Age of Empires II: Definitive Edition — Update 46295",
+    "type": "major"
+  },
+  {
+    "version": 47820,
+    "date": "2021-05-03",
+    "title": "Age of Empires II: Definitive Edition — Update 47820",
+    "type": "major"
+  },
+  {
+    "version": 50292,
+    "date": "2021-07-06",
+    "title": "Age of Empires II: Definitive Edition — Update 50292",
+    "type": "major"
+  },
+  {
+    "version": 51737,
+    "date": "2021-08-10",
+    "title": "Age of Empires II: Definitive Edition — Update 51737",
+    "type": "major"
+  },
+  {
+    "version": 53347,
+    "date": "2021-09-08",
+    "title": "Age of Empires II: Definitive Edition — Hotfix 53347",
+    "type": "hotfix"
+  },
+  {
+    "version": 54480,
+    "date": "2021-10-05",
+    "title": "Age of Empires II: Definitive Edition — Update 54480",
+    "type": "major"
+  },
+  {
+    "version": 54684,
+    "date": "2021-10-05",
+    "title": "Hotfix 54684",
+    "type": "hotfix"
+  },
+  {
+    "version": 56005,
+    "date": "2021-11-17",
+    "title": "Age of Empires II: Definitive Edition — Update 56005",
+    "type": "major"
+  },
+  {
+    "version": 58259,
+    "date": "2022-01-31",
+    "title": "Age of Empires II: Definitive Edition - Update 58259",
+    "type": "major"
+  },
+  {
+    "version": 59165,
+    "date": "2022-02-22",
+    "title": "Age of Empires II: Definitive Edition - Update 59165",
+    "type": "major"
+  },
+  {
+    "version": 60305,
+    "date": "2024-03-26",
+    "title": "Hotfix 60305",
+    "type": "hotfix"
+  },
+  {
+    "version": 61321,
+    "date": "2022-04-27",
+    "title": "Age of Empires II: Definitive Edition - Update 61321",
+    "type": "major"
+  },
+  {
+    "version": 61591,
+    "date": "2022-04-27",
+    "title": "Hotfix 61591",
+    "type": "hotfix"
+  },
+  {
+    "version": 62085,
+    "date": "2022-05-31",
+    "title": "Age of Empires II: Definitive Edition - Update 62085",
+    "type": "major"
+  },
+  {
+    "version": 63482,
+    "date": "2022-06-28",
+    "title": "Age of Empires II: Definitive Edition - Update 63482",
+    "type": "major"
+  },
+  {
+    "version": 66692,
+    "date": "2022-08-29",
+    "title": "Age of Empires II: Definitive Edition - Update 66692",
+    "type": "major"
+  },
+  {
+    "version": 73855,
+    "date": "2022-12-07",
+    "title": "Age of Empires II: Definitive Edition - Update 73855",
+    "type": "major"
+  },
+  {
+    "version": 77209,
+    "date": "2023-02-22",
+    "title": "Age of Empires II: Definitive Edition - Update 77209",
+    "type": "major"
+  },
+  {
+    "version": 78174,
+    "date": "2023-03-08",
+    "title": "Age of Empires II: Definitive Edition - Update 78174",
+    "type": "major"
+  },
+  {
+    "version": 78757,
+    "date": "2023-03-08",
+    "title": "Hotfix 78757",
+    "type": "hotfix"
+  },
+  {
+    "version": 81058,
+    "date": "2023-04-11",
+    "title": "Age of Empires II: Definitive Edition - Update 81058",
+    "type": "major"
+  },
+  {
+    "version": 82587,
+    "date": "2023-04-27",
+    "title": "Age of Empires II: Definitive Edition – Hotfix 82587",
+    "type": "hotfix"
+  },
+  {
+    "version": 83607,
+    "date": "2023-05-15",
+    "title": "Age of Empires II: Definitive Edition - Update 83607",
+    "type": "major"
+  },
+  {
+    "version": 85208,
+    "date": "2023-05-31",
+    "title": "Age of Empires II: Definitive Edition – Hotfix 85208",
+    "type": "hotfix"
+  },
+  {
+    "version": 85614,
+    "date": "2023-06-08",
+    "title": "Age of Empires II: Definitive Edition – Hotfix 85614",
+    "type": "hotfix"
+  },
+  {
+    "version": 87863,
+    "date": "2023-06-27",
+    "title": "Age of Empires II: Definitive Edition - Update 87863",
+    "type": "major"
+  },
+  {
+    "version": 90260,
+    "date": "2023-10-30",
+    "title": "Hotfix 90260",
+    "type": "hotfix"
+  },
+  {
+    "version": 93001,
+    "date": "2023-09-06",
+    "title": "Age of Empires II: Definitive Edition - Update 93001",
+    "type": "major"
+  },
+  {
+    "version": 93870,
+    "date": "2023-09-06",
+    "title": "Hotfix 93870",
+    "type": "hotfix"
+  },
+  {
+    "version": 95810,
+    "date": "2023-10-30",
+    "title": "Preview: Age of Empires II: Definitive Edition – Update 95810",
+    "type": "major"
+  },
+  {
+    "version": 96976,
+    "date": "2023-10-30",
+    "title": "Hotfix 96976",
+    "type": "hotfix"
+  },
+  {
+    "version": 99311,
+    "date": "2023-12-11",
+    "title": "Age of Empires II: Definitive Edition - Update 99311",
+    "type": "major"
+  },
+  {
+    "version": 99404,
+    "date": "2023-12-11",
+    "title": "Hotfix 99404",
+    "type": "hotfix"
+  },
+  {
+    "version": 104954,
+    "date": "2024-02-22",
+    "title": "Age of Empires II: Definitive Edition – Update 104954",
+    "type": "major"
+  },
+  {
+    "version": 107882,
+    "date": "2024-03-26",
+    "title": "Hotfix 107882",
+    "type": "hotfix"
+  },
+  {
+    "version": 108769,
+    "date": "2024-04-04",
+    "title": "Hotfix 108769",
+    "type": "hotfix"
+  },
+  {
+    "version": 109739,
+    "date": "2024-04-04",
+    "title": "Age of Empires II: Definitive Edition - Hotfix 109739",
+    "type": "hotfix"
+  },
+  {
+    "version": 111772,
+    "date": "2024-04-30",
+    "title": "Age of Empires II: Definitive Edition - Update 111772",
+    "type": "major"
+  },
+  {
+    "version": 113358,
+    "date": "2024-05-16",
+    "title": "Age of Empires II: Definitive Edition – Hotfix 113358",
+    "type": "hotfix"
+  },
+  {
+    "version": 114480,
+    "date": "2024-06-06",
+    "title": "Age of Empires II: Definitive Edition – Hotfix 114480",
+    "type": "hotfix"
+  },
+  {
+    "version": 117204,
+    "date": "2024-07-02",
+    "title": "Age of Empires II: Definitive Edition – Update 117204",
+    "type": "major"
+  },
+  {
+    "version": 118476,
+    "date": "2024-07-18",
+    "title": "Age of Empires II: Definitive Edition – Wololo Map Update 118476",
+    "type": "major"
+  },
+  {
+    "version": 125283,
+    "date": "2024-10-14",
+    "title": "Hotfix 125283",
+    "type": "hotfix"
+  },
+  {
+    "version": 127161,
+    "date": "2024-10-14",
+    "title": "Hotfix 127161",
+    "type": "hotfix"
+  },
+  {
+    "version": 128442,
+    "date": "2024-11-14",
+    "title": "Age of Empires II: Definitive Edition – Update 128442",
+    "type": "major"
+  },
+  {
+    "version": 130746,
+    "date": "2024-12-10",
+    "title": "Age of Empires II: Definitive Edition – Update 130746",
+    "type": "major"
+  },
+  {
+    "version": 133431,
+    "date": "2025-01-30",
+    "title": "Age of Empires II: Definitive Edition – Minor Update 133431",
+    "type": "minor"
+  },
+  {
+    "version": 141935,
+    "date": "2025-04-10",
+    "title": "Age of Empires II: Definitive Edition – Update 141935",
+    "type": "major"
+  },
+  {
+    "version": 143191,
+    "date": "2025-04-28",
+    "title": "Age of Empires II: Definitive Edition – Update 143191",
+    "type": "major"
+  },
+  {
+    "version": 143421,
+    "date": "2025-05-06",
+    "title": "Age of Empires II: Definitive Edition – Update 143421",
+    "type": "major"
+  },
+  {
+    "version": 144358,
+    "date": "2025-05-12",
+    "title": "Age of Empires II: Definitive Edition – Update 144358",
+    "type": "major"
+  },
+  {
+    "version": 145651,
+    "date": "2025-05-28",
+    "title": "Age of Empires II: Definitive Edition – Update 145651",
+    "type": "major"
+  },
+  {
+    "version": 147949,
+    "date": "2025-06-25",
+    "title": "Age of Empires II: Definitive Edition – Update 147949",
+    "type": "major"
+  },
+  {
+    "version": 153015,
+    "date": "2025-08-12",
+    "title": "Age of Empires II: Definitive Edition – Update 153015",
+    "type": "major"
+  },
+  {
+    "version": 153638,
+    "date": "2025-08-20",
+    "title": "Age of Empires II: Definitive Edition – Update 153638",
+    "type": "major"
+  },
+  {
+    "version": 155976,
+    "date": "2025-09-16",
+    "title": "Age of Empires II: Definitive Edition – Minor Update 155976",
+    "type": "minor"
+  },
+  {
+    "version": 158041,
+    "date": "2025-10-14",
+    "title": "Age of Empires II: Definitive Edition – Update 158041",
+    "type": "major"
+  },
+  {
+    "version": 160062,
+    "date": "2025-11-06",
+    "title": "Age of Empires II: Definitive Edition – Minor Update 160062",
+    "type": "minor"
+  },
+  {
+    "version": 162286,
+    "date": "2025-12-02",
+    "title": "Age of Empires II: Definitive Edition – Update 162286",
+    "type": "major"
+  },
+  {
+    "version": 169123,
+    "date": "2026-02-17",
+    "title": "Age of Empires II: Definitive Edition – Update 169123",
+    "type": "major"
+  },
+  {
+    "version": 169409,
+    "date": "2026-02-17",
+    "title": "Hotfix 169409",
+    "type": "hotfix"
+  },
+  {
+    "version": 169652,
+    "date": "2026-02-17",
+    "title": "Hotfix 169652",
+    "type": "hotfix"
+  },
+  {
+    "version": 170934,
+    "date": "2026-03-12",
+    "title": "Age of Empires II: Definitive Edition – Update 170934",
+    "type": "major"
+  },
+  {
+    "version": 174992,
+    "date": "2026-04-23",
+    "title": "Age of Empires II: Definitive Edition – Minor Update 174992",
+    "type": "minor"
+  },
+  {
+    "version": 175278,
+    "date": "2026-04-23",
+    "title": "Hotfix 175278",
+    "type": "hotfix"
+  }
+]
