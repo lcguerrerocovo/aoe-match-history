@@ -7,9 +7,24 @@ interface RlMappings {
   maps?: { aoe2?: Record<string, Record<string, number>> };
 }
 
+// Mapping version boundaries (unix seconds)
+// v1→v2: Romans added at id 33 (patch 59165, 2022-02-22)
+// v3→v4: Armenians(0) + Georgians(16) inserted, all IDs shifted (patch 95810, 2023-10-30)
+// v4→v5: 9 new civs appended at end, no shifts (patch 162286, 2025-12-02)
+const V2_BOUNDARY = Date.UTC(2022, 1, 22) / 1000; // 2022-02-22
+const V4_BOUNDARY = Date.UTC(2023, 9, 30) / 1000; // 2023-10-30
+
+type MappingVersion = 1 | 2 | 4;
+
+function getMappingVersion(matchTimeUnix: number): MappingVersion {
+  if (matchTimeUnix < V2_BOUNDARY) return 1;
+  if (matchTimeUnix < V4_BOUNDARY) return 2;
+  return 4;
+}
+
 // Module-level caches
 let rlMappings: RlMappings | null = null;
-let civMap: IdNameMap | null = null;
+let civMaps: Record<MappingVersion, IdNameMap> | null = null;
 let mapMap: IdNameMap | null = null;
 
 export async function loadMappings(): Promise<RlMappings> {
@@ -23,23 +38,42 @@ export async function loadMappings(): Promise<RlMappings> {
   return rlMappings as RlMappings;
 }
 
-export async function getCivMap(): Promise<IdNameMap> {
-  if (!civMap) {
-    const mappings = await loadMappings();
-    if (!mappings?.civs?.aoe2) return {};
-    civMap = {};
-    for (const [civName, versions] of Object.entries(mappings.civs.aoe2)) {
-      if (typeof versions === 'object' && versions !== null) {
-        const versionNumbers = Object.keys(versions).map(Number);
-        const latestVersion = Math.max(...versionNumbers);
-        const civId = versions[latestVersion.toString()];
-        if (civId !== undefined) {
-          civMap[civId.toString()] = civName;
-        }
-      }
-    }
+async function buildCivMaps(): Promise<Record<MappingVersion, IdNameMap>> {
+  if (civMaps) return civMaps;
+  const mappings = await loadMappings();
+  if (!mappings?.civs?.aoe2) {
+    civMaps = { 1: {}, 2: {}, 4: {} };
+    return civMaps;
   }
-  return civMap;
+  const v1: IdNameMap = {};
+  const v2: IdNameMap = {};
+  const v4: IdNameMap = {};
+  for (const [civName, versions] of Object.entries(mappings.civs.aoe2)) {
+    if (typeof versions !== 'object' || versions === null) continue;
+    const v = versions as Record<string, number>;
+    const maxVer = Math.max(...Object.keys(v).map(Number));
+    if (v['1'] !== undefined && v['1'] >= 0) v1[v['1'].toString()] = civName;
+    // v2 and v3 have same mapping
+    const v2Key = v['3'] ?? v['2'];
+    if (v2Key !== undefined && v2Key >= 0) v2[v2Key.toString()] = civName;
+    // v4+: prefer v5, then v4, then highest available
+    const v4Key = v['5'] ?? v['4'] ?? v[maxVer.toString()];
+    if (v4Key !== undefined && v4Key >= 0) v4[v4Key.toString()] = civName;
+  }
+  civMaps = { 1: v1, 2: v2, 4: v4 };
+  return civMaps;
+}
+
+/** Current civ map (v4+) — use for live matches and current-version lookups */
+export async function getCivMap(): Promise<IdNameMap> {
+  const maps = await buildCivMaps();
+  return maps[4];
+}
+
+/** Version-aware civ map — use for historical match data */
+export async function getCivMapForDate(matchTimeUnix: number): Promise<IdNameMap> {
+  const maps = await buildCivMaps();
+  return maps[getMappingVersion(matchTimeUnix)];
 }
 
 export async function getMapMap(): Promise<IdNameMap> {
@@ -130,7 +164,7 @@ export function resolveMap(currentMapMap: IdNameMap, { options = null, settings 
 }
 
 export async function processMatch(match: RawMatch, profiles: RawProfile[]): Promise<ProcessedMatch> {
-  const currentCivMap = await getCivMap();
+  const currentCivMap = await getCivMapForDate(match.startgametime);
   const currentMapMap = await getMapMap();
 
   // Create profile and rating maps

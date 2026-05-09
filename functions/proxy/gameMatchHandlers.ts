@@ -1,7 +1,7 @@
 import { log, getFirestoreClient } from './config';
-import { getCivMap, getMapMap, groupPlayersIntoTeams, resolveMap } from './matchProcessing';
+import { getCivMapForDate, getMapMap, groupPlayersIntoTeams, resolveMap } from './matchProcessing';
 import { withAuthRetry, getAuthenticatedPlayerService } from './authService';
-import type { HandlerResponse, ProcessedMatch, ProcessedPlayer, IdNameMap, SinglePlayerMatch } from './types';
+import type { HandlerResponse, ProcessedMatch, ProcessedPlayer, SinglePlayerMatch } from './types';
 
 // Authenticated single-player recent match history via RelicPlayerService
 export async function handleGameMatchHistory(idsStr: string): Promise<HandlerResponse<SinglePlayerMatch[]>> {
@@ -52,8 +52,6 @@ async function fetchAliases(profileIds: string[]): Promise<Map<string, string>> 
 export async function handleProcessedGameMatchHistory(idsStr: string): Promise<HandlerResponse<{ id: string; name: string; matches: ProcessedMatch[] }>> {
   const raw = await handleGameMatchHistory(idsStr);
 
-  // Pre-load civ mapping once for all matches
-  const civMap = await getCivMap();
   const currentMapMap = await getMapMap();
 
   // Collect unique profile IDs across all matches
@@ -65,7 +63,8 @@ export async function handleProcessedGameMatchHistory(idsStr: string): Promise<H
   });
   const aliasMap = await fetchAliases(Array.from(idSet));
 
-  const transformMatch = (m: SinglePlayerMatch): ProcessedMatch => {
+  const transformMatch = async (m: SinglePlayerMatch): Promise<ProcessedMatch> => {
+    const civMap = await getCivMapForDate(m.start_time);
     // Build Player objects in UI-expected shape
     const rawPlayers = m.players || [];
 
@@ -109,7 +108,7 @@ export async function handleProcessedGameMatchHistory(idsStr: string): Promise<H
     };
   };
 
-  const processed = (raw.data || []).map(transformMatch);
+  const processed = await Promise.all((raw.data || []).map(transformMatch));
   processed.sort((a, b) => b.start_time.localeCompare(a.start_time));
 
   // Derive name when single profile

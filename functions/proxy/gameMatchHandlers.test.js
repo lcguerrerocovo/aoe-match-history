@@ -35,6 +35,7 @@ const mockGroupPlayersIntoTeams = jest.fn().mockReturnValue([]);
 const mockResolveMap = jest.fn().mockReturnValue({ id: null, name: '' });
 jest.mock('./matchProcessing', () => ({
   getCivMap: (...args) => mockGetCivMap(...args),
+  getCivMapForDate: (...args) => mockGetCivMap(...args),
   getMapMap: (...args) => mockGetMapMap(...args),
   groupPlayersIntoTeams: (...args) => mockGroupPlayersIntoTeams(...args),
   resolveMap: (...args) => mockResolveMap(...args),
