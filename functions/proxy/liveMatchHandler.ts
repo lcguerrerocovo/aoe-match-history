@@ -417,12 +417,19 @@ async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: 
         pendingFetch = fetchAllLiveMatches()
             .then(result => {
                 if (result.matches.length > 0) {
-                    cache = {
-                        data: result.matches,
-                        timestamp: Date.now(),
-                        phase: result.exhausted ? 'complete' : 'fast',
-                        generation: fetchGeneration,
-                    };
+                    // Don't downgrade complete → fast: if we already have more data
+                    // from a previous complete fetch, keep it until background finishes
+                    if (!result.exhausted && cache && cache.data.length > result.matches.length) {
+                        // Update timestamp so the stale path triggers background refresh
+                        cache = { ...cache, timestamp: Date.now() };
+                    } else {
+                        cache = {
+                            data: result.matches,
+                            timestamp: Date.now(),
+                            phase: result.exhausted ? 'complete' : 'fast',
+                            generation: fetchGeneration,
+                        };
+                    }
                 }
                 return result;
             })
@@ -430,7 +437,7 @@ async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: 
     }
 
     const result = await pendingFetch;
-    return { matches: result.matches, partial: cache?.phase === 'fast' };
+    return { matches: cache?.data ?? result.matches, partial: cache?.phase === 'fast' };
 }
 
 export async function handleLiveRatings(queryStringOrBody?: string | { profile_ids?: number[] }): Promise<HandlerResponse<Record<string, number>>> {
