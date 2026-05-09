@@ -3,8 +3,7 @@ name: Deploy AOE Search VM with Latest Snapshot
 on:
   push:
     paths:
-      - 'aoe-search/deploy-vm.sh'
-      - 'aoe-search/startup.sh'
+      - 'aoe-search/**'
       - '.github/workflows/deploy-aoe-search.yml'
   workflow_dispatch:
 
@@ -134,24 +133,12 @@ jobs:
           
           echo "✅ Meilisearch wrapper completed successfully"
       
-      - name: Update Proxy Function with New IP
+      - name: Update Proxy with New Meilisearch IP
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          echo "🔄 Updating proxy function with new Meilisearch IP: $EXTERNAL_IP"
-          
-          cd functions/proxy
-          rm -rf node_modules
-          npm cache clean --force
-          npm ci
-          gcloud run deploy aoe2-api-proxy \
-            --source=. \
+          echo "🔄 Updating proxy MEILISEARCH_HOST to http://$EXTERNAL_IP:7700"
+          gcloud run services update aoe2-api-proxy \
             --region=us-central1 \
-            --platform=managed \
-            --allow-unauthenticated \
-            --memory=256Mi \
-            --timeout=30s \
-            --set-env-vars="STEAM_API_KEY=${{ secrets.STEAM_API_KEY }},RELIC_AUTH_STEAM_USER=${{ secrets.RELIC_AUTH_STEAM_USER }},RELIC_AUTH_STEAM_PASS=${{ secrets.RELIC_AUTH_STEAM_PASS }},MEILISEARCH_HOST=http://$EXTERNAL_IP:7700,MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }}" \
-            --service-account="aoe2-site-bot@aoe2-site.iam.gserviceaccount.com" \
-            --verbosity=debug
+            --update-env-vars="MEILISEARCH_HOST=http://$EXTERNAL_IP:7700"
           
           echo "✅ Proxy function updated with new Meilisearch IP" 
