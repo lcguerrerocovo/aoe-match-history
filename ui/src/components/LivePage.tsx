@@ -7,6 +7,8 @@ import { getLiveMatches, getLiveRatings } from '../services/liveMatchService';
 import type { LiveMatch } from '../types/liveMatch';
 
 const REFRESH_INTERVAL_MS = 30_000;
+const STALE_THRESHOLD_S = 300; // 5 minutes — retry if newest match is older than this
+const STALE_RETRY_MS = 3_000;
 
 const GAME_TYPE_CATEGORIES = ['RM 1v1', 'RM Team', 'QM RM', 'QM RM Team', 'EW 1v1', 'EW Team', 'QM EW', 'QM EW Team', 'Other'] as const;
 type GameTypeCategory = typeof GAME_TYPE_CATEGORIES[number];
@@ -193,13 +195,12 @@ export function LivePage() {
           }))
         : data;
 
-      // If the newest match is older than 5 minutes, data is stale — trigger a retry
       const newestStartTime = Math.max(...data.map(m => m.start_time));
       const ageSeconds = Date.now() / 1000 - newestStartTime;
-      if (data.length > 0 && ageSeconds > 300) {
+      if (data.length > 0 && ageSeconds > STALE_THRESHOLD_S) {
         setIsLoading(true);
         fetchingRef.current = false;
-        setTimeout(() => fetchMatches(), 3000);
+        setTimeout(() => fetchMatches(), STALE_RETRY_MS);
         return;
       }
 
