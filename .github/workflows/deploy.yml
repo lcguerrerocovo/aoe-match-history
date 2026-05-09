@@ -17,6 +17,7 @@ on:
       - 'data/rl_api_mappings.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
