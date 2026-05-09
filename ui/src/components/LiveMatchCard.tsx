@@ -6,6 +6,7 @@ import { FiEye } from 'react-icons/fi';
 import type { LiveMatch, LiveMatchPlayer } from '../types/liveMatch';
 import { assetManager } from '../utils/assetManager';
 import { groupByTeam } from '../utils/liveMatchUtils';
+import { PLAYER_COLORS } from '../utils/playerColors';
 
 const livePulse = keyframes`
   0%, 100% { opacity: 0.85; box-shadow: 0 0 3px var(--chakra-colors-brand-red-chalk); }
@@ -63,11 +64,22 @@ export const PlayerRow = memo(function PlayerRow({ player, isHighlighted, rowInd
       bg={rowIndex % 2 === 0 ? 'brand.cardBg' : 'brand.stoneLight'}
       _last={{ borderBottomWidth: 0 }}
     >
+      {/* Player color bar */}
+      {player.color_id > 0 && (
+        <Box
+          w={{ base: '6px', md: '8px' }}
+          h={{ base: '14px', md: '16px' }}
+          bg={PLAYER_COLORS[player.color_id] || 'brand.inkMuted'}
+          flexShrink={0}
+          mr={1}
+        />
+      )}
+
       {/* Civ icon */}
       {hasCiv && (
         <Box
-          w={{ base: '20px', md: '24px' }}
-          h={{ base: '20px', md: '24px' }}
+          w={{ base: '18px', md: '21px' }}
+          h={{ base: '18px', md: '21px' }}
           flexShrink={0}
           overflow="hidden"
           mr={1}

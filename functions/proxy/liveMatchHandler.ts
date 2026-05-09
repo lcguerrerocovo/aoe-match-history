@@ -2,7 +2,7 @@ import { logger, getMatchDbPool } from './config';
 import { withAuthRetry, getAuthenticatedPlayerService } from './authService';
 import { getGameVersion, reportEmptyResults, reportNonEmptyResults } from './gameVersion';
 import { getCivMap, getGameType, getMapMap, resolveMap } from './matchProcessing';
-import { decodeOptions } from './decoders';
+import { decodeOptions, decodeSlotInfo } from './decoders';
 import type { HandlerResponse, LiveMatch, LiveMatchPlayer } from './types';
 
 const log = logger.child({ module: 'LiveMatches' });
@@ -101,6 +101,23 @@ async function normalizeMatches(
             }
             const gameType = getGameType(matchTypeId) || `Type ${matchTypeId}`;
 
+            // Decode slot info from compressed player summary for color assignments
+            const colorMap = new Map<number, number>();
+            try {
+                const slotInfo = decodeSlotInfo((m[12] as string) || '') as Array<{
+                    'profileInfo.id': number;
+                    metaData?: { colorId?: number | null } | null;
+                }>;
+                for (const slot of slotInfo) {
+                    const colorId = (slot.metaData as { colorId?: number | null } | null)?.colorId;
+                    if (colorId != null) {
+                        colorMap.set(slot['profileInfo.id'], colorId);
+                    }
+                }
+            } catch {
+                // Slot info decode can fail — colors will default to 0
+            }
+
             // Extract players from the roster
             // Each entry: [match_id, profile_id, unknown, statgroup_id, civ_id, team_id, ip]
             const roster = m[14];
@@ -120,9 +137,10 @@ async function normalizeMatches(
                     matchPlayers.push({
                         name: playerInfo?.name || `Player ${profileId}`,
                         profile_id: profileId,
-                        rating: null, // populated from DB below
+                        rating: null,
                         civ: civName,
                         team: teamId,
+                        color_id: colorMap.get(profileId) ?? 0,
                         steam_id: playerInfo?.steam_id,
                     });
                 }
@@ -147,8 +165,8 @@ async function normalizeMatches(
     return matches;
 }
 
-// In-memory rating cache: profile_id → { rating, timestamp }
-const ratingCache = new Map<number, { rating: number; ts: number }>();
+// In-memory rating cache: profile_id → { rating (null = known miss), timestamp }
+const ratingCache = new Map<number, { rating: number | null; ts: number }>();
 const RATING_CACHE_TTL_MS = 90_000; // 90s — ratings only change when a match finishes
 
 /**
@@ -167,7 +185,7 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
     for (const id of profileIds) {
         const entry = ratingCache.get(id);
         if (entry && now - entry.ts < RATING_CACHE_TTL_MS) {
-            results.set(id, entry.rating);
+            if (entry.rating !== null) results.set(id, entry.rating);
         } else {
             uncached.push(id);
         }
@@ -178,7 +196,7 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
         return results;
     }
 
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 5000;
 
     try {
         const batches: number[][] = [];
@@ -203,15 +221,24 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
             ),
         ));
 
+        const foundIds = new Set<number>();
         for (const result of dbResults) {
             for (const row of result.rows) {
                 const id = Number(row.profile_id);
                 results.set(id, row.new_rating);
                 ratingCache.set(id, { rating: row.new_rating, ts: now });
+                foundIds.add(id);
             }
         }
 
-        log.info({ found: results.size, fromCache: profileIds.length - uncached.length, fromDb: uncached.length, batches: batches.length }, 'Fetched player ratings');
+        // Cache misses so we don't re-query players with no match history
+        for (const id of uncached) {
+            if (!foundIds.has(id)) {
+                ratingCache.set(id, { rating: null, ts: now });
+            }
+        }
+
+        log.info({ found: results.size, misses: uncached.length - foundIds.size, fromCache: profileIds.length - uncached.length, fromDb: uncached.length, batches: batches.length }, 'Fetched player ratings');
         return results;
     } catch (err) {
         log.warn({ error: (err as Error).message, stack: (err as Error).stack }, 'Failed to fetch player ratings from DB');

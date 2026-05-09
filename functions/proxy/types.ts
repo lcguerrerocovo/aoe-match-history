@@ -219,6 +219,7 @@ export interface LiveMatchPlayer {
   rating: number | null;
   civ: string | number;
   team: number;
+  color_id: number;
   steam_id?: string;
 }
 

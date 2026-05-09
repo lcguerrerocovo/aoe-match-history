@@ -316,9 +316,6 @@ class RelicPlayerService {
                 if (matches.length > 0) {
                     this.log.debug({ firstMatch: JSON.stringify(matches[0]) }, 'First match structure');
                 }
-                if (players.length > 0) {
-                    this.log.info({ firstPlayer: JSON.stringify(players[0]) }, 'First player structure');
-                }
 
                 return {
                     success: true,
