@@ -162,6 +162,7 @@ async function normalizeMatches(
         }
     }
 
+    matches.sort((a, b) => b.start_time - a.start_time);
     return matches;
 }
 
