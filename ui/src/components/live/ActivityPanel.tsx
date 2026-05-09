@@ -85,10 +85,10 @@ export function ActivityPanel({
       if (m.map) counts.set(m.map, (counts.get(m.map) || 0) + 1);
     }
     const sorted = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1]);
-    const top5 = sorted.slice(0, 5).map(([name, count]) => ({ name, count }));
-    const remaining = sorted.slice(5).reduce((sum, [, c]) => sum + c, 0);
-    return { top5, remaining, remainingMapCount: Math.max(0, sorted.length - 5) };
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name, count]) => ({ name, count }));
+    return sorted;
   }, [matches, selectedEloBracket, avgRatings]);
 
   // ELO counts reflect active map filter
@@ -119,7 +119,7 @@ export function ActivityPanel({
   if (matchCount === 0) return null;
 
   const hasFilter = selectedMap !== '' || selectedEloBracket !== '';
-  const maxMapCount = topMaps.top5.length > 0 ? topMaps.top5[0].count : 1;
+  const maxMapCount = topMaps.length > 0 ? topMaps[0].count : 1;
   const maxEloBucket = eloBuckets ? Math.max(...eloBuckets.map((b) => b.count)) : 1;
 
   return (
@@ -157,7 +157,7 @@ export function ActivityPanel({
           </HStack>
 
           {/* Top Maps — clickable bars */}
-          {topMaps.top5.length > 0 && (
+          {topMaps.length > 0 && (
             <Box mb={4}>
               <Text
                 fontSize="2xs"
@@ -169,7 +169,7 @@ export function ActivityPanel({
               >
                 Top Maps
               </Text>
-              {topMaps.top5.map(({ name, count }) => {
+              {topMaps.map(({ name, count }) => {
                 const isSelected = selectedMap === name;
                 const isDimmed = selectedMap !== '' && !isSelected;
                 return (
@@ -215,40 +215,6 @@ export function ActivityPanel({
                   </Flex>
                 );
               })}
-              {topMaps.remaining > 0 && (
-                <Flex
-                  align="center"
-                  gap={2}
-                  opacity={selectedMap !== '' ? 0.4 : 1}
-                  transition="opacity 0.2s ease"
-                >
-                  <Text
-                    fontSize="xs"
-                    color="brand.inkMuted"
-                    fontStyle="italic"
-                    w="100px"
-                    textAlign="right"
-                    flexShrink={0}
-                  >
-                    Other ({topMaps.remainingMapCount})
-                  </Text>
-                  <Box flex="1" h="12px" bg="brand.parchmentDark" borderRadius="sm" overflow="hidden">
-                    <Box
-                      h="100%"
-                      w={`${(topMaps.remaining / maxMapCount) * 100}%`}
-                      bgGradient="to-r"
-                      gradientFrom="brand.redChalk"
-                      gradientTo="brand.bronze"
-                      borderRadius="sm"
-                      opacity={0.5}
-                      transition="width 0.5s ease"
-                    />
-                  </Box>
-                  <Text fontSize="xs" color="brand.inkMuted" w="30px" textAlign="right" flexShrink={0}>
-                    {topMaps.remaining}
-                  </Text>
-                </Flex>
-              )}
             </Box>
           )}
 
@@ -293,7 +259,7 @@ export function ActivityPanel({
                   ))}
                 </HStack>
               ) : eloBuckets && eloBuckets.length > 0 ? (
-                <HStack gap={1} align="flex-end" h="72px">
+                <HStack gap={1} align="flex-end" h="84px">
                   {eloBuckets.map((b) => {
                     const barH = Math.max((b.count / maxEloBucket) * 48, 4);
                     const isSelected = selectedEloBracket === b.label;
@@ -312,6 +278,16 @@ export function ActivityPanel({
                         onClick={() => onEloBracketSelect(isSelected ? '' : b.label)}
                         _hover={{ opacity: isDimmed ? 0.7 : 1 }}
                       >
+                        <Text
+                          fontSize="2xs"
+                          color={isSelected ? 'brand.redChalk' : 'brand.inkMuted'}
+                          fontWeight={isSelected ? 'bold' : 'normal'}
+                          lineHeight="1"
+                          mb={0.5}
+                          transition="color 0.2s ease"
+                        >
+                          {b.count}
+                        </Text>
                         <Box
                           h={`${barH}px`}
                           bgGradient="to-t"

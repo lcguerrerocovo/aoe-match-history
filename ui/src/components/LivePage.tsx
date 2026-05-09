@@ -197,22 +197,21 @@ export function LivePage() {
       setError(null);
       setIsLoading(false);
 
-      // Fetch ratings in two batches: visible-first, then the rest
-      // Collect profile IDs in match order (first matches = top of list)
+      // Fetch all ratings in a single call
       const seen = new Set<number>();
-      const ordered: number[] = [];
+      const allProfileIds: number[] = [];
       for (const m of data) {
         for (const p of m.players) {
           if (!seen.has(p.profile_id)) {
             seen.add(p.profile_id);
-            ordered.push(p.profile_id);
+            allProfileIds.push(p.profile_id);
           }
         }
       }
 
-      if (ordered.length > 0) {
+      if (allProfileIds.length > 0) {
         // Prune ratingsRef to only current players to prevent unbounded growth
-        const currentPlayers = new Set(ordered);
+        const currentPlayers = new Set(allProfileIds);
         const pruned = new Map<number, number>();
         for (const id of currentPlayers) {
           const r = ratingsRef.current.get(id);
@@ -220,11 +219,7 @@ export function LivePage() {
         }
         ratingsRef.current = pruned;
 
-        const FIRST_BATCH = 150; // ~first 75 matches worth of players
-        const first = ordered.slice(0, FIRST_BATCH);
-        const rest = ordered.slice(FIRST_BATCH);
-
-        const mergeRatings = (ratings: Map<number, number>) => {
+        getLiveRatings(allProfileIds).then(ratings => {
           if (ratings.size === 0) return;
           ratings.forEach((r, id) => ratingsRef.current.set(id, r));
           setMatches(prev => prev.map(match => ({
@@ -234,17 +229,7 @@ export function LivePage() {
               rating: ratings.get(p.profile_id) ?? p.rating,
             })),
           })));
-        };
-
-        // First batch — visible matches, resolves fast
-        getLiveRatings(first).then(ratings => {
-          mergeRatings(ratings);
           setRatingsLoaded(true);
-
-          // Second batch — remaining matches
-          if (rest.length > 0) {
-            getLiveRatings(rest).then(mergeRatings);
-          }
         });
       }
     } catch (err) {

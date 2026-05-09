@@ -4,7 +4,7 @@ set -e
 # --- Configuration ---
 # MATCH_DB_PASSWORD: store in GitHub repo secrets, export locally when running this script.
 # Same pattern as MEILI_MASTER_KEY for the aoe-search VM.
-PROJECT_ID="${GCP_PROJECT_ID:-$(gcloud config get-value project)}"
+PROJECT_ID="${GCP_PROJECT_ID:-aoe2-site}"
 ZONE="${GCP_ZONE:-us-central1-a}"
 VM_NAME="${MATCH_DB_VM_NAME:-aoe-match-db}"
 DB_PASSWORD="${MATCH_DB_PASSWORD:?Must set MATCH_DB_PASSWORD (stored in GitHub repo secrets)}"

@@ -126,6 +126,7 @@ ui/src/assets/
 # Environment files
 .env
 !.env.example
+.gcp-sa-key.json
 
 # Screenshot tool output
 ui/screenshots/

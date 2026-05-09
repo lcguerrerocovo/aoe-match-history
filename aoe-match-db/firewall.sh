@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PROJECT_ID="${GCP_PROJECT_ID:-$(gcloud config get-value project)}"
+PROJECT_ID="${GCP_PROJECT_ID:-aoe2-site}"
 
 echo "Creating firewall rules for PostgreSQL VM..."
 

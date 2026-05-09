@@ -2,7 +2,7 @@
 set -e
 
 # --- Configuration ---
-PROJECT_ID="${GCP_PROJECT_ID:-$(gcloud config get-value project)}"
+PROJECT_ID="${GCP_PROJECT_ID:-aoe2-site}"
 ZONE="${GCP_ZONE:-us-central1-a}"
 VM_NAME="${SEARCH_VM_NAME:-aoe-search}"
 MEILI_MASTER_KEY="${MEILI_MASTER_KEY:-a-secure-master-key-change-this}"

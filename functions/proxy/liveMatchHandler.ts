@@ -188,13 +188,17 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
 
         const dbResults = await Promise.all(batches.map(batch =>
             pool.query<{ profile_id: string; new_rating: number }>(
-                `SELECT DISTINCT ON (profile_id)
-                        profile_id, new_rating
-                 FROM match_player
-                 WHERE profile_id = ANY($1)
-                   AND new_rating IS NOT NULL
-                   AND new_rating > 0
-                 ORDER BY profile_id, match_id DESC`,
+                `SELECT p.profile_id, m.new_rating
+                 FROM unnest($1::int[]) AS p(profile_id)
+                 CROSS JOIN LATERAL (
+                     SELECT new_rating
+                     FROM match_player mp
+                     WHERE mp.profile_id = p.profile_id
+                       AND mp.new_rating IS NOT NULL
+                       AND mp.new_rating > 0
+                     ORDER BY mp.match_id DESC
+                     LIMIT 1
+                 ) m`,
                 [batch],
             ),
         ));
@@ -210,7 +214,7 @@ async function fetchPlayerRatings(profileIds: number[]): Promise<Map<number, num
         log.info({ found: results.size, fromCache: profileIds.length - uncached.length, fromDb: uncached.length, batches: batches.length }, 'Fetched player ratings');
         return results;
     } catch (err) {
-        log.warn({ error: (err as Error).message }, 'Failed to fetch player ratings from DB');
+        log.warn({ error: (err as Error).message, stack: (err as Error).stack }, 'Failed to fetch player ratings from DB');
         return results; // return cached + partial DB results
     }
 }
