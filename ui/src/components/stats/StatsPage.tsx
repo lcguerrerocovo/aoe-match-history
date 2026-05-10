@@ -256,7 +256,8 @@ function CivRowEl({
       borderRadius="sm"
       transition="all 0.15s"
       px={1}
-      cursor={hasChanges ? { base: 'pointer', md: 'help' } : undefined}
+      cursor={hasChanges ? 'pointer' : undefined}
+      css={hasChanges ? { '@media (hover: hover) and (pointer: fine)': { cursor: 'help' } } : undefined}
       border={hasChanges ? '1px solid' : '1px solid transparent'}
       borderColor={hasChanges ? 'brand.bronze' : 'transparent'}
       bg={hasChanges ? { base: 'rgba(180,140,60,0.06)', _dark: 'rgba(180,140,60,0.08)' } : undefined}
@@ -304,8 +305,8 @@ function CivRowEl({
     <Box>
       {hasChanges ? (
         <>
-          {/* Desktop: tooltip on hover */}
-          <Box display={{ base: 'none', md: 'block' }}>
+          {/* Hover devices (mouse): tooltip on hover */}
+          <Box display="none" css={{ '@media (hover: hover) and (pointer: fine)': { display: 'block' } }}>
             <Tooltip
               content={<BalanceTooltipContent changes={row.balanceChanges!} />}
               placement="right"
@@ -320,13 +321,13 @@ function CivRowEl({
               {rowContent}
             </Tooltip>
           </Box>
-          {/* Mobile: click to expand */}
-          <Box display={{ base: 'block', md: 'none' }}>
+          {/* Touch devices: click to expand */}
+          <Box display="block" css={{ '@media (hover: hover) and (pointer: fine)': { display: 'none' } }}>
             {rowContent}
           </Box>
           {expanded && (
             <Box
-              display={{ md: 'none' }}
+              css={{ '@media (hover: hover) and (pointer: fine)': { display: 'none' } }}
               ml={LABEL_W}
               pl={3}
               py={1.5}
