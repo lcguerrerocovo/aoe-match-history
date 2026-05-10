@@ -91,6 +91,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=300 \
+            --set-env-vars="CLOUDFLARE_ZONE_ID=${{ secrets.CLOUDFLARE_ZONE_ID }},CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         else
           echo "Job does not exist, creating..."
@@ -101,6 +102,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=300 \
+            --set-env-vars="CLOUDFLARE_ZONE_ID=${{ secrets.CLOUDFLARE_ZONE_ID }},CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
 

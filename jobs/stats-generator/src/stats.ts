@@ -286,9 +286,26 @@ export async function generateStats(): Promise<void> {
   await storage.bucket(OUTPUT_BUCKET).file(OUTPUT_PATH).save(json, {
     contentType: 'application/json',
     metadata: {
-      cacheControl: 'public, max-age=3600',
+      cacheControl: 'public, max-age=86400',
     },
   });
 
   log.info({ bucket: OUTPUT_BUCKET, path: OUTPUT_PATH }, 'Stats uploaded to GCS');
+
+  const cfZoneId = process.env.CLOUDFLARE_ZONE_ID;
+  const cfToken = process.env.CLOUDFLARE_API_TOKEN;
+  if (cfZoneId && cfToken) {
+    const purgeResp = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${cfZoneId}/purge_cache`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${cfToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: ['https://aoe2.site/data/civ-stats.json'] }),
+      },
+    );
+    const purgeResult = await purgeResp.json() as { success: boolean };
+    log.info({ success: purgeResult.success }, 'Cloudflare cache purged for civ-stats.json');
+  } else {
+    log.info('Skipping Cloudflare cache purge (no credentials)');
+  }
 }

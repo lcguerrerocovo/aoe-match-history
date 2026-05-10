@@ -77,17 +77,39 @@
       "title": "Update 170934",
       "impact": "minor",
       "civChanges": {
-        "Mapuche": ["Settlement train times increased: Skirm 52 → 56s, Elite Skirm 33 → 36s, Spear 44 → 47s, Pike 33 → 36s"],
-        "Tupi": ["Curare Blackwood Archer poison 3 → 2 damage over 15s", "Dead unit refund fixed to 15% total cost"]
+        "Incas": [
+          "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
+          "Champi Scout +1 vs Cavalry/Camels, +2 vs Shock Infantry",
+          "Champi Runner loses bonus vs buildings, upgrade cost increased",
+          "Champi Warrior upgrade cost 125f 100g → 200f 175g",
+          "Champi-line cost 45f 25g → 50f 25g, train times increased"
+        ],
+        "Mapuche": [
+          "Settlement train times increased: Skirm 52 → 56s, Elite Skirm 33 → 36s, Spear 44 → 47s, Pike 33 → 36s",
+          "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
+          "Champi Scout +1 vs Cavalry/Camels, +2 vs Shock Infantry",
+          "Champi Runner loses bonus vs buildings, upgrade cost increased",
+          "Champi Warrior upgrade cost 125f 100g → 200f 175g",
+          "Champi-line cost 45f 25g → 50f 25g, train times increased"
+        ],
+        "Muisca": [
+          "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
+          "Champi Scout +1 vs Cavalry/Camels, +2 vs Shock Infantry",
+          "Champi Runner loses bonus vs buildings, upgrade cost increased",
+          "Champi Warrior upgrade cost 125f 100g → 200f 175g",
+          "Champi-line cost 45f 25g → 50f 25g, train times increased"
+        ],
+        "Tupi": [
+          "Curare Blackwood Archer poison 3 → 2 damage over 15s",
+          "Dead unit refund fixed to 15% total cost",
+          "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
+          "Champi Scout +1 vs Cavalry/Camels, +2 vs Shock Infantry",
+          "Champi Runner loses bonus vs buildings, upgrade cost increased",
+          "Champi Warrior upgrade cost 125f 100g → 200f 175g",
+          "Champi-line cost 45f 25g → 50f 25g, train times increased"
+        ]
       },
-      "generalChanges": [
-        "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
-        "Champi Scout gains +1 vs Cavalry/Camels, +2 vs Shock Infantry",
-        "Champi Runner loses bonus vs buildings, upgrade cost increased",
-        "Champi Warrior upgrade cost 125f 100g → 200f 175g",
-        "Champi-line cost 45f 25g → 50f 25g",
-        "Champi-line train times increased across all tiers"
-      ]
+      "generalChanges": []
     }
   ]
 }
