@@ -7,6 +7,7 @@ import type { LiveMatch, LiveMatchPlayer } from '../types/liveMatch';
 import { assetManager } from '../utils/assetManager';
 import { groupByTeam } from '../utils/liveMatchUtils';
 import { PLAYER_COLORS } from '../utils/playerColors';
+import { calculateWinProbability } from '../utils/winProbability';
 
 const livePulse = keyframes`
   0%, 100% { opacity: 0.85; box-shadow: 0 0 3px var(--chakra-colors-brand-red-chalk); }
@@ -178,6 +179,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
   avgRating?: number | null;
 }) {
   const teams = useMemo(() => groupByTeam(match.players), [match.players]);
+  const winProb = useMemo(() => calculateWinProbability(teams), [teams]);
   const elapsedRef = useRef<HTMLSpanElement>(null);
 
   // Update elapsed time via DOM ref — no React re-render needed
@@ -278,6 +280,36 @@ export const LiveMatchCard = memo(function LiveMatchCard({
           })}
         </Flex>
       </Flex>
+
+      {/* Win probability bar */}
+      {winProb && (
+        <Flex px={4} pt={2} pb={1} direction="column" gap={1}>
+          <Flex justify="space-between" align="center">
+            <Text fontSize="2xs" fontFamily="mono" fontWeight="bold" color="brand.inkDark">
+              {winProb[0]}%
+            </Text>
+            <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
+              Win %
+            </Text>
+            <Text fontSize="2xs" fontFamily="mono" fontWeight="bold" color="brand.inkDark">
+              {winProb[1]}%
+            </Text>
+          </Flex>
+          <Flex h="6px" borderRadius="full" overflow="hidden" bg="brand.stone">
+            <Box
+              w={`${winProb[0]}%`}
+              bg={winProb[0] >= winProb[1] ? 'brand.bronze' : 'brand.inkLight'}
+              borderRightRadius={winProb[0] === 100 ? 'full' : 'none'}
+              transition="width 0.5s ease"
+            />
+            <Box
+              flex="1"
+              bg={winProb[1] > winProb[0] ? 'brand.bronze' : 'brand.inkLight'}
+              borderLeftRadius={winProb[1] === 100 ? 'full' : 'none'}
+            />
+          </Flex>
+        </Flex>
+      )}
 
       {/* Footer */}
       <Flex
