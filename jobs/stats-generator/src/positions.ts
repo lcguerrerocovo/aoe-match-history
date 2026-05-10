@@ -11,6 +11,7 @@ const ELO_BRACKETS: readonly EloBracket[] = ['all', '<1000', '1000-1500', '1500+
 const MAX_ELO_GAP = 200;
 const MIN_PICK_RATE = 0.01;
 const MIN_MAP_GAMES = 1500;
+const EXCLUDED_MAPS = new Set(['nomad', 'megarandom', 'coastalforest', 'africanclearing', 'pilgrims', 'landnomad', 'shipwreck']);
 
 interface CivPositionStats {
   wins: number;
@@ -122,7 +123,7 @@ export function buildPositionStats(
     const mapName = mapNames[players[0].map_id];
     if (!mapName) continue;
     const mapLower = mapName.toLowerCase();
-    if (mapLower === 'nomad' || mapLower === 'megarandom' || mapLower === 'coastal forest') continue;
+    if (EXCLUDED_MAPS.has(mapLower)) continue;
     const expectedPlayers = gameSize === '3v3' ? 6 : 8;
     if (players.length !== expectedPlayers) continue;
 
@@ -196,7 +197,7 @@ export function buildPositionStats(
       dateRange,
       minPickRate: MIN_PICK_RATE,
       minMapGames: MIN_MAP_GAMES,
-      excludedMaps: ['Nomad', 'MegaRandom', 'Coastal Forest'],
+      excludedMaps: ['Nomad', 'MegaRandom', 'CoastalForest', 'AfricanClearing', 'Pilgrims', 'LandNomad', 'Shipwreck'],
     },
     '3v3': {} as Record<EloBracket, Record<string, MapSection>>,
     '4v4': {} as Record<EloBracket, Record<string, MapSection>>,
