@@ -1,4 +1,4 @@
-import { Box, VStack, Flex, Text } from '@chakra-ui/react';
+import { Box, VStack, HStack, Flex, Text } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaGlobe } from 'react-icons/fa';
 import { PlayerSearch } from './PlayerSearch';
@@ -109,28 +109,49 @@ export function LandingPage() {
               broken down by action types from your latest games in a clean, competitive-focused interface.
             </Text>
           </Box>
-          <RouterLink to="/live">
-            <Flex
-              align="center"
-              justify="center"
-              gap={2}
-              py={3}
-              px={5}
-              mx="auto"
-              borderWidth="1px"
-              borderColor="brand.borderWarm"
-              borderRadius="sm"
-              transition="all 0.2s ease"
-              _hover={{ borderColor: 'brand.redChalk', bg: 'brand.parchmentDark' }}
-              cursor="pointer"
-              w="fit-content"
-            >
-              <PulsingDot size="6px" />
-              <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
-                Live Matches
-              </Text>
-            </Flex>
-          </RouterLink>
+          <HStack gap={3} justify="center">
+            <RouterLink to="/live">
+              <Flex
+                align="center"
+                justify="center"
+                gap={2}
+                py={3}
+                px={5}
+                borderWidth="1px"
+                borderColor="brand.borderWarm"
+                borderRadius="sm"
+                transition="all 0.2s ease"
+                _hover={{ borderColor: 'brand.redChalk', bg: 'brand.parchmentDark' }}
+                cursor="pointer"
+                w="fit-content"
+              >
+                <PulsingDot size="6px" />
+                <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
+                  Live Matches
+                </Text>
+              </Flex>
+            </RouterLink>
+            <RouterLink to="/stats">
+              <Flex
+                align="center"
+                justify="center"
+                gap={2}
+                py={3}
+                px={5}
+                borderWidth="1px"
+                borderColor="brand.borderWarm"
+                borderRadius="sm"
+                transition="all 0.2s ease"
+                _hover={{ borderColor: 'brand.redChalk', bg: 'brand.parchmentDark' }}
+                cursor="pointer"
+                w="fit-content"
+              >
+                <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
+                  Civ Stats
+                </Text>
+              </Flex>
+            </RouterLink>
+          </HStack>
         </VStack>
       </VStack>
     </Box>

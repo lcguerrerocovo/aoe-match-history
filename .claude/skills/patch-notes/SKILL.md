@@ -31,37 +31,24 @@ This config determines:
 
 ### Step 2: Fetch Missing Patch Notes
 
-Fetch from Steam News API using a Node.js one-liner or script (the Steam API host `api.steampowered.com` is NOT in the network sandbox allowlist — sandbox bypass will be needed for the fetch):
+Run the fetch script (sandbox bypass needed — Steam API and ageofempires.com are not in the allowlist):
 
+```bash
+node scripts/fetch-patch-notes.mjs              # Last 6 months (default)
+node scripts/fetch-patch-notes.mjs --months 12  # Last 12 months
+node scripts/fetch-patch-notes.mjs --all        # All patches
+node scripts/fetch-patch-notes.mjs --force      # Overwrite existing notes
 ```
-https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=813780&count=500&feeds=steam_community_announcements
-```
 
-For each patch in `patches.json` that lacks a saved note file:
+The script:
+1. Reads `data/patches.json` for the patch list
+2. Skips patches that already have saved notes in `data/patch-notes/`
+3. For major patches: fetches the full blog post from `ageofempires.com/news/` (has complete balance details)
+4. Falls back to Steam News API BBCode content for minor/hotfix patches
+5. For hotfixes mentioned in parent patch bodies: saves a stub referencing the parent
+6. Converts HTML/BBCode to markdown and saves as `data/patch-notes/v{version}.md` with frontmatter
 
-1. Match the patch version to a news item by version number in the title or body
-2. Convert BBCode content to markdown:
-   - `[h1]`→`#`, `[h2]`→`##`, `[h3]`→`###`
-   - `[b]`→`**`, `[i]`→`*`
-   - `[list]`/`[olist]` → bullet/numbered list, `[*]`→`- `
-   - `[url=X]text[/url]`→`[text](X)`, `[img]X[/img]`→`![](X)`
-   - Strip `[previewyoutube]`, `[table]`, and other unsupported tags
-   - Collapse excessive blank lines
-3. Save as `data/patch-notes/v{version}.md` with frontmatter:
-   ```markdown
-   ---
-   version: {version}
-   date: "{YYYY-MM-DD}"
-   title: "{title}"
-   type: "{major|minor|hotfix}"
-   ---
-
-   {converted content}
-   ```
-
-If a patch has no matching news item (common for hotfixes extracted from parent patch bodies), save a stub noting that the content lives in the parent patch's notes.
-
-**Scope control:** Focus on the last 6 months of patches by default. Only process older patches if the user explicitly asks.
+After running, verify the output: `ls -la data/patch-notes/` and spot-check a file.
 
 ### Step 3: Analyze for Balance Changes
 

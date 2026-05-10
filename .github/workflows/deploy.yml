@@ -8,6 +8,7 @@ on:
       - 'data/100.json'
       - 'data/rl_api_mappings.json'
       - 'data/patches.json'
+      - 'data/balance-patches.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
   pull_request:
@@ -17,6 +18,7 @@ on:
       - 'data/100.json'
       - 'data/rl_api_mappings.json'
       - 'data/patches.json'
+      - 'data/balance-patches.json'
       - '.github/workflows/deploy.yml'
       - 'functions/**'
   workflow_dispatch:
@@ -179,7 +181,8 @@ jobs:
           gsutil -m cp data/100.json gs://aoe2.site/data/
           gsutil -m cp data/rl_api_mappings.json gs://aoe2.site/data/
           gsutil -m cp data/patches.json gs://aoe2.site/data/
-          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json gs://aoe2.site/data/patches.json
+          gsutil -m cp data/balance-patches.json gs://aoe2.site/data/
+          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://aoe2.site/data/100.json gs://aoe2.site/data/rl_api_mappings.json gs://aoe2.site/data/patches.json gs://aoe2.site/data/balance-patches.json
           # Upload _redirects file
           gsutil -m cp ui/_redirects gs://aoe2.site/_redirects
           # Set ACL for public access
@@ -377,6 +380,7 @@ jobs:
             PURGE_FILES="$PURGE_FILES\"https://aoe2.site/data/rl_api_mappings.json\","
             PURGE_FILES="$PURGE_FILES\"https://aoe2.site/data/100.json\","
             PURGE_FILES="$PURGE_FILES\"https://aoe2.site/data/patches.json\","
+            PURGE_FILES="$PURGE_FILES\"https://aoe2.site/data/balance-patches.json\","
           fi
 
           # Remove trailing comma and wrap in JSON

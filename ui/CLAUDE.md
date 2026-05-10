@@ -72,6 +72,7 @@ StatsPage                        Civ statistics page (win rate + pick rate chart
 ├── WinRateChart                 Horizontal bar chart sorted by win rate (40–60% domain, 50% baseline)
 ├── PickRateChart                Horizontal bar chart sorted by pick rate
 ├── CivRowEl                     Single civ row: icon, name, bar, value, delta badge
+├── BalanceChangeIndicator       Popover showing per-civ balance changes from current patch
 ├── DeltaBadge                   Patch-over-patch delta indicator (▲/▼)
 └── CivIcon                      Civ emblem from CDN
 ```

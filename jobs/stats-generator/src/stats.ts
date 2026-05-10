@@ -1,6 +1,6 @@
 import { Storage } from '@google-cloud/storage';
 import pino from 'pino';
-import { loadPatches, findMajorPatches, loadResolvedMappings } from './mappings.js';
+import { loadPatches, findMajorPatches, loadBalancePatches, findBalancePatchBoundaries, loadResolvedMappings } from './mappings.js';
 import { queryCivStats } from './bigquery.js';
 import type { StatsRow } from './bigquery.js';
 import type { ResolvedMappings } from './mappings.js';
@@ -51,8 +51,8 @@ interface StatsOutput {
   meta: {
     generatedAt: string;
     patches: {
-      current: { version: number; date: string; title: string };
-      previous: { version: number; date: string; title: string };
+      current: { version: number; date: string; title: string; civChanges?: Record<string, string[]>; generalChanges?: string[] };
+      previous: { version: number; date: string; title: string; civChanges?: Record<string, string[]>; generalChanges?: string[] };
     };
     eloBrackets: readonly string[];
     totalPicks: {
@@ -218,16 +218,31 @@ function buildCivPatchStats(
 }
 
 export async function generateStats(): Promise<void> {
-  const patches = await loadPatches();
-  const { current, previous } = findMajorPatches(patches);
+  const balancePatches = await loadBalancePatches();
+
+  let currentPatch: { version: number; date: string; title: string; civChanges?: Record<string, string[]>; generalChanges?: string[] };
+  let previousPatch: typeof currentPatch;
+
+  if (balancePatches && balancePatches.length >= 2) {
+    const { current, previous } = findBalancePatchBoundaries(balancePatches);
+    currentPatch = current;
+    previousPatch = previous;
+    log.info('Using balance-patches.json for patch boundaries');
+  } else {
+    const patches = await loadPatches();
+    const { current, previous } = findMajorPatches(patches);
+    currentPatch = current;
+    previousPatch = previous;
+    log.info('Fell back to findMajorPatches for patch boundaries');
+  }
 
   log.info({
-    currentPatch: { version: current.version, date: current.date },
-    previousPatch: { version: previous.version, date: previous.date },
+    currentPatch: { version: currentPatch.version, date: currentPatch.date },
+    previousPatch: { version: previousPatch.version, date: previousPatch.date },
   }, 'Generating stats for patch periods');
 
-  const mappings = await loadResolvedMappings(current.date, previous.date);
-  const rows = await queryCivStats(previous.date, current.date);
+  const mappings = await loadResolvedMappings(currentPatch.date, previousPatch.date);
+  const rows = await queryCivStats(previousPatch.date, currentPatch.date);
   const { sections, totals, totalsByMap } = buildStats(rows, mappings);
 
   const civCount1v1 = Object.keys(sections['1v1'].all.civs).length;
@@ -238,8 +253,16 @@ export async function generateStats(): Promise<void> {
     meta: {
       generatedAt: new Date().toISOString(),
       patches: {
-        current: { version: current.version, date: current.date, title: current.title },
-        previous: { version: previous.version, date: previous.date, title: previous.title },
+        current: {
+          version: currentPatch.version, date: currentPatch.date, title: currentPatch.title,
+          ...(currentPatch.civChanges && { civChanges: currentPatch.civChanges }),
+          ...(currentPatch.generalChanges && { generalChanges: currentPatch.generalChanges }),
+        },
+        previous: {
+          version: previousPatch.version, date: previousPatch.date, title: previousPatch.title,
+          ...(previousPatch.civChanges && { civChanges: previousPatch.civChanges }),
+          ...(previousPatch.generalChanges && { generalChanges: previousPatch.generalChanges }),
+        },
       },
       eloBrackets: ELO_BRACKETS,
       totalPicks: {

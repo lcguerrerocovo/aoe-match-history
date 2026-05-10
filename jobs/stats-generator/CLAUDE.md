@@ -1,6 +1,6 @@
 # Stats Generator
 
-Cloud Run Job that queries BigQuery for civ win rate statistics, resolves civ/map names using version-aware mappings, and uploads the result as JSON to GCS.
+Cloud Run Job that queries BigQuery for civ win rate statistics, resolves civ/map names using version-aware mappings, and uploads the result as JSON to GCS. Uses `balance-patches.json` for patch boundaries and embeds per-civ balance changes into output; falls back to `patches.json` major-patch detection if balance config is unavailable.
 
 ## Commands
 
@@ -30,7 +30,7 @@ docker run stats-generator
 | `src/index.ts` | Entry point -- calls generateStats(), handles errors |
 | `src/stats.ts` | Orchestrator -- loads patches/mappings, queries BigQuery, builds output JSON, uploads to GCS |
 | `src/bigquery.ts` | BigQuery query -- aggregates wins/losses/picks by civ, map, match type, ELO bracket, and patch period |
-| `src/mappings.ts` | Version-aware civ/map name resolution -- loads patches.json + rl_api_mappings.json from CDN |
+| `src/mappings.ts` | Version-aware civ/map name resolution -- loads patches.json + rl_api_mappings.json + balance-patches.json from CDN. `loadBalancePatches()` fetches curated balance config, `findBalancePatchBoundaries()` picks the two most recent entries as current/previous. Falls back to `findMajorPatches()` if balance config unavailable. |
 
 ## Environment Variables
 
@@ -52,4 +52,4 @@ ELO brackets: `all`, `<1000`, `1000-1500`, `1500-2000`, `2000+`. Each civ has `c
 ## Data Sources
 
 - **BigQuery**: `aoe2-site.matches.raw_matches` table (populated by the collector's Parquet archiver)
-- **CDN**: `patches.json` for patch boundaries, `rl_api_mappings.json` for civ/map ID resolution
+- **CDN**: `balance-patches.json` for patch boundaries and per-civ change summaries (primary), `patches.json` for fallback patch boundaries, `rl_api_mappings.json` for civ/map ID resolution

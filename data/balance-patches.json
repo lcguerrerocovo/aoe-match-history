@@ -1,0 +1,93 @@
+{
+  "description": "Human-curated balance-relevant patches for stats boundaries and per-civ tooltips.",
+  "patches": [
+    {
+      "version": 162286,
+      "date": "2025-12-02",
+      "title": "Update 162286",
+      "impact": "major",
+      "civChanges": {
+        "Armenians": ["Warrior Priest cost reduced 30f 60g → 30f 50g"],
+        "Bulgarians": ["Krepost can now train Petards"],
+        "Burgundians": ["Flemish Militia speed increased 0.9 → 0.94"],
+        "Georgians": ["Aznauri Cavalry effect -15% → -20% pop space", "Upgrade cost reduced 750f 250g → 550f 250g", "Fortified Churches area 8 → 9 tiles"],
+        "Jurchens": ["Iron Pagoda reload reduced 2.28 → 2.15", "Mounted attack bonus 20% → 25%"],
+        "Khitans": ["Mounted Trebuchet fire area/duration buffed", "Pasture cost 100w → 110w, food 105 → 115"],
+        "Persians": ["Kamandaran: Archer-line 60w → 50w"],
+        "Shu": ["Lumberjack food bonus 9% → 7%"],
+        "Spanish": ["Elite Conquistador attack 18 → 19", "Elite Conquistador upgrade cost reduced"],
+        "Tatars": ["Keshik HP 110 → 120, Elite 140 → 145", "Elite Keshik upgrade cost reduced"],
+        "Turks": ["Gold mining bonus 20% → 25%"],
+        "Wu": ["Jian Swordsman train time 27s → 35s"]
+      },
+      "generalChanges": [
+        "Chicken food 65 → 75",
+        "Eagle Warrior cost 25f 50g → 20f 50g",
+        "Gambesons cost 100f 100g → 50f 100g",
+        "Traction Trebuchet reload 9s → 11s, bonus vs buildings 175 → 230, speed 0.6 → 0.57",
+        "9 new random maps added"
+      ]
+    },
+    {
+      "version": 169123,
+      "date": "2026-02-17",
+      "title": "Update 169123",
+      "impact": "major",
+      "civChanges": {
+        "Armenians": ["Warrior Priest cost increased 30f 50g → 40f 50g"],
+        "Aztec": ["Gain Catapult Galleons"],
+        "Bengalis": ["Ratha pierce armor 2 → 1", "Ratha Cavalry Archer armor 1 → 0"],
+        "Berbers": ["Genitour +2 bonus vs Mamelukes"],
+        "Burgundians": ["Feudal Flemish Militia HP 45 → 40"],
+        "Byzantines": ["Fire Ship attack bonus 20% → 25%"],
+        "Chinese": ["Dragon Ship HP 145 → 135"],
+        "Cumans": ["Gain Catapult Galleons"],
+        "Hindustanis": ["Steppe Lancers lose team bonus +2 vs buildings"],
+        "Incas": ["Gain Champi Warriors and Settlements", "Lose Eagle Warriors, Lumber/Mining Camps, Mills", "Food discount -10/15/20/25% → -5/10/15/20%", "Fabric Shields armor +1/+2 → +1/+1"],
+        "Italians": ["Dock/University tech discount 33% → 25%"],
+        "Khitans": ["Herder gather rate -4%", "Skirm/Spear/Scout train bonus 25% → 15%"],
+        "Koreans": ["Turtle Ship cost reduced, Elite attack/armor buffed", "War Wagon pierce armor 3 → 2"],
+        "Mayans": ["Gain Catapult Galleons"],
+        "Portuguese": ["Carrack tech removed, new Circumnavigation tech", "Lose Demolition Ships"],
+        "Spanish": ["Missionaries can carry Relics"],
+        "Vietnamese": ["Imperial Skirmisher +3 vs Mamelukes"],
+        "Vikings": ["Longboat HP 130 → 125, Elite 135 → 130", "Gain Fire Ships, lose Demolition Ships", "War ship discount -15/15/20% → -10/15/20%"],
+        "Wei": ["Xianbei Raider train time 26s → 29s, cost 60w 25g → 65w 25g"],
+        "Wu": ["Careening/Dry Dock now free", "Infantry regen 10/20/30 → 10/15/30", "Jian Swordsman (shielded) melee armor 2 → 0"]
+      },
+      "generalChanges": [
+        "Naval Overhaul: new Hulk-line counters Fire Ships",
+        "Fire Ships now deal only melee damage",
+        "New Catapult Galleon ship type",
+        "Fishing Ship HP/armor/gather rate nerfed, can garrison in Docks",
+        "New Fishing Lines tech, Gillnets reworked",
+        "Trade Cogs can trade for gold, wood, or both",
+        "All military ship speeds -5%",
+        "Fortified Church range 6 → 4, lose bonus vs buildings",
+        "Siege Tower HP 220 → 175, lose garrison speed bonus",
+        "Fire Lancer cost/train time increased, lose ranged melee attack",
+        "Skirmisher +2 vs Mamelukes",
+        "Slinger reworked: cost/stats/bonuses changed",
+        "Watch Tower-line ship bonus reduced"
+      ]
+    },
+    {
+      "version": 170934,
+      "date": "2026-03-12",
+      "title": "Update 170934",
+      "impact": "minor",
+      "civChanges": {
+        "Mapuche": ["Settlement train times increased: Skirm 52 → 56s, Elite Skirm 33 → 36s, Spear 44 → 47s, Pike 33 → 36s"],
+        "Tupi": ["Curare Blackwood Archer poison 3 → 2 damage over 15s", "Dead unit refund fixed to 15% total cost"]
+      },
+      "generalChanges": [
+        "Champi Scout speed 1.1 → 1.0, attack 4 → 3",
+        "Champi Scout gains +1 vs Cavalry/Camels, +2 vs Shock Infantry",
+        "Champi Runner loses bonus vs buildings, upgrade cost increased",
+        "Champi Warrior upgrade cost 125f 100g → 200f 175g",
+        "Champi-line cost 45f 25g → 50f 25g",
+        "Champi-line train times increased across all tiers"
+      ]
+    }
+  ]
+}

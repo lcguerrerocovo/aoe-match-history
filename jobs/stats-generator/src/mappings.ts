@@ -21,10 +21,25 @@ export interface Patch {
   type: string;
 }
 
+export interface BalancePatch {
+  version: number;
+  date: string;
+  title: string;
+  impact: string;
+  civChanges: Record<string, string[]>;
+  generalChanges: string[];
+}
+
+interface BalancePatchesFile {
+  description: string;
+  patches: BalancePatch[];
+}
+
 export type IdNameMap = Record<number, string>;
 
 const MAPPINGS_URL = 'https://storage.googleapis.com/aoe2.site/data/rl_api_mappings.json';
 const PATCHES_URL = 'https://storage.googleapis.com/aoe2.site/data/patches.json';
+const BALANCE_PATCHES_URL = 'https://storage.googleapis.com/aoe2.site/data/balance-patches.json';
 
 export async function loadPatches(): Promise<Patch[]> {
   const resp = await fetch(PATCHES_URL);
@@ -32,6 +47,34 @@ export async function loadPatches(): Promise<Patch[]> {
   const patches = await resp.json() as Patch[];
   log.info({ count: patches.length }, 'Loaded patches from CDN');
   return patches;
+}
+
+export async function loadBalancePatches(): Promise<BalancePatch[] | null> {
+  try {
+    const resp = await fetch(BALANCE_PATCHES_URL);
+    if (!resp.ok) {
+      log.warn({ status: resp.status }, 'balance-patches.json not available, falling back to findMajorPatches');
+      return null;
+    }
+    const data = await resp.json() as BalancePatchesFile;
+    log.info({ count: data.patches.length }, 'Loaded balance patches from CDN');
+    return data.patches;
+  } catch (err) {
+    log.warn({ err }, 'Failed to load balance-patches.json, falling back');
+    return null;
+  }
+}
+
+export function findBalancePatchBoundaries(
+  balancePatches: BalancePatch[],
+): { current: BalancePatch; previous: BalancePatch } {
+  const sorted = [...balancePatches].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+  if (sorted.length < 2) {
+    throw new Error(`Need at least 2 balance patches, found ${sorted.length}`);
+  }
+  return { current: sorted[0], previous: sorted[1] };
 }
 
 export function findMajorPatches(patches: Patch[]): { current: Patch; previous: Patch } {

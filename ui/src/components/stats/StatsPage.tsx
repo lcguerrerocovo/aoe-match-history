@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Flex, HStack, Text, VStack, Popover } from '@chakra-ui/react';
 import { useEffect, useState, useMemo } from 'react';
 import TopBar from '../TopBar';
 import { getCivStats } from '../../services/civStatsService';
@@ -37,6 +37,7 @@ interface CivRow {
   pickRateDelta: number;
   totalGames: number;
   iconUrl: string;
+  balanceChanges?: string[];
 }
 
 function buildCivRows(
@@ -48,6 +49,7 @@ function buildCivRows(
   const section = data[matchType][eloBracket];
   if (!section) return [];
   const civs = section.civs;
+  const civChanges = data.meta.patches.current.civChanges;
   return Object.entries(civs).map(([name, civ]) => {
     let current: Pick<CivPatchStats, 'winRate' | 'pickRate' | 'totalGames'>;
     let previous: Pick<CivPatchStats, 'winRate' | 'pickRate'>;
@@ -70,6 +72,7 @@ function buildCivRows(
       pickRateDelta: (current.pickRate - previous.pickRate) * 100,
       totalGames: current.totalGames,
       iconUrl: cdnEmblemUrl(name),
+      balanceChanges: civChanges?.[name],
     };
   }).filter(r => r.totalGames > 0);
 }
@@ -116,6 +119,55 @@ function DeltaBadge({ value }: { value: number }) {
   );
 }
 
+function BalanceChangeIndicator({ changes }: { changes: string[] }) {
+  return (
+    <Popover.Root positioning={{ placement: 'right-start' }} autoFocus={false}>
+      <Popover.Trigger asChild>
+        <Box
+          as="button"
+          w="14px"
+          h="14px"
+          borderRadius="full"
+          bg="brand.bronze"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexShrink={0}
+          cursor="pointer"
+          _hover={{ bg: 'brand.heraldic' }}
+          aria-label="Balance changes"
+        >
+          <Text fontSize="8px" color="white" fontWeight="bold" lineHeight="1">!</Text>
+        </Box>
+      </Popover.Trigger>
+      <Popover.Positioner>
+        <Popover.Content
+          bg="brand.cardBg"
+          border="1px solid"
+          borderColor="brand.borderLight"
+          borderRadius="md"
+          boxShadow="md"
+          p={3}
+          maxW="300px"
+          zIndex={10}
+        >
+          <Popover.Arrow>
+            <Popover.ArrowTip />
+          </Popover.Arrow>
+          <Text fontSize="2xs" fontWeight="bold" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" mb={1}>
+            Balance Changes
+          </Text>
+          <VStack align="start" gap={0.5}>
+            {changes.map((change, i) => (
+              <Text key={i} fontSize="xs" color="brand.inkDark">{change}</Text>
+            ))}
+          </VStack>
+        </Popover.Content>
+      </Popover.Positioner>
+    </Popover.Root>
+  );
+}
+
 function CivRowEl({
   row, barPct, barColor,
   valueText, deltaValue,
@@ -136,6 +188,9 @@ function CivRowEl({
       px={1}
     >
       <Flex align="center" gap={1.5} w={LABEL_W} flexShrink={0} justify="flex-end" pr={2}>
+        {row.balanceChanges && row.balanceChanges.length > 0 && (
+          <BalanceChangeIndicator changes={row.balanceChanges} />
+        )}
         <Text fontSize="xs" fontWeight="600" color="brand.inkDark" truncate>
           {row.name}
         </Text>
@@ -281,15 +336,20 @@ export function StatsPage() {
   );
 
   useEffect(() => {
-    setSelectedMap('all');
-  }, [matchType, eloBracket]);
+    if (selectedMap !== 'all' && !maps.includes(selectedMap)) {
+      setSelectedMap('all');
+    }
+  }, [matchType, eloBracket, maps, selectedMap]);
 
   const totalPicks = rows.reduce((s, r) => s + r.totalGames, 0);
 
   function patchLabel(title: string): string {
-    return title
+    const short = title
       .replace('Age of Empires II: Definitive Edition – ', '')
-      .replace(/^Update\s*/i, '');
+      .replace(/^Update\s*/i, 'v')
+      .replace(/^Minor Update\s*/i, 'v')
+      .replace(/^Hotfix\s*/i, 'v');
+    return short.startsWith('v') ? short : `v${short}`;
   }
 
   return (
@@ -318,7 +378,18 @@ export function StatsPage() {
                 <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
                   Current Patch
                 </Text>
-                <Text fontSize="sm" color="brand.inkDark" fontWeight="600">
+                <Text
+                  fontSize="xs"
+                  fontWeight="700"
+                  color="brand.inkDark"
+                  bg="brand.stoneLight"
+                  border="1px solid"
+                  borderColor="brand.inkLight"
+                  borderRadius="sm"
+                  px={2}
+                  py={0.5}
+                  fontFamily="mono"
+                >
                   {patchLabel(data.meta.patches.current.title)}
                 </Text>
               </VStack>
@@ -326,7 +397,18 @@ export function StatsPage() {
                 <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
                   Compared To
                 </Text>
-                <Text fontSize="sm" color="brand.inkDark" fontWeight="600">
+                <Text
+                  fontSize="xs"
+                  fontWeight="700"
+                  color="brand.inkMuted"
+                  bg="brand.stoneLight"
+                  border="1px solid"
+                  borderColor="brand.inkLight"
+                  borderRadius="sm"
+                  px={2}
+                  py={0.5}
+                  fontFamily="mono"
+                >
                   {patchLabel(data.meta.patches.previous.title)}
                 </Text>
               </VStack>
