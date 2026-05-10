@@ -40,9 +40,11 @@ const STRIP_COLORS = {
 };
 
 export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: FormationViewProps) {
-  const leftFlanks = flankCivs.slice(0, 2);
-  const rightFlanks = flankCivs.slice(2, 4);
-  const pockets = pocketCivs.slice(0, 4);
+  // Zigzag: #1 left, #2 right, #3 left, #4 right
+  const leftFlanks = [flankCivs[0], flankCivs[2]].filter(Boolean);
+  const rightFlanks = [flankCivs[1], flankCivs[3]].filter(Boolean);
+  const leftPockets = [pocketCivs[0], pocketCivs[2]].filter(Boolean);
+  const rightPockets = [pocketCivs[1], pocketCivs[3]].filter(Boolean);
   const colors = STRIP_COLORS[gameSize];
 
   const DIAMOND_SIZE = { base: 280, md: 400 };
@@ -105,7 +107,7 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
             {leftFlanks.map((civ, i) => (
               <CivPositionCard
                 key={civ.name}
-                rank={i + 1}
+                rank={i * 2 + 1}
                 civName={civ.name}
                 winRate={civ.stats.winRate}
                 totalGames={civ.stats.totalGames}
@@ -130,7 +132,7 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
             {rightFlanks.map((civ, i) => (
               <CivPositionCard
                 key={civ.name}
-                rank={i + 3}
+                rank={i * 2 + 2}
                 civName={civ.name}
                 winRate={civ.stats.winRate}
                 totalGames={civ.stats.totalGames}
@@ -157,9 +159,8 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
           </Text>
 
           <Flex gap={{ base: 4, md: 6 }} justify="center">
-            {/* Left pocket column: #1, #3 */}
             <Flex direction="column" gap={3} align="center">
-              {[pockets[0], pockets[2]].filter(Boolean).map((civ, i) => (
+              {leftPockets.map((civ, i) => (
                 <CivPositionCard
                   key={civ.name}
                   rank={i * 2 + 1}
@@ -172,9 +173,8 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
                 />
               ))}
             </Flex>
-            {/* Right pocket column: #2, #4 */}
             <Flex direction="column" gap={3} align="center">
-              {[pockets[1], pockets[3]].filter(Boolean).map((civ, i) => (
+              {rightPockets.map((civ, i) => (
                 <CivPositionCard
                   key={civ.name}
                   rank={i * 2 + 2}

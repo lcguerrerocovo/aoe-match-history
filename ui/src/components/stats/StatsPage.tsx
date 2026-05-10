@@ -506,8 +506,8 @@ export function StatsPage() {
         {/* Chapter tabs */}
         <HStack gap={0} mb={4} borderBottom="1px solid" borderColor="brand.borderLight">
           {([
-            { key: 'statistics' as const, label: 'Civ Statistics' },
-            { key: 'insights' as const, label: 'Insights' },
+            { key: 'statistics' as const, label: 'Win Rates' },
+            { key: 'insights' as const, label: 'Team Positions' },
           ]).map(({ key, label }) => (
             <Box
               key={key}

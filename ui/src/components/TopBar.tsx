@@ -18,7 +18,7 @@ const TopBar = () => {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const mobileNavItems = [
-    { label: 'Stats', path: '/stats', dot: false },
+    { label: 'Insights', path: '/stats', dot: false },
     { label: 'Live', path: '/live', dot: true },
   ];
 
@@ -108,7 +108,7 @@ const TopBar = () => {
               letterSpacing="wide"
               textTransform="uppercase"
               asChild
-            ><RouterLink to="/stats">Stats</RouterLink></Flex>
+            ><RouterLink to="/stats">Insights</RouterLink></Flex>
             <Flex
               align="center"
               gap={1.5}

@@ -304,7 +304,7 @@ export async function generateStats(): Promise<void> {
       version: currentPatch.version,
       date: currentPatch.date,
       title: currentPatch.title,
-    });
+    }, mappings.maps.current);
     const positionJson = JSON.stringify(positionOutput);
     const positionSizeMB = (Buffer.byteLength(positionJson) / 1024 / 1024).toFixed(2);
     log.info({ sizeMB: positionSizeMB }, 'Position stats JSON generated');

@@ -4,12 +4,10 @@ import pino from 'pino';
 const { Pool } = pg;
 const log = pino({ name: 'stats-postgres' });
 
-const EXCLUDED_MAPS = ['Nomad', 'MegaRandom', 'Coastal Forest'];
-
 export interface PositionRow {
   match_id: number;
   match_type_id: number;
-  map_name: string;
+  map_id: number;
   civilization_id: number;
   civilization_name: string;
   team_id: number;
@@ -22,7 +20,7 @@ const POSITION_QUERY = `
 SELECT
   m.match_id,
   m.match_type_id,
-  m.map_name,
+  m.map_id,
   mp.civilization_id,
   mp.civilization_name,
   mp.team_id,
@@ -35,9 +33,9 @@ WHERE m.match_type_id IN (8, 9)
   AND m.start_time >= $1
   AND m.winning_team IS NOT NULL
   AND m.start_time IS NOT NULL
-  AND m.map_name IS NOT NULL
-  AND m.map_name NOT IN (${EXCLUDED_MAPS.map((_, i) => `$${i + 2}`).join(', ')})
+  AND m.map_id IS NOT NULL
   AND mp.civilization_id IS NOT NULL
+  AND mp.civilization_name IS NOT NULL
   AND mp.team_id IS NOT NULL
   AND mp.color_id IS NOT NULL
   AND mp.result_type IN (0, 1)
@@ -54,8 +52,7 @@ export async function queryPositionStats(
     const patchStart = new Date(patchStartDate);
     log.info({ patchStart: patchStart.toISOString() }, 'Querying PostgreSQL for position stats');
 
-    const params = [patchStart, ...EXCLUDED_MAPS];
-    const result = await pool.query<PositionRow>(POSITION_QUERY, params);
+    const result = await pool.query<PositionRow>(POSITION_QUERY, [patchStart]);
 
     log.info({ rowCount: result.rows.length }, 'PostgreSQL query complete');
     return result.rows;

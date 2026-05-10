@@ -147,7 +147,7 @@ export function LandingPage() {
                 w="fit-content"
               >
                 <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
-                  Civ Stats
+                  Insights
                 </Text>
               </Flex>
             </RouterLink>

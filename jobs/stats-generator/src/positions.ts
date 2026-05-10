@@ -81,6 +81,7 @@ interface Accumulator {
 export function buildPositionStats(
   rows: PositionRow[],
   patchInfo: PatchInfo,
+  mapNames: Record<number, string>,
 ): PositionStatsOutput {
   const matchPlayers = new Map<number, PositionRow[]>();
   for (const row of rows) {
@@ -122,7 +123,10 @@ export function buildPositionStats(
   for (const [matchId, players] of matchPlayers) {
     if (players.length === 0) continue;
     const gameSize = getGameSize(players[0].match_type_id);
-    const mapName = players[0].map_name;
+    const mapName = mapNames[players[0].map_id];
+    if (!mapName) continue;
+    const mapLower = mapName.toLowerCase();
+    if (mapLower === 'nomad' || mapLower === 'megarandom' || mapLower === 'coastal forest') continue;
     const expectedPlayers = gameSize === '3v3' ? 6 : 8;
     if (players.length !== expectedPlayers) continue;
 
