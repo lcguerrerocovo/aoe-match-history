@@ -1,6 +1,6 @@
 import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { Tooltip } from '../ui/tooltip';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import TopBar from '../TopBar';
 import { getCivStats } from '../../services/civStatsService';
 import type { CivStatsData, MatchType, CivPatchStats, EloBracket } from '../../types/civStats';
@@ -168,7 +168,7 @@ function ChartColumnHeaders() {
   );
 }
 
-function formatChange(text: string): React.ReactNode {
+function formatChange(text: string): ReactNode {
   return text.replace(
     /(\d+[\d.]*%?|\d+[sf]|\d+\/\d+\/\d+\/?\d*)/g,
     '**$1**',
