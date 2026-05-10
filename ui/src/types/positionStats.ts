@@ -24,12 +24,12 @@ export interface MapSection {
 export interface PositionStatsData {
   meta: {
     generatedAt: string;
-    patch: {
-      version: number;
-      date: string;
-      title: string;
+    dateRange: {
+      start: string;
+      end: string;
     };
     minPickRate: number;
+    minMapGames: number;
     excludedMaps: string[];
   };
   '3v3': Record<PositionEloBracket, Record<string, MapSection>>;

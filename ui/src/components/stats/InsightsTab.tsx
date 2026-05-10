@@ -88,7 +88,7 @@ export function InsightsTab() {
 
   return (
     <>
-      {/* Patch info */}
+      {/* Date range info */}
       {data && (
         <Flex gap={3} mb={3} align="center">
           <Flex
@@ -103,10 +103,10 @@ export function InsightsTab() {
           >
             <VStack gap={0} align="start">
               <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                Patch
+                Period
               </Text>
               <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontFamily="mono">
-                v{data.meta.patch.version}
+                Last 6 months
               </Text>
             </VStack>
             <Box w="1px" h="24px" bg="brand.inkLight" />
@@ -234,7 +234,7 @@ export function InsightsTab() {
       {data && (
         <VStack gap={1} mt={4}>
           <Text fontSize="2xs" color="brand.inkMuted" textAlign="center">
-            Current patch only — civs with &lt; 1% pick rate excluded — maps without fixed positions excluded
+            Last 6 months — maps with &lt; 1,500 games excluded — civs with &lt; 1% pick rate excluded — maps without fixed positions excluded
           </Text>
           <Text fontSize="2xs" color="brand.inkMuted" textAlign="center">
             Ranked by Wilson score (W) — a statistical lower bound that balances win rate with sample size.

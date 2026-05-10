@@ -10,6 +10,7 @@ type EloBracket = 'all' | '<1000' | '1000-1500' | '1500+';
 const ELO_BRACKETS: readonly EloBracket[] = ['all', '<1000', '1000-1500', '1500+'];
 const MAX_ELO_GAP = 200;
 const MIN_PICK_RATE = 0.01;
+const MIN_MAP_GAMES = 1500;
 
 interface CivPositionStats {
   wins: number;
@@ -30,17 +31,12 @@ interface MapSection {
   flank: PositionSection;
 }
 
-interface PatchInfo {
-  version: number;
-  date: string;
-  title: string;
-}
-
 export interface PositionStatsOutput {
   meta: {
     generatedAt: string;
-    patch: PatchInfo;
+    dateRange: { start: string; end: string };
     minPickRate: number;
+    minMapGames: number;
     excludedMaps: string[];
   };
   '3v3': Record<EloBracket, Record<string, MapSection>>;
@@ -80,7 +76,7 @@ interface Accumulator {
 
 export function buildPositionStats(
   rows: PositionRow[],
-  patchInfo: PatchInfo,
+  dateRange: { start: string; end: string },
   mapNames: Record<number, string>,
 ): PositionStatsOutput {
   const matchPlayers = new Map<number, PositionRow[]>();
@@ -197,8 +193,9 @@ export function buildPositionStats(
   const output: PositionStatsOutput = {
     meta: {
       generatedAt: new Date().toISOString(),
-      patch: patchInfo,
+      dateRange,
       minPickRate: MIN_PICK_RATE,
+      minMapGames: MIN_MAP_GAMES,
       excludedMaps: ['Nomad', 'MegaRandom', 'Coastal Forest'],
     },
     '3v3': {} as Record<EloBracket, Record<string, MapSection>>,
@@ -206,9 +203,18 @@ export function buildPositionStats(
   };
 
   for (const gameSize of ['3v3', '4v4'] as GameSize[]) {
+    // Filter maps by min games using the 'all' bracket totals
+    const allBracketGames = totalGames[gameSize].all;
+    const eligibleMaps = new Set(
+      Object.entries(allBracketGames)
+        .filter(([, count]) => count >= MIN_MAP_GAMES)
+        .map(([name]) => name),
+    );
+
     for (const bracket of ELO_BRACKETS) {
       output[gameSize][bracket] = {};
       for (const [mapName, positions] of Object.entries(acc[gameSize][bracket])) {
+        if (!eligibleMaps.has(mapName)) continue;
         const mapTotalGames = totalGames[gameSize][bracket][mapName] ?? 0;
         const mapSection: MapSection = {
           totalGames: mapTotalGames,

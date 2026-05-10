@@ -289,21 +289,22 @@ export async function generateStats(): Promise<void> {
   await storage.bucket(OUTPUT_BUCKET).file(OUTPUT_PATH).save(json, {
     contentType: 'application/json',
     metadata: {
-      cacheControl: 'public, max-age=86400',
+      cacheControl: 'public, max-age=3600',
     },
   });
 
   log.info({ bucket: OUTPUT_BUCKET, path: OUTPUT_PATH }, 'Stats uploaded to GCS');
 
-  // Position stats (requires DATABASE_URL)
+  // Position stats (requires DATABASE_URL) — uses 6-month rolling window
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
-    log.info('Generating position stats from PostgreSQL');
-    const positionRows = await queryPositionStats(databaseUrl, currentPatch.date);
+    const positionEnd = new Date().toISOString().slice(0, 10);
+    const positionStart = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10);
+    log.info({ positionStart, positionEnd }, 'Generating position stats from PostgreSQL (6-month window)');
+    const positionRows = await queryPositionStats(databaseUrl, positionStart);
     const positionOutput = buildPositionStats(positionRows, {
-      version: currentPatch.version,
-      date: currentPatch.date,
-      title: currentPatch.title,
+      start: positionStart,
+      end: positionEnd,
     }, mappings.maps.current);
     const positionJson = JSON.stringify(positionOutput);
     const positionSizeMB = (Buffer.byteLength(positionJson) / 1024 / 1024).toFixed(2);
@@ -311,7 +312,7 @@ export async function generateStats(): Promise<void> {
 
     await storage.bucket(OUTPUT_BUCKET).file(POSITION_OUTPUT_PATH).save(positionJson, {
       contentType: 'application/json',
-      metadata: { cacheControl: 'public, max-age=86400' },
+      metadata: { cacheControl: 'public, max-age=3600' },
     });
     log.info({ bucket: OUTPUT_BUCKET, path: POSITION_OUTPUT_PATH }, 'Position stats uploaded to GCS');
   } else {
