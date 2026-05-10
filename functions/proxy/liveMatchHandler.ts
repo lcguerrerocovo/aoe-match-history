@@ -214,11 +214,10 @@ async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[])
                CROSS JOIN LATERAL (
                    SELECT mp.new_rating
                    FROM match_player mp
-                   JOIN match mt ON mt.match_id = mp.match_id
                    WHERE mp.profile_id = p.profile_id
                      AND mp.new_rating IS NOT NULL
                      AND mp.new_rating > 0
-                     AND mt.match_type_id = ANY($2)
+                     AND EXISTS (SELECT 1 FROM match mt WHERE mt.match_id = mp.match_id AND mt.match_type_id = ANY($2))
                    ORDER BY mp.match_id DESC
                    LIMIT 1
                ) m`
