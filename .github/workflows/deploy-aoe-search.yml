@@ -12,35 +12,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 2
+
       - name: Google Auth
         id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-      
+
+      - name: Detect what changed
+        id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE 'aoe-search/(deploy-vm\.sh|startup\.sh)'; then
+            echo "vm_reset=true" >> $GITHUB_OUTPUT
+            echo "🔄 VM scripts changed — will reset VM"
+          else
+            echo "vm_reset=false" >> $GITHUB_OUTPUT
+            echo "📋 Config-only change — will update files without VM reset"
+          fi
+
       - name: Deploy AOE Search VM
+        if: steps.changes.outputs.vm_reset == 'true'
         run: |
           cd aoe-search
           chmod +x deploy-vm.sh
           MEILI_MASTER_KEY="${{ secrets.MEILISEARCH_MASTER_KEY }}" ./deploy-vm.sh
-      
+
       - name: Get VM External IP
         id: vm-ip
         run: |
           EXTERNAL_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
           if [ -n "$EXTERNAL_IP" ]; then
             echo "vm_external_ip=$EXTERNAL_IP" >> $GITHUB_OUTPUT
-            echo "✅ AOE Search VM deployed at: $EXTERNAL_IP"
+            echo "✅ AOE Search VM at: $EXTERNAL_IP"
           else
             echo "❌ Failed to get VM external IP"
             exit 1
           fi
-      
+
       - name: Wait for startup script to complete
+        if: steps.changes.outputs.vm_reset == 'true'
         run: |
           echo "⏳ Waiting for Meilisearch to become healthy..."
           for i in {1..60}; do
@@ -53,37 +68,25 @@ jobs:
           done
           echo "❌ Meilisearch failed to become healthy after 10 minutes"
           exit 1
-      
+
       - name: Get latest snapshot from GCS
+        if: steps.changes.outputs.vm_reset == 'true'
         id: get-snapshot
         run: |
-          # Get the latest snapshot directory
           LATEST_SNAPSHOT_DIR=$(gsutil ls gs://aoe2-site-data/snapshots/ | grep -E '[0-9]{8}-[0-9]{6}/$' | sort | tail -1 | sed 's|/$||')
           echo "Latest snapshot: $LATEST_SNAPSHOT_DIR"
-          
-          # Download the snapshot files to GitHub Actions runner
           mkdir -p ./latest-snapshot
           gsutil cp "${LATEST_SNAPSHOT_DIR}/data.snapshot" ./latest-snapshot/
           gsutil cp "${LATEST_SNAPSHOT_DIR}/fingerprint.txt" ./latest-snapshot/ 2>/dev/null || echo "No fingerprint found"
           gsutil cp "${LATEST_SNAPSHOT_DIR}/metadata.json" ./latest-snapshot/ 2>/dev/null || echo "No metadata found"
-          
-          # Set output for next steps
           echo "snapshot_dir=${LATEST_SNAPSHOT_DIR}" >> $GITHUB_OUTPUT
           echo "fingerprint=$(cat ./latest-snapshot/fingerprint.txt 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
-      
 
-      
       - name: Upload snapshot files
+        if: steps.changes.outputs.vm_reset == 'true'
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          
-          # Create persistent directories on VM
           gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/snapshots"
-          
-          # Upload snapshot files using gcloud compute scp
           gcloud compute scp --zone=us-central1-a ./latest-snapshot/* aoe-search:/tmp/
-          
-          # Move files to persistent storage location
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
             sudo mv /tmp/data.snapshot /mnt/stateful_partition/meilisearch/snapshots/latest.snapshot
             sudo mv /tmp/fingerprint.txt /mnt/stateful_partition/meilisearch/snapshots/latest.fingerprint.txt 2>/dev/null || true
@@ -91,54 +94,35 @@ jobs:
             sudo chown -R root:root /mnt/stateful_partition/meilisearch/snapshots/
             sudo chmod 644 /mnt/stateful_partition/meilisearch/snapshots/*
           "
-          
-          echo "✅ Snapshot files uploaded and moved to persistent storage"
-      
+          echo "✅ Snapshot files uploaded"
+
       - name: Upload wrapper and config files
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          
-          # Create Meilisearch directories
           gcloud compute ssh aoe-search --zone=us-central1-a --command="sudo mkdir -p /mnt/stateful_partition/meilisearch/config"
-          
-          # Upload wrapper and config files to /tmp first
-          echo "🔄 Uploading wrapper and config files..."
           gcloud compute scp --zone=us-central1-a aoe-search/meilisearch-wrapper.sh aoe-search:/tmp/
           gcloud compute scp --zone=us-central1-a aoe-search/meilisearch_config.json aoe-search:/tmp/
-          
-          # Move files to Meilisearch directory with proper permissions
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
             sudo mv /tmp/meilisearch-wrapper.sh /mnt/stateful_partition/meilisearch/
             sudo mv /tmp/meilisearch_config.json /mnt/stateful_partition/meilisearch/config/
             sudo chmod 755 /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
             sudo chown -R root:root /mnt/stateful_partition/meilisearch/
-            ls -la /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
           "
-          
-          echo "✅ Wrapper and config files uploaded to Meilisearch directory"
-      
+          echo "✅ Wrapper and config files uploaded"
+
       - name: Run Meilisearch wrapper
         run: |
-          EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
-          
-          # Run the wrapper
           gcloud compute ssh aoe-search --zone=us-central1-a --command="
-            echo \"Snapshot files in persistent storage:\"
-            ls -la /mnt/stateful_partition/meilisearch/snapshots/
-            echo \"Wrapper file permissions:\"
-            ls -la /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
-            echo \"Running Meilisearch wrapper...\"
+            echo 'Running Meilisearch wrapper...'
             sudo bash /mnt/stateful_partition/meilisearch/meilisearch-wrapper.sh
           "
-          
           echo "✅ Meilisearch wrapper completed successfully"
-      
+
       - name: Update Proxy with New Meilisearch IP
+        if: steps.changes.outputs.vm_reset == 'true'
         run: |
           EXTERNAL_IP="${{ steps.vm-ip.outputs.vm_external_ip }}"
           echo "🔄 Updating proxy MEILISEARCH_HOST to http://$EXTERNAL_IP:7700"
           gcloud run services update aoe2-api-proxy \
             --region=us-central1 \
             --update-env-vars="MEILISEARCH_HOST=http://$EXTERNAL_IP:7700"
-          
-          echo "✅ Proxy function updated with new Meilisearch IP" 
+          echo "✅ Proxy updated with new Meilisearch IP"

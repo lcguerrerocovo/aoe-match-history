@@ -91,8 +91,9 @@ describe('searchMeilisearch', () => {
     expect(body.q).toBe('tornasol');
     expect(body.sort).toEqual(['total_matches:desc', 'last_match_date:desc']);
 
-    expect(results).toHaveLength(1);
-    expect(results[0]).toEqual({
+    expect(results.fromFallback).toBe(false);
+    expect(results.results).toHaveLength(1);
+    expect(results.results[0]).toEqual({
       id: '123',
       name: 'TornasolAlias',
       country: 'ES',
@@ -103,26 +104,26 @@ describe('searchMeilisearch', () => {
     });
   });
 
-  it('returns [] for empty clean query', async () => {
+  it('returns empty results for empty clean query', async () => {
     const results = await searchMeilisearch('!!!');
-    expect(results).toEqual([]);
+    expect(results).toEqual({ results: [], fromFallback: false });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it('returns [] on fetch error (does not throw)', async () => {
+  it('returns fallback on fetch error (does not throw)', async () => {
     mockFetch.mockRejectedValue(new Error('network error'));
     const results = await searchMeilisearch('tornasol');
-    expect(results).toEqual([]);
+    expect(results).toEqual({ results: [], fromFallback: true });
   });
 
-  it('returns [] on non-ok response', async () => {
+  it('returns fallback on non-ok response', async () => {
     mockFetch.mockResolvedValue({
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
     });
     const results = await searchMeilisearch('tornasol');
-    expect(results).toEqual([]);
+    expect(results).toEqual({ results: [], fromFallback: true });
   });
 });
 
@@ -269,5 +270,12 @@ describe('handlePlayerSearch', () => {
     expect(result.data).toHaveLength(1);
     expect(result.data[0].profile_id).toBe(42);
     expect(result.headers['Cache-Control']).toBe('public, max-age=1800');
+  });
+
+  it('returns no-cache when Meilisearch is unreachable', async () => {
+    mockFetch.mockRejectedValue(new Error('fetch failed'));
+    const result = await handlePlayerSearch('viper');
+    expect(result.data).toEqual([]);
+    expect(result.headers['Cache-Control']).toBe('no-cache');
   });
 });

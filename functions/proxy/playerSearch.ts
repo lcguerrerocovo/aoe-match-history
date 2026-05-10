@@ -8,9 +8,14 @@ export function cleanForSearch(text: string): string {
   return text.replace(/[^\w]/g, '').toLowerCase();
 }
 
-export async function searchMeilisearch(query: string, limit: number = 20): Promise<PlayerSearchResult[]> {
+interface MeilisearchResult {
+  results: PlayerSearchResult[];
+  fromFallback: boolean;
+}
+
+export async function searchMeilisearch(query: string, limit: number = 20): Promise<MeilisearchResult> {
   const cleanQuery = cleanForSearch(query);
-  if (!cleanQuery) return [];
+  if (!cleanQuery) return { results: [], fromFallback: false };
 
   try {
     const meilisearchUrl = `${MEILISEARCH_URL.replace(/\/$/, '')}/indexes/players/search`;
@@ -35,7 +40,6 @@ export async function searchMeilisearch(query: string, limit: number = 20): Prom
 
     const result = await response.json() as { hits: Array<{ profile_id: number; alias?: string; name?: string; country?: string; total_matches?: number; last_match_date?: string; clanlist_name?: string }> };
 
-    // Transform Meilisearch results to match expected format
     const results: PlayerSearchResult[] = result.hits.map(hit => ({
       id: hit.profile_id.toString(),
       name: hit.alias || hit.name || '',
@@ -47,11 +51,11 @@ export async function searchMeilisearch(query: string, limit: number = 20): Prom
     }));
 
     log.info({ query: cleanQuery, resultCount: results.length }, 'Meilisearch search completed');
-    return results;
+    return { results, fromFallback: false };
 
   } catch (error) {
     log.error({ error: (error as Error).message, query: cleanQuery }, 'Error in Meilisearch search');
-    return [];
+    return { results: [], fromFallback: true };
   }
 }
 
@@ -161,13 +165,13 @@ export async function handlePlayerSearch(name: string): Promise<HandlerResponse<
     }
 
     // Use Meilisearch for fast, typo-tolerant search
-    const results = await searchMeilisearch(cleanName, 100);
-    log.info({ query: name, cleanQuery: cleanName, resultCount: results.length }, 'Player search completed');
+    const { results, fromFallback } = await searchMeilisearch(cleanName, 100);
+    log.info({ query: name, cleanQuery: cleanName, resultCount: results.length, fromFallback }, 'Player search completed');
 
     return {
       data: results,
       headers: {
-        'Cache-Control': 'public, max-age=1800', // 30 minutes for search results
+        'Cache-Control': fromFallback ? 'no-cache' : 'public, max-age=1800',
         'Vary': 'Accept-Encoding'
       }
     };
