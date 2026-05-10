@@ -152,7 +152,7 @@ function RankBadge({ value }: { value: number }) {
 function ChartColumnHeaders() {
   return (
     <Flex align="center" h="18px" px={1} mb={0.5}>
-      <Box w="20px" flexShrink={0} />
+      <Box w="24px" flexShrink={0} />
       <Box w={LABEL_W} flexShrink={0} />
       <Box flex={1} />
       <Text fontSize="2xs" color="brand.inkMuted" fontWeight="600" w="46px" textAlign="right" flexShrink={0} pl={2}>
@@ -179,7 +179,7 @@ function formatChange(text: string): React.ReactNode {
   );
 }
 
-function GeneralChanges({ changes }: { changes: string[] }) {
+function GeneralChanges({ changes, civCount }: { changes: string[]; civCount: number }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <Box mb={3}>
@@ -199,7 +199,8 @@ function GeneralChanges({ changes }: { changes: string[] }) {
           {expanded ? '▾' : '▸'}
         </Text>
         <Text fontSize="xs" fontWeight="700" color="brand.inkMuted" letterSpacing="wide">
-          {changes.length} balance change{changes.length !== 1 ? 's' : ''} this patch
+          {changes.length} general balance change{changes.length !== 1 ? 's' : ''} this patch
+          {civCount > 0 && <Text as="span" fontWeight="500"> — see highlighted civs below for civ-specific changes</Text>}
         </Text>
       </Flex>
       {expanded && (
@@ -260,7 +261,7 @@ function CivRowEl({
       bg={hasChanges ? { base: 'rgba(180,140,60,0.06)', _dark: 'rgba(180,140,60,0.08)' } : undefined}
       onClick={hasChanges ? () => setExpanded(prev => !prev) : undefined}
     >
-      <Text fontSize="xs" fontWeight="600" color="brand.inkMuted" w="20px" textAlign="right" flexShrink={0} pr={1.5}>
+      <Text fontSize="xs" fontWeight="600" color="brand.inkMuted" w="24px" textAlign="right" flexShrink={0} pr={1.5} lineHeight="1">
         {position}
       </Text>
 
@@ -562,7 +563,7 @@ export function StatsPage() {
 
         {/* General Balance Changes */}
         {data?.meta.patches.current.generalChanges && data.meta.patches.current.generalChanges.length > 0 && (
-          <GeneralChanges changes={data.meta.patches.current.generalChanges} />
+          <GeneralChanges changes={data.meta.patches.current.generalChanges} civCount={Object.keys(data.meta.patches.current.civChanges ?? {}).length} />
         )}
 
         {/* Controls */}
