@@ -30,8 +30,8 @@ docker run stats-generator
 | `src/index.ts` | Entry point -- calls generateStats(), handles errors |
 | `src/stats.ts` | Orchestrator -- loads patches/mappings, queries BigQuery + PostgreSQL, builds output JSON, uploads to GCS |
 | `src/bigquery.ts` | BigQuery query -- aggregates wins/losses/picks by civ, map, match type, ELO bracket, and patch period |
-| `src/postgres.ts` | PostgreSQL query -- fetches match player data (team, color, position) for 3v3/4v4 team games |
-| `src/positions.ts` | Position stats builder -- classifies pocket/flank from color IDs, aggregates win rates by position per map/civ/ELO bracket |
+| `src/postgres.ts` | PostgreSQL query -- fetches match player data (team, color, position) for 3v3/4v4 team games; parameterized by start date (6-month rolling window passed from stats.ts) |
+| `src/positions.ts` | Position stats builder -- classifies pocket/flank from color IDs, aggregates win rates by position per map/civ/ELO bracket; excludes nomad-style maps and maps below 1500-game threshold |
 | `src/mappings.ts` | Version-aware civ/map name resolution -- loads patches.json + rl_api_mappings.json + balance-patches.json from CDN. `loadBalancePatches()` fetches curated balance config, `findBalancePatchBoundaries()` picks the two most recent entries as current/previous. Falls back to `findMajorPatches()` if balance config unavailable. |
 
 ## Environment Variables
@@ -54,10 +54,11 @@ Writes two files to the output GCS bucket:
 - Each civ has `current` and `previous` patch period stats with win rate, pick rate, and per-map breakdowns
 
 **`data/position-stats.json`** -- team position (pocket/flank) statistics (requires `DATABASE_URL`):
-- `meta` -- generation timestamp, current patch info, excluded maps
+- `meta` -- generation timestamp, date range (6-month rolling window), excluded maps
 - `3v3` / `4v4` -- per-map, per-position civ win rates keyed by ELO bracket
-- Excludes Nomad, MegaRandom, Coastal Forest (no fixed positions)
-- Civs with < 1% pick rate filtered out
+- Excludes Nomad, MegaRandom, CoastalForest, AfricanClearing, Pilgrims, LandNomad, Shipwreck (no fixed positions or nomad-style spawns)
+- Maps with < 1500 total games filtered out; civs with < 1% pick rate filtered out
+- Cache-Control: `public, max-age=3600` (1-hour TTL, same as civ-stats.json)
 
 ELO brackets (4): `all`, `<1000`, `1000-1500`, `1500+`.
 

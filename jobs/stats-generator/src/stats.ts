@@ -164,7 +164,7 @@ function buildStats(
       }
     }
 
-    if (mapName && (eloBracket !== 'all')) {
+    if (mapName) {
       for (const bracket of brackets) {
         totalsByMap[category][bracket][patch][mapName] = (totalsByMap[category][bracket][patch][mapName] ?? 0) + row.total_picks;
       }

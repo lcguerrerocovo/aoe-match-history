@@ -164,3 +164,4 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `colorUtils.ts` — contrast ratio calculation, optimal text color for backgrounds
 - `playerColors.ts` — player color hex values (color_id to hex mapping)
 - `timeUtils.ts` — relative time formatting, session timing display
+- `winProbability.ts` — ELO-based win probability calculation (`calculateWinProbability(teams)`) used by `LiveMatchCard` to render a probability bar

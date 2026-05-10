@@ -18,9 +18,10 @@ interface FormationViewProps {
 }
 
 // AoE2 position colors for the strip indicators
-// 4v4 team1: 1(blue) 3(green) 5(cyan) 7(grey) — flanks=1,7 pocket=3,5
-// 4v4 team2: 2(red) 4(yellow) 6(purple) 8(orange) — flanks=2,8 pocket=4,6
-// 3v3 team1: 1(blue) 3(green) 5(cyan) — flanks=1,3 pocket=5
+// classifyPosition: sorted team color IDs, outer (min/max) = flank, middle = pocket
+// 4v4 team1: 1(blue) 3(green) 5(cyan) 7(grey) — flanks=1,7 pockets=3,5
+// 4v4 team2: 2(red) 4(yellow) 6(purple) 8(orange) — flanks=2,8 pockets=4,6
+// 3v3 team1: 1(blue) 3(green) 5(cyan) — flanks=1,5 pocket=3
 // 3v3 team2: 2(red) 4(yellow) 6(purple) — flanks=2,6 pocket=4
 // 3v3 uses blue team (odd colors): 1=blue(flank), 3=green(pocket), 5=cyan(flank)
 // 4v4 uses red team (even colors): 2=red(flank), 4=yellow(pocket), 6=purple(pocket), 8=orange(flank)

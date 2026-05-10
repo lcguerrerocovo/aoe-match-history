@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import TopBar from '../TopBar';
 import { getCivStats } from '../../services/civStatsService';
 import { InsightsTab } from './InsightsTab';
+import { assetManager } from '../../utils/assetManager';
 import type { CivStatsData, MatchType, CivPatchStats, EloBracket } from '../../types/civStats';
 
 type StatsView = 'winRate' | 'pickRate';
@@ -18,18 +19,6 @@ const ELO_LABELS: { value: EloBracket; label: string }[] = [
 
 const ROW_H = 32;
 const LABEL_W = { base: '100px', md: '130px' } as const;
-const CDN_BASE = 'https://aoe2.site/assets';
-
-const CIV_EMBLEM_SPECIAL: Record<string, string> = {
-  'Lac Viet': 'lacviet.png',
-  'Aztec': 'aztecs.png',
-  'Macedonians': 'macedonian.png',
-};
-
-function cdnEmblemUrl(civName: string): string {
-  const filename = CIV_EMBLEM_SPECIAL[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
-  return `${CDN_BASE}/civ_emblems/${filename}`;
-}
 
 interface CivRow {
   name: string;
@@ -77,7 +66,7 @@ function buildCivRows(
       prevWinRate: previous.winRate,
       prevPickRate: previous.pickRate,
       totalGames: current.totalGames,
-      iconUrl: cdnEmblemUrl(name),
+      iconUrl: assetManager.getCivEmblem(name),
       balanceChanges: civChanges?.[name],
     };
   }).filter(r => r.totalGames > 0);
@@ -366,7 +355,10 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
       <ChartColumnHeaders />
 
       <Box position="relative">
-        {/* 50% reference line — overlays the bar area only */}
+        {/* 50% reference line — overlays the bar area only.
+            Left fixed: 2px px padding + 24px rank col + 130px label col + 2px px = 158px
+            Right fixed: 46px value + 40px delta + 30px rank = 116px
+            Line left = 158px + (100% - 158px - 116px) * refPct */}
         <Box
           position="absolute"
           top={0}
@@ -377,7 +369,7 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
           borderColor="brand.inkMuted"
           opacity={0.5}
           style={{
-            left: `calc(var(--label-w) + (100% - var(--label-w) - var(--right-w)) * ${refPct / 100})`,
+            left: `calc(158px + (100% - 158px - 116px) * ${refPct / 100})`,
           }}
           display={{ base: 'none', md: 'block' }}
         />
@@ -521,11 +513,11 @@ export function StatsPage() {
               transition="all 0.15s ease"
               position="relative"
               bottom="-1px"
-              bg={activeTab === key ? { base: 'brand.parchment', _dark: '#1E1E1E' } : 'transparent'}
+              bg={activeTab === key ? 'brand.statsPanelBg' : 'transparent'}
               border={activeTab === key ? '1px solid' : '1px solid transparent'}
               borderColor={activeTab === key ? 'brand.borderLight' : 'transparent'}
               borderBottom={activeTab === key ? '1px solid' : '1px solid transparent'}
-              borderBottomColor={activeTab === key ? { base: 'brand.parchment', _dark: '#1E1E1E' } : 'transparent'}
+              borderBottomColor={activeTab === key ? 'brand.statsPanelBg' : 'transparent'}
               _hover={{ color: activeTab === key ? 'brand.inkDark' : 'brand.redChalk' }}
             >
               <Text
@@ -739,7 +731,7 @@ export function StatsPage() {
 
             {data && rows.length > 0 && (
               <Box
-                bg={{ base: 'brand.parchment', _dark: '#1E1E1E' }}
+                bg="brand.statsPanelBg"
                 border="1px solid"
                 borderColor="brand.inkLight"
                 borderRadius="md"

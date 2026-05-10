@@ -1,17 +1,5 @@
 import { Flex, Text, VStack } from '@chakra-ui/react';
-
-const CDN_BASE = 'https://aoe2.site/assets';
-
-const CIV_EMBLEM_SPECIAL: Record<string, string> = {
-  'Lac Viet': 'lacviet.png',
-  'Aztec': 'aztecs.png',
-  'Macedonians': 'macedonian.png',
-};
-
-function cdnEmblemUrl(civName: string): string {
-  const filename = CIV_EMBLEM_SPECIAL[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
-  return `${CDN_BASE}/civ_emblems/${filename}`;
-}
+import { assetManager } from '../../utils/assetManager';
 
 interface CivPositionCardProps {
   rank: number;
@@ -79,7 +67,7 @@ export function CivPositionCard({
       {/* Emblem */}
       <Flex align="center" justify="center" px={1.5} py={2} flexShrink={0}>
         <img
-          src={cdnEmblemUrl(civName)}
+          src={assetManager.getCivEmblem(civName)}
           alt=""
           width={36}
           height={36}

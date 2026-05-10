@@ -106,6 +106,9 @@ const semanticColors = {
       },
     },
 
+    // Panel/card surface background used by stats page and similar content areas
+    statsPanelBg: { value: { base: '#F8F3E6', _dark: '#1E1E1E' } },
+
     // UI element backgrounds
     cardBg: { value: { base: '#f6ecd8', _dark: '#2D3748' } },
     cardWinnerBg: { value: { base: 'rgba(139, 58, 58, 0.03)', _dark: 'rgba(196, 69, 54, 0.06)' } },

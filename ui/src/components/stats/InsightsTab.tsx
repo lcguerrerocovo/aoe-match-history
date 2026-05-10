@@ -208,7 +208,7 @@ export function InsightsTab() {
 
       {data && (flankCivs.length > 0 || pocketCivs.length > 0) && (
         <Box
-          bg={{ base: 'brand.parchment', _dark: '#1E1E1E' }}
+          bg="brand.statsPanelBg"
           border="1px solid"
           borderColor="brand.inkLight"
           borderRadius="md"
