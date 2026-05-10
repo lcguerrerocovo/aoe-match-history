@@ -468,7 +468,24 @@ export function StatsPage() {
     }
   }, [matchType, eloBracket, maps, selectedMap]);
 
-  const totalPicks = rows.reduce((s, r) => s + r.totalGames, 0);
+  const { currentPicks, previousPicks } = useMemo(() => {
+    if (!data) return { currentPicks: 0, previousPicks: 0 };
+    const section = data[matchType][eloBracket];
+    if (!section) return { currentPicks: 0, previousPicks: 0 };
+
+    let curTotal = 0;
+    let prevTotal = 0;
+    for (const civ of Object.values(section.civs)) {
+      if (selectedMap === 'all') {
+        curTotal += civ.current.totalGames;
+        prevTotal += civ.previous.totalGames;
+      } else {
+        curTotal += civ.current.maps[selectedMap]?.totalGames ?? 0;
+        prevTotal += civ.previous.maps[selectedMap]?.totalGames ?? 0;
+      }
+    }
+    return { currentPicks: curTotal, previousPicks: prevTotal };
+  }, [data, matchType, eloBracket, selectedMap]);
 
   function patchLabel(title: string): string {
     const short = title
@@ -522,7 +539,7 @@ export function StatsPage() {
                     Picks
                   </Text>
                   <Text fontSize="sm" fontWeight="600" color="brand.inkDark">
-                    {(data.meta.totalPicks[matchType]?.[eloBracket]?.current ?? totalPicks).toLocaleString()}
+                    {currentPicks.toLocaleString()}
                   </Text>
                 </VStack>
               </Flex>
@@ -553,7 +570,7 @@ export function StatsPage() {
                     Picks
                   </Text>
                   <Text fontSize="sm" fontWeight="600" color="brand.inkMuted">
-                    {(data.meta.totalPicks[matchType]?.[eloBracket]?.previous ?? 0).toLocaleString()}
+                    {previousPicks.toLocaleString()}
                   </Text>
                 </VStack>
               </Flex>
