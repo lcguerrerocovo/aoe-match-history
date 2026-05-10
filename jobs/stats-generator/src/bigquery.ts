@@ -84,8 +84,7 @@ with_elo AS (
       WHEN r.rating IS NULL OR r.rating <= 0 THEN 'all'
       WHEN r.rating < 1000 THEN '<1000'
       WHEN r.rating < 1500 THEN '1000-1500'
-      WHEN r.rating < 2000 THEN '1500-2000'
-      ELSE '2000+'
+      ELSE '1500+'
     END AS elo_bracket
   FROM player_results pr
   LEFT JOIN player_ratings r

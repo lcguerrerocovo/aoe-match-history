@@ -3,16 +3,17 @@ import { Tooltip } from '../ui/tooltip';
 import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import TopBar from '../TopBar';
 import { getCivStats } from '../../services/civStatsService';
+import { InsightsTab } from './InsightsTab';
 import type { CivStatsData, MatchType, CivPatchStats, EloBracket } from '../../types/civStats';
 
 type StatsView = 'winRate' | 'pickRate';
+type StatsTab = 'statistics' | 'insights';
 
 const ELO_LABELS: { value: EloBracket; label: string }[] = [
   { value: 'all', label: 'All ELO' },
   { value: '<1000', label: '< 1000' },
   { value: '1000-1500', label: '1000–1500' },
-  { value: '1500-2000', label: '1500–2000' },
-  { value: '2000+', label: '2000+' },
+  { value: '1500+', label: '1500+' },
 ];
 
 const ROW_H = 32;
@@ -441,6 +442,7 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
 }
 
 export function StatsPage() {
+  const [activeTab, setActiveTab] = useState<StatsTab>('statistics');
   const [data, setData] = useState<CivStatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [matchType, setMatchType] = useState<MatchType>('1v1');
@@ -501,18 +503,45 @@ export function StatsPage() {
       <TopBar />
 
       <Box flex={1} maxW="960px" w="100%" mx="auto" px={{ base: 2, md: 6 }} py={4}>
-        {/* Header */}
+        {/* Chapter tabs */}
+        <HStack gap={0} mb={4} borderBottom="1px solid" borderColor="brand.borderLight">
+          {([
+            { key: 'statistics' as const, label: 'Civ Statistics' },
+            { key: 'insights' as const, label: 'Insights' },
+          ]).map(({ key, label }) => (
+            <Box
+              key={key}
+              as="button"
+              onClick={() => setActiveTab(key)}
+              px={{ base: 4, md: 6 }}
+              py={2.5}
+              borderTopRadius="md"
+              cursor="pointer"
+              transition="all 0.15s ease"
+              position="relative"
+              bottom="-1px"
+              bg={activeTab === key ? { base: 'brand.parchment', _dark: '#1E1E1E' } : 'transparent'}
+              border={activeTab === key ? '1px solid' : '1px solid transparent'}
+              borderColor={activeTab === key ? 'brand.borderLight' : 'transparent'}
+              borderBottom={activeTab === key ? '1px solid' : '1px solid transparent'}
+              borderBottomColor={activeTab === key ? { base: 'brand.parchment', _dark: '#1E1E1E' } : 'transparent'}
+              _hover={{ color: activeTab === key ? 'brand.inkDark' : 'brand.redChalk' }}
+            >
+              <Text
+                fontSize={{ base: 'sm', md: 'md' }}
+                fontWeight={activeTab === key ? 'bold' : '500'}
+                color={activeTab === key ? 'brand.inkDark' : 'brand.inkMuted'}
+                fontVariantCaps="small-caps"
+                letterSpacing="wide"
+              >
+                {label}
+              </Text>
+            </Box>
+          ))}
+        </HStack>
+
         <VStack align="start" gap={2} mb={4}>
-          <Text
-            fontSize={{ base: 'lg', md: 'xl' }}
-            fontWeight="bold"
-            color="brand.inkDark"
-            fontVariantCaps="small-caps"
-            letterSpacing="wide"
-          >
-            Civilization Statistics
-          </Text>
-          {data && (
+          {activeTab === 'statistics' && data && (
             <Flex gap={3} flexWrap="wrap" align="stretch">
               <Flex
                 gap={3}
@@ -578,156 +607,162 @@ export function StatsPage() {
           )}
         </VStack>
 
-        {/* General Balance Changes */}
-        {data?.meta.patches.current.generalChanges && data.meta.patches.current.generalChanges.length > 0 && (
-          <GeneralChanges changes={data.meta.patches.current.generalChanges} civCount={Object.keys(data.meta.patches.current.civChanges ?? {}).length} />
-        )}
+        {activeTab === 'insights' && <InsightsTab />}
 
-        {/* Controls */}
-        <Flex gap={2} mb={4} align="center" flexWrap="wrap">
-          <HStack
-            bg="brand.stoneLight"
-            border="1px solid"
-            borderColor="brand.inkLight"
-            borderRadius="md"
-            p="2px"
-            gap="2px"
-          >
-            {(['1v1', 'team'] as const).map(mt => (
-              <Box
-                key={mt}
-                as="button"
-                onClick={() => setMatchType(mt)}
-                bg={matchType === mt ? 'brand.parchmentDark' : 'transparent'}
-                color={matchType === mt ? 'brand.inkDark' : 'brand.inkMuted'}
-                px={3}
-                py={1}
-                borderRadius="sm"
-                fontSize="xs"
-                fontWeight="bold"
-                textTransform="uppercase"
-                letterSpacing="wide"
-                cursor="pointer"
-                _hover={{ color: 'brand.redChalk' }}
-                transition="all 0.15s ease"
-                boxShadow={matchType === mt ? 'sm' : 'none'}
-              >
-                {mt === '1v1' ? '1v1' : 'Team'}
-              </Box>
-            ))}
-          </HStack>
-
-          <HStack
-            bg="brand.stoneLight"
-            border="1px solid"
-            borderColor="brand.inkLight"
-            borderRadius="md"
-            p="2px"
-            gap="2px"
-          >
-            {([
-              { key: 'winRate' as const, label: 'Win Rate' },
-              { key: 'pickRate' as const, label: 'Pick Rate' },
-            ]).map(({ key, label }) => (
-              <Box
-                key={key}
-                as="button"
-                onClick={() => setActiveView(key)}
-                bg={activeView === key ? 'brand.parchmentDark' : 'transparent'}
-                color={activeView === key ? 'brand.inkDark' : 'brand.inkMuted'}
-                px={3}
-                py={1}
-                borderRadius="sm"
-                fontSize="xs"
-                fontWeight="bold"
-                textTransform="uppercase"
-                letterSpacing="wide"
-                cursor="pointer"
-                _hover={{ color: 'brand.redChalk' }}
-                transition="all 0.15s ease"
-                boxShadow={activeView === key ? 'sm' : 'none'}
-              >
-                {label}
-              </Box>
-            ))}
-          </HStack>
-
-          <select
-            value={selectedMap}
-            onChange={e => setSelectedMap(e.target.value)}
-            style={{
-              background: 'var(--chakra-colors-brand-stoneLight)',
-              border: '1px solid var(--chakra-colors-brand-inkLight)',
-              borderRadius: '6px',
-              padding: '4px 12px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              color: 'var(--chakra-colors-brand-inkDark)',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <option value="all">All Maps</option>
-            {maps.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-
-          <select
-            value={eloBracket}
-            onChange={e => setEloBracket(e.target.value as EloBracket)}
-            style={{
-              background: 'var(--chakra-colors-brand-stoneLight)',
-              border: '1px solid var(--chakra-colors-brand-inkLight)',
-              borderRadius: '6px',
-              padding: '4px 12px',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              color: 'var(--chakra-colors-brand-inkDark)',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {ELO_LABELS.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </Flex>
-
-        {/* Content */}
-        {error && (
-          <Text color="brand.darkLoss" fontSize="sm">Failed to load stats: {error}</Text>
-        )}
-
-        {!data && !error && (
-          <Text color="brand.inkMuted" fontSize="sm">Loading statistics...</Text>
-        )}
-
-        {data && rows.length > 0 && (
-          <Box
-            bg={{ base: 'brand.parchment', _dark: '#1E1E1E' }}
-            border="1px solid"
-            borderColor="brand.inkLight"
-            borderRadius="md"
-            p={{ base: 1, md: 4 }}
-            overflow="auto"
-          >
-            {activeView === 'winRate' ? (
-              <WinRateChart rows={rows} />
-            ) : (
-              <PickRateChart rows={rows} />
+        {activeTab === 'statistics' && (
+          <>
+            {/* General Balance Changes */}
+            {data?.meta.patches.current.generalChanges && data.meta.patches.current.generalChanges.length > 0 && (
+              <GeneralChanges changes={data.meta.patches.current.generalChanges} civCount={Object.keys(data.meta.patches.current.civChanges ?? {}).length} />
             )}
-          </Box>
-        )}
 
-        {data && rows.length === 0 && (
-          <Text color="brand.inkMuted" fontSize="sm">No data available for this selection.</Text>
-        )}
+            {/* Controls */}
+            <Flex gap={2} mb={4} align="center" flexWrap="wrap">
+              <HStack
+                bg="brand.stoneLight"
+                border="1px solid"
+                borderColor="brand.inkLight"
+                borderRadius="md"
+                p="2px"
+                gap="2px"
+              >
+                {(['1v1', 'team'] as const).map(mt => (
+                  <Box
+                    key={mt}
+                    as="button"
+                    onClick={() => setMatchType(mt)}
+                    bg={matchType === mt ? 'brand.parchmentDark' : 'transparent'}
+                    color={matchType === mt ? 'brand.inkDark' : 'brand.inkMuted'}
+                    px={3}
+                    py={1}
+                    borderRadius="sm"
+                    fontSize="xs"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="wide"
+                    cursor="pointer"
+                    _hover={{ color: 'brand.redChalk' }}
+                    transition="all 0.15s ease"
+                    boxShadow={matchType === mt ? 'sm' : 'none'}
+                  >
+                    {mt === '1v1' ? '1v1' : 'Team'}
+                  </Box>
+                ))}
+              </HStack>
 
-        {data && (
-          <Text fontSize="2xs" color="brand.inkMuted" mt={4} textAlign="center">
-            Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
-          </Text>
+              <HStack
+                bg="brand.stoneLight"
+                border="1px solid"
+                borderColor="brand.inkLight"
+                borderRadius="md"
+                p="2px"
+                gap="2px"
+              >
+                {([
+                  { key: 'winRate' as const, label: 'Win Rate' },
+                  { key: 'pickRate' as const, label: 'Pick Rate' },
+                ]).map(({ key, label }) => (
+                  <Box
+                    key={key}
+                    as="button"
+                    onClick={() => setActiveView(key)}
+                    bg={activeView === key ? 'brand.parchmentDark' : 'transparent'}
+                    color={activeView === key ? 'brand.inkDark' : 'brand.inkMuted'}
+                    px={3}
+                    py={1}
+                    borderRadius="sm"
+                    fontSize="xs"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="wide"
+                    cursor="pointer"
+                    _hover={{ color: 'brand.redChalk' }}
+                    transition="all 0.15s ease"
+                    boxShadow={activeView === key ? 'sm' : 'none'}
+                  >
+                    {label}
+                  </Box>
+                ))}
+              </HStack>
+
+              <select
+                value={selectedMap}
+                onChange={e => setSelectedMap(e.target.value)}
+                style={{
+                  background: 'var(--chakra-colors-brand-stoneLight)',
+                  border: '1px solid var(--chakra-colors-brand-inkLight)',
+                  borderRadius: '6px',
+                  padding: '4px 12px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  color: 'var(--chakra-colors-brand-inkDark)',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <option value="all">All Maps</option>
+                {maps.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+
+              <select
+                value={eloBracket}
+                onChange={e => setEloBracket(e.target.value as EloBracket)}
+                style={{
+                  background: 'var(--chakra-colors-brand-stoneLight)',
+                  border: '1px solid var(--chakra-colors-brand-inkLight)',
+                  borderRadius: '6px',
+                  padding: '4px 12px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  color: 'var(--chakra-colors-brand-inkDark)',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {ELO_LABELS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </Flex>
+
+            {/* Content */}
+            {error && (
+              <Text color="brand.darkLoss" fontSize="sm">Failed to load stats: {error}</Text>
+            )}
+
+            {!data && !error && (
+              <Text color="brand.inkMuted" fontSize="sm">Loading statistics...</Text>
+            )}
+
+            {data && rows.length > 0 && (
+              <Box
+                bg={{ base: 'brand.parchment', _dark: '#1E1E1E' }}
+                border="1px solid"
+                borderColor="brand.inkLight"
+                borderRadius="md"
+                p={{ base: 1, md: 4 }}
+                overflow="auto"
+              >
+                {activeView === 'winRate' ? (
+                  <WinRateChart rows={rows} />
+                ) : (
+                  <PickRateChart rows={rows} />
+                )}
+              </Box>
+            )}
+
+            {data && rows.length === 0 && (
+              <Text color="brand.inkMuted" fontSize="sm">No data available for this selection.</Text>
+            )}
+
+            {data && (
+              <Text fontSize="2xs" color="brand.inkMuted" mt={4} textAlign="center">
+                Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
+              </Text>
+            )}
+          </>
         )}
       </Box>
     </Box>

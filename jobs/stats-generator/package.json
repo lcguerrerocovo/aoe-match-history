@@ -11,10 +11,12 @@
   "dependencies": {
     "@google-cloud/bigquery": "^7.9.0",
     "@google-cloud/storage": "^7.19.0",
+    "pg": "^8.13.1",
     "pino": "^9.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",
+    "@types/pg": "^8.11.10",
     "typescript": "^5.7.0"
   },
   "engines": {

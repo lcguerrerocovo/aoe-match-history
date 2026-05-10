@@ -506,6 +506,9 @@ const separatorRecipe = defineRecipe({
 
 const config = defineConfig({
   globalCss: {
+    html: {
+      scrollbarGutter: 'stable',
+    },
     body: {
       bg: { base: '{colors.brand.parchment}', _dark: '#0F0F0F' },
       backgroundImage: {

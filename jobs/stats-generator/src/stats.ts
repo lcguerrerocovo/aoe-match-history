@@ -2,6 +2,8 @@ import { Storage } from '@google-cloud/storage';
 import pino from 'pino';
 import { loadPatches, findMajorPatches, loadBalancePatches, findBalancePatchBoundaries, loadResolvedMappings } from './mappings.js';
 import { queryCivStats } from './bigquery.js';
+import { queryPositionStats } from './postgres.js';
+import { buildPositionStats } from './positions.js';
 import type { StatsRow } from './bigquery.js';
 import type { ResolvedMappings } from './mappings.js';
 
@@ -9,8 +11,9 @@ const log = pino({ name: 'stats-generator' });
 
 const OUTPUT_BUCKET = process.env.OUTPUT_BUCKET || 'aoe2.site';
 const OUTPUT_PATH = 'data/civ-stats.json';
+const POSITION_OUTPUT_PATH = 'data/position-stats.json';
 
-const ELO_BRACKETS = ['all', '<1000', '1000-1500', '1500-2000', '2000+'] as const;
+const ELO_BRACKETS = ['all', '<1000', '1000-1500', '1500+'] as const;
 
 type MatchCategory = '1v1' | 'team';
 type PatchPeriod = 'current' | 'previous';
@@ -292,6 +295,32 @@ export async function generateStats(): Promise<void> {
 
   log.info({ bucket: OUTPUT_BUCKET, path: OUTPUT_PATH }, 'Stats uploaded to GCS');
 
+  // Position stats (requires DATABASE_URL)
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    log.info('Generating position stats from PostgreSQL');
+    const positionRows = await queryPositionStats(databaseUrl, currentPatch.date);
+    const positionOutput = buildPositionStats(positionRows, {
+      version: currentPatch.version,
+      date: currentPatch.date,
+      title: currentPatch.title,
+    });
+    const positionJson = JSON.stringify(positionOutput);
+    const positionSizeMB = (Buffer.byteLength(positionJson) / 1024 / 1024).toFixed(2);
+    log.info({ sizeMB: positionSizeMB }, 'Position stats JSON generated');
+
+    await storage.bucket(OUTPUT_BUCKET).file(POSITION_OUTPUT_PATH).save(positionJson, {
+      contentType: 'application/json',
+      metadata: { cacheControl: 'public, max-age=86400' },
+    });
+    log.info({ bucket: OUTPUT_BUCKET, path: POSITION_OUTPUT_PATH }, 'Position stats uploaded to GCS');
+  } else {
+    log.info('Skipping position stats (DATABASE_URL not set)');
+  }
+
+  const purgeFiles = ['https://aoe2.site/data/civ-stats.json'];
+  if (databaseUrl) purgeFiles.push('https://aoe2.site/data/position-stats.json');
+
   const cfZoneId = process.env.CLOUDFLARE_ZONE_ID;
   const cfToken = process.env.CLOUDFLARE_API_TOKEN;
   if (cfZoneId && cfToken) {
@@ -300,11 +329,11 @@ export async function generateStats(): Promise<void> {
       {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${cfToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: ['https://aoe2.site/data/civ-stats.json'] }),
+        body: JSON.stringify({ files: purgeFiles }),
       },
     );
     const purgeResult = await purgeResp.json() as { success: boolean };
-    log.info({ success: purgeResult.success }, 'Cloudflare cache purged for civ-stats.json');
+    log.info({ success: purgeResult.success, files: purgeFiles }, 'Cloudflare cache purged');
   } else {
     log.info('Skipping Cloudflare cache purge (no credentials)');
   }

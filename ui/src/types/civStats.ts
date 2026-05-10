@@ -23,7 +23,7 @@ export interface PatchInfo {
   generalChanges?: string[];
 }
 
-export type EloBracket = 'all' | '<1000' | '1000-1500' | '1500-2000' | '2000+';
+export type EloBracket = 'all' | '<1000' | '1000-1500' | '1500+';
 
 export interface CivStatsData {
   meta: {
