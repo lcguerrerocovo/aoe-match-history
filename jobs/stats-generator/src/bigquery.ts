@@ -8,6 +8,7 @@ export interface StatsRow {
   match_type_id: number;
   civ_id: number;
   map_id: number | null;
+  elo_bracket: string;
   wins: number;
   losses: number;
   total_picks: number;
@@ -35,24 +36,48 @@ player_results AS (
       ELSE 'previous'
     END AS patch,
     CAST(JSON_EXTRACT_SCALAR(p, '$.civilization_id') AS INT64) AS civ_id,
-    CAST(JSON_EXTRACT_SCALAR(p, '$.resulttype') AS INT64) AS result_type
+    CAST(JSON_EXTRACT_SCALAR(p, '$.resulttype') AS INT64) AS result_type,
+    CAST(JSON_EXTRACT_SCALAR(p, '$.profile_id') AS INT64) AS profile_id
   FROM deduped m,
     UNNEST(JSON_EXTRACT_ARRAY(m.raw_json, '$.matchhistoryreportresults')) AS p
+),
+player_ratings AS (
+  SELECT
+    m.match_id,
+    CAST(JSON_EXTRACT_SCALAR(member, '$.profile_id') AS INT64) AS profile_id,
+    CAST(JSON_EXTRACT_SCALAR(member, '$.oldrating') AS INT64) AS rating
+  FROM deduped m,
+    UNNEST(JSON_EXTRACT_ARRAY(m.raw_json, '$.matchhistorymember')) AS member
+),
+with_elo AS (
+  SELECT
+    pr.*,
+    CASE
+      WHEN r.rating IS NULL OR r.rating <= 0 THEN 'all'
+      WHEN r.rating < 1000 THEN '<1000'
+      WHEN r.rating < 1500 THEN '1000-1500'
+      WHEN r.rating < 2000 THEN '1500-2000'
+      ELSE '2000+'
+    END AS elo_bracket
+  FROM player_results pr
+  LEFT JOIN player_ratings r
+    ON pr.match_id = r.match_id AND pr.profile_id = r.profile_id
 )
 SELECT
   patch,
   match_type_id,
   civ_id,
   map_id,
+  elo_bracket,
   COUNTIF(result_type = 1) AS wins,
   COUNTIF(result_type = 0) AS losses,
   COUNT(*) AS total_picks,
   COUNT(DISTINCT match_id) AS unique_matches
-FROM player_results
+FROM with_elo
 WHERE civ_id IS NOT NULL
   AND result_type IN (0, 1)
-GROUP BY patch, match_type_id, civ_id, map_id
-ORDER BY patch, match_type_id, civ_id, map_id
+GROUP BY patch, match_type_id, civ_id, map_id, elo_bracket
+ORDER BY patch, match_type_id, civ_id, map_id, elo_bracket
 `;
 
 export async function queryCivStats(
@@ -92,6 +117,7 @@ export async function queryCivStats(
     match_type_id: Number(row.match_type_id),
     civ_id: Number(row.civ_id),
     map_id: row.map_id != null ? Number(row.map_id) : null,
+    elo_bracket: row.elo_bracket as string,
     wins: Number(row.wins),
     losses: Number(row.losses),
     total_picks: Number(row.total_picks),

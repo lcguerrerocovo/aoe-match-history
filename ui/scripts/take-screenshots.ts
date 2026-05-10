@@ -96,6 +96,11 @@ function buildViews(): ViewConfig[] {
       waitForSelector: '[data-testid="topbar-root"]',
     },
     {
+      name: 'stats',
+      path: '/stats',
+      waitForSelector: '[data-testid="topbar-root"]',
+    },
+    {
       name: 'match',
       path: '', // Resolved dynamically
       waitForSelector: '[data-testid="enlarged-match-card"]',

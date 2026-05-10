@@ -8,6 +8,7 @@ Vite + React 18 + TypeScript + Chakra UI v3.
 - `/profile_id/:profileId` — `App` (match history for a player)
 - `/match/:matchId` — `MatchPage` (single match detail with APM)
 - `/live` — `LivePage` (live matches from observable advertisements)
+- `/stats` — `StatsPage` (civ win rate and pick rate statistics)
 
 When adding or removing routes, update the screenshot tool views in `scripts/take-screenshots.ts`.
 
@@ -66,6 +67,13 @@ LiveMatchCard.tsx                 Shared live match card (used by LivePage + Pro
 ├── PulsingDot                   Reusable animated red dot (used by LivePage header + TopBar Live links)
 ├── PlayerRow                    Player name + civ icon + rating in a live match
 └── LiveMatchCardSkeleton        Skeleton placeholder matching card structure (dark header + diamond + rows)
+
+StatsPage                        Civ statistics page (win rate + pick rate charts)
+├── WinRateChart                 Horizontal bar chart sorted by win rate (40–60% domain, 50% baseline)
+├── PickRateChart                Horizontal bar chart sorted by pick rate
+├── CivRowEl                     Single civ row: icon, name, bar, value, delta badge
+├── DeltaBadge                   Patch-over-patch delta indicator (▲/▼)
+└── CivIcon                      Civ emblem from CDN
 ```
 
 Note: Two `MapCard` components exist — `MatchList/MapCard.tsx` (list view, smaller) and
@@ -128,6 +136,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `profile-search` — profile with TopBar search results
 - `profile-expanded` — profile with accordion session expanded
 - `live` — live matches page
+- `stats` — civ statistics page
 - `match` — match detail with APM view
 - `match-actions` — match detail with Actions view
 
@@ -138,6 +147,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `matchService.ts` — API client (`getFullMatchHistory` for cursor-paginated + server-filtered history, `getMatches` legacy fallback, `getMatch`, `getPersonalStats`, replay/APM helpers)
 - `liveMatchService.ts` — Live matches API client (`getLiveMatches`, `getLiveRatings`, `getLiveMatchForPlayer`)
 - `playerSearchService.ts` — Player search API client (`searchPlayers`)
+- `civStatsService.ts` — Civ stats fetcher (`getCivStats` — loads `civ-stats.json` from `/data/`)
 
 ## Key Utils
 

@@ -93,7 +93,7 @@ Separate path-triggered workflows:
 - `data/rl_api_mappings.json` — Civ ID → name, map ID → name mappings for the Relic API. Updated manually when new civs/maps are added to the game.
 - `data/100.json` — Reference/leaderboard data
 - `data/patches.json` — Game patch history (version, date, title, type). Used by stats-generator to determine current/previous patch boundaries.
-- `data/civ-stats.json` — Generated civ win rate stats (output of stats-generator, served from GCS, not in repo)
+- `data/civ-stats.json` — Generated civ win rate stats by ELO bracket (output of stats-generator, served from GCS, not in repo)
 
 ## Environment Variables
 

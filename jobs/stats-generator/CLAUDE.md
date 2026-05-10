@@ -29,7 +29,7 @@ docker run stats-generator
 |------|---------------|
 | `src/index.ts` | Entry point -- calls generateStats(), handles errors |
 | `src/stats.ts` | Orchestrator -- loads patches/mappings, queries BigQuery, builds output JSON, uploads to GCS |
-| `src/bigquery.ts` | BigQuery query -- aggregates wins/losses/picks by civ, map, match type, and patch period |
+| `src/bigquery.ts` | BigQuery query -- aggregates wins/losses/picks by civ, map, match type, ELO bracket, and patch period |
 | `src/mappings.ts` | Version-aware civ/map name resolution -- loads patches.json + rl_api_mappings.json from CDN |
 
 ## Environment Variables
@@ -43,11 +43,11 @@ No secrets required -- uses Application Default Credentials for BigQuery and GCS
 ## Output
 
 Writes `data/civ-stats.json` to the output GCS bucket. The file contains:
-- `meta` -- generation timestamp, patch versions, total pick counts
-- `1v1` -- per-civ stats for 1v1 ranked (match_type_id 6)
-- `team` -- per-civ stats for team ranked (match_type_id 7, 8, 9)
+- `meta` -- generation timestamp, patch versions, ELO brackets, total pick counts (by match type + bracket)
+- `1v1` -- per-civ stats for 1v1 ranked (match_type_id 6), keyed by ELO bracket
+- `team` -- per-civ stats for team ranked (match_type_id 7, 8, 9), keyed by ELO bracket
 
-Each civ has `current` and `previous` patch period stats with win rate, pick rate, and per-map breakdowns.
+ELO brackets: `all`, `<1000`, `1000-1500`, `1500-2000`, `2000+`. Each civ has `current` and `previous` patch period stats with win rate, pick rate, and per-map breakdowns.
 
 ## Data Sources
 

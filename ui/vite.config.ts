@@ -52,6 +52,11 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false
+      },
+      '/data': {
+        target: 'https://aoe2.site',
+        changeOrigin: true,
+        secure: true
       }
     }
   },

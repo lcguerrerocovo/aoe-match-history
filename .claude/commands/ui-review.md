@@ -13,6 +13,7 @@ landing    → /                        → LandingPage
 profile    → /profile_id/:profileId   → App (ProfileHeader, FilterBar, MatchList)
 match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, ApmBreakdownChart)
 live       → /live                    → LivePage (LiveMatchCard, PlayerRow)
+stats      → /stats                   → StatsPage (WinRateChart, PickRateChart)
 ```
 
 ## Prod URL Mapping
@@ -24,6 +25,7 @@ landing    → https://aoe2.site/
 profile    → https://aoe2.site/profile_id/197388
 match      → https://aoe2.site/match/auto (pick a recent match from the profile page)
 live       → https://aoe2.site/live
+stats      → https://aoe2.site/stats
 ```
 
 If the user provides a full URL, use that instead of the mapping.
@@ -55,6 +57,7 @@ Pick the right `--wait-for-selector` based on the view:
 - `profile` → `[data-scope='accordion']` (waits for match data to load)
 - `match` → `[data-part='item-content']` (waits for match detail to render)
 - `landing` → `input` (waits for search input)
+- `stats` → `[data-testid="topbar-root"]` (waits for page to render)
 - Custom URL → `body` (generic fallback)
 
 Always add `--wait-for-timeout 5000` after the selector resolves, to let async rendering settle.

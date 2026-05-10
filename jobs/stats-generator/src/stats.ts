@@ -10,8 +10,11 @@ const log = pino({ name: 'stats-generator' });
 const OUTPUT_BUCKET = process.env.OUTPUT_BUCKET || 'aoe2.site';
 const OUTPUT_PATH = 'data/civ-stats.json';
 
+const ELO_BRACKETS = ['all', '<1000', '1000-1500', '1500-2000', '2000+'] as const;
+
 type MatchCategory = '1v1' | 'team';
 type PatchPeriod = 'current' | 'previous';
+type EloBracket = typeof ELO_BRACKETS[number];
 
 interface CivMapStats {
   wins: number;
@@ -51,17 +54,18 @@ interface StatsOutput {
       current: { version: number; date: string; title: string };
       previous: { version: number; date: string; title: string };
     };
+    eloBrackets: readonly string[];
     totalPicks: {
-      '1v1': { current: number; previous: number };
-      team: { current: number; previous: number };
+      '1v1': Record<EloBracket, { current: number; previous: number }>;
+      team: Record<EloBracket, { current: number; previous: number }>;
     };
     totalPicksByMap: {
       '1v1': TotalMatchesByMap;
       team: TotalMatchesByMap;
     };
   };
-  '1v1': MatchTypeSection;
-  team: MatchTypeSection;
+  '1v1': Record<EloBracket, MatchTypeSection>;
+  team: Record<EloBracket, MatchTypeSection>;
 }
 
 function getMatchCategory(matchTypeId: number): MatchCategory {
@@ -81,13 +85,25 @@ function round(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
+interface Accumulator {
+  wins: number;
+  losses: number;
+  total: number;
+  maps: Record<string, { wins: number; losses: number; total: number }>;
+}
+
+function emptyAccumulator(): Accumulator {
+  return { wins: 0, losses: 0, total: 0, maps: {} };
+}
+
 function buildStats(
   rows: StatsRow[],
   mappings: ResolvedMappings,
-): { sections: Record<MatchCategory, MatchTypeSection>; totals: Record<MatchCategory, Record<PatchPeriod, number>>; totalsByMap: Record<MatchCategory, TotalMatchesByMap> } {
-  const totals: Record<MatchCategory, Record<PatchPeriod, number>> = {
-    '1v1': { current: 0, previous: 0 },
-    team: { current: 0, previous: 0 },
+) {
+  // totals[category][eloBracket][patch] = count
+  const totals: Record<MatchCategory, Record<EloBracket, Record<PatchPeriod, number>>> = {
+    '1v1': {} as Record<EloBracket, Record<PatchPeriod, number>>,
+    team: {} as Record<EloBracket, Record<PatchPeriod, number>>,
   };
 
   const totalsByMap: Record<MatchCategory, TotalMatchesByMap> = {
@@ -95,54 +111,79 @@ function buildStats(
     team: { current: {}, previous: {} },
   };
 
-  const accumulator: Record<MatchCategory, Record<string, Record<PatchPeriod, { wins: number; losses: number; total: number; maps: Record<string, { wins: number; losses: number; total: number }> }>>> = {
-    '1v1': {},
-    team: {},
+  // accumulator[category][eloBracket][civName][patch]
+  const accumulator: Record<MatchCategory, Record<EloBracket, Record<string, Record<PatchPeriod, Accumulator>>>> = {
+    '1v1': {} as Record<EloBracket, Record<string, Record<PatchPeriod, Accumulator>>>,
+    team: {} as Record<EloBracket, Record<string, Record<PatchPeriod, Accumulator>>>,
   };
+
+  for (const bracket of ELO_BRACKETS) {
+    totals['1v1'][bracket] = { current: 0, previous: 0 };
+    totals.team[bracket] = { current: 0, previous: 0 };
+    accumulator['1v1'][bracket] = {};
+    accumulator.team[bracket] = {};
+  }
 
   for (const row of rows) {
     const category = getMatchCategory(row.match_type_id);
     const patch = row.patch as PatchPeriod;
     const civName = resolveCivName(row.civ_id, patch, mappings);
     const mapName = row.map_id != null ? resolveMapName(row.map_id, patch, mappings) : null;
+    const eloBracket = row.elo_bracket as EloBracket;
 
-    totals[category][patch] += row.total_picks;
+    // Accumulate into both the specific bracket AND the 'all' bucket
+    const brackets: EloBracket[] = eloBracket === 'all' ? ['all'] : [eloBracket, 'all'];
 
-    if (mapName) {
-      totalsByMap[category][patch][mapName] = (totalsByMap[category][patch][mapName] ?? 0) + row.total_picks;
-    }
+    for (const bracket of brackets) {
+      totals[category][bracket][patch] += row.total_picks;
 
-    if (!accumulator[category][civName]) {
-      accumulator[category][civName] = {
-        current: { wins: 0, losses: 0, total: 0, maps: {} },
-        previous: { wins: 0, losses: 0, total: 0, maps: {} },
-      };
-    }
-
-    const civAcc = accumulator[category][civName][patch];
-    civAcc.wins += row.wins;
-    civAcc.losses += row.losses;
-    civAcc.total += row.total_picks;
-
-    if (mapName) {
-      if (!civAcc.maps[mapName]) {
-        civAcc.maps[mapName] = { wins: 0, losses: 0, total: 0 };
+      if (!accumulator[category][bracket][civName]) {
+        accumulator[category][bracket][civName] = {
+          current: emptyAccumulator(),
+          previous: emptyAccumulator(),
+        };
       }
-      civAcc.maps[mapName].wins += row.wins;
-      civAcc.maps[mapName].losses += row.losses;
-      civAcc.maps[mapName].total += row.total_picks;
+
+      const civAcc = accumulator[category][bracket][civName][patch];
+      civAcc.wins += row.wins;
+      civAcc.losses += row.losses;
+      civAcc.total += row.total_picks;
+
+      if (mapName) {
+        if (!civAcc.maps[mapName]) {
+          civAcc.maps[mapName] = { wins: 0, losses: 0, total: 0 };
+        }
+        civAcc.maps[mapName].wins += row.wins;
+        civAcc.maps[mapName].losses += row.losses;
+        civAcc.maps[mapName].total += row.total_picks;
+      }
+    }
+
+    // totalsByMap only for the 'all' bucket (map filter is independent of ELO)
+    if (mapName && (eloBracket !== 'all')) {
+      // Only count from non-'all' rows to avoid double counting
+      totalsByMap[category][patch][mapName] = (totalsByMap[category][patch][mapName] ?? 0) + row.total_picks;
     }
   }
 
-  const sections: Record<MatchCategory, MatchTypeSection> = { '1v1': { civs: {} }, team: { civs: {} } };
+  const sections: Record<MatchCategory, Record<EloBracket, MatchTypeSection>> = {
+    '1v1': {} as Record<EloBracket, MatchTypeSection>,
+    team: {} as Record<EloBracket, MatchTypeSection>,
+  };
 
   for (const category of ['1v1', 'team'] as MatchCategory[]) {
-    for (const [civName, patches] of Object.entries(accumulator[category])) {
-      const civStats: CivStats = {
-        current: buildCivPatchStats(patches.current, totals[category].current, totalsByMap[category].current),
-        previous: buildCivPatchStats(patches.previous, totals[category].previous, totalsByMap[category].previous),
-      };
-      sections[category].civs[civName] = civStats;
+    for (const bracket of ELO_BRACKETS) {
+      sections[category][bracket] = { civs: {} };
+      const bracketTotalsByMap = bracket === 'all'
+        ? totalsByMap[category]
+        : { current: {}, previous: {} };
+
+      for (const [civName, patches] of Object.entries(accumulator[category][bracket])) {
+        sections[category][bracket].civs[civName] = {
+          current: buildCivPatchStats(patches.current, totals[category][bracket].current, bracketTotalsByMap.current),
+          previous: buildCivPatchStats(patches.previous, totals[category][bracket].previous, bracketTotalsByMap.previous),
+        };
+      }
     }
   }
 
@@ -150,7 +191,7 @@ function buildStats(
 }
 
 function buildCivPatchStats(
-  acc: { wins: number; losses: number; total: number; maps: Record<string, { wins: number; losses: number; total: number }> },
+  acc: Accumulator,
   totalGamesInCategory: number,
   totalsByMap: Record<string, number>,
 ): CivPatchStats {
@@ -189,9 +230,9 @@ export async function generateStats(): Promise<void> {
   const rows = await queryCivStats(previous.date, current.date);
   const { sections, totals, totalsByMap } = buildStats(rows, mappings);
 
-  const civCount1v1 = Object.keys(sections['1v1'].civs).length;
-  const civCountTeam = Object.keys(sections.team.civs).length;
-  log.info({ civCount1v1, civCountTeam, totalRows: rows.length }, 'Stats built');
+  const civCount1v1 = Object.keys(sections['1v1'].all.civs).length;
+  const civCountTeam = Object.keys(sections.team.all.civs).length;
+  log.info({ civCount1v1, civCountTeam, totalRows: rows.length, eloBrackets: ELO_BRACKETS.length }, 'Stats built');
 
   const output: StatsOutput = {
     meta: {
@@ -200,9 +241,10 @@ export async function generateStats(): Promise<void> {
         current: { version: current.version, date: current.date, title: current.title },
         previous: { version: previous.version, date: previous.date, title: previous.title },
       },
+      eloBrackets: ELO_BRACKETS,
       totalPicks: {
-        '1v1': { current: totals['1v1'].current, previous: totals['1v1'].previous },
-        team: { current: totals.team.current, previous: totals.team.previous },
+        '1v1': totals['1v1'],
+        team: totals.team,
       },
       totalPicksByMap: {
         '1v1': totalsByMap['1v1'],

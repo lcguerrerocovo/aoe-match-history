@@ -18,6 +18,7 @@ const TopBar = () => {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const mobileNavItems = [
+    { label: 'Stats', path: '/stats', dot: false },
     { label: 'Live', path: '/live', dot: true },
   ];
 
@@ -95,8 +96,19 @@ const TopBar = () => {
               </Box>
             </RouterLink></Text>
 
-          {/* Right: Live link + Search bar */}
+          {/* Right: Nav links + Search bar */}
           <Flex align="center" gap={4}>
+            <Flex
+              align="center"
+              gap={1.5}
+              fontSize="sm"
+              color="brand.topbarText"
+              opacity={location.pathname === '/stats' ? 1 : 0.8}
+              _hover={{ opacity: 1 }}
+              letterSpacing="wide"
+              textTransform="uppercase"
+              asChild
+            ><RouterLink to="/stats">Stats</RouterLink></Flex>
             <Flex
               align="center"
               gap={1.5}
