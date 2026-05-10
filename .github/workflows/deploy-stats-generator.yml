@@ -1,0 +1,122 @@
+name: Deploy Stats Generator Job
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'jobs/stats-generator/**', '.github/workflows/deploy-stats-generator.yml' ]
+  workflow_dispatch:
+    inputs:
+      run_job:
+        description: 'Run the stats generator after deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: aoe2-site
+  REGION: us-central1
+  IMAGE_NAME: stats-generator
+  JOB_NAME: stats-generator-job
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Google Auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Create Artifact Registry repository
+      run: |
+        if ! gcloud artifacts repositories describe stats-generator --location=$REGION 2>/dev/null; then
+          echo "Creating Artifact Registry repository..."
+          gcloud artifacts repositories create stats-generator \
+            --repository-format=docker \
+            --location=$REGION \
+            --description="Stats generator job images"
+        else
+          echo "Repository already exists"
+        fi
+
+    - name: Apply cleanup policy
+      run: |
+        gcloud artifacts repositories set-cleanup-policies stats-generator \
+          --location=$REGION \
+          --policy=.github/artifact-registry-cleanup-policy.json \
+          --no-dry-run
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker $REGION-docker.pkg.dev
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install dependencies and build
+      working-directory: jobs/stats-generator
+      run: |
+        npm ci
+        npm run build
+        npm prune --production
+
+    - name: Build Docker image
+      working-directory: jobs/stats-generator
+      run: |
+        docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/stats-generator/$IMAGE_NAME:${{ github.sha }} .
+        docker tag $REGION-docker.pkg.dev/$PROJECT_ID/stats-generator/$IMAGE_NAME:${{ github.sha }} $REGION-docker.pkg.dev/$PROJECT_ID/stats-generator/$IMAGE_NAME:latest
+
+    - name: Push Docker image
+      run: |
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/stats-generator/$IMAGE_NAME:${{ github.sha }}
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/stats-generator/$IMAGE_NAME:latest
+
+    - name: Deploy Cloud Run Job
+      run: |
+        if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
+          echo "Job exists, updating..."
+          gcloud run jobs update ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/stats-generator/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=512Mi \
+            --cpu=1 \
+            --max-retries=1 \
+            --task-timeout=300 \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        else
+          echo "Job does not exist, creating..."
+          gcloud run jobs create ${JOB_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/stats-generator/${IMAGE_NAME}:latest \
+            --region=${REGION} \
+            --memory=512Mi \
+            --cpu=1 \
+            --max-retries=1 \
+            --task-timeout=300 \
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+        fi
+
+    - name: Create Cloud Scheduler Job
+      run: |
+        gcloud scheduler jobs create http stats-generator-scheduler \
+          --schedule="0 6 * * *" \
+          --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/$JOB_NAME:run" \
+          --http-method=POST \
+          --oauth-service-account-email="$PROJECT_ID@appspot.gserviceaccount.com" \
+          --location=$REGION \
+          --description="Runs stats generator daily at 06:00 UTC" \
+          || echo "Scheduler job already exists or failed to create"
+
+    - name: Run stats generator
+      if: ${{ github.event.inputs.run_job == 'true' }}
+      run: |
+        echo "Running stats generator..."
+        gcloud run jobs execute $JOB_NAME --region=$REGION --wait

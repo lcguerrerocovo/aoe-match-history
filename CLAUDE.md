@@ -8,15 +8,16 @@ Personal project: Age of Empires 2 match history viewer. Live at **https://aoe2.
 ui/                  React frontend (Vite + TypeScript + Chakra UI)
 functions/proxy/     TypeScript API proxy on Cloud Run (Relic API, Steam, Meilisearch, Firestore, PostgreSQL)
 functions/apm/       Python Cloud Function — replay parsing for APM stats (mgz library)
-data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json)
+data/                Static data files deployed to GCS (rl_api_mappings.json, 100.json, patches.json)
 jobs/indexing/       Cloud Run Job — collects players from Relic API, indexes to Meilisearch
 jobs/collector/      Cloud Run Job — collects match history from Relic API to PostgreSQL
+jobs/stats-generator/ Cloud Run Job — generates civ win rate stats from BigQuery, uploads JSON to GCS
 aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
 aoe-match-db/        PostgreSQL VM config (e2-medium, backup cron, firewall rules)
 scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup)
 ```
 
-**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, PostgreSQL on GCE VM (match history), Firestore for session/match caching.
+**Infra:** GCS bucket (`aoe2.site`) behind Cloudflare CDN, Cloud Run (proxy), Cloud Function Gen2 (APM), Meilisearch on GCE VM, PostgreSQL on GCE VM (match history), BigQuery (match analytics), Firestore for session/match caching.
 
 ## Commands
 
@@ -57,6 +58,13 @@ pnpm run migrate:up      # Apply database migrations (requires DATABASE_URL)
 pnpm run migrate:down    # Roll back last migration
 ```
 
+### Stats Generator (from `jobs/stats-generator/`)
+```bash
+npm run build            # Compile TypeScript to dist/
+npm start                # Run compiled output
+npm run dev              # Watch mode (recompile on change)
+```
+
 ### Local Dev (full stack)
 ```bash
 # Terminal 1: SSH tunnels to VMs
@@ -78,11 +86,14 @@ Push to `master` triggers GitHub Actions. Main deployment (`deploy.yml`) runs th
 Separate path-triggered workflows:
 - **deploy-collector-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 3 hours (`jobs/collector/**`)
 - **deploy-indexing-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 6 hours (`jobs/indexing/**`)
+- **deploy-stats-generator.yml** — build Docker image, deploy Cloud Run Job, schedule daily at 06:00 UTC (`jobs/stats-generator/**`)
 
 ## Key Data Files
 
 - `data/rl_api_mappings.json` — Civ ID → name, map ID → name mappings for the Relic API. Updated manually when new civs/maps are added to the game.
 - `data/100.json` — Reference/leaderboard data
+- `data/patches.json` — Game patch history (version, date, title, type). Used by stats-generator to determine current/previous patch boundaries.
+- `data/civ-stats.json` — Generated civ win rate stats (output of stats-generator, served from GCS, not in repo)
 
 ## Environment Variables
 
