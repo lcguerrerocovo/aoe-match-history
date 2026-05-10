@@ -166,25 +166,75 @@ async function normalizeMatches(
     return matches;
 }
 
-// In-memory rating cache: "profileId" or "profileId:matchTypeIds" → { rating (null = known miss), timestamp }
+// In-memory rating cache: "profileId:leaderboardId" or "profileId:latest" → { rating (null = known miss), timestamp }
 const ratingCache = new Map<string, { rating: number | null; ts: number }>();
 const RATING_CACHE_TTL_MS = 90_000; // 90s — ratings only change when a match finishes
+const RATING_MAPPING_CACHE_TTL_MS = 300_000; // 5m — DB-backed static mapping
+const ratingMappingCache = new Map<number, { leaderboardId: number | null; ts: number }>();
+
+async function fetchRatingLeaderboardIds(matchTypeIds: number[]): Promise<Map<number, number>> {
+    const uniqueIds = Array.from(new Set(matchTypeIds.filter(id => Number.isInteger(id))));
+    const result = new Map<number, number>();
+    if (uniqueIds.length === 0) return result;
+
+    const pool = getMatchDbPool();
+    if (!pool) return result;
+
+    const now = Date.now();
+    const uncached: number[] = [];
+
+    for (const matchTypeId of uniqueIds) {
+        const entry = ratingMappingCache.get(matchTypeId);
+        if (entry && now - entry.ts < RATING_MAPPING_CACHE_TTL_MS) {
+            if (entry.leaderboardId != null) result.set(matchTypeId, entry.leaderboardId);
+        } else {
+            uncached.push(matchTypeId);
+        }
+    }
+
+    if (uncached.length === 0) return result;
+
+    try {
+        const mapping = await pool.query<{ match_type_id: number; leaderboard_id: number }>(
+            `SELECT match_type_id, leaderboard_id
+             FROM rating_leaderboard_mapping
+             WHERE match_type_id = ANY($1::int[])`,
+            [uncached],
+        );
+
+        const found = new Set<number>();
+        for (const row of mapping.rows) {
+            result.set(row.match_type_id, row.leaderboard_id);
+            ratingMappingCache.set(row.match_type_id, { leaderboardId: row.leaderboard_id, ts: now });
+            found.add(row.match_type_id);
+        }
+
+        for (const matchTypeId of uncached) {
+            if (!found.has(matchTypeId)) {
+                ratingMappingCache.set(matchTypeId, { leaderboardId: null, ts: now });
+            }
+        }
+    } catch (err) {
+        log.warn({ error: (err as Error).message }, 'Failed to fetch rating leaderboard mapping');
+    }
+
+    return result;
+}
 
 /**
- * Fetch the most recent ELO rating for each profile_id from PostgreSQL.
- * Uses an in-memory per-player cache to avoid repeated DB queries.
- * When matchTypeIds is provided, only considers ratings from those match types
- * (e.g. [6] for 1v1, [7,8,9] for team) to avoid showing TG rating in a 1v1 match.
- * Returns a map of profile_id → rating. Gracefully returns empty map if DB unavailable.
+ * Fetch latest known ELO ratings from the materialized player_latest_rating table.
+ * When leaderboardId is provided, returns ratings for that exact leaderboard
+ * (e.g. 3 = RM 1v1, 4 = RM Team). Without a leaderboard, returns the latest
+ * known rating across leaderboards for compatibility/debug callers.
  */
-async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[]): Promise<Map<number, number>> {
+async function fetchRatingsFromLatestTable(profileIds: number[], leaderboardId?: number): Promise<Map<number, number>> {
     const pool = getMatchDbPool();
     if (!pool || profileIds.length === 0) return new Map();
 
     const now = Date.now();
     const results = new Map<number, number>();
     const uncached: number[] = [];
-    const cacheKeySuffix = matchTypeIds ? `:${matchTypeIds.join(',')}` : '';
+    const cacheKeySuffix = `:${leaderboardId ?? 'latest'}`;
 
     for (const id of profileIds) {
         const entry = ratingCache.get(`${id}${cacheKeySuffix}`);
@@ -208,35 +258,20 @@ async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[])
             batches.push(uncached.slice(i, i + BATCH_SIZE));
         }
 
-        const query = matchTypeIds
-            ? `SELECT p.profile_id, m.new_rating
-               FROM unnest($1::int[]) AS p(profile_id)
-               CROSS JOIN LATERAL (
-                   SELECT mp.new_rating
-                   FROM match_player mp
-                   WHERE mp.profile_id = p.profile_id
-                     AND mp.new_rating IS NOT NULL
-                     AND mp.new_rating > 0
-                     AND EXISTS (SELECT 1 FROM match mt WHERE mt.match_id = mp.match_id AND mt.match_type_id = ANY($2))
-                   ORDER BY mp.match_id DESC
-                   LIMIT 1
-               ) m`
-            : `SELECT p.profile_id, m.new_rating
-               FROM unnest($1::int[]) AS p(profile_id)
-               CROSS JOIN LATERAL (
-                   SELECT new_rating
-                   FROM match_player mp
-                   WHERE mp.profile_id = p.profile_id
-                     AND mp.new_rating IS NOT NULL
-                     AND mp.new_rating > 0
-                   ORDER BY mp.match_id DESC
-                   LIMIT 1
-               ) m`;
+        const query = leaderboardId != null
+            ? `SELECT profile_id, rating
+               FROM player_latest_rating
+               WHERE leaderboard_id = $2
+                 AND profile_id = ANY($1::bigint[])`
+            : `SELECT DISTINCT ON (profile_id) profile_id, rating
+               FROM player_latest_rating
+               WHERE profile_id = ANY($1::bigint[])
+               ORDER BY profile_id, source_time DESC, source_match_id DESC`;
 
         const dbResults = await Promise.all(batches.map(batch =>
-            pool.query<{ profile_id: string; new_rating: number }>(
+            pool.query<{ profile_id: string; rating: number }>(
                 query,
-                matchTypeIds ? [batch, matchTypeIds] : [batch],
+                leaderboardId != null ? [batch, leaderboardId] : [batch],
             ),
         ));
 
@@ -244,8 +279,8 @@ async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[])
         for (const result of dbResults) {
             for (const row of result.rows) {
                 const id = Number(row.profile_id);
-                results.set(id, row.new_rating);
-                ratingCache.set(`${id}${cacheKeySuffix}`, { rating: row.new_rating, ts: now });
+                results.set(id, row.rating);
+                ratingCache.set(`${id}${cacheKeySuffix}`, { rating: row.rating, ts: now });
                 foundIds.add(id);
             }
         }
@@ -257,12 +292,78 @@ async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[])
             }
         }
 
-        log.info({ found: results.size, misses: uncached.length - foundIds.size, fromCache: profileIds.length - uncached.length, fromDb: uncached.length, batches: batches.length }, 'Fetched player ratings');
+        log.info({
+            found: results.size,
+            misses: uncached.length - foundIds.size,
+            fromCache: profileIds.length - uncached.length,
+            fromDb: uncached.length,
+            batches: batches.length,
+            leaderboardId,
+        }, 'Fetched player ratings');
         return results;
     } catch (err) {
-        log.warn({ error: (err as Error).message, stack: (err as Error).stack }, 'Failed to fetch player ratings from DB');
+        log.warn({ error: (err as Error).message, stack: (err as Error).stack, leaderboardId }, 'Failed to fetch player ratings from DB');
         return results; // return cached + partial DB results
     }
+}
+
+async function fetchPlayerRatings(profileIds: number[], matchTypeIds?: number[]): Promise<Map<number, number>> {
+    if (!matchTypeIds || matchTypeIds.length === 0) {
+        return fetchRatingsFromLatestTable(profileIds);
+    }
+
+    const uniqueMatchTypeIds = Array.from(new Set(matchTypeIds));
+    const leaderboardIdByMatchType = await fetchRatingLeaderboardIds(uniqueMatchTypeIds);
+    if (uniqueMatchTypeIds.some(matchTypeId => !leaderboardIdByMatchType.has(matchTypeId))) {
+        return new Map();
+    }
+
+    const leaderboardIds = new Set(leaderboardIdByMatchType.values());
+    const leaderboardId = leaderboardIds.size === 1 ? Array.from(leaderboardIds)[0] : null;
+    if (leaderboardId == null) return new Map();
+    return fetchRatingsFromLatestTable(profileIds, leaderboardId);
+}
+
+async function enrichLiveMatchesWithRatings(matches: LiveMatch[]): Promise<LiveMatch[]> {
+    const leaderboardIdByMatchType = await fetchRatingLeaderboardIds(matches.map(match => match.matchtype_id));
+    const profileIdsByLeaderboard = new Map<number, Set<number>>();
+    for (const match of matches) {
+        const leaderboardId = leaderboardIdByMatchType.get(match.matchtype_id);
+        if (leaderboardId == null) continue;
+
+        let profileIds = profileIdsByLeaderboard.get(leaderboardId);
+        if (!profileIds) {
+            profileIds = new Set<number>();
+            profileIdsByLeaderboard.set(leaderboardId, profileIds);
+        }
+        for (const player of match.players) {
+            profileIds.add(player.profile_id);
+        }
+    }
+
+    if (profileIdsByLeaderboard.size === 0) return matches;
+
+    const ratingsByLeaderboard = new Map<number, Map<number, number>>();
+    await Promise.all(Array.from(profileIdsByLeaderboard.entries()).map(async ([leaderboardId, profileIds]) => {
+        ratingsByLeaderboard.set(
+            leaderboardId,
+            await fetchRatingsFromLatestTable(Array.from(profileIds), leaderboardId),
+        );
+    }));
+
+    return matches.map(match => {
+        const leaderboardId = leaderboardIdByMatchType.get(match.matchtype_id);
+        const ratings = leaderboardId != null ? ratingsByLeaderboard.get(leaderboardId) : undefined;
+        if (!ratings || ratings.size === 0) return match;
+
+        return {
+            ...match,
+            players: match.players.map(player => ({
+                ...player,
+                rating: ratings.get(player.profile_id) ?? player.rating,
+            })),
+        };
+    });
 }
 
 /**
@@ -536,15 +637,7 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
         }
 
         let matches = await normalizeMatches(result.data.matches, result.data.players);
-        for (const match of matches) {
-            const matchTypeIds = match.matchtype_id === 6 ? [6] : [7, 8, 9];
-            const playerIds = match.players.map(p => p.profile_id);
-            const ratings = await fetchPlayerRatings(playerIds, matchTypeIds);
-            for (const player of match.players) {
-                const rating = ratings.get(player.profile_id);
-                if (rating != null) player.rating = rating;
-            }
-        }
+        matches = await enrichLiveMatchesWithRatings(matches);
 
         // Belt-and-suspenders: filter server-side in case Relic ignores profile_ids
         const idSet = new Set(profileIds);
@@ -556,6 +649,7 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
 
     // Unfiltered: use cached + paginated fetch
     const { matches, partial } = await getCachedLiveMatches();
+    const enrichedMatches = await enrichLiveMatchesWithRatings(matches);
 
     // Short CDN TTL for empty or partial responses — complete data is usually
     // available within seconds, so don't let CDN cache stale partial results
@@ -567,5 +661,5 @@ export async function handleLiveMatches(queryString?: string): Promise<HandlerRe
         headers['X-Partial'] = '1';
     }
 
-    return { data: matches, headers };
+    return { data: enrichedMatches, headers };
 }

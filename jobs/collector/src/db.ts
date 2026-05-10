@@ -1,6 +1,7 @@
 import pg from 'pg';
 import pino from 'pino';
 import { decodeOptions, decodeSlotInfo } from './decoders.js';
+import { buildLatestRatingRows } from './latestRatings.js';
 import type { RawMatch, RawProfile, IdNameMap, PlayerMetadata } from './types.js';
 
 const { Pool } = pg;
@@ -195,6 +196,7 @@ export class Database {
         await client.query('SAVEPOINT batch');
         await this.batchInsertMatches(client, processed);
         await this.batchInsertPlayers(client, processed);
+        await this.batchUpsertLatestRatings(client, processed);
         await client.query('RELEASE SAVEPOINT batch');
         upsertedCount = processed.length;
       } catch (err) {
@@ -302,6 +304,62 @@ export class Database {
     );
   }
 
+  private async batchUpsertLatestRatings(client: pg.PoolClient, processed: ProcessedMatch[]): Promise<void> {
+    const rows = buildLatestRatingRows(processed);
+    if (rows.length === 0) return;
+
+    const cols = 5;
+    const placeholders: string[] = [];
+    const values: unknown[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      const off = i * cols;
+      placeholders.push(`(${Array.from({ length: cols }, (_, j) => `$${off + j + 1}`).join(',')}, NOW())`);
+      const row = rows[i];
+      values.push(row.profileId, row.matchTypeId, row.rating, row.sourceMatchId, row.sourceTime);
+    }
+
+    await client.query(
+      `WITH input (
+         profile_id, match_type_id, rating, source_match_id, source_time, updated_at
+       ) AS (
+         VALUES ${placeholders.join(',')}
+       ),
+       mapped AS (
+         SELECT
+           input.profile_id,
+           rlm.leaderboard_id,
+           input.rating,
+           input.source_match_id,
+           input.source_time,
+           input.updated_at,
+           ROW_NUMBER() OVER (
+             PARTITION BY input.profile_id, rlm.leaderboard_id
+             ORDER BY input.source_time DESC, input.source_match_id DESC
+           ) AS rn
+         FROM input
+         JOIN rating_leaderboard_mapping rlm ON rlm.match_type_id = input.match_type_id
+       )
+       INSERT INTO player_latest_rating (
+         profile_id, leaderboard_id, rating, source_match_id, source_time, updated_at
+       )
+       SELECT
+         profile_id, leaderboard_id, rating, source_match_id, source_time, updated_at
+       FROM mapped
+       WHERE rn = 1
+       ON CONFLICT (profile_id, leaderboard_id) DO UPDATE SET
+         rating = EXCLUDED.rating,
+         source_match_id = EXCLUDED.source_match_id,
+         source_time = EXCLUDED.source_time,
+         updated_at = NOW()
+       WHERE EXCLUDED.source_time > player_latest_rating.source_time
+          OR (
+            EXCLUDED.source_time = player_latest_rating.source_time
+            AND EXCLUDED.source_match_id > player_latest_rating.source_match_id
+          )`,
+      values,
+    );
+  }
+
   /**
    * Fallback: insert matches one at a time with SAVEPOINTs for isolation.
    */
@@ -314,6 +372,7 @@ export class Database {
         await client.query(`SAVEPOINT ${sp}`);
         await this.batchInsertMatches(client, [m]);
         await this.batchInsertPlayers(client, [m]);
+        await this.batchUpsertLatestRatings(client, [m]);
         await client.query(`RELEASE SAVEPOINT ${sp}`);
         count++;
       } catch (err) {

@@ -39,6 +39,7 @@ describe('LivePage', () => {
 
   it('renders match cards, tabs, and ActivityPanel', () => {
     cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
+    cy.intercept('POST', '/api/live/ratings', { body: {} }).as('ratings');
     mountWithProviders(<LivePage />);
     cy.tick(100);
     cy.wait('@live');
@@ -57,6 +58,7 @@ describe('LivePage', () => {
     // Player count header
     const totalPlayers = mockLiveMatches.reduce((sum, m) => sum + m.players.length, 0);
     cy.contains(`${totalPlayers} players`).should('be.visible');
+    cy.get('@ratings.all').should('have.length', 0);
   });
 
   it('filters matches when clicking a game type tab', () => {

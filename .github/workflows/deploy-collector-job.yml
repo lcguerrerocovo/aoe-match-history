@@ -92,7 +92,7 @@ jobs:
       working-directory: jobs/collector
       run: |
         pnpm install --frozen-lockfile
-        pnpm run build
+        pnpm test
         pnpm prune --prod
 
     - name: Build Docker image

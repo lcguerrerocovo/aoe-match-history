@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import TopBar from './TopBar';
 import { LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
 import { ActivityPanel, getMatchAvgRating, getEloBracketLabel, VirtualMatchList } from './live';
-import { getLiveMatches, getLiveRatings } from '../services/liveMatchService';
+import { getLiveMatches } from '../services/liveMatchService';
 import type { LiveMatch } from '../types/liveMatch';
 
 const REFRESH_INTERVAL_MS = 30_000;
@@ -92,7 +92,6 @@ export function LivePage() {
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());
   const [ratingsLoaded, setRatingsLoaded] = useState(false);
   const [isPartial, setIsPartial] = useState(false);
-  const ratingsRef = useRef<Map<number, number>>(new Map());
 
   // Reset map/ELO filters when game type tab changes
   const handleCategorySelect = useCallback((cat: GameTypeCategory) => {
@@ -183,18 +182,6 @@ export function LivePage() {
       }
       prevMatchIdsRef.current = new Set(data.map(m => m.match_id));
 
-      // Apply cached ratings from previous cycle so histogram stays populated
-      const cached = ratingsRef.current;
-      const enriched = cached.size > 0
-        ? data.map(match => ({
-            ...match,
-            players: match.players.map(p => ({
-              ...p,
-              rating: cached.get(p.profile_id) ?? p.rating,
-            })),
-          }))
-        : data;
-
       const newestStartTime = Math.max(...data.map(m => m.start_time));
       const ageSeconds = Date.now() / 1000 - newestStartTime;
       if (data.length > 0 && ageSeconds > STALE_THRESHOLD_S) {
@@ -204,50 +191,10 @@ export function LivePage() {
         return;
       }
 
-      setMatches(enriched);
+      setMatches(data);
       setError(null);
       setIsLoading(false);
-
-      // Fetch ratings grouped by match type category (1v1 vs team)
-      const soloIds = new Set<number>();
-      const teamIds = new Set<number>();
-      for (const m of data) {
-        const bucket = m.matchtype_id === 6 ? soloIds : teamIds;
-        for (const p of m.players) bucket.add(p.profile_id);
-      }
-
-      const allProfileIds = [...new Set([...soloIds, ...teamIds])];
-      if (allProfileIds.length > 0) {
-        // Prune ratingsRef to only current players to prevent unbounded growth
-        const currentPlayers = new Set(allProfileIds);
-        const pruned = new Map<number, number>();
-        for (const id of currentPlayers) {
-          const r = ratingsRef.current.get(id);
-          if (r != null) pruned.set(id, r);
-        }
-        ratingsRef.current = pruned;
-
-        const fetches: Promise<Map<number, number>>[] = [];
-        if (soloIds.size > 0) fetches.push(getLiveRatings([...soloIds], [6]));
-        if (teamIds.size > 0) fetches.push(getLiveRatings([...teamIds], [7, 8, 9]));
-
-        Promise.all(fetches).then(results => {
-          const combined = new Map<number, number>();
-          for (const ratings of results) {
-            ratings.forEach((r, id) => combined.set(id, r));
-          }
-          if (combined.size === 0) return;
-          combined.forEach((r, id) => ratingsRef.current.set(id, r));
-          setMatches(prev => prev.map(match => ({
-            ...match,
-            players: match.players.map(p => ({
-              ...p,
-              rating: combined.get(p.profile_id) ?? p.rating,
-            })),
-          })));
-          setRatingsLoaded(true);
-        });
-      }
+      setRatingsLoaded(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load live matches');
       setIsLoading(false);
