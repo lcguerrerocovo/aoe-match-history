@@ -20,7 +20,7 @@ const semanticColors = {
     inkMuted: { value: { base: '#8B7355', _dark: '#CBD5E0' } },
     inkLight: { value: { base: '#C4B59A', _dark: '#2D3748' } },
     heraldic: { value: { base: '#5A3A20', _dark: '#90CDF4' } },
-    inkMedium: { value: { base: '#6B5240', _dark: '#2D3748' } },
+    inkMedium: { value: { base: '#6B5240', _dark: '#A0AEC0' } },
     redChalk: { value: { base: '#8B3A3A', _dark: '#C44536' } },
     borderWarm: { value: { base: '#9C8567', _dark: '#4A5568' } },
     white: { value: '#fff' },
@@ -32,10 +32,10 @@ const semanticColors = {
     win: { value: { base: '#3AA76D', _dark: '#48BB78' } },
     loss: { value: { base: '#D64545', _dark: '#F56565' } },
     inkAccent: { value: { base: '#8B4513', _dark: '#90CDF4' } },
-    stone: { value: { base: '#E6E3D8', _dark: '#2D3748' } },
+    stone: { value: { base: '#E6E3D8', _dark: '#4A5568' } },
     stoneLight: { value: { base: '#F2F0EA', _dark: '#1A202C' } },
     fadedParchment: { value: { base: '#E8DCC8', _dark: '#2A4A6B' } },
-    parchmentDark: { value: { base: '#EDE5D2', _dark: '#2D3748' } },
+    parchmentDark: { value: { base: '#EDE5D2', _dark: '#1A202C' } },
 
     // Dark background optimized
     brightGold: { value: '#FFD700' },

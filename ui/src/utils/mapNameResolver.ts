@@ -78,6 +78,8 @@ export function resolveMapFilename(apiName: string): string[] {
     'TeamIslands': ['rm_team-islands.png', 'rm_team_islands.png', 'team-islands.png'],
     'SaltMarsh': ['rm_salt-marsh.png', 'rm_salt_marsh.png', 'salt-marsh.png'],
     'GhostLake': ['rm_ghost-lake.png', 'rm_ghost_lake.png', 'ghost-lake.png'],
+    'Hillfort': ['rm_hill-fort.png', 'rm_hill_fort.png', 'hill-fort.png'],
+    'MountainRidge': ['rm_mountain-ridge.png', 'rm_mountain_ridge.png', 'mountain-ridge.png'],
     'Scandanavia': ['rm_scandinavia.png', 'rm_scandanavia.png', 'scandinavia.png'], // Note: API has typo
     'Nomad': ['rm_nomad.png', 'nomad.png', 'qs_nomad.png'],
     'Arena': ['rm_arena.png', 'arena.png', 'qs_arena.png'],
