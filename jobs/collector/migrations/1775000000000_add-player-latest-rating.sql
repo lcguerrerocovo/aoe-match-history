@@ -42,59 +42,10 @@ ON CONFLICT (match_type_id) DO UPDATE SET
     leaderboard_id = EXCLUDED.leaderboard_id,
     label = EXCLUDED.label;
 
-WITH ratings AS (
-    SELECT
-        mp.profile_id,
-        rlm.leaderboard_id,
-        mp.new_rating AS rating,
-        mp.match_id AS source_match_id,
-        COALESCE(m.completion_time, m.start_time, TO_TIMESTAMP(0)) AS source_time
-    FROM match_player mp
-    JOIN match m ON m.match_id = mp.match_id
-    JOIN rating_leaderboard_mapping rlm ON rlm.match_type_id = m.match_type_id
-    WHERE mp.new_rating IS NOT NULL
-      AND mp.new_rating > 0
-),
-ranked AS (
-    SELECT
-        profile_id,
-        leaderboard_id,
-        rating,
-        source_match_id,
-        source_time,
-        ROW_NUMBER() OVER (
-            PARTITION BY profile_id, leaderboard_id
-            ORDER BY source_time DESC, source_match_id DESC
-        ) AS rn
-    FROM ratings
-)
-INSERT INTO player_latest_rating (
-    profile_id,
-    leaderboard_id,
-    rating,
-    source_match_id,
-    source_time,
-    updated_at
-)
-SELECT
-    profile_id,
-    leaderboard_id,
-    rating,
-    source_match_id,
-    source_time,
-    NOW()
-FROM ranked
-WHERE rn = 1
-ON CONFLICT (profile_id, leaderboard_id) DO UPDATE SET
-    rating = EXCLUDED.rating,
-    source_match_id = EXCLUDED.source_match_id,
-    source_time = EXCLUDED.source_time,
-    updated_at = NOW()
-WHERE EXCLUDED.source_time > player_latest_rating.source_time
-   OR (
-       EXCLUDED.source_time = player_latest_rating.source_time
-       AND EXCLUDED.source_match_id > player_latest_rating.source_match_id
-   );
+-- Historical backfill is intentionally not part of this deploy migration.
+-- The match_player and match tables are large enough that a full-table backfill
+-- can exceed CI/DB connection limits. The collector populates this table for
+-- newly fetched match histories after the schema and mapping exist.
 
 -- Down Migration
 
