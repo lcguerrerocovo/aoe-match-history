@@ -723,6 +723,12 @@ export function StatsPage() {
         {data && rows.length === 0 && (
           <Text color="brand.inkMuted" fontSize="sm">No data available for this selection.</Text>
         )}
+
+        {data && (
+          <Text fontSize="2xs" color="brand.inkMuted" mt={4} textAlign="center">
+            Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
+          </Text>
+        )}
       </Box>
     </Box>
   );

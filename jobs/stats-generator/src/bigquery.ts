@@ -15,6 +15,8 @@ export interface StatsRow {
   unique_matches: number;
 }
 
+const MAX_ELO_GAP = 200;
+
 const STATS_QUERY = `
 WITH deduped AS (
   SELECT *
@@ -37,7 +39,8 @@ player_results AS (
     END AS patch,
     CAST(JSON_EXTRACT_SCALAR(p, '$.civilization_id') AS INT64) AS civ_id,
     CAST(JSON_EXTRACT_SCALAR(p, '$.resulttype') AS INT64) AS result_type,
-    CAST(JSON_EXTRACT_SCALAR(p, '$.profile_id') AS INT64) AS profile_id
+    CAST(JSON_EXTRACT_SCALAR(p, '$.profile_id') AS INT64) AS profile_id,
+    CAST(JSON_EXTRACT_SCALAR(p, '$.teamid') AS INT64) AS team_id
   FROM deduped m,
     UNNEST(JSON_EXTRACT_ARRAY(m.raw_json, '$.matchhistoryreportresults')) AS p
 ),
@@ -48,6 +51,31 @@ player_ratings AS (
     CAST(JSON_EXTRACT_SCALAR(member, '$.oldrating') AS INT64) AS rating
   FROM deduped m,
     UNNEST(JSON_EXTRACT_ARRAY(m.raw_json, '$.matchhistorymember')) AS member
+),
+-- For 1v1: gap between the two players
+-- For team: gap between average team ELOs
+match_elo_gap AS (
+  SELECT
+    pr.match_id,
+    pr.match_type_id,
+    CASE
+      WHEN pr.match_type_id = 6 THEN
+        MAX(r.rating) - MIN(r.rating)
+      ELSE
+        ABS(
+          AVG(CASE WHEN pr.team_id = 0 THEN r.rating END) -
+          AVG(CASE WHEN pr.team_id = 1 THEN r.rating END)
+        )
+    END AS elo_gap
+  FROM player_results pr
+  JOIN player_ratings r ON pr.match_id = r.match_id AND pr.profile_id = r.profile_id
+  WHERE r.rating > 0
+  GROUP BY pr.match_id, pr.match_type_id
+),
+competitive_matches AS (
+  SELECT match_id
+  FROM match_elo_gap
+  WHERE elo_gap <= @max_elo_gap OR elo_gap IS NULL
 ),
 with_elo AS (
   SELECT
@@ -62,6 +90,8 @@ with_elo AS (
   FROM player_results pr
   LEFT JOIN player_ratings r
     ON pr.match_id = r.match_id AND pr.profile_id = r.profile_id
+  INNER JOIN competitive_matches cm
+    ON pr.match_id = cm.match_id
 )
 SELECT
   patch,
@@ -102,11 +132,13 @@ export async function queryCivStats(
       prev_start: bq.timestamp(prevStart),
       curr_start: bq.timestamp(currStart),
       curr_end: bq.timestamp(currEnd),
+      max_elo_gap: MAX_ELO_GAP,
     },
     types: {
       prev_start: 'TIMESTAMP',
       curr_start: 'TIMESTAMP',
       curr_end: 'TIMESTAMP',
+      max_elo_gap: 'INT64',
     },
   });
 
