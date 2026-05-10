@@ -13,7 +13,7 @@ landing    → /                        → LandingPage
 profile    → /profile_id/:profileId   → App (ProfileHeader, FilterBar, MatchList)
 match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, ApmBreakdownChart)
 live       → /live                    → LivePage (LiveMatchCard, PlayerRow)
-stats      → /stats                   → StatsPage (WinRateChart, PickRateChart)
+stats      → /stats                   → StatsPage (WinRateChart, PickRateChart, InsightsTab, FormationView)
 ```
 
 ## Prod URL Mapping

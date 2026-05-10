@@ -8,7 +8,7 @@ Vite + React 18 + TypeScript + Chakra UI v3.
 - `/profile_id/:profileId` — `App` (match history for a player)
 - `/match/:matchId` — `MatchPage` (single match detail with APM)
 - `/live` — `LivePage` (live matches from observable advertisements)
-- `/stats` — `StatsPage` (civ win rate and pick rate statistics)
+- `/stats` — `StatsPage` (sub-tabs: Win Rates for civ win/pick rate charts, Team Positions for pocket/flank analysis)
 
 When adding or removing routes, update the screenshot tool views in `scripts/take-screenshots.ts`.
 
@@ -68,13 +68,15 @@ LiveMatchCard.tsx                 Shared live match card (used by LivePage + Pro
 ├── PlayerRow                    Player name + civ icon + rating in a live match
 └── LiveMatchCardSkeleton        Skeleton placeholder matching card structure (dark header + diamond + rows)
 
-StatsPage                        Civ statistics page (win rate + pick rate charts)
+StatsPage                        Insights page with tabbed sub-views (Win Rates + Team Positions)
 ├── WinRateChart                 Horizontal bar chart sorted by win rate (40–60% domain, 50% baseline)
 ├── PickRateChart                Horizontal bar chart sorted by pick rate
 ├── CivRowEl                     Single civ row: icon, name, bar, value, delta badge
-├── BalanceChangeIndicator       Popover showing per-civ balance changes from current patch
 ├── DeltaBadge                   Patch-over-patch delta indicator (▲/▼)
-└── CivIcon                      Civ emblem from CDN
+├── CivIcon                      Civ emblem from CDN
+└── InsightsTab                  Team Positions tab — pocket/flank win rates for 3v3/4v4
+    └── FormationView            Diamond-map formation layout with position cards
+        └── CivPositionCard      Single civ card showing win rate, games, Wilson score
 ```
 
 Note: Two `MapCard` components exist — `MatchList/MapCard.tsx` (list view, smaller) and
@@ -149,6 +151,7 @@ Requires dev server running (`npm run dev:all` + Meilisearch tunnel) for dev cap
 - `liveMatchService.ts` — Live matches API client (`getLiveMatches`, `getLiveRatings`, `getLiveMatchForPlayer`)
 - `playerSearchService.ts` — Player search API client (`searchPlayers`)
 - `civStatsService.ts` — Civ stats fetcher (`getCivStats` — loads `civ-stats.json` from `/data/`)
+- `positionStatsService.ts` — Position stats fetcher (`getPositionStats` — loads `position-stats.json` from `/data/`)
 
 ## Key Utils
 
