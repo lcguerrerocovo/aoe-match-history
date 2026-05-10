@@ -283,31 +283,29 @@ export const LiveMatchCard = memo(function LiveMatchCard({
 
       {/* Win probability bar */}
       {winProb && (
-        <Flex px={4} pt={2} pb={1} direction="column" gap={1}>
-          <Flex justify="space-between" align="center">
-            <Text fontSize="2xs" fontFamily="mono" fontWeight="bold" color="brand.inkDark">
-              {winProb[0]}%
-            </Text>
-            <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
+        <Flex px={4} pt={2} pb={1} align="center" gap={2}>
+          <Text fontSize="xs" fontWeight="700" color="brand.inkDark" minW="32px" textAlign="right">
+            {winProb[0]}%
+          </Text>
+          <Flex flex="1" direction="column" align="center" gap="2px">
+            <Flex h="5px" w="100%" borderRadius="full" overflow="hidden">
+              <Box
+                w={`${winProb[0]}%`}
+                bg={winProb[0] >= winProb[1] ? 'brand.bronze' : 'brand.inkLight'}
+                transition="width 0.5s ease"
+              />
+              <Box
+                flex="1"
+                bg={winProb[1] > winProb[0] ? 'brand.bronze' : 'brand.inkLight'}
+              />
+            </Flex>
+            <Text fontSize="2xs" color="brand.inkMuted" fontVariantCaps="small-caps" letterSpacing="wider" fontWeight="600" lineHeight="1">
               Win %
             </Text>
-            <Text fontSize="2xs" fontFamily="mono" fontWeight="bold" color="brand.inkDark">
-              {winProb[1]}%
-            </Text>
           </Flex>
-          <Flex h="6px" borderRadius="full" overflow="hidden" bg="brand.stone">
-            <Box
-              w={`${winProb[0]}%`}
-              bg={winProb[0] >= winProb[1] ? 'brand.bronze' : 'brand.inkLight'}
-              borderRightRadius={winProb[0] === 100 ? 'full' : 'none'}
-              transition="width 0.5s ease"
-            />
-            <Box
-              flex="1"
-              bg={winProb[1] > winProb[0] ? 'brand.bronze' : 'brand.inkLight'}
-              borderLeftRadius={winProb[1] === 100 ? 'full' : 'none'}
-            />
-          </Flex>
+          <Text fontSize="xs" fontWeight="700" color="brand.inkDark" minW="32px" textAlign="left">
+            {winProb[1]}%
+          </Text>
         </Flex>
       )}
 
