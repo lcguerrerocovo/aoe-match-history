@@ -106,9 +106,9 @@ function buildStats(
     team: {} as Record<EloBracket, Record<PatchPeriod, number>>,
   };
 
-  const totalsByMap: Record<MatchCategory, TotalMatchesByMap> = {
-    '1v1': { current: {}, previous: {} },
-    team: { current: {}, previous: {} },
+  const totalsByMap: Record<MatchCategory, Record<EloBracket, TotalMatchesByMap>> = {
+    '1v1': {} as Record<EloBracket, TotalMatchesByMap>,
+    team: {} as Record<EloBracket, TotalMatchesByMap>,
   };
 
   // accumulator[category][eloBracket][civName][patch]
@@ -120,6 +120,8 @@ function buildStats(
   for (const bracket of ELO_BRACKETS) {
     totals['1v1'][bracket] = { current: 0, previous: 0 };
     totals.team[bracket] = { current: 0, previous: 0 };
+    totalsByMap['1v1'][bracket] = { current: {}, previous: {} };
+    totalsByMap.team[bracket] = { current: {}, previous: {} };
     accumulator['1v1'][bracket] = {};
     accumulator.team[bracket] = {};
   }
@@ -159,10 +161,10 @@ function buildStats(
       }
     }
 
-    // totalsByMap only for the 'all' bucket (map filter is independent of ELO)
     if (mapName && (eloBracket !== 'all')) {
-      // Only count from non-'all' rows to avoid double counting
-      totalsByMap[category][patch][mapName] = (totalsByMap[category][patch][mapName] ?? 0) + row.total_picks;
+      for (const bracket of brackets) {
+        totalsByMap[category][bracket][patch][mapName] = (totalsByMap[category][bracket][patch][mapName] ?? 0) + row.total_picks;
+      }
     }
   }
 
@@ -174,9 +176,7 @@ function buildStats(
   for (const category of ['1v1', 'team'] as MatchCategory[]) {
     for (const bracket of ELO_BRACKETS) {
       sections[category][bracket] = { civs: {} };
-      const bracketTotalsByMap = bracket === 'all'
-        ? totalsByMap[category]
-        : { current: {}, previous: {} };
+      const bracketTotalsByMap = totalsByMap[category][bracket];
 
       for (const [civName, patches] of Object.entries(accumulator[category][bracket])) {
         sections[category][bracket].civs[civName] = {
@@ -247,8 +247,8 @@ export async function generateStats(): Promise<void> {
         team: totals.team,
       },
       totalPicksByMap: {
-        '1v1': totalsByMap['1v1'],
-        team: totalsByMap.team,
+        '1v1': totalsByMap['1v1'].all,
+        team: totalsByMap.team.all,
       },
     },
     '1v1': sections['1v1'],
