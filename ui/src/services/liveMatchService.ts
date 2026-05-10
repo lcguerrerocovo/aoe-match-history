@@ -25,13 +25,16 @@ export async function getLiveMatches(): Promise<LiveMatchResult> {
   return { matches, partial };
 }
 
-export async function getLiveRatings(profileIds: number[]): Promise<Map<number, number>> {
+export async function getLiveRatings(profileIds: number[], matchTypeIds?: number[]): Promise<Map<number, number>> {
   if (profileIds.length === 0) return new Map();
+
+  const body: { profile_ids: number[]; match_type_ids?: number[] } = { profile_ids: profileIds };
+  if (matchTypeIds) body.match_type_ids = matchTypeIds;
 
   const response = await fetch(`${API_URL}/live/ratings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ profile_ids: profileIds }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

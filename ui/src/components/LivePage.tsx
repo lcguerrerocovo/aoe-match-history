@@ -208,18 +208,15 @@ export function LivePage() {
       setError(null);
       setIsLoading(false);
 
-      // Fetch all ratings in a single call
-      const seen = new Set<number>();
-      const allProfileIds: number[] = [];
+      // Fetch ratings grouped by match type category (1v1 vs team)
+      const soloIds = new Set<number>();
+      const teamIds = new Set<number>();
       for (const m of data) {
-        for (const p of m.players) {
-          if (!seen.has(p.profile_id)) {
-            seen.add(p.profile_id);
-            allProfileIds.push(p.profile_id);
-          }
-        }
+        const bucket = m.matchtype_id === 6 ? soloIds : teamIds;
+        for (const p of m.players) bucket.add(p.profile_id);
       }
 
+      const allProfileIds = [...new Set([...soloIds, ...teamIds])];
       if (allProfileIds.length > 0) {
         // Prune ratingsRef to only current players to prevent unbounded growth
         const currentPlayers = new Set(allProfileIds);
@@ -230,14 +227,22 @@ export function LivePage() {
         }
         ratingsRef.current = pruned;
 
-        getLiveRatings(allProfileIds).then(ratings => {
-          if (ratings.size === 0) return;
-          ratings.forEach((r, id) => ratingsRef.current.set(id, r));
+        const fetches: Promise<Map<number, number>>[] = [];
+        if (soloIds.size > 0) fetches.push(getLiveRatings([...soloIds], [6]));
+        if (teamIds.size > 0) fetches.push(getLiveRatings([...teamIds], [7, 8, 9]));
+
+        Promise.all(fetches).then(results => {
+          const combined = new Map<number, number>();
+          for (const ratings of results) {
+            ratings.forEach((r, id) => combined.set(id, r));
+          }
+          if (combined.size === 0) return;
+          combined.forEach((r, id) => ratingsRef.current.set(id, r));
           setMatches(prev => prev.map(match => ({
             ...match,
             players: match.players.map(p => ({
               ...p,
-              rating: ratings.get(p.profile_id) ?? p.rating,
+              rating: combined.get(p.profile_id) ?? p.rating,
             })),
           })));
           setRatingsLoaded(true);
