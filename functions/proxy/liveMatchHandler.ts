@@ -456,7 +456,7 @@ export async function handleLiveRatings(queryStringOrBody?: string | { profile_i
         }
     }
 
-    if (profileIds.length === 0 || profileIds.length > 5000) {
+    if (profileIds.length === 0 || profileIds.length > 20000) {
         return {
             data: {},
             headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
