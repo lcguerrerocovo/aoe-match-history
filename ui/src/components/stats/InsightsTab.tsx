@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState, useMemo } from 'react';
 import { getPositionStats } from '../../services/positionStatsService';
 import { FormationView } from './FormationView';
@@ -232,15 +232,43 @@ export function InsightsTab() {
       )}
 
       {data && (
-        <VStack gap={1} mt={4}>
-          <Text fontSize="2xs" color="brand.inkMuted" textAlign="center">
-            Last 6 months — maps with &lt; 1,500 games excluded — civs with &lt; 1% pick rate excluded — maps without fixed positions excluded
+        <Flex
+          mt={6}
+          justify="center"
+          gap={{ base: 3, md: 6 }}
+          flexWrap="wrap"
+          py={3}
+          px={4}
+          borderTop="1px solid"
+          borderColor="brand.inkLight"
+          opacity={0.75}
+        >
+          {[
+            'Last 6 months',
+            'Maps with < 1,500 games excluded',
+            'Civs with < 1% pick rate excluded',
+          ].map((item, i) => (
+            <Text key={i} fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
+              {i > 0 && <Text as="span" color="brand.bronze" mx={0.5}>·</Text>}
+              {item}
+            </Text>
+          ))}
+          <Text fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
+            <Text as="span" color="brand.bronze" mx={0.5}>·</Text>
+            Ranked by 𝑊 (
+            <Link
+              href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="brand.bronze"
+              textDecoration="underline"
+              _hover={{ color: 'brand.redChalk' }}
+            >
+              Wilson score
+            </Link>
+            )
           </Text>
-          <Text fontSize="2xs" color="brand.inkMuted" textAlign="center">
-            Ranked by Wilson score (W) — a statistical lower bound that balances win rate with sample size.
-            A civ with 53% over 5,000 games ranks above 56% over 200 games because the confidence is higher.
-          </Text>
-        </VStack>
+        </Flex>
       )}
     </>
   );

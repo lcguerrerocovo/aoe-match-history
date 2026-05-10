@@ -225,6 +225,7 @@ function BalanceTooltipContent({ changes }: { changes: string[] }) {
 function CivRowEl({
   row, barPct, barColor,
   valueText, deltaValue, rankChange, position,
+  refLinePct, showRefLabel,
 }: {
   row: CivRow;
   barPct: number;
@@ -233,6 +234,8 @@ function CivRowEl({
   deltaValue: number;
   rankChange: number;
   position: number;
+  refLinePct?: number;
+  showRefLabel?: boolean;
 }) {
   const hasChanges = row.balanceChanges && row.balanceChanges.length > 0;
   const [expanded, setExpanded] = useState(false);
@@ -263,7 +266,7 @@ function CivRowEl({
         <CivIcon row={row} />
       </Flex>
 
-      <Box flex={1} h="16px" position="relative" bg={{ base: 'rgba(0,0,0,0.03)', _dark: 'rgba(255,255,255,0.05)' }} borderRadius="2px">
+      <Box flex={1} h="16px" position="relative" overflow="visible" bg={{ base: 'rgba(0,0,0,0.03)', _dark: 'rgba(255,255,255,0.05)' }} borderRadius="2px">
         <Box
           position="absolute"
           left={0}
@@ -274,6 +277,35 @@ function CivRowEl({
           borderRadius="2px"
           transition="width 0.3s ease"
         />
+        {refLinePct != null && (
+          <Box
+            position="absolute"
+            left={`${refLinePct}%`}
+            top={`-${(ROW_H - 16) / 2}px`}
+            bottom={`-${(ROW_H - 16) / 2 + 1}px`}
+            w="1px"
+            zIndex={1}
+            borderLeft="1px dashed"
+            borderColor="brand.inkMuted"
+            opacity={0.4}
+            display={{ base: 'none', md: 'block' }}
+          >
+            {showRefLabel && (
+              <Text
+                position="absolute"
+                top="-14px"
+                left="50%"
+                transform="translateX(-50%)"
+                fontSize="2xs"
+                color="brand.inkMuted"
+                fontWeight="600"
+                whiteSpace="nowrap"
+              >
+                50%
+              </Text>
+            )}
+          </Box>
+        )}
       </Box>
 
       <Text fontSize="xs" fontWeight="800" color="brand.inkDark" w="46px" textAlign="right" flexShrink={0} pl={2}>
@@ -345,39 +377,18 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
 
   return (
     <Box>
-      <Flex justify="space-between" align="baseline" mb={3}>
-        <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontVariantCaps="small-caps" letterSpacing="wide">
-          Win Rate by Civilization
-        </Text>
-        <Text fontSize="2xs" color="brand.inkMuted">50% baseline</Text>
-      </Flex>
+      <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontVariantCaps="small-caps" letterSpacing="wide" mb={3}>
+        Win Rate by Civilization
+      </Text>
 
       <ChartColumnHeaders />
 
       <Box position="relative">
-        {/* 50% reference line — overlays the bar area only.
-            Left fixed: 2px px padding + 24px rank col + 130px label col + 2px px = 158px
-            Right fixed: 46px value + 40px delta + 30px rank = 116px
-            Line left = 158px + (100% - 158px - 116px) * refPct */}
-        <Box
-          position="absolute"
-          top={0}
-          bottom={0}
-          w="1px"
-          zIndex={1}
-          borderLeft="1px dashed"
-          borderColor="brand.inkMuted"
-          opacity={0.5}
-          style={{
-            left: `calc(158px + (100% - 158px - 116px) * ${refPct / 100})`,
-          }}
-          display={{ base: 'none', md: 'block' }}
-        />
-
         <VStack gap="1px" align="stretch">
           {sorted.map((row, i) => {
-            const barPct = ((row.winRate - domainMin) / (domainMax - domainMin)) * 100;
-            const isAbove = row.winRate >= 50;
+            const displayWinRate = Math.round(row.winRate * 10) / 10;
+            const barPct = ((displayWinRate - domainMin) / (domainMax - domainMin)) * 100;
+            const isAbove = displayWinRate >= 50;
 
             return (
               <CivRowEl
@@ -389,6 +400,8 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
                 deltaValue={row.winRateDelta}
                 rankChange={row.winRateRank}
                 position={i + 1}
+                refLinePct={refPct}
+                showRefLabel={i === 0}
               />
             );
           })}
@@ -751,9 +764,19 @@ export function StatsPage() {
             )}
 
             {data && (
-              <Text fontSize="2xs" color="brand.inkMuted" mt={4} textAlign="center">
-                Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
-              </Text>
+              <Flex
+                mt={6}
+                justify="center"
+                py={3}
+                px={4}
+                borderTop="1px solid"
+                borderColor="brand.inkLight"
+                opacity={0.75}
+              >
+                <Text fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
+                  Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
+                </Text>
+              </Flex>
             )}
           </>
         )}

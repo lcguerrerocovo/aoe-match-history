@@ -97,8 +97,8 @@ export function CivPositionCard({
         </Text>
 
         {wilson != null && (
-          <Text fontSize="2xs" color="brand.inkMuted" lineHeight="1.2" opacity={0.7}>
-            W {(wilson * 100).toFixed(1)}%
+          <Text fontSize="2xs" color="brand.inkMuted" lineHeight="1.2" fontStyle="italic">
+            𝑊 {(wilson * 100).toFixed(1)}%
           </Text>
         )}
       </VStack>
