@@ -8,8 +8,8 @@ set -euo pipefail
 #
 # Optional:
 #   BATCH_MATCHES=5000          Number of match rows scanned per batch
-#   START_MATCH_ID=0            Resume point; scans match_id > START_MATCH_ID
-#   END_MATCH_ID=               Optional inclusive upper bound
+#   BEFORE_MATCH_ID=            Resume point; scans match_id < BEFORE_MATCH_ID
+#   MIN_MATCH_ID=0              Optional inclusive lower bound
 #   MAX_BATCHES=                Optional stop after N batches
 #   STATEMENT_TIMEOUT_MS=120000 Per-batch timeout
 #   SLEEP_SECONDS=0.1           Pause between batches
@@ -20,8 +20,8 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 BATCH_MATCHES="${BATCH_MATCHES:-5000}"
-START_MATCH_ID="${START_MATCH_ID:-0}"
-END_MATCH_ID="${END_MATCH_ID:-}"
+BEFORE_MATCH_ID="${BEFORE_MATCH_ID:-}"
+MIN_MATCH_ID="${MIN_MATCH_ID:-0}"
 MAX_BATCHES="${MAX_BATCHES:-}"
 STATEMENT_TIMEOUT_MS="${STATEMENT_TIMEOUT_MS:-120000}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-0.1}"
@@ -46,22 +46,33 @@ require_positive_integer() {
 }
 
 require_positive_integer "BATCH_MATCHES" "$BATCH_MATCHES"
-require_non_negative_integer "START_MATCH_ID" "$START_MATCH_ID"
+require_non_negative_integer "MIN_MATCH_ID" "$MIN_MATCH_ID"
 require_positive_integer "STATEMENT_TIMEOUT_MS" "$STATEMENT_TIMEOUT_MS"
 
-if [[ -n "$END_MATCH_ID" ]]; then
-  require_non_negative_integer "END_MATCH_ID" "$END_MATCH_ID"
+if [[ -n "$BEFORE_MATCH_ID" ]]; then
+  require_positive_integer "BEFORE_MATCH_ID" "$BEFORE_MATCH_ID"
 fi
 
 if [[ -n "$MAX_BATCHES" ]]; then
   require_positive_integer "MAX_BATCHES" "$MAX_BATCHES"
 fi
 
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -qAt -c "
+mapping_count="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -qAt -c "
   SELECT COUNT(*) FROM rating_leaderboard_mapping;
-" >/dev/null
+")"
 
-last_match_id="$START_MATCH_ID"
+if [[ "$mapping_count" == "0" ]]; then
+  echo "rating_leaderboard_mapping has no rows; run migrations first" >&2
+  exit 1
+fi
+
+if [[ -z "$BEFORE_MATCH_ID" ]]; then
+  BEFORE_MATCH_ID="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -qAt -c "
+    SELECT COALESCE(MAX(match_id) + 1, 0)::text FROM match;
+  ")"
+fi
+
+before_match_id="$BEFORE_MATCH_ID"
 batch_number=0
 total_matches=0
 total_rating_rows=0
@@ -70,10 +81,11 @@ total_changed=0
 
 echo "Starting latest ratings backfill"
 echo "  batch_matches=$BATCH_MATCHES"
-echo "  start_match_id=$START_MATCH_ID"
-echo "  end_match_id=${END_MATCH_ID:-none}"
+echo "  before_match_id=$BEFORE_MATCH_ID"
+echo "  min_match_id=$MIN_MATCH_ID"
 echo "  max_batches=${MAX_BATCHES:-none}"
 echo "  statement_timeout_ms=$STATEMENT_TIMEOUT_MS"
+echo "  direction=newest_first"
 
 while true; do
   if [[ -n "$MAX_BATCHES" && "$batch_number" -ge "$MAX_BATCHES" ]]; then
@@ -82,11 +94,6 @@ while true; do
   fi
 
   batch_started_at="$(date +%s)"
-  end_match_id_sql="NULL"
-  if [[ -n "$END_MATCH_ID" ]]; then
-    end_match_id_sql="$END_MATCH_ID"
-  fi
-
   result="$(
     psql "$DATABASE_URL" \
       -v ON_ERROR_STOP=1 \
@@ -98,9 +105,9 @@ while true; do
         WITH batch_matches AS MATERIALIZED (
           SELECT match_id, match_type_id, start_time, completion_time
           FROM match
-          WHERE match_id > ${last_match_id}::bigint
-            AND (${end_match_id_sql}::bigint IS NULL OR match_id <= ${end_match_id_sql}::bigint)
-          ORDER BY match_id
+          WHERE match_id < ${before_match_id}::bigint
+            AND match_id >= ${MIN_MATCH_ID}::bigint
+          ORDER BY match_id DESC
           LIMIT ${BATCH_MATCHES}::int
         ),
         ratings AS MATERIALIZED (
@@ -164,11 +171,11 @@ while true; do
           (SELECT COUNT(*) FROM ratings)::int,
           (SELECT COUNT(*) FROM ranked WHERE rn = 1)::int,
           (SELECT COUNT(*) FROM upserted)::int,
-          COALESCE((SELECT MAX(match_id)::text FROM batch_matches), '${last_match_id}');
+          COALESCE((SELECT MIN(match_id)::text FROM batch_matches), '${before_match_id}');
       "
   )"
 
-  IFS=$'\t' read -r matches_scanned rating_rows_scanned candidate_rows rows_changed new_last_match_id <<< "$result"
+  IFS=$'\t' read -r matches_scanned rating_rows_scanned candidate_rows rows_changed next_before_match_id <<< "$result"
 
   if [[ "$matches_scanned" == "0" ]]; then
     echo "No more matches to scan. Backfill complete."
@@ -180,11 +187,11 @@ while true; do
   total_rating_rows=$((total_rating_rows + rating_rows_scanned))
   total_candidates=$((total_candidates + candidate_rows))
   total_changed=$((total_changed + rows_changed))
-  last_match_id="$new_last_match_id"
+  before_match_id="$next_before_match_id"
   batch_elapsed=$(( $(date +%s) - batch_started_at ))
 
-  echo "batch=$batch_number last_match_id=$last_match_id matches=$matches_scanned rating_rows=$rating_rows_scanned candidates=$candidate_rows changed=$rows_changed elapsed_seconds=$batch_elapsed"
-  echo "resume with: START_MATCH_ID=$last_match_id bash jobs/collector/scripts/backfill-latest-ratings.sh"
+  echo "batch=$batch_number next_before_match_id=$before_match_id matches=$matches_scanned rating_rows=$rating_rows_scanned candidates=$candidate_rows changed=$rows_changed elapsed_seconds=$batch_elapsed"
+  echo "resume with: BEFORE_MATCH_ID=$before_match_id bash jobs/collector/scripts/backfill-latest-ratings.sh"
 
   if [[ "$SLEEP_SECONDS" != "0" ]]; then
     sleep "$SLEEP_SECONDS"
@@ -197,4 +204,4 @@ echo "  matches_scanned=$total_matches"
 echo "  rating_rows_scanned=$total_rating_rows"
 echo "  candidate_rows=$total_candidates"
 echo "  rows_changed=$total_changed"
-echo "  resume_from_match_id=$last_match_id"
+echo "  resume_before_match_id=$before_match_id"
