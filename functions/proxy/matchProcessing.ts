@@ -1,5 +1,6 @@
 import { decodeOptions, decodeSlotInfo } from './decoders';
 import { log } from './config';
+import { normalizeMapDisplayName, resolveMapFromMappings } from './mapNames';
 import type { RawMatch, RawProfile, ProcessedMatch, ProcessedPlayer, DecodedOptions, IdNameMap, ResolveMapInput, ResolvedMap } from './types';
 
 interface VersionEntry {
@@ -107,11 +108,10 @@ export async function getMapMap(): Promise<IdNameMap> {
     mapMap = {};
     for (const [mapName, versions] of Object.entries(mappings.maps.aoe2)) {
       if (typeof versions === 'object' && versions !== null) {
-        const versionNumbers = Object.keys(versions).map(Number);
-        const latestVersion = Math.max(...versionNumbers);
-        const mapId = versions[latestVersion.toString()];
-        if (mapId !== undefined) {
-          mapMap[mapId.toString()] = mapName;
+        for (const mapId of Object.values(versions)) {
+          if (mapId !== undefined && mapId >= 0) {
+            mapMap[mapId.toString()] = normalizeMapDisplayName(mapName);
+          }
         }
       }
     }
@@ -178,13 +178,11 @@ export function detectWinningTeams(teams: ProcessedPlayer[][]): { winningTeam: n
 
 // Resolve map ID and friendly name from various sources
 export function resolveMap(currentMapMap: IdNameMap, { options = null, settings = null, mapId = null, rawName = '' }: ResolveMapInput): ResolvedMap {
-  const candidate = options?.['10'] || settings?.['10'] || mapId;
-  const idStr = candidate?.toString?.();
-  const name = idStr && currentMapMap[idStr] ? currentMapMap[idStr] : rawName;
-  if (!name && idStr) {
-    log.debug({ mapId: idStr, rawMap: rawName }, 'Map ID unresolved');
+  const resolved = resolveMapFromMappings(currentMapMap, { options, settings, mapId });
+  if (resolved.name === 'Unknown' && resolved.id !== null) {
+    log.debug({ mapId: resolved.id, rawMap: rawName }, 'Map ID unresolved');
   }
-  return { id: candidate ? parseInt(String(candidate), 10) : mapId, name };
+  return resolved;
 }
 
 export async function processMatch(match: RawMatch, profiles: RawProfile[]): Promise<ProcessedMatch> {

@@ -1,3 +1,5 @@
+import { normalizeMapDisplayName } from './mapNameResolver';
+
 interface RlMappings {
   civs: {
     aoe2: Record<string, Record<string, number>>;
@@ -47,13 +49,10 @@ export async function getMapMap(): Promise<Record<string, string>> {
     mapMap = {};
     for (const [mapName, versions] of Object.entries(mappings.maps.aoe2)) {
       if (typeof versions === 'object' && versions !== null) {
-        // Get the latest version number
-        const versionNumbers = Object.keys(versions).map(Number);
-        const latestVersion = Math.max(...versionNumbers);
-        // Use the latest version's ID as the key
-        const mapId = versions[latestVersion.toString()];
-        if (mapId !== undefined) {
-          mapMap[mapId.toString()] = mapName;
+        for (const mapId of Object.values(versions)) {
+          if (mapId !== undefined && mapId >= 0) {
+            mapMap[mapId.toString()] = normalizeMapDisplayName(mapName);
+          }
         }
       }
     }
@@ -93,4 +92,4 @@ export function calculateWinRate(wins: number, losses: number): string {
 export function calculatePercentile(rank: number, rankTotal: number): string {
   if (rank === -1 || rankTotal === 0) return '0.0';
   return (100 - (rank / rankTotal * 100)).toFixed(1);
-} 
+}

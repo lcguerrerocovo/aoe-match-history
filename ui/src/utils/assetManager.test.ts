@@ -123,6 +123,7 @@ describe('assetManager', () => {
       const testCases = [
         { mapName: 'Arabia', expected: 'rm_arabia.png' },
         { mapName: 'BlackForest', expected: 'rm_black-forest.png' },
+        { mapName: 'Black Forest', expected: 'rm_black-forest.png' },
         { mapName: 'AmazonTunnel', expected: 'rm_amazon_tunnels.png' },
       ];
 
@@ -139,12 +140,12 @@ describe('assetManager', () => {
 
     it('should handle map names with .rms extensions', () => {
       const url = assetManager.getMapImage('rm_enclosed.rms');
-      expect(url).toContain('maps/rm_rm_enclosed.png');
+      expect(url).toContain('maps/rm_enclosed.png');
     });
 
     it('should handle map names with .rms2 extensions', () => {
       const url = assetManager.getMapImage('rm_goldenpit.rms2');
-      expect(url).toContain('maps/rm_rm_goldenpit.png');
+      expect(url).toContain('maps/rm_goldenpit.png');
     });
 
     it('should return generic map for empty/invalid names', () => {
@@ -171,4 +172,4 @@ describe('assetManager', () => {
       expect(url).toMatch(/^(https:\/\/aoe2\.site\/assets\/civ_icons\/aztecs\.png|\/src\/assets\/civ_icons\/aztecs\.png)$/);
     });
   });
-}); 
+});

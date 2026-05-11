@@ -4,16 +4,44 @@ import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
-import type { FilterOptions } from './services/matchService';
+import type { FilterOptions, FullMatchHistoryResponse } from './services/matchService';
 import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
 import { useParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
 import { groupMatchesBySession, searchMatches, createFlatMatchGroup, sortMatchesByStart, sortMatchGroupsByDate } from './utils/matchUtils';
+import { normalizeMapDisplayName } from './utils/mapNameResolver';
 import TopBar from './components/TopBar';
 import { WatermarkTiled } from './components/Watermark';
 import { CornerFlourishes } from './components/CornerFlourishes';
 import { ProfileLiveMatch } from './components/ProfileLiveMatch';
+
+function mergeMapCounts(maps: Map[]): Map[] {
+  return Array.from(
+    maps.reduce((acc, { name, count }) => {
+      const normalizedName = normalizeMapDisplayName(name);
+      acc.set(normalizedName, (acc.get(normalizedName) || 0) + count);
+      return acc;
+    }, new globalThis.Map<string, number>())
+  )
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+function normalizeFilterOptions(filterOptions?: FilterOptions): FilterOptions | undefined {
+  if (!filterOptions) return undefined;
+  return {
+    ...filterOptions,
+    maps: mergeMapCounts(filterOptions.maps),
+  };
+}
+
+function normalizeMatches(matches: Match[]): Match[] {
+  return matches.map(match => ({
+    ...match,
+    map: normalizeMapDisplayName(match.map),
+  }));
+}
 
 function App() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -21,7 +49,7 @@ function App() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [matchTypes, setMatchTypes] = useState<MatchType[]>([]);
   const [openDates, setOpenDates] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string, country?: string, clanlist_name?: string } | null>(null);
   const [stats, setStats] = useState<PersonalStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +67,8 @@ function App() {
   const layout = useLayoutConfig();
 
   // Track whether server-side filters are active (map or matchType selected)
-  const hasServerFilters = !!(selectedMap || selectedMatchType);
+  const hasActiveFilters = !!(selectedMap || selectedMatchType);
+  const hasServerFilters = !!serverFilterOptions && hasActiveFilters;
 
   // Ref to look up matchType ids (comma-separated) from name using server filter options
   const matchTypeIdMapRef = useRef<Record<string, string>>({});
@@ -62,37 +91,49 @@ function App() {
     setSortDirection('desc');
     setNextCursor(null);
     setServerFilterOptions(null);
+    setProfile(null);
+    setStats(null);
   }, [profileId]);
 
-  const updateMatches = useCallback(async () => {
+  const applyMatchHistoryResult = useCallback((matchResult: FullMatchHistoryResponse) => {
+    setAllMatches(normalizeMatches(matchResult.matches));
+    setHasMore(matchResult.hasMore);
+    setNextCursor(matchResult.nextCursor || null);
+
+    const filterOptions = normalizeFilterOptions(matchResult.filterOptions);
+    if (filterOptions) {
+      setServerFilterOptions(filterOptions);
+    }
+  }, []);
+
+  const fetchInitialMatchHistory = useCallback(async () => {
     if (!profileId) return;
-    setIsLoading(true);
+
     setCurrentPage(1);
     setNextCursor(null);
     setHasMore(false);
+
+    const matchResult = await getFullMatchHistory(profileId, { limit: 50 }).catch(() =>
+      getMatches(profileId).then(data => ({
+        matches: data.matches,
+        hasMore: false,
+        nextCursor: undefined,
+        filterOptions: undefined,
+      }))
+    );
+
+    applyMatchHistoryResult(matchResult);
+    return matchResult;
+  }, [profileId, applyMatchHistoryResult]);
+
+  const updateMatches = useCallback(async () => {
+    if (!profileId) return;
+    setIsProfileLoading(true);
     try {
-      // Try full endpoint first, fall back to legacy if it fails
-      const [matchResult, statsData] = await Promise.all([
-        getFullMatchHistory(profileId, { limit: 50 }).catch(() =>
-          getMatches(profileId).then(data => ({
-            matches: data.matches,
-            hasMore: false,
-            nextCursor: undefined as string | undefined,
-            filterOptions: undefined as FilterOptions | undefined,
-          }))
-        ),
+      const [, statsData] = await Promise.all([
+        fetchInitialMatchHistory(),
         getPersonalStats(profileId)
       ]);
-
-      // Store all matches for filtering
-      setAllMatches(matchResult.matches);
-      setHasMore(matchResult.hasMore);
-      setNextCursor(matchResult.nextCursor || null);
-
-      // Store server filter options if provided
-      if (matchResult.filterOptions) {
-        setServerFilterOptions(matchResult.filterOptions);
-      }
 
       // Get Steam avatar if available
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
@@ -115,9 +156,9 @@ function App() {
       setStats(statsData);
       setOpenDates([]); // Reset accordion state when profile changes
     } finally {
-      setIsLoading(false);
+      setIsProfileLoading(false);
     }
-  }, [profileId]);
+  }, [profileId, fetchInitialMatchHistory]);
 
   const fetchWithServerFilters = useCallback(async (cursor?: string | null) => {
     if (!profileId) return;
@@ -142,7 +183,7 @@ function App() {
         // Cursor-based load more with server filters
         const result = await fetchWithServerFilters(nextCursor);
         if (result) {
-          setAllMatches(prev => [...prev, ...result.matches]);
+          setAllMatches(prev => [...prev, ...normalizeMatches(result.matches)]);
           setHasMore(result.hasMore);
           setNextCursor(result.nextCursor || null);
         }
@@ -152,14 +193,14 @@ function App() {
           limit: 50,
           cursor: nextCursor,
         });
-        setAllMatches(prev => [...prev, ...result.matches]);
+        setAllMatches(prev => [...prev, ...normalizeMatches(result.matches)]);
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor || null);
       } else {
         // Legacy page-based fallback
         const nextPage = currentPage + 1;
         const result = await getFullMatchHistory(profileId, nextPage, 50);
-        setAllMatches(prev => [...prev, ...result.matches]);
+        setAllMatches(prev => [...prev, ...normalizeMatches(result.matches)]);
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor || null);
         setCurrentPage(nextPage);
@@ -180,24 +221,21 @@ function App() {
 
     if (hasServerFilters) {
       // Re-fetch from server with filters
-      setIsLoading(true);
       setAllMatches([]);
       setNextCursor(null);
       setHasMore(false);
       fetchWithServerFilters().then(result => {
         if (result) {
-          setAllMatches(result.matches);
+          setAllMatches(normalizeMatches(result.matches));
           setHasMore(result.hasMore);
           setNextCursor(result.nextCursor || null);
         }
       }).catch(() => {
         // Silently fail
-      }).finally(() => {
-        setIsLoading(false);
       });
     } else {
-      // Filters cleared — re-fetch initial data
-      updateMatches();
+      // Filters cleared — re-fetch unfiltered match history only. Profile/stats stay stable.
+      fetchInitialMatchHistory();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMap, selectedMatchType]);
@@ -210,6 +248,14 @@ function App() {
     // Apply search filter (always client-side)
     if (searchTerm.trim()) {
       filtered = searchMatches(filtered, searchTerm);
+    }
+
+    if (!serverFilterOptions && selectedMap) {
+      filtered = filtered.filter(match => normalizeMapDisplayName(match.map) === selectedMap);
+    }
+
+    if (!serverFilterOptions && selectedMatchType) {
+      filtered = filtered.filter(match => (match.diplomacy?.type || 'Unknown') === selectedMatchType);
     }
 
     // When searching by text OR filtering by map/match type, create flat groups (no date accordion)
@@ -241,14 +287,7 @@ function App() {
   }, [profileId, updateMatches]);
 
   const getMapsWithCounts = (matches: Match[]): Map[] => {
-    return Array.from(
-      matches.reduce((acc, match) => {
-        acc.set(match.map, (acc.get(match.map) || 0) + 1);
-        return acc;
-      }, new Map<string, number>())
-    )
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
+    return mergeMapCounts(matches.map(match => ({ name: match.map, count: 1 })));
   };
 
   const getMatchTypesWithCounts = (matches: Match[]): MatchType[] => {
@@ -266,18 +305,16 @@ function App() {
   const handleMapFilter = (map: string) => {
     setSelectedMap(map);
     // Clear immediately to prevent flash of unfiltered content; effect handles full reset + fetch
-    if (map) {
+    if (serverFilterOptions && map) {
       setAllMatches([]);
-      setIsLoading(true);
     }
   };
 
   const handleMatchTypeFilter = (matchType: string) => {
     setSelectedMatchType(matchType);
     // Clear immediately to prevent flash of unfiltered content; effect handles full reset + fetch
-    if (matchType) {
+    if (serverFilterOptions && matchType) {
       setAllMatches([]);
-      setIsLoading(true);
     }
   };
 
@@ -294,7 +331,6 @@ function App() {
 
     if (hasServerFilters) {
       // Re-fetch from server with new sort direction
-      setIsLoading(true);
       setAllMatches([]);
       setNextCursor(null);
       setHasMore(false);
@@ -305,13 +341,11 @@ function App() {
         matchType: matchTypeId,
         sort: direction,
       }).then(result => {
-        setAllMatches(result.matches);
+        setAllMatches(normalizeMatches(result.matches));
         setHasMore(result.hasMore);
         setNextCursor(result.nextCursor || null);
       }).catch(() => {
         // Silently fail
-      }).finally(() => {
-        setIsLoading(false);
       });
       return;
     }
@@ -356,7 +390,7 @@ function App() {
           <WatermarkTiled />
           {profileId &&
             <Box w="100%">
-              <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isLoading} />
+              <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isProfileLoading} />
               <Box
                 w={layout.matchList.width}
                 maxW={layout.matchList.maxWidth}

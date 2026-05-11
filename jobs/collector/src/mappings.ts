@@ -1,4 +1,5 @@
 import pino from 'pino';
+import { normalizeMapDisplayName } from './mapNames.js';
 import type { IdNameMap } from './types.js';
 
 const log = pino({ name: 'match-collector' });
@@ -116,11 +117,10 @@ export async function getMapMap(): Promise<IdNameMap> {
     mapMap = {};
     for (const [mapName, versions] of Object.entries(mappings.maps.aoe2)) {
       if (typeof versions === 'object' && versions !== null) {
-        const versionNumbers = Object.keys(versions).map(Number);
-        const latestVersion = Math.max(...versionNumbers);
-        const mapId = versions[latestVersion.toString()];
-        if (mapId !== undefined) {
-          mapMap[mapId.toString()] = mapName;
+        for (const mapId of Object.values(versions)) {
+          if (mapId !== undefined && mapId >= 0) {
+            mapMap[mapId.toString()] = normalizeMapDisplayName(mapName);
+          }
         }
       }
     }

@@ -153,4 +153,47 @@ describe('App Filter Dropdown Counts', () => {
     cy.get('option').contains('RM 1v1 (25)').should('exist');
     cy.get('option').contains('RM Team (15)').should('exist');
   });
+
+  it('should keep the profile header stable while applying match filters', () => {
+    let personalStatsCalls = 0;
+
+    cy.intercept('GET', /match-history\/12345$/, { statusCode: 200, body: { matches: [], name: 'TestPlayer' } });
+    cy.intercept('GET', /match-history\/12345\/full/, (req) => {
+      const url = new URL(req.url);
+      const headers = { 'content-type': 'application/json' };
+      if (url.searchParams.get('matchType')) {
+        req.reply({ statusCode: 200, delay: 500, body: filteredResponse, headers });
+      } else {
+        req.reply({ statusCode: 200, body: fullMatchHistoryResponse, headers });
+      }
+    }).as('fullHistory');
+    cy.intercept('GET', /personal-stats/, (req) => {
+      personalStatsCalls += 1;
+      req.reply({
+        statusCode: 200,
+        body: {
+          statGroups: [{ members: [{ profile_id: 12345, alias: 'StableProfile' }] }],
+          leaderboardStats: [],
+        },
+      });
+    }).as('personalStats');
+
+    renderApp();
+    cy.wait('@fullHistory');
+    cy.wait('@personalStats');
+
+    cy.contains('StableProfile').should('be.visible');
+
+    cy.get('select').last().select('RM 1v1');
+
+    cy.contains('StableProfile').should('be.visible');
+    cy.then(() => {
+      expect(personalStatsCalls).to.eq(1);
+    });
+
+    cy.wait('@fullHistory');
+    cy.then(() => {
+      expect(personalStatsCalls).to.eq(1);
+    });
+  });
 });

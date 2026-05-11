@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import { log } from './config';
-import { groupPlayersIntoTeams, detectWinningTeams, getGameType } from './matchProcessing';
+import { groupPlayersIntoTeams, detectWinningTeams, getGameType, getMapMap } from './matchProcessing';
+import { getMapIdsForDisplayName, normalizeKnownMapOptions, resolveMapNameFromRow } from './mapNames';
 import type { ProcessedMatch, ProcessedPlayer } from './types';
 
 interface MatchRow {
@@ -54,13 +55,14 @@ export async function queryFilterOptions(
   pool: pg.Pool,
   profileId: string,
 ): Promise<FilterOptions> {
-  const [mapsResult, matchTypesResult] = await Promise.all([
-    pool.query<{ map_name: string; count: string }>(
-      `SELECT m.map_name, COUNT(*)::text AS count
+  const [mapMap, mapsResult, matchTypesResult] = await Promise.all([
+    getMapMap(),
+    pool.query<{ map_id: number | null; count: string }>(
+      `SELECT m.map_id, COUNT(*)::text AS count
        FROM match_player mp
        JOIN match m ON m.match_id = mp.match_id
-       WHERE mp.profile_id = $1 AND m.map_name IS NOT NULL
-       GROUP BY m.map_name
+       WHERE mp.profile_id = $1 AND m.map_id IS NOT NULL
+       GROUP BY m.map_id
        ORDER BY COUNT(*) DESC`,
       [profileId],
     ),
@@ -75,10 +77,7 @@ export async function queryFilterOptions(
     ),
   ]);
 
-  const maps = mapsResult.rows.map(r => ({
-    name: r.map_name,
-    count: parseInt(r.count, 10),
-  }));
+  const maps = normalizeKnownMapOptions(mapsResult.rows, mapMap);
 
   // Merge match type IDs that share the same display name (e.g. IDs 7,8,9 → "RM Team")
   const matchTypesByName = new Map<string, { ids: number[]; count: number }>();
@@ -125,8 +124,13 @@ export async function queryMatchHistory(
   let paramIndex = 2;
 
   if (mapName) {
-    conditions.push(`m.map_name = $${paramIndex}`);
-    params.push(mapName);
+    const mapMap = await getMapMap();
+    const mapIds = getMapIdsForDisplayName(mapMap, mapName);
+    if (mapIds.length === 0) {
+      return { matches: [], hasMore: false };
+    }
+    conditions.push(`m.map_id = ANY($${paramIndex})`);
+    params.push(mapIds);
     paramIndex++;
   }
 
@@ -185,7 +189,8 @@ export async function queryMatchHistory(
   }
 
   // Step 2: Get full match + player data for those match IDs
-  const [matchesResult, playersResult] = await Promise.all([
+  const [mapMap, matchesResult, playersResult] = await Promise.all([
+    getMapMap(),
     pool.query<MatchRow>(
       `SELECT match_id, map_id, map_name, match_type_id, start_time,
               completion_time, duration, description, max_players, winning_team
@@ -251,7 +256,7 @@ export async function queryMatchHistory(
         type: getGameType(matchTypeIdVal) || 'Unknown',
         team_size: (match.max_players ?? 0).toString(),
       },
-      map: match.map_name || 'Unknown',
+      map: resolveMapNameFromRow(mapMap, match.map_id),
       duration: match.duration ?? 0,
       teams,
       players,
@@ -280,7 +285,8 @@ export async function querySingleMatch(
   pool: pg.Pool,
   matchId: string,
 ): Promise<ProcessedMatch | null> {
-  const [matchResult, playersResult] = await Promise.all([
+  const [mapMap, matchResult, playersResult] = await Promise.all([
+    getMapMap(),
     pool.query<MatchRow>(
       `SELECT match_id, map_id, map_name, match_type_id, start_time,
               completion_time, duration, description, max_players, winning_team
@@ -338,7 +344,7 @@ export async function querySingleMatch(
       type: getGameType(matchTypeId) || 'Unknown',
       team_size: (match.max_players ?? 0).toString(),
     },
-    map: match.map_name || 'Unknown',
+    map: resolveMapNameFromRow(mapMap, match.map_id),
     duration: match.duration ?? 0,
     teams,
     players,

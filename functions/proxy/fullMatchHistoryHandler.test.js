@@ -47,6 +47,7 @@ jest.mock('./matchProcessing', () => ({
     const types = { 6: 'RM 1v1', 7: 'RM Team', 8: 'RM Team', 9: 'RM Team' };
     return types[id] || null;
   }),
+  getMapMap: jest.fn(() => Promise.resolve({ '1': 'Arabia', '2': 'Arena', '3': 'BlackForest' })),
 }));
 
 const { processMatch } = require('./matchProcessing');
@@ -100,7 +101,7 @@ function makeProcessedMatch(id, startTime, overrides = {}) {
 function makeDbMatchRows(matches) {
   return matches.map(m => ({
     match_id: m.id.toString(),
-    map_id: 1,
+    map_id: m.mapId ?? 1,
     map_name: m.mapName || 'Arabia',
     match_type_id: m.matchTypeId || 6,
     start_time: new Date(m.startTime * 1000),
@@ -164,7 +165,7 @@ function setupSmartDbMock({
     const sqlStr = typeof sql === 'string' ? sql : '';
 
     // queryFilterOptions: map counts
-    if (sqlStr.includes('GROUP BY m.map_name')) {
+    if (sqlStr.includes('GROUP BY m.map_id')) {
       return Promise.resolve({ rows: filterMaps });
     }
     // queryFilterOptions: match type counts
@@ -246,7 +247,7 @@ describe('handleFullMatchHistory', () => {
       ];
       setupSmartDbMock({
         matchData: dbMatches,
-        filterMaps: [{ map_name: 'Arabia', count: '3' }],
+        filterMaps: [{ map_id: 1, count: '3' }],
         filterMatchTypes: [{ match_type_id: 6, count: '3' }],
       });
 
@@ -267,7 +268,7 @@ describe('handleFullMatchHistory', () => {
       ];
       setupSmartDbMock({
         matchData: dbMatches,
-        filterMaps: [{ map_name: 'Arabia', count: '2' }],
+        filterMaps: [{ map_id: 1, count: '2' }],
         filterMatchTypes: [{ match_type_id: 6, count: '2' }],
       });
 
@@ -293,7 +294,7 @@ describe('handleFullMatchHistory', () => {
       setupRelicApi([]);
       setupSmartDbMock({
         matchData: [],
-        filterMaps: [{ map_name: 'Arabia', count: '10' }, { map_name: 'Arena', count: '5' }],
+        filterMaps: [{ map_id: 1, count: '10' }, { map_id: 2, count: '5' }],
         filterMatchTypes: [{ match_type_id: 6, count: '10' }, { match_type_id: 7, count: '5' }],
       });
 
@@ -429,8 +430,8 @@ describe('handleFullMatchHistory', () => {
       mockGetMatchDbPool.mockReturnValue(mockPool);
 
       setupSmartDbMock({
-        matchData: [{ id: 600, startTime: 1700000000, mapName: 'Arena' }],
-        filterMaps: [{ map_name: 'Arena', count: '5' }],
+        matchData: [{ id: 600, startTime: 1700000000, mapId: 2, mapName: 'Arena' }],
+        filterMaps: [{ map_id: 2, count: '5' }],
         filterMatchTypes: [{ match_type_id: 6, count: '5' }],
       });
 
@@ -444,8 +445,8 @@ describe('handleFullMatchHistory', () => {
         c => typeof c[0] === 'string' && c[0].includes('SELECT mp.match_id')
       );
       expect(matchIdsCall).toBeDefined();
-      expect(matchIdsCall[0]).toContain('map_name');
-      expect(matchIdsCall[1]).toContain('Arena');
+      expect(matchIdsCall[0]).toContain('map_id');
+      expect(matchIdsCall[1]).toContainEqual([2]);
     });
 
     it('passes matchType filter to DB query', async () => {
@@ -474,7 +475,7 @@ describe('handleFullMatchHistory', () => {
 
       setupSmartDbMock({
         matchData: [{ id: 800, startTime: 1700000000, mapName: 'Arabia', matchTypeId: 6 }],
-        filterMaps: [{ map_name: 'Arabia', count: '2' }],
+        filterMaps: [{ map_id: 1, count: '2' }],
         filterMatchTypes: [{ match_type_id: 6, count: '2' }],
       });
 
@@ -486,7 +487,7 @@ describe('handleFullMatchHistory', () => {
       const matchIdsCall = mockPool.query.mock.calls.find(
         c => typeof c[0] === 'string' && c[0].includes('SELECT mp.match_id')
       );
-      expect(matchIdsCall[0]).toContain('map_name');
+      expect(matchIdsCall[0]).toContain('map_id');
       expect(matchIdsCall[0]).toContain('match_type_id');
     });
 
@@ -495,7 +496,7 @@ describe('handleFullMatchHistory', () => {
 
       setupSmartDbMock({
         matchData: [{ id: 900, startTime: 1700000000, mapName: 'Arabia' }],
-        filterMaps: [{ map_name: 'Arabia', count: '10' }],
+        filterMaps: [{ map_id: 1, count: '10' }],
         filterMatchTypes: [{ match_type_id: 6, count: '10' }],
       });
 
@@ -535,7 +536,7 @@ describe('handleFullMatchHistory', () => {
 
       setupSmartDbMock({
         matchData: [{ id: 1100, startTime: 1700000000, mapName: 'Arabia' }],
-        filterMaps: [{ map_name: 'Arabia', count: '1' }],
+        filterMaps: [{ map_id: 1, count: '1' }],
         filterMatchTypes: [],
       });
 

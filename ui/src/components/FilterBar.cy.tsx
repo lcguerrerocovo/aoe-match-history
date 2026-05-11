@@ -4,6 +4,7 @@ import { mount } from '@cypress/react';
 import { FilterBar } from './FilterBar';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { mockFilterBarProps } from '../test/mocks';
+import { useState } from 'react';
 
 describe('FilterBar Responsive Layout', () => {
   it('should display all filter elements correctly on different screen sizes', () => {
@@ -151,4 +152,32 @@ describe('FilterBar Responsive Layout', () => {
     cy.get('select').last().select('RM 1v1');
     cy.get('@onMatchTypeChange').should('have.been.calledWith', 'RM 1v1');
   });
-}); 
+
+  it('should clear search without restoring the previous debounced value', () => {
+    cy.clock();
+
+    function ControlledFilterBar() {
+      const [searchValue, setSearchValue] = useState('');
+
+      return (
+        <CustomThemeProvider>
+          <FilterBar
+            {...mockFilterBarProps}
+            searchValue={searchValue}
+            onSearchChange={(value) => setSearchValue(value)}
+            onClearSearch={() => setSearchValue('')}
+          />
+        </CustomThemeProvider>
+      );
+    }
+
+    mount(<ControlledFilterBar />);
+
+    cy.get('input[placeholder="Filter matches..."]').type('arabia');
+    cy.tick(300);
+    cy.get('input').should('have.value', 'arabia');
+
+    cy.contains('×').click();
+    cy.get('input').should('have.value', '');
+  });
+});

@@ -71,10 +71,15 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
   const [sortDirection, setSortDirection] = useState(externalSortDirection);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const debouncedSearch = useDebouncedValue(searchValue, 300);
+  const onSearchChangeRef = useRef(onSearchChange);
 
   useEffect(() => {
-    onSearchChange(debouncedSearch);
-  }, [debouncedSearch, onSearchChange]);
+    onSearchChangeRef.current = onSearchChange;
+  }, [onSearchChange]);
+
+  useEffect(() => {
+    onSearchChangeRef.current(debouncedSearch);
+  }, [debouncedSearch]);
 
   // Sync external values with internal state
   useEffect(() => {
@@ -95,6 +100,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
 
   const handleClear = () => {
     setSearchValue('');
+    setIsSearchFocused(false);
     onClearSearch?.();
   };
 

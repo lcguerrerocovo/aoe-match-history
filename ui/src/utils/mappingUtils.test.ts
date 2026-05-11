@@ -127,6 +127,7 @@ describe('mappingUtils', () => {
           aoe2: {
             'Arabia': { '1': 9 },
             'Arena': { '1': 17 },
+            'BlackForest': { '1': 21, '2': 30 },
           }
         }
       };
@@ -140,6 +141,8 @@ describe('mappingUtils', () => {
 
       expect(result['9']).toBe('Arabia');
       expect(result['17']).toBe('Arena');
+      expect(result['21']).toBe('Black Forest');
+      expect(result['30']).toBe('Black Forest');
     });
 
     it('should return empty object when maps.aoe2 is missing', async () => {
@@ -154,4 +157,4 @@ describe('mappingUtils', () => {
       expect(result).toEqual({});
     });
   });
-}); 
+});

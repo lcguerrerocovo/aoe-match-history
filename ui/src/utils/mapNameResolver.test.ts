@@ -3,7 +3,8 @@ import {
   resolveMapFilename, 
   getMostLikelyMapFilename, 
   getAllPossibleMapFilenames,
-  isMapFilename 
+  isMapFilename,
+  normalizeMapDisplayName
 } from './mapNameResolver';
 
 describe('mapNameResolver', () => {
@@ -45,15 +46,15 @@ describe('mapNameResolver', () => {
 
     it('should strip .rms extension from map names', () => {
       const result = resolveMapFilename('rm_enclosed.rms');
-      expect(result).toContain('rm_rm_enclosed.png');
       expect(result).toContain('rm_enclosed.png');
+      expect(result).not.toContain('rm_rm_enclosed.png');
       expect(result).not.toContain('rm_enclosed.rms.png');
     });
 
     it('should handle .rms2 extensions', () => {
       const result = resolveMapFilename('rm_goldenpit.rms2');
-      expect(result).toContain('rm_rm_goldenpit.png');
       expect(result).toContain('rm_goldenpit.png');
+      expect(result).not.toContain('rm_rm_goldenpit.png');
       expect(result).not.toContain('rm_goldenpit.rms2.png');
     });
   });
@@ -158,4 +159,14 @@ describe('mapNameResolver', () => {
       expect(patterns).toContain('rwm_amazon_tunnel.png');
     });
   });
-}); 
+
+  describe('normalizeMapDisplayName', () => {
+    it('should normalize mapping keys and raw scenario filenames for display', () => {
+      expect(normalizeMapDisplayName('BlackForest')).toBe('Black Forest');
+      expect(normalizeMapDisplayName('AfricanClearing')).toBe('African Clearing');
+      expect(normalizeMapDisplayName('rm_goldenpit.rms2')).toBe('Golden Pit');
+      expect(normalizeMapDisplayName('Gold_Rush.rms')).toBe('Gold Rush');
+      expect(normalizeMapDisplayName('Scandanavia')).toBe('Scandinavia');
+    });
+  });
+});

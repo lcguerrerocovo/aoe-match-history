@@ -35,7 +35,8 @@ const MOCK_MAPPINGS = {
   maps: {
     aoe2: {
       Arabia: { '1': 9, '2': 14 },   // latest version 2 → id 14
-      Arena: { '1': 29 }              // latest version 1 → id 29
+      Arena: { '1': 29 },             // latest version 1 → id 29
+      BlackForest: { '1': 30 }
     }
   }
 };
@@ -145,10 +146,10 @@ describe('getMapMap', () => {
     const map = await getMapMap();
     // Arabia: versions {1:9, 2:14} → latest is 2 → id 14
     expect(map['14']).toBe('Arabia');
+    expect(map['9']).toBe('Arabia');
     // Arena: versions {1:29} → id 29
     expect(map['29']).toBe('Arena');
-    // id 9 should NOT appear
-    expect(map['9']).toBeUndefined();
+    expect(map['30']).toBe('Black Forest');
   });
 
   it('returns {} when mappings has no maps.aoe2', async () => {
@@ -281,22 +282,21 @@ describe('resolveMap', () => {
     expect(result.id).toBe(14);
   });
 
-  it('falls back to rawName when map id is not in mapMap', () => {
+  it('does not treat rawName as canonical when map id is not in mapMap', () => {
     const result = resolveMap(mapMap, { options: { '10': 999 }, rawName: 'Custom Map' });
-    expect(result.name).toBe('Custom Map');
+    expect(result.name).toBe('Unknown');
     expect(result.id).toBe(999);
   });
 
-  it('falls back to rawName when options is null', () => {
+  it('does not treat rawName as canonical when mapId is not in mapMap', () => {
     const result = resolveMap(mapMap, { options: null, rawName: 'CustomMap', mapId: 999 });
-    // mapId 999 is not in mapMap → falls back to rawName
-    expect(result.name).toBe('CustomMap');
+    expect(result.name).toBe('Unknown');
     expect(result.id).toBe(999);
   });
 
   it('handles missing options and missing mapId gracefully', () => {
     const result = resolveMap(mapMap, { rawName: 'SomeMap' });
-    expect(result.name).toBe('SomeMap');
+    expect(result.name).toBe('Unknown');
     expect(result.id).toBeNull();
   });
 });

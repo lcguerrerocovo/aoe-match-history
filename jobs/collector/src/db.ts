@@ -2,6 +2,7 @@ import pg from 'pg';
 import pino from 'pino';
 import { decodeOptions, decodeSlotInfo } from './decoders.js';
 import { buildLatestRatingRows } from './latestRatings.js';
+import { resolveCanonicalMapName } from './mapNames.js';
 import type { RawMatch, RawProfile, IdNameMap, PlayerMetadata } from './types.js';
 
 const { Pool } = pg;
@@ -54,7 +55,7 @@ export function processMatch(
   const options = decodeOptions(match.options);
   const mapIdStr = options['10'];
   const mapId = mapIdStr ? parseInt(mapIdStr, 10) : null;
-  const mapName = mapId !== null ? (mapMap[mapId.toString()] || match.mapname) : match.mapname;
+  const mapName = resolveCanonicalMapName(mapMap, mapId);
 
   let slotInfo: Array<{ 'profileInfo.id': number; metaData?: PlayerMetadata | string | null }> = [];
   try {

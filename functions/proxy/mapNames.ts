@@ -1,14 +1,4 @@
-/**
- * Smart Map Name Resolver
- * 
- * Converts API map names to various CDN filename patterns used by AoE2 assets.
- * Handles different naming conventions automatically without manual mapping.
- */
-
-export interface MapNameMapping {
-  apiName: string;
-  possibleFilenames: string[];
-}
+import type { IdNameMap, ResolveMapInput, ResolvedMap } from './types';
 
 const DISPLAY_OVERRIDES: Record<string, string> = {
   africanclearing: 'African Clearing',
@@ -152,103 +142,62 @@ export function normalizeMapDisplayName(name: string | null | undefined): string
   return titleCaseMapName(spacedName);
 }
 
-/**
- * Convert API map name to various possible CDN filename patterns
- */
-export function resolveMapFilename(apiName: string): string[] {
-  const patterns: string[] = [];
+function parseMapId(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = typeof value === 'number' ? value : parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
-  const cleanName = normalizeMapDisplayName(apiName);
-  const nameUnderscore = cleanName.replace(/\s+/g, '_').toLowerCase();
-  const nameHyphen = cleanName.replace(/\s+/g, '-').toLowerCase();
-  const nameCompact = cleanName.replace(/\s+/g, '').toLowerCase();
-  
-  // Common CDN patterns
-  patterns.push(
-    // Standard rm_ pattern (most common)
-    `rm_${nameUnderscore}.png`,
-    `rm_${nameHyphen}.png`,
-    `rm_${nameCompact}.png`,
-    
-    // Without rm_ prefix
-    `${nameUnderscore}.png`,
-    `${nameHyphen}.png`,
-    `${nameCompact}.png`,
-    
-    // Special cases for certain map types
-    `sm_${nameUnderscore}.png`, // Small maps
-    `sm_${nameHyphen}.png`,
-    `sm_${nameCompact}.png`,
-    
-    // Real world maps
-    `rwm_${nameUnderscore}.png`,
-    `rwm_${nameHyphen}.png`,
-    `rwm_${nameCompact}.png`,
-    
-    // Quick start maps
-    `qs_${nameUnderscore}.png`,
-    `qs_${nameHyphen}.png`,
-    `qs_${nameCompact}.png`
-  );
-  
-  // Handle special cases and common variations
-  const specialCases: Record<string, string[]> = {
-    blackforest: ['rm_black-forest.png', 'rm_black_forest.png', 'black-forest.png'],
-    goldrush: ['rm_gold-rush.png', 'rm_gold_rush.png', 'gold-rush.png'],
-    craterlake: ['rm_crater-lake.png', 'rm_crater_lake.png', 'crater-lake.png'],
-    teamislands: ['rm_team-islands.png', 'rm_team_islands.png', 'team-islands.png'],
-    saltmarsh: ['rm_salt-marsh.png', 'rm_salt_marsh.png', 'salt-marsh.png'],
-    ghostlake: ['rm_ghost-lake.png', 'rm_ghost_lake.png', 'ghost-lake.png'],
-    hillfort: ['rm_hill-fort.png', 'rm_hill_fort.png', 'hill-fort.png'],
-    mountainridge: ['rm_mountain-ridge.png', 'rm_mountain_ridge.png', 'mountain-ridge.png'],
-    fourlakes: ['rm_four-lakes.png', 'rm_four_lakes.png', 'four-lakes.png'],
-    scandinavia: ['rm_scandinavia.png', 'rm_scandanavia.png', 'scandinavia.png'],
-    nomad: ['rm_nomad.png', 'nomad.png', 'qs_nomad.png'],
-    arena: ['rm_arena.png', 'arena.png', 'qs_arena.png'],
-    arabia: ['rm_arabia.png', 'arabia.png', 'qs_arabia.png'],
-    amazontunnel: ['rm_amazon_tunnels.png', 'rm_amazon_tunnel.png', 'amazon_tunnels.png', 'amazon_tunnel.png'],
-    goldenpit: ['rm_goldenpit.png', 'rm_golden_pit.png', 'rm_golden-pit.png', 'goldenpit.png'],
-  };
-  
-  const specialCase = specialCases[mapNameKey(cleanName)];
-  if (specialCase) {
-    patterns.unshift(...specialCase);
+function getCandidateMapId({
+  options = null,
+  settings = null,
+  mapId = null,
+}: Pick<ResolveMapInput, 'options' | 'settings' | 'mapId'>): number | null {
+  return parseMapId(options?.['10'] ?? settings?.['10'] ?? mapId);
+}
+
+export function resolveCanonicalMapName(mapMap: IdNameMap, mapId: string | number | null | undefined): string | null {
+  const resolvedMapId = parseMapId(mapId);
+  if (resolvedMapId === null) return null;
+
+  const mappedName = mapMap[resolvedMapId.toString()];
+  return mappedName ? normalizeMapDisplayName(mappedName) : null;
+}
+
+export function resolveMapFromMappings(mapMap: IdNameMap, input: ResolveMapInput): ResolvedMap {
+  const id = getCandidateMapId(input);
+  const name = resolveCanonicalMapName(mapMap, id) || 'Unknown';
+  return { id, name };
+}
+
+export function getMapIdsForDisplayName(mapMap: IdNameMap, displayName: string): number[] {
+  const normalized = normalizeMapDisplayName(displayName);
+  if (normalized === 'Unknown') return [];
+
+  return Object.entries(mapMap)
+    .filter(([, mappedName]) => normalizeMapDisplayName(mappedName) === normalized)
+    .map(([id]) => parseInt(id, 10))
+    .filter(id => Number.isFinite(id));
+}
+
+export function resolveMapNameFromRow(mapMap: IdNameMap, mapId: number | string | null | undefined): string {
+  return resolveCanonicalMapName(mapMap, mapId) || 'Unknown';
+}
+
+export function normalizeKnownMapOptions(
+  rows: Array<{ map_id: number | string | null; count: string }>,
+  mapMap: IdNameMap,
+): { name: string; count: number }[] {
+  const mapsByName = new Map<string, number>();
+
+  for (const row of rows) {
+    const name = resolveCanonicalMapName(mapMap, row.map_id);
+    if (!name) continue;
+
+    mapsByName.set(name, (mapsByName.get(name) || 0) + parseInt(row.count, 10));
   }
-  
-  // Remove duplicates while preserving order
-  return [...new Set(patterns)];
-}
 
-/**
- * Get the most likely filename for a map (prioritizes common patterns)
- */
-export function getMostLikelyMapFilename(apiName: string): string {
-  // Safety check: return generic map for empty/invalid names
-  if (!apiName || typeof apiName !== 'string' || apiName.trim().length === 0) {
-    return 'cm_generic.png';
-  }
-  
-  const patterns = resolveMapFilename(apiName);
-  
-  // Prioritize rm_ patterns as they're most common
-  const rmPattern = patterns.find(p => p.startsWith('rm_'));
-  if (rmPattern) return rmPattern;
-  
-  // Fall back to first pattern
-  return patterns[0] || `${apiName.toLowerCase()}.png`;
-}
-
-/**
- * Get all possible filenames for a map
- */
-export function getAllPossibleMapFilenames(apiName: string): string[] {
-  return resolveMapFilename(apiName);
-}
-
-/**
- * Check if a filename matches a map name (useful for validation)
- */
-export function isMapFilename(filename: string, apiName: string): boolean {
-  const patterns = resolveMapFilename(apiName);
-  return patterns.some(pattern => pattern === filename);
+  return Array.from(mapsByName.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
