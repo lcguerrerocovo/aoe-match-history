@@ -53,6 +53,7 @@ describe('mapNameResolver', () => {
 
     it('should handle .rms2 extensions', () => {
       const result = resolveMapFilename('rm_goldenpit.rms2');
+      expect(result[0]).toBe('rm_golden-pit.png');
       expect(result).toContain('rm_goldenpit.png');
       expect(result).not.toContain('rm_rm_goldenpit.png');
       expect(result).not.toContain('rm_goldenpit.rms2.png');
@@ -113,9 +114,14 @@ describe('mapNameResolver', () => {
         { apiName: 'GoldRush', expected: 'rm_gold-rush.png' },
         { apiName: 'Nomad', expected: 'rm_nomad.png' },
         { apiName: 'Arena', expected: 'rm_arena.png' },
+        { apiName: 'Glade', expected: 'rm_glade.png' },
+        { apiName: 'Border Dispute', expected: 'rm_border_dispute.png' },
+        { apiName: 'BorderDispute', expected: 'rm_border_dispute.png' },
+        { apiName: 'Mega Random', expected: 'rm_megarandom.png' },
         { apiName: 'TeamIslands', expected: 'rm_team-islands.png' },
         { apiName: 'SaltMarsh', expected: 'rm_salt-marsh.png' },
         { apiName: 'GhostLake', expected: 'rm_ghost-lake.png' },
+        { apiName: 'Golden Pit', expected: 'rm_golden-pit.png' },
         { apiName: 'CraterLake', expected: 'rm_crater-lake.png' },
         { apiName: 'Scandanavia', expected: 'rm_scandinavia.png' }, // Handles API typo
       ];
@@ -164,6 +170,7 @@ describe('mapNameResolver', () => {
     it('should normalize mapping keys and raw scenario filenames for display', () => {
       expect(normalizeMapDisplayName('BlackForest')).toBe('Black Forest');
       expect(normalizeMapDisplayName('AfricanClearing')).toBe('African Clearing');
+      expect(normalizeMapDisplayName('BorderDispute')).toBe('Border Dispute');
       expect(normalizeMapDisplayName('rm_goldenpit.rms2')).toBe('Golden Pit');
       expect(normalizeMapDisplayName('Gold_Rush.rms')).toBe('Gold Rush');
       expect(normalizeMapDisplayName('Scandanavia')).toBe('Scandinavia');

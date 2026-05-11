@@ -1,4 +1,6 @@
 import { decodeOptions, decodeSlotInfo } from './decoders';
+import fs from 'fs/promises';
+import path from 'path';
 import { log } from './config';
 import { normalizeCivDisplayName, resolvePlayerCiv } from './civNames';
 import { normalizeMapDisplayName, resolveMapFromMappings } from './mapNames';
@@ -22,6 +24,7 @@ const LEGACY_VERSIONS: VersionEntry[] = [
   { key: '4', startDate: '2023-10-30T00:00:00Z', startUnix: Math.floor(Date.UTC(2023, 9, 30) / 1000) },
   { key: '5', startDate: '2025-12-02T00:00:00Z', startUnix: Math.floor(Date.UTC(2025, 11, 2) / 1000) },
 ];
+const DEFAULT_MAPPINGS_URL = 'https://storage.googleapis.com/aoe2.site/data/rl_api_mappings.json';
 
 // Module-level caches
 let rlMappings: RlMappings | null = null;
@@ -31,7 +34,15 @@ let mapMap: IdNameMap | null = null;
 
 export async function loadMappings(): Promise<RlMappings> {
   if (!rlMappings) {
-    const response = await fetch('https://aoe2.site/data/rl_api_mappings.json');
+    const localPath = process.env.RL_API_MAPPINGS_PATH;
+    if (localPath) {
+      const resolvedPath = path.resolve(process.cwd(), localPath);
+      const raw = await fs.readFile(resolvedPath, 'utf8');
+      rlMappings = JSON.parse(raw) as RlMappings;
+      return rlMappings;
+    }
+
+    const response = await fetch(process.env.RL_API_MAPPINGS_URL || DEFAULT_MAPPINGS_URL);
     if (!response.ok) {
       throw new Error(`API responded with status ${response.status}`);
     }

@@ -32,7 +32,7 @@ let mapMap: IdNameMap | null = null;
 export async function loadMappings(): Promise<RlMappings> {
   if (!mappingsPromise) {
     mappingsPromise = (async () => {
-      const response = await fetch('https://aoe2.site/data/rl_api_mappings.json');
+      const response = await fetch('https://storage.googleapis.com/aoe2.site/data/rl_api_mappings.json');
       if (!response.ok) {
         mappingsPromise = null;
         throw new Error(`Failed to load mappings: HTTP ${response.status}`);

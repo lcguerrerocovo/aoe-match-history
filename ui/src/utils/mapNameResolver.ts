@@ -17,6 +17,7 @@ const DISPLAY_OVERRIDES: Record<string, string> = {
   amazontunnel: 'Amazon Tunnel',
   battleontheice: 'Battle on the Ice',
   blackforest: 'Black Forest',
+  borderdispute: 'Border Dispute',
   bogislands: 'Bog Islands',
   cityoflakes: 'City of Lakes',
   coastalforest: 'Coastal Forest',
@@ -207,7 +208,8 @@ export function resolveMapFilename(apiName: string): string[] {
     arena: ['rm_arena.png', 'arena.png', 'qs_arena.png'],
     arabia: ['rm_arabia.png', 'arabia.png', 'qs_arabia.png'],
     amazontunnel: ['rm_amazon_tunnels.png', 'rm_amazon_tunnel.png', 'amazon_tunnels.png', 'amazon_tunnel.png'],
-    goldenpit: ['rm_goldenpit.png', 'rm_golden_pit.png', 'rm_golden-pit.png', 'goldenpit.png'],
+    megarandom: ['rm_megarandom.png', 'rm_mega_random.png', 'rm_mega-random.png', 'megarandom.png'],
+    goldenpit: ['rm_golden-pit.png', 'rm_goldenpit.png', 'rm_golden_pit.png', 'golden-pit.png', 'goldenpit.png'],
   };
   
   const specialCase = specialCases[mapNameKey(cleanName)];
@@ -225,6 +227,10 @@ export function resolveMapFilename(apiName: string): string[] {
 export function getMostLikelyMapFilename(apiName: string): string {
   // Safety check: return generic map for empty/invalid names
   if (!apiName || typeof apiName !== 'string' || apiName.trim().length === 0) {
+    return 'cm_generic.png';
+  }
+
+  if (apiName.trim().toLowerCase() === 'unknown') {
     return 'cm_generic.png';
   }
   

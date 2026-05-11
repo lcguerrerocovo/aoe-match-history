@@ -136,6 +136,10 @@ describe('assetManager', () => {
         { mapName: 'BlackForest', expected: 'rm_black-forest.png' },
         { mapName: 'Black Forest', expected: 'rm_black-forest.png' },
         { mapName: 'AmazonTunnel', expected: 'rm_amazon_tunnels.png' },
+        { mapName: 'Glade', expected: 'rm_glade.png' },
+        { mapName: 'Border Dispute', expected: 'rm_border_dispute.png' },
+        { mapName: 'BorderDispute', expected: 'rm_border_dispute.png' },
+        { mapName: 'Mega Random', expected: 'rm_megarandom.png' },
       ];
 
       testCases.forEach(({ mapName, expected }) => {
@@ -156,11 +160,11 @@ describe('assetManager', () => {
 
     it('should handle map names with .rms2 extensions', () => {
       const url = assetManager.getMapImage('rm_goldenpit.rms2');
-      expect(url).toContain('maps/rm_goldenpit.png');
+      expect(url).toContain('maps/rm_golden-pit.png');
     });
 
     it('should return generic map for empty/invalid names', () => {
-      const testCases = ['', '   ', null as any, undefined as any];
+      const testCases = ['', '   ', 'Unknown', null as any, undefined as any];
       
       testCases.forEach(invalidName => {
         const url = assetManager.getMapImage(invalidName);
