@@ -54,6 +54,7 @@ pytest test_main.py -v           # Run APM tests
 ```bash
 pnpm run build           # Compile TypeScript to dist/
 pnpm start               # Run compiled output
+pnpm test                # Build + run tests
 pnpm run dev             # Watch mode (recompile on change)
 pnpm run migrate:up      # Apply database migrations (requires DATABASE_URL)
 pnpm run migrate:down    # Roll back last migration
@@ -125,3 +126,5 @@ See `functions/proxy/CLAUDE.md` for proxy-specific vars. UI uses:
 - Meilisearch version (1.7.3) pinned across 3 files — use `scripts/check-versions.sh` to verify
 - `ui/src/assets/` is gitignored — assets live in GCS bucket, not the repo
 - Relic API uses uint32 sentinel values (`0xFFFFFFFF` = 4294967295) for "unset" fields — these exceed PostgreSQL's signed int32 max. Use `clampInt()` in collector's `db.ts` to convert to null before INSERT.
+- Live match ELO ratings use a materialized `player_latest_rating` table (maintained by collector). The `rating_leaderboard_mapping` table maps `match_type_id` → `leaderboard_id` (e.g., 6→RM 1v1, 7/8/9→RM Team, 26→EW 1v1). Don't query `match_player` for live ratings — use the materialized table.
+- `civ_emblems/` must be synced from GCS for local dev (`gsutil cp gs://aoe2.site/assets/civ_emblems/* ui/src/assets/civ_emblems/`). Icons for Mapuche, Muisca, Tupi sourced from "Better Civ Emblems" mod in CrossOver bottle.

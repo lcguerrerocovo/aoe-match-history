@@ -8,6 +8,7 @@ Cloud Run Job that collects match history data from the Relic API and stores it 
 pnpm install             # Install dependencies (pnpm is canonical — CI uses frozen lockfile)
 pnpm run build           # Compile TypeScript to dist/
 pnpm start               # Run compiled output
+pnpm test                # Build + run tests
 pnpm run dev             # Watch mode (recompile on change)
 ```
 
@@ -40,7 +41,8 @@ docker run -e DATABASE_URL=... match-collector
 | `src/index.ts` | Entry point — wires up DB + Collector, handles errors |
 | `src/collector.ts` | Orchestrator — scan → diff → fetch → store flow |
 | `src/api.ts` | Relic API client — leaderboard scanning, match history fetching |
-| `src/db.ts` | PostgreSQL layer — upsert matches/players, collection state |
+| `src/db.ts` | PostgreSQL layer — upsert matches/players, collection state, upsert latest ratings |
+| `src/latestRatings.ts` | Builds `player_latest_rating` rows from processed matches (extracts valid ratings with match type and timestamp) |
 | `src/raw-archive.ts` | Parquet archiver — buffers raw match JSON, writes to GCS |
 | `src/decoders.ts` | Options/SlotInfo decoding (base64 + zlib), copied from proxy |
 | `src/mappings.ts` | Civ/map ID resolution from CDN mappings file |

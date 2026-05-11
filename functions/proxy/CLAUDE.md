@@ -26,7 +26,7 @@ TypeScript Cloud Functions Framework service. Bridges the UI to Relic API, Steam
 | `decoders.ts` | Options/SlotInfo decoding (base64 + zlib) |
 | `relicAuth.ts` | Steam → Relic authentication flow |
 | `relicPlayerService.ts` | Authenticated Relic API calls |
-| `liveMatchHandler.ts` | Live match handler: two-phase paginated fetch of observable advertisements (2 fast pages returned immediately, up to 10 pages / 2000 matches fetched in background), stale-while-revalidate cache (25s fresh / 60s stale) with request coalescing, match deduplication, per-player rating cache (90s TTL), normalizes to typed `LiveMatch[]` |
+| `liveMatchHandler.ts` | Live match handler: two-phase paginated fetch of observable advertisements (2 fast pages returned immediately, up to 10 pages / 2000 matches fetched in background), stale-while-revalidate cache (25s fresh / 60s stale) with request coalescing, match deduplication, normalizes to typed `LiveMatch[]`. Enriches ratings server-side via `player_latest_rating` table — maps match_type_id → leaderboard_id via `rating_leaderboard_mapping`, then does batch PK lookups per leaderboard. Per-player rating cache (90s TTL) keyed by `profileId:leaderboardId`. |
 | `gameVersion.ts` | Auto-detects AoE2 game build version from Steam RSS feed (used as `appBinaryChecksum`) |
 | `concurrencyLimiter.ts` | Generic async concurrency limiter (queue-based, used for batch operations) |
 | `sessionManager.ts` | Firestore-backed session persistence |
@@ -45,8 +45,8 @@ npm run test:coverage
 
 | Method | Path | Purpose | Cache |
 |--------|------|---------|-------|
-| GET | `/api/live` | Live matches via `findObservableAdvertisements` (authenticated, two-phase paginated: 2 fast pages returned immediately, up to 10 pages fetched in background). Stale-while-revalidate cache (25s fresh / 60s stale) with request coalescing. Returns `X-Partial: 1` header when background pages are still loading. Optional `?profile_ids=` filters to matches containing those players (single page, no cache, includes ELO ratings inline). | 30s |
-| POST | `/api/live/ratings` | ELO ratings lookup from PostgreSQL for given profile IDs. Accepts `{ profile_ids: number[] }` JSON body. Per-player in-memory cache (90s TTL) avoids redundant DB queries. Also accepts GET with `?profile_ids=` query string. | 60s |
+| GET | `/api/live` | Live matches via `findObservableAdvertisements` (authenticated, two-phase paginated: 2 fast pages returned immediately, up to 10 pages fetched in background). Stale-while-revalidate cache (25s fresh / 60s stale) with request coalescing. Returns `X-Partial: 1` header when background pages are still loading. ELO ratings enriched server-side from `player_latest_rating` table (leaderboard-specific — RM 1v1 matches get RM 1v1 ratings, not TG). Optional `?profile_ids=` filters to matches containing those players (single page, no cache). | 30s |
+| POST | `/api/live/ratings` | ELO ratings lookup from `player_latest_rating` table. Accepts `{ profile_ids: number[], match_type_ids?: number[] }` JSON body. Per-player in-memory cache (90s TTL). Note: LivePage no longer calls this — ratings are enriched server-side in `/api/live`. Kept for debug/external use. | 60s |
 | GET | `/api/player-search?name=` | Meilisearch player search (Firestore fallback) | 30 min |
 | GET | `/api/match-history/:profileId` | Processed automatch history | 5 min |
 | GET | `/api/match-history/:profileId/full` | Full match history (Relic + PostgreSQL, cursor-paginated). Query params: `cursor`, `limit`, `map`, `matchType`, `sort` (asc/desc), `page` (legacy). Returns `filterOptions` on first request. | 5 min |
