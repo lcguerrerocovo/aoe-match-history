@@ -1,4 +1,5 @@
 import pino from 'pino';
+import { normalizeCivDisplayName } from './civNames.js';
 import { normalizeMapDisplayName } from './mapNames.js';
 import type { IdNameMap } from './types.js';
 
@@ -84,7 +85,7 @@ async function buildCivMaps(): Promise<Record<string, IdNameMap>> {
       for (const entry of versionEntries) {
         const id = v[entry.key];
         if (id !== undefined && id >= 0) {
-          maps[entry.key][id.toString()] = civName;
+          maps[entry.key][id.toString()] = normalizeCivDisplayName(civName) || civName;
         }
       }
     }

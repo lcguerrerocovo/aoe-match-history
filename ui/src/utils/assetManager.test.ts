@@ -96,7 +96,12 @@ describe('assetManager', () => {
 
     it('should handle empty civ names', () => {
       const url = assetManager.getCivIcon('');
-      expect(url).toContain('civ_icons/.png');
+      expect(url).toContain('civ_icons/unknown.png');
+    });
+
+    it('should not resolve numeric civ IDs in the UI', () => {
+      const url = assetManager.getCivIcon(59);
+      expect(url).toContain('civ_icons/unknown.png');
     });
   });
 
@@ -115,6 +120,12 @@ describe('assetManager', () => {
     it('should NOT map Hindustanis to indians for emblems', () => {
       const url = assetManager.getCivEmblem('Hindustanis');
       expect(url).toContain('civ_emblems/hindustanis.png');
+    });
+
+    it('should support new emblem assets from canonical civ names', () => {
+      expect(assetManager.getCivEmblem('Mapuche')).toContain('civ_emblems/mapuche.png');
+      expect(assetManager.getCivEmblem('Muisca')).toContain('civ_emblems/muisca.png');
+      expect(assetManager.getCivEmblem('Tupi')).toContain('civ_emblems/tupi.png');
     });
   });
 

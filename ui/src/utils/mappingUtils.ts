@@ -1,3 +1,4 @@
+import { normalizeCivDisplayName } from './civNameResolver';
 import { normalizeMapDisplayName } from './mapNameResolver';
 
 interface RlMappings {
@@ -34,7 +35,7 @@ export async function getCivMap(): Promise<Record<string, string>> {
         // Use the latest version's ID as the key
         const civId = versions[latestVersion.toString()];
         if (civId !== undefined) {
-          civMap[civId.toString()] = civName;
+          civMap[civId.toString()] = normalizeCivDisplayName(civName);
         }
       }
     }

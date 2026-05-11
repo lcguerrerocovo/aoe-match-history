@@ -1,5 +1,6 @@
 import { decodeOptions, decodeSlotInfo } from './decoders';
 import { log } from './config';
+import { normalizeCivDisplayName, resolvePlayerCiv } from './civNames';
 import { normalizeMapDisplayName, resolveMapFromMappings } from './mapNames';
 import type { RawMatch, RawProfile, ProcessedMatch, ProcessedPlayer, DecodedOptions, IdNameMap, ResolveMapInput, ResolvedMap } from './types';
 
@@ -79,7 +80,7 @@ async function buildCivMaps(): Promise<Record<string, IdNameMap>> {
       for (const entry of versionEntries) {
         const id = v[entry.key];
         if (id !== undefined && id >= 0) {
-          maps[entry.key][id.toString()] = civName;
+          maps[entry.key][id.toString()] = normalizeCivDisplayName(civName) || civName;
         }
       }
     }
@@ -235,7 +236,7 @@ export async function processMatch(match: RawMatch, profiles: RawProfile[]): Pro
     return {
       name: displayName,
       original_name: originalName,
-      civ: currentCivMap[civId.toString()] || civId,
+      civ: resolvePlayerCiv(currentCivMap, null, civId),
       number: teamId,
       color_id: colorId,
       user_id: result.profile_id,

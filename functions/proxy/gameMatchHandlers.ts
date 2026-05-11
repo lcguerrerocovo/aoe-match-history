@@ -1,4 +1,5 @@
 import { log, getFirestoreClient } from './config';
+import { resolvePlayerCiv } from './civNames';
 import { getCivMapForDate, getMapMap, groupPlayersIntoTeams, resolveMap } from './matchProcessing';
 import { withAuthRetry, getAuthenticatedPlayerService } from './authService';
 import type { HandlerResponse, ProcessedMatch, ProcessedPlayer, SinglePlayerMatch } from './types';
@@ -72,12 +73,13 @@ export async function handleProcessedGameMatchHistory(idsStr: string): Promise<H
       const profileIdStr = (p as Record<string, unknown>)["profileInfo.id"]?.toString() || '';
       const metaData = p.metaData as { civId?: string; colorId?: number; teamId?: string } | null;
       const civId = metaData?.civId ?? null;
+      const parsedCivId = civId !== null ? parseInt(civId, 10) : null;
       const colorId = metaData?.colorId ?? 0;
       const teamIdRaw = metaData?.teamId ?? (p as Record<string, unknown>).teamID ?? 0;
       const teamNumber = parseInt(String(teamIdRaw), 10) + 1;
       return {
         name: aliasMap.get(profileIdStr) || profileIdStr,
-        civ: civMap[civId?.toString?.() ?? ""] || (civId as string | number),
+        civ: resolvePlayerCiv(civMap, null, parsedCivId !== null && Number.isFinite(parsedCivId) ? parsedCivId : null),
         number: teamNumber,
         color_id: colorId,
         user_id: profileIdStr,

@@ -7,6 +7,7 @@
  */
 
 import { getMostLikelyMapFilename } from './mapNameResolver';
+import { getCivAssetFilename } from './civNameResolver';
 
 interface AssetConfig {
   developmentUrl: string;
@@ -54,29 +55,16 @@ class AssetManager {
   /**
    * Get civilization icon URL (mod-style icons for match list)
    */
-  getCivIcon(civName: string): string {
-    const specialCases: Record<string, string> = {
-      'Lac Viet': 'lacviet.png',
-      'Aztec': 'aztecs.png',
-      'Hindustanis': 'indians.png',
-      'Macedonians': 'macedonian.png',
-    };
-
-    const filename = specialCases[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
+  getCivIcon(civName: string | number): string {
+    const filename = getCivAssetFilename(civName, 'icon');
     return this.buildAssetUrl(`civ_icons/${filename}`);
   }
 
   /**
    * Get civilization emblem URL (full heraldic crest for match summary)
    */
-  getCivEmblem(civName: string): string {
-    const specialCases: Record<string, string> = {
-      'Lac Viet': 'lacviet.png',
-      'Aztec': 'aztecs.png',
-      'Macedonians': 'macedonian.png',
-    };
-
-    const filename = specialCases[civName] ?? `${civName.toLowerCase().replace(/\s+/g, '_')}.png`;
+  getCivEmblem(civName: string | number): string {
+    const filename = getCivAssetFilename(civName, 'emblem');
     return this.buildAssetUrl(`civ_emblems/${filename}`);
   }
 

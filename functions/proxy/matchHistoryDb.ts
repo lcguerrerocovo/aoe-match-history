@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import { log } from './config';
-import { groupPlayersIntoTeams, detectWinningTeams, getGameType, getMapMap } from './matchProcessing';
+import { resolvePlayerCiv } from './civNames';
+import { groupPlayersIntoTeams, detectWinningTeams, getGameType, getCivMapForDate, getMapMap } from './matchProcessing';
 import { getMapIdsForDisplayName, normalizeKnownMapOptions, resolveMapNameFromRow } from './mapNames';
 import type { ProcessedMatch, ProcessedPlayer } from './types';
 
@@ -217,13 +218,15 @@ export async function queryMatchHistory(
   }
 
   // Transform to ProcessedMatch[]
-  const matches: ProcessedMatch[] = matchesResult.rows.map(match => {
+  const matches: ProcessedMatch[] = await Promise.all(matchesResult.rows.map(async match => {
     const matchId = match.match_id.toString();
     const playerRows = playersByMatch.get(matchId) || [];
+    const matchTimeUnix = match.start_time ? Math.floor(match.start_time.getTime() / 1000) : 0;
+    const civMap = await getCivMapForDate(matchTimeUnix);
 
     const players: ProcessedPlayer[] = playerRows.map(p => ({
       name: p.player_name || p.profile_id.toString(),
-      civ: p.civilization_name || p.civilization_id || 0,
+      civ: resolvePlayerCiv(civMap, p.civilization_name, p.civilization_id),
       number: p.team_id ?? 0,
       color_id: p.color_id ?? 0,
       user_id: parseInt(p.profile_id, 10),
@@ -263,7 +266,7 @@ export async function queryMatchHistory(
       winning_team: winningTeam,
       winning_teams: winningTeams,
     };
-  });
+  }));
 
   // Sort to match query order
   if (sort === 'asc') {
@@ -308,10 +311,12 @@ export async function querySingleMatch(
 
   const match = matchResult.rows[0];
   const mId = match.match_id.toString();
+  const matchTimeUnix = match.start_time ? Math.floor(match.start_time.getTime() / 1000) : 0;
+  const civMap = await getCivMapForDate(matchTimeUnix);
 
   const players: ProcessedPlayer[] = playersResult.rows.map(p => ({
     name: p.player_name || p.profile_id.toString(),
-    civ: p.civilization_name || p.civilization_id || 0,
+    civ: resolvePlayerCiv(civMap, p.civilization_name, p.civilization_id),
     number: p.team_id ?? 0,
     color_id: p.color_id ?? 0,
     user_id: parseInt(p.profile_id, 10),

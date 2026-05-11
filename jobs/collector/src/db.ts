@@ -1,6 +1,7 @@
 import pg from 'pg';
 import pino from 'pino';
 import { decodeOptions, decodeSlotInfo } from './decoders.js';
+import { resolveCanonicalCivName } from './civNames.js';
 import { buildLatestRatingRows } from './latestRatings.js';
 import { resolveCanonicalMapName } from './mapNames.js';
 import type { RawMatch, RawProfile, IdNameMap, PlayerMetadata } from './types.js';
@@ -73,7 +74,7 @@ export function processMatch(
     const metaData = playerSlot?.metaData as PlayerMetadata | null | undefined;
     const teamId = metaData?.teamId ? parseInt(metaData.teamId) : result.teamid + 1;
     const colorId = metaData?.colorId ?? 0;
-    const civName = civMap[result.civilization_id.toString()] || null;
+    const civName = resolveCanonicalCivName(civMap, result.civilization_id);
     const ratingEntry = match.matchhistorymember?.find(m => m.profile_id === result.profile_id);
     const profile = profiles.find(p => p.profile_id === result.profile_id);
     const matchUrl = match.matchurls?.find(u => u.profile_id === result.profile_id);

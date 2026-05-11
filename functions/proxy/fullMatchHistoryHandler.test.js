@@ -47,6 +47,7 @@ jest.mock('./matchProcessing', () => ({
     const types = { 6: 'RM 1v1', 7: 'RM Team', 8: 'RM Team', 9: 'RM Team' };
     return types[id] || null;
   }),
+  getCivMapForDate: jest.fn(() => Promise.resolve({ '1': 'Britons', '2': 'Franks', '59': 'Mapuche' })),
   getMapMap: jest.fn(() => Promise.resolve({ '1': 'Arabia', '2': 'Arena', '3': 'BlackForest' })),
 }));
 
@@ -118,8 +119,8 @@ function makeDbPlayerRows(matches) {
     {
       match_id: m.id.toString(),
       profile_id: '123',
-      civilization_id: 1,
-      civilization_name: 'Britons',
+      civilization_id: m.firstCivId ?? 1,
+      civilization_name: m.firstCivName === undefined ? 'Britons' : m.firstCivName,
       team_id: 1,
       color_id: 0,
       result_type: 1,
@@ -132,8 +133,8 @@ function makeDbPlayerRows(matches) {
     {
       match_id: m.id.toString(),
       profile_id: '456',
-      civilization_id: 2,
-      civilization_name: 'Franks',
+      civilization_id: m.secondCivId ?? 2,
+      civilization_name: m.secondCivName === undefined ? 'Franks' : m.secondCivName,
       team_id: 2,
       color_id: 1,
       result_type: 2,
@@ -370,6 +371,17 @@ describe('handleFullMatchHistory', () => {
       const result = await handleFullMatchHistory('123', '?page=2&limit=50');
 
       expect(result.data.filterOptions).toBeUndefined();
+    });
+
+    it('resolves DB civilization IDs from versioned civ mappings before stored names', async () => {
+      mockGetMatchDbPool.mockReturnValue(mockPool);
+      setupSmartDbMock({
+        matchData: [{ id: 301, startTime: 1764633600, firstCivId: 59, firstCivName: 'Malians' }],
+      });
+
+      const result = await handleFullMatchHistory('123', '?page=2&limit=50');
+
+      expect(result.data.matches[0].players[0].civ).toBe('Mapuche');
     });
   });
 
