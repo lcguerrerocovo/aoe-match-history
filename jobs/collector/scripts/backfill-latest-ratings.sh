@@ -82,26 +82,26 @@ while true; do
   fi
 
   batch_started_at="$(date +%s)"
+  end_match_id_sql="NULL"
+  if [[ -n "$END_MATCH_ID" ]]; then
+    end_match_id_sql="$END_MATCH_ID"
+  fi
 
   result="$(
     psql "$DATABASE_URL" \
       -v ON_ERROR_STOP=1 \
-      -v statement_timeout_ms="$STATEMENT_TIMEOUT_MS" \
-      -v last_match_id="$last_match_id" \
-      -v batch_matches="$BATCH_MATCHES" \
-      -v end_match_id="$END_MATCH_ID" \
       -qAt \
       -F $'\t' \
       -c "
-        SET statement_timeout = :'statement_timeout_ms';
+        SET statement_timeout = ${STATEMENT_TIMEOUT_MS};
 
         WITH batch_matches AS MATERIALIZED (
           SELECT match_id, match_type_id, start_time, completion_time
           FROM match
-          WHERE match_id > :'last_match_id'::bigint
-            AND (NULLIF(:'end_match_id', '') IS NULL OR match_id <= NULLIF(:'end_match_id', '')::bigint)
+          WHERE match_id > ${last_match_id}::bigint
+            AND (${end_match_id_sql}::bigint IS NULL OR match_id <= ${end_match_id_sql}::bigint)
           ORDER BY match_id
-          LIMIT :'batch_matches'::int
+          LIMIT ${BATCH_MATCHES}::int
         ),
         ratings AS MATERIALIZED (
           SELECT
@@ -164,7 +164,7 @@ while true; do
           (SELECT COUNT(*) FROM ratings)::int,
           (SELECT COUNT(*) FROM ranked WHERE rn = 1)::int,
           (SELECT COUNT(*) FROM upserted)::int,
-          COALESCE((SELECT MAX(match_id)::text FROM batch_matches), :'last_match_id');
+          COALESCE((SELECT MAX(match_id)::text FROM batch_matches), '${last_match_id}');
       "
   )"
 
