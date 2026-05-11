@@ -344,6 +344,13 @@ jobs:
             echo "data_changed=false" >> $GITHUB_OUTPUT
           fi
 
+          if echo "$CHANGED_FILES" | grep -q "^data/rl_api_mappings.json$"; then
+            echo "mappings_changed=true" >> $GITHUB_OUTPUT
+            echo "🗺️  RL API mappings changed"
+          else
+            echo "mappings_changed=false" >> $GITHUB_OUTPUT
+          fi
+
           # Check for asset changes (civ icons, maps, logos)
           if echo "$CHANGED_FILES" | grep -q "^ui/src/assets/"; then
             echo "assets_changed=true" >> $GITHUB_OUTPUT
@@ -351,6 +358,23 @@ jobs:
           else
             echo "assets_changed=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Google Auth
+        if: steps.changes.outputs.mappings_changed == 'true' && needs.build-and-deploy.result == 'success'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: steps.changes.outputs.mappings_changed == 'true' && needs.build-and-deploy.result == 'success'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Restart API after mappings update
+        if: steps.changes.outputs.mappings_changed == 'true' && needs.build-and-deploy.result == 'success'
+        run: |
+          gcloud run services update aoe2-api-proxy \
+            --region=us-central1 \
+            --update-env-vars=MAP_RELOAD_TS="$(date +%s)"
 
       - name: Clear Cloudflare Cache
         if: steps.changes.outputs.proxy_changed == 'true' || steps.changes.outputs.data_changed == 'true' || steps.changes.outputs.assets_changed == 'true'
