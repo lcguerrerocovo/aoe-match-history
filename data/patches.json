@@ -538,5 +538,23 @@
     "date": "2026-04-23",
     "title": "Hotfix 175278",
     "type": "hotfix"
+  },
+  {
+    "version": 177723,
+    "date": "2026-06-02",
+    "title": "Age of Empires II: Definitive Edition – Update 177723",
+    "type": "major"
+  },
+  {
+    "version": 178524,
+    "date": "2026-06-02",
+    "title": "Hotfix 178524",
+    "type": "hotfix"
+  },
+  {
+    "version": 179158,
+    "date": "2026-06-02",
+    "title": "Hotfix 179158",
+    "type": "hotfix"
   }
 ]

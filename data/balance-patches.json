@@ -110,6 +110,30 @@
         ]
       },
       "generalChanges": []
+    },
+    {
+      "version": 177723,
+      "date": "2026-06-02",
+      "title": "Update 177723",
+      "impact": "major",
+      "civChanges": {
+        "Armenians": ["Elite Composite Bowman HP 45 → 50", "Gain access to Siege Ram"],
+        "Burgundians": ["Eco tech food discount 33% → 40%", "Relic food team bonus 30/min → 20/min"],
+        "Incas": ["Military food discount 5/10/15/20% → 15/20/25/30% (Kamayuk unchanged)"],
+        "Mapuche": ["Forager drop-off bonus 20% → 25%"],
+        "Muisca": ["Settlement discount 25% → 33%", "Temple Guard cost 80f 45g → 70f 45g", "Temple Guard anti-cav bonus +3/+6 → +5/+8", "Guecha Warrior HP 50/50 → 55/60", "Huaracas Slinger train speed 25% → 50%"],
+        "Tupi": ["Blackwood Archer train time 14s → 18s"],
+        "Wei": ["Tiger Cavalry HP 115/130 → 110/125", "Tiger Cavalry train time 15s → 18s"]
+      },
+      "generalChanges": [
+        "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance",
+        "Champi Warrior-line train time/cost reduced",
+        "Xolotl Warrior now affected by Garland Wars, Holcans, Fabric Shields, Herbalism, Caciques, Butalmapu",
+        "Dock arrows phased by age: 0/3/4/5",
+        "Dock anti-ship bonus phased by age: +0/2/3/4",
+        "Tower-line anti-ship bonus reduced by 1 each",
+        "Sea Tower anti-ship +8 → +5"
+      ]
     }
   ]
 }
