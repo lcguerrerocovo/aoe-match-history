@@ -28,7 +28,7 @@ After VM is up (~2-3 min), run migrations:
 MATCH_DB_PASSWORD="$MATCH_DB_PASSWORD" bash aoe-match-db/migrate-db.sh
 ```
 
-No CI pipeline — deployed manually when VM config changes (same pattern as `aoe-search/`).
+CI: `deploy-match-db.yml` triggers on `aoe-match-db/**` changes to master. Updates VM metadata and resets the VM when `startup.sh`, `deploy-vm.sh`, or `firewall.sh` change. Manual deploy still works for ad-hoc changes.
 
 ## Schema Management
 

@@ -54,8 +54,8 @@ echo "Configured log rotation (7-day rolling, 100MB max per file)"
 # Clean up legacy monolithic log if it exists (pre-rotation config)
 LEGACY_LOG="/var/log/postgresql/postgresql-16-main.log"
 if [ -f "$LEGACY_LOG" ] && [ "$(stat -c%s "$LEGACY_LOG" 2>/dev/null || echo 0)" -gt 104857600 ]; then
-    truncate -s 0 "$LEGACY_LOG"
-    echo "Truncated oversized legacy log"
+    rm -f "$LEGACY_LOG"
+    echo "Removed oversized legacy log"
 fi
 
 # Allow connections from GCP internal network (10.0.0.0/8)
