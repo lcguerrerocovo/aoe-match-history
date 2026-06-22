@@ -34,6 +34,30 @@ if ! grep -q "listen_addresses = '\*'" "$PG_CONF"; then
     echo "Configured listen_addresses = '*'"
 fi
 
+# Configure log rotation — PG manages its own logs, 7 day-of-week files, ~700MB max
+PG_LOG_SETTINGS=(
+    "logging_collector = on"
+    "log_directory = '/var/log/postgresql'"
+    "log_filename = 'postgresql-%a.log'"
+    "log_rotation_age = 1d"
+    "log_rotation_size = 100MB"
+    "log_truncate_on_rotation = on"
+)
+for setting in "${PG_LOG_SETTINGS[@]}"; do
+    key=$(echo "$setting" | cut -d'=' -f1 | xargs)
+    if ! grep -q "^${key} " "$PG_CONF"; then
+        echo "$setting" >> "$PG_CONF"
+    fi
+done
+echo "Configured log rotation (7-day rolling, 100MB max per file)"
+
+# Clean up legacy monolithic log if it exists (pre-rotation config)
+LEGACY_LOG="/var/log/postgresql/postgresql-16-main.log"
+if [ -f "$LEGACY_LOG" ] && [ "$(stat -c%s "$LEGACY_LOG" 2>/dev/null || echo 0)" -gt 104857600 ]; then
+    truncate -s 0 "$LEGACY_LOG"
+    echo "Truncated oversized legacy log"
+fi
+
 # Allow connections from GCP internal network (10.0.0.0/8)
 if ! grep -q "10.0.0.0/8" "$PG_HBA"; then
     echo "host    $DB_NAME    $DB_USER    10.0.0.0/8    scram-sha-256" >> "$PG_HBA"
