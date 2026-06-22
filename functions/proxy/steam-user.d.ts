@@ -8,7 +8,12 @@ declare module 'steam-user' {
     password: string;
   }
 
+  interface SteamUserOptions {
+    webCompatibilityMode?: boolean;
+  }
+
   class SteamUser {
+    constructor(options?: SteamUserOptions);
     steamID: SteamID;
     accountInfo: { name: string } | null;
     logOn(details: LogOnDetails): void;

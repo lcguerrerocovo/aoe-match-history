@@ -38,7 +38,7 @@ class RelicAuthClient {
     private log: ReturnType<typeof logger.child>;
 
     constructor() {
-        this.client = new SteamUser();
+        this.client = new SteamUser({ webCompatibilityMode: true });
         this.sessionId = null;
         this.lastAuthTime = null;
         this.authExpiry = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -96,13 +96,27 @@ class RelicAuthClient {
     }
 
     async _steamLogin(username: string, password: string): Promise<SteamData> {
+        const STEAM_LOGIN_TIMEOUT_MS = 15_000;
         return new Promise((resolve, reject) => {
+            let settled = false;
+            const timeout = setTimeout(() => {
+                if (!settled) {
+                    settled = true;
+                    this.log.error({ timeout: STEAM_LOGIN_TIMEOUT_MS }, 'Steam login timed out');
+                    try { this.client.logOff(); } catch { /* ignore */ }
+                    reject(new Error(`Steam login timed out after ${STEAM_LOGIN_TIMEOUT_MS}ms`));
+                }
+            }, STEAM_LOGIN_TIMEOUT_MS);
+
             this.client.logOn({
                 accountName: username,
                 password: password
             });
 
             this.client.on('loggedOn', () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
                 this.log.info('Successfully logged into Steam.');
                 const steamId64 = this.client.steamID.getSteamID64();
                 const steamUserName = this.client.accountInfo?.name || username;
@@ -114,11 +128,17 @@ class RelicAuthClient {
             });
 
             this.client.on('steamGuard', (domain: string, callback: (code: string) => void, lastCodeWrong: boolean) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
                 this.log.info({ domain }, 'Steam Guard code needed');
                 reject(new Error('Steam Guard required but not implemented'));
             });
 
             this.client.on('error', (err: Error) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
                 this.log.error({ error: err.message }, 'Steam login error');
                 reject(err);
             });
