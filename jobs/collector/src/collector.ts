@@ -33,34 +33,45 @@ export class Collector {
     const leaderboardProfiles = await scanAllLeaderboards();
     log.info({ totalProfiles: leaderboardProfiles.size }, 'Leaderboard scan complete');
 
-    // Step 3: Get existing collection state
-    log.info('Querying collection state...');
+    // Step 3: Get existing collection state (DB-optional — if DB is down, fetch all profiles)
+    let dbAvailable = true;
     const allProfileIds = Array.from(leaderboardProfiles.keys());
-
-    // Query in batches of 5000 to avoid oversized queries
-    const STATE_BATCH_SIZE = 5000;
     const collectionState = new Map<number, number>();
-    for (let i = 0; i < allProfileIds.length; i += STATE_BATCH_SIZE) {
-      const batch = allProfileIds.slice(i, i + STATE_BATCH_SIZE);
-      const batchState = await this.db.getCollectionState(batch);
-      for (const [k, v] of batchState) {
-        collectionState.set(k, v);
+
+    try {
+      log.info('Querying collection state...');
+      const STATE_BATCH_SIZE = 5000;
+      for (let i = 0; i < allProfileIds.length; i += STATE_BATCH_SIZE) {
+        const batch = allProfileIds.slice(i, i + STATE_BATCH_SIZE);
+        const batchState = await this.db.getCollectionState(batch);
+        for (const [k, v] of batchState) {
+          collectionState.set(k, v);
+        }
       }
+      log.info({ knownProfiles: collectionState.size }, 'Collection state loaded');
+    } catch (err) {
+      dbAvailable = false;
+      log.warn({ err: (err as Error).message }, 'DB unavailable — will fetch all profiles and archive to GCS only');
     }
-    log.info({ knownProfiles: collectionState.size }, 'Collection state loaded');
 
     // Step 4: Diff — find profiles that need fetching
-    const changedProfiles: number[] = [];
-    for (const [profileId, lastMatchTime] of leaderboardProfiles) {
-      const lastFetched = collectionState.get(profileId);
-      if (!lastFetched || lastMatchTime > lastFetched) {
-        changedProfiles.push(profileId);
+    let changedProfiles: number[];
+    if (dbAvailable) {
+      changedProfiles = [];
+      for (const [profileId, lastMatchTime] of leaderboardProfiles) {
+        const lastFetched = collectionState.get(profileId);
+        if (!lastFetched || lastMatchTime > lastFetched) {
+          changedProfiles.push(profileId);
+        }
       }
+      log.info({
+        changedProfiles: changedProfiles.length,
+        unchangedProfiles: leaderboardProfiles.size - changedProfiles.length,
+      }, 'Diff complete');
+    } else {
+      changedProfiles = allProfileIds;
+      log.info({ changedProfiles: changedProfiles.length }, 'DB offline — fetching all leaderboard profiles');
     }
-    log.info({
-      changedProfiles: changedProfiles.length,
-      unchangedProfiles: leaderboardProfiles.size - changedProfiles.length,
-    }, 'Diff complete');
 
     if (changedProfiles.length === 0) {
       log.info('No profiles need updating. Done.');
@@ -69,11 +80,12 @@ export class Collector {
 
     // Step 5: Concurrent batch fetch and store
     let totalMatches = 0;
+    let totalDbStored = 0;
     let totalErrors = 0;
     let completedBatches = 0;
     const totalBatches = Math.ceil(changedProfiles.length / BATCH_SIZE);
 
-    log.info({ totalBatches, concurrency: CONCURRENCY }, 'Starting concurrent collection');
+    log.info({ totalBatches, concurrency: CONCURRENCY, dbAvailable }, 'Starting concurrent collection');
 
     // Build all batch slices
     const batches: number[][] = [];
@@ -93,17 +105,10 @@ export class Collector {
         try {
           const response = await fetchMatchHistory(batchProfileIds);
 
-          // Build lastMatchTimes map for this batch
-          const batchLastMatchTimes = new Map<number, number>();
-          for (const pid of batchProfileIds) {
-            const t = leaderboardProfiles.get(pid);
-            if (t !== undefined) batchLastMatchTimes.set(pid, t);
-          }
-
           const matchStats = response.matchHistoryStats || [];
           const profiles = response.profiles || [];
 
-          // Archive raw matches to Parquet
+          // Archive raw matches to Parquet (always — independent of DB)
           for (const match of matchStats) {
             const pm = processMatch(match, profiles, getCivMapForDateSync(match.startgametime), mapMap);
             await archive.append({
@@ -120,16 +125,30 @@ export class Collector {
               raw_json: pm.rawJson,
             });
           }
+          totalMatches += matchStats.length;
 
-          const count = await this.db.upsertMatches(
-            matchStats,
-            profiles,
-            batchProfileIds,
-            batchLastMatchTimes,
-            getCivMapForDateSync,
-            mapMap,
-          );
-          totalMatches += count;
+          // Upsert to DB only if available
+          if (dbAvailable) {
+            try {
+              const batchLastMatchTimes = new Map<number, number>();
+              for (const pid of batchProfileIds) {
+                const t = leaderboardProfiles.get(pid);
+                if (t !== undefined) batchLastMatchTimes.set(pid, t);
+              }
+
+              const count = await this.db.upsertMatches(
+                matchStats,
+                profiles,
+                batchProfileIds,
+                batchLastMatchTimes,
+                getCivMapForDateSync,
+                mapMap,
+              );
+              totalDbStored += count;
+            } catch (err) {
+              log.warn({ err: (err as Error).message, batch: idx + 1 }, 'DB upsert failed — matches archived to GCS');
+            }
+          }
         } catch (err) {
           totalErrors++;
           log.error({
@@ -147,6 +166,7 @@ export class Collector {
             batch: completedBatches,
             totalBatches,
             totalMatches,
+            dbStored: totalDbStored,
             errors: totalErrors,
             elapsed: `${elapsed}s`,
             profilesPerMin: rate,
@@ -163,7 +183,7 @@ export class Collector {
     try {
       await archive.finalize();
     } catch (err) {
-      log.error({ err: (err as Error).message }, 'Archive finalization failed — matches are safe in PG');
+      log.error({ err: (err as Error).message }, 'Archive finalization failed');
     }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
@@ -172,7 +192,9 @@ export class Collector {
       elapsed: `${elapsed}s`,
       profilesScanned: leaderboardProfiles.size,
       profilesChanged: changedProfiles.length,
-      matchesStored: totalMatches,
+      matchesArchived: totalMatches,
+      matchesStored: totalDbStored,
+      dbAvailable,
       batchErrors: totalErrors,
       profilesPerMin: rate,
     }, 'Collection complete');

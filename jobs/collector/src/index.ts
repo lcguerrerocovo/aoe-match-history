@@ -20,7 +20,11 @@ async function main(): Promise<void> {
   try {
     await collector.run();
   } finally {
-    await db.close();
+    try {
+      await db.close();
+    } catch {
+      // DB may never have connected
+    }
   }
 
   logger.info("Match collector finished");
