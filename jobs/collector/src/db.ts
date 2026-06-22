@@ -324,7 +324,9 @@ export class Database {
       `WITH input (
          profile_id, match_type_id, rating, source_match_id, source_time, updated_at
        ) AS (
-         VALUES ${placeholders.join(',')}
+         SELECT * FROM (VALUES ${placeholders.join(',')}) AS t(
+           profile_id bigint, match_type_id int, rating int, source_match_id bigint, source_time timestamp, updated_at timestamp
+         )
        ),
        mapped AS (
          SELECT
