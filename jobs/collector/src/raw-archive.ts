@@ -54,12 +54,11 @@ export class RawArchive {
     this.runTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
   }
 
-  async append(row: ArchiveRow): Promise<void> {
+  append(row: ArchiveRow): void {
     this.rows.push(row);
     if (this.rows.length >= FLUSH_THRESHOLD) {
-      // Serialize flushes — concurrent workers may trigger simultaneously
+      // Fire and forget — serialized via flushLock, finalize() awaits completion
       this.flushLock = this.flushLock.then(() => this.flush());
-      await this.flushLock;
     }
   }
 

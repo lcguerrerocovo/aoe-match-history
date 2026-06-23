@@ -111,7 +111,7 @@ export class Collector {
           // Archive raw matches to Parquet (always — independent of DB)
           for (const match of matchStats) {
             const pm = processMatch(match, profiles, getCivMapForDateSync(match.startgametime), mapMap);
-            await archive.append({
+            archive.append({
               match_id: pm.matchId,
               map_id: pm.mapId,
               map_name: pm.mapName,
