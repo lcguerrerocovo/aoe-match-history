@@ -198,5 +198,9 @@ export class Collector {
       batchErrors: totalErrors,
       profilesPerMin: rate,
     }, 'Collection complete');
+
+    if (dbAvailable && changedProfiles.length > 0 && totalDbStored === 0) {
+      throw new Error(`Processed ${changedProfiles.length} profiles but stored 0 matches — likely a DB write bug`);
+    }
   }
 }
