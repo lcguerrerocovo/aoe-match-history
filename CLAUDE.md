@@ -89,6 +89,8 @@ Separate path-triggered workflows:
 - **deploy-collector-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 3 hours (`jobs/collector/**`)
 - **deploy-indexing-job.yml** — build Docker image, deploy Cloud Run Job, schedule every 6 hours (`jobs/indexing/**`)
 - **deploy-stats-generator.yml** — build Docker image, deploy Cloud Run Job, schedule daily at 06:00 UTC (`jobs/stats-generator/**`)
+- **deploy-match-db.yml** — update VM metadata + reset, wait for PG healthy (`aoe-match-db/**`). **Do not deploy while collector is running** — VM reset kills PG connections.
+- **deploy-aoe-search.yml** — update VM + restore Meilisearch snapshot (`aoe-search/**`)
 
 ## Key Data Files
 

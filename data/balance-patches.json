@@ -118,11 +118,13 @@
       "impact": "major",
       "civChanges": {
         "Armenians": ["Elite Composite Bowman HP 45 → 50", "Gain access to Siege Ram"],
+        "Aztec": ["Xolotl Warrior now affected by Garland Wars, Herbalism, Caciques"],
         "Burgundians": ["Eco tech food discount 33% → 40%", "Relic food team bonus 30/min → 20/min"],
-        "Incas": ["Military food discount 5/10/15/20% → 15/20/25/30% (Kamayuk unchanged)"],
-        "Mapuche": ["Forager drop-off bonus 20% → 25%"],
-        "Muisca": ["Settlement discount 25% → 33%", "Temple Guard cost 80f 45g → 70f 45g", "Temple Guard anti-cav bonus +3/+6 → +5/+8", "Guecha Warrior HP 50/50 → 55/60", "Huaracas Slinger train speed 25% → 50%"],
-        "Tupi": ["Blackwood Archer train time 14s → 18s"],
+        "Incas": ["Military food discount 5/10/15/20% → 15/20/25/30% (Kamayuk unchanged)", "Xolotl Warrior now affected by Fabric Shields", "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance", "Champi Warrior-line train time/cost reduced"],
+        "Mapuche": ["Forager drop-off bonus 20% → 25%", "Xolotl Warrior now affected by Butalmapu", "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance", "Champi Warrior-line train time/cost reduced"],
+        "Mayans": ["Xolotl Warrior now affected by Holcans"],
+        "Muisca": ["Settlement discount 25% → 33%", "Temple Guard cost 80f 45g → 70f 45g", "Temple Guard anti-cav bonus +3/+6 → +5/+8", "Guecha Warrior HP 50/50 → 55/60", "Huaracas Slinger train speed 25% → 50%", "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance", "Champi Warrior-line train time/cost reduced"],
+        "Tupi": ["Blackwood Archer train time 14s → 18s", "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance", "Champi Warrior-line train time/cost reduced"],
         "Wei": ["Tiger Cavalry HP 115/130 → 110/125", "Tiger Cavalry train time 15s → 18s"]
       },
       "generalChanges": [

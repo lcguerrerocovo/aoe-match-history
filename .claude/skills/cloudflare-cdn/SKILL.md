@@ -89,12 +89,43 @@ Stored as GitHub Actions secrets:
 | `assets/**/*.png` | `public, max-age=86400` | 24 hours — purge after updates |
 | JS/CSS bundles | Vite content-hashed filenames | Cache-busted automatically |
 
+## SPA Router Worker
+
+GCS can't serve `index.html` with a 200 status for unknown paths — it always returns 404. A Cloudflare Worker (`cloudflare/spa-router/`) handles SPA routing: intercepts 404s on non-file paths (no extension) and serves `index.html` with a 200 so React Router can handle client-side routing.
+
+- **Worker name:** `aoe2-spa-router`
+- **Route:** `aoe2.site/*`
+- **Source:** `cloudflare/spa-router/worker.js`
+- **Config:** `cloudflare/spa-router/wrangler.toml`
+
+### Wrangler Setup
+```bash
+# Install (bypass Spotify Artifactory)
+npm install -g wrangler --registry https://registry.npmjs.org
+
+# Auth — uses CLOUDFLARE_API_TOKEN env var if set, otherwise:
+unset CLOUDFLARE_API_TOKEN && wrangler login
+```
+
+If `wrangler login` fails with "You are logged in with an API Token", unset `CLOUDFLARE_API_TOKEN` first — that env var takes precedence over OAuth.
+
+### Deploy
+```bash
+cd cloudflare/spa-router && wrangler deploy
+```
+
+### Caching Gotcha
+The worker's `fetch()` subrequests use a separate cache layer that **Cloudflare dashboard "Purge Everything" does not clear**. Data files (`/data/*`) bypass the worker cache (`cacheTtl: 0`) so they always hit GCS origin. If other files appear stale after a purge, redeploy the worker.
+
+### Why not GCS error page?
+GCS error pages serve the right content but with a 404 status code. Browsers won't execute `<script type="module">` from a 404 response, so the SPA never boots on fresh visits to routes like `/live` or `/stats`.
+
 ## GCS Bucket
 
 - Bucket: `gs://aoe2.site`
 - Region: `us-east1`
 - Public access: `allUsers:objectViewer`
-- Website config: `index.html` as main and error page
+- Website config: `index.html` as main, error page also set to `index.html` (fallback for the worker)
 
 ## Asset Upload (manual)
 
@@ -113,3 +144,5 @@ This uploads everything in `ui/src/assets/` to `gs://aoe2.site/assets/`.
 | 525 SSL error | SSL/TLS mode wrong or cert not provisioned | Set to Full, purge cache, wait for cert |
 | 404 on api.aoe2.site | Domain mapping wrong region | Remap with `--region=us-central1` |
 | Old search results | Search cache not purged | Purge search URLs |
+| 404 on SPA routes (`/live`, `/stats`) from fresh browser | SPA router worker not deployed or misconfigured | `cd cloudflare/spa-router && wrangler deploy` |
+| Stale data after stats-generator run + dashboard purge | Worker subrequest cache not cleared by dashboard purge | Redeploy worker: `cd cloudflare/spa-router && wrangler deploy` |

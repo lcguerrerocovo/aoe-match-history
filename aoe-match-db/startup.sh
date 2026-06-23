@@ -34,22 +34,23 @@ if ! grep -q "listen_addresses = '\*'" "$PG_CONF"; then
     echo "Configured listen_addresses = '*'"
 fi
 
-# Configure log rotation — PG manages its own logs, 7 day-of-week files, ~700MB max
+# Configure log rotation — PG manages its own logs, capped at ~500MB total
 PG_LOG_SETTINGS=(
     "logging_collector = on"
     "log_directory = '/var/log/postgresql'"
-    "log_filename = 'postgresql-%a.log'"
-    "log_rotation_age = 1d"
-    "log_rotation_size = 100MB"
+    "log_filename = 'postgresql-%H.log'"
+    "log_rotation_age = 1h"
+    "log_rotation_size = 20MB"
     "log_truncate_on_rotation = on"
+    "log_min_messages = error"
 )
 for setting in "${PG_LOG_SETTINGS[@]}"; do
     key=$(echo "$setting" | cut -d'=' -f1 | xargs)
-    if ! grep -q "^${key} " "$PG_CONF"; then
-        echo "$setting" >> "$PG_CONF"
-    fi
+    # Remove any existing setting (commented or not) to avoid duplicates on re-runs
+    sed -i "/^#\?${key} /d" "$PG_CONF"
+    echo "$setting" >> "$PG_CONF"
 done
-echo "Configured log rotation (7-day rolling, 100MB max per file)"
+echo "Configured log rotation (hourly, 20MB cap, 24 files max, errors only)"
 
 # Clean up legacy monolithic log if it exists (pre-rotation config)
 LEGACY_LOG="/var/log/postgresql/postgresql-16-main.log"
