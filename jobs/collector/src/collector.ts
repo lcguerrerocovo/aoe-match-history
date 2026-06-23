@@ -200,7 +200,14 @@ export class Collector {
     }, 'Collection complete');
 
     if (dbAvailable && changedProfiles.length > 0 && totalDbStored === 0) {
-      throw new Error(`Processed ${changedProfiles.length} profiles but stored 0 matches — likely a DB write bug`);
+      log.fatal({ profilesChanged: changedProfiles.length }, 'ALERT: Processed profiles but stored 0 matches');
+    }
+
+    if (totalErrors > 0) {
+      const errorRate = totalMatches > 0 ? totalErrors / totalMatches : 1;
+      if (errorRate > 0.1) {
+        log.fatal({ totalErrors, totalMatches, errorRate: `${(errorRate * 100).toFixed(1)}%` }, 'ALERT: Match error rate exceeds 10%');
+      }
     }
   }
 }

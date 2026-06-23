@@ -1,0 +1,22 @@
+{
+  "displayName": "Collector match error rate high",
+  "documentation": {
+    "content": "The match collector is failing to store >10% of matches, or stored 0 matches despite processing profiles. Check logs for the root cause.",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "displayName": "Collector ALERT log",
+      "conditionMatchedLog": {
+        "filter": "resource.type = \"cloud_run_job\" AND resource.labels.job_name = \"match-collector-job\" AND jsonPayload.msg =~ \"^ALERT:\"",
+        "labelExtractors": {}
+      }
+    }
+  ],
+  "combiner": "OR",
+  "alertStrategy": {
+    "notificationRateLimit": {
+      "period": "3600s"
+    }
+  }
+}
