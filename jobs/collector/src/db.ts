@@ -321,11 +321,12 @@ export class Database {
     }
 
     await client.query(
-      `WITH input (
-         profile_id, match_type_id, rating, source_match_id, source_time, updated_at
-       ) AS (
-         SELECT * FROM (VALUES ${placeholders.join(',')}) AS t(
-           profile_id bigint, match_type_id int, rating int, source_match_id bigint, source_time timestamp, updated_at timestamp
+      `WITH input AS (
+         SELECT
+           profile_id::bigint, match_type_id::int, rating::int,
+           source_match_id::bigint, source_time::timestamp, updated_at::timestamp
+         FROM (VALUES ${placeholders.join(',')}) AS t(
+           profile_id, match_type_id, rating, source_match_id, source_time, updated_at
          )
        ),
        mapped AS (
