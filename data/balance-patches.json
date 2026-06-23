@@ -128,9 +128,6 @@
         "Wei": ["Tiger Cavalry HP 115/130 → 110/125", "Tiger Cavalry train time 15s → 18s"]
       },
       "generalChanges": [
-        "Slinger cost 70f 10w → 50f 25w, +2 conversion resistance",
-        "Champi Warrior-line train time/cost reduced",
-        "Xolotl Warrior now affected by Garland Wars, Holcans, Fabric Shields, Herbalism, Caciques, Butalmapu",
         "Dock arrows phased by age: 0/3/4/5",
         "Dock anti-ship bonus phased by age: +0/2/3/4",
         "Tower-line anti-ship bonus reduced by 1 each",
