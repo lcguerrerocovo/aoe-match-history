@@ -6,6 +6,7 @@ const FETCH_TIMEOUT_MS = 15_000;
 export interface LiveMatchResult {
   matches: LiveMatch[];
   partial: boolean;
+  serverTimeS: number;
 }
 
 export async function getLiveMatches(): Promise<LiveMatchResult> {
@@ -21,8 +22,10 @@ export async function getLiveMatches(): Promise<LiveMatchResult> {
     throw new Error('Invalid response format');
   }
   const partial = response.headers.get('X-Partial') === '1';
+  const dateHeader = response.headers.get('Date');
+  const serverTimeS = dateHeader ? Math.floor(new Date(dateHeader).getTime() / 1000) : Math.floor(Date.now() / 1000);
   const matches: LiveMatch[] = await response.json();
-  return { matches, partial };
+  return { matches, partial, serverTimeS };
 }
 
 export async function getLiveRatings(profileIds: number[], matchTypeIds?: number[]): Promise<Map<number, number>> {

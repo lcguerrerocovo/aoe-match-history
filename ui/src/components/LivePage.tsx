@@ -172,7 +172,7 @@ export function LivePage() {
     if (fetchingRef.current) return; // skip if previous fetch still in-flight
     fetchingRef.current = true;
     try {
-      const { matches: data, partial } = await getLiveMatches();
+      const { matches: data, partial, serverTimeS } = await getLiveMatches();
       setIsPartial(partial);
       // Detect newly appeared matches for enter animation
       const prev = prevMatchIdsRef.current;
@@ -183,7 +183,7 @@ export function LivePage() {
       prevMatchIdsRef.current = new Set(data.map(m => m.match_id));
 
       const newestStartTime = Math.max(...data.map(m => m.start_time));
-      const ageSeconds = Date.now() / 1000 - newestStartTime;
+      const ageSeconds = serverTimeS - newestStartTime;
       if (data.length > 0 && ageSeconds > STALE_THRESHOLD_S) {
         setIsLoading(true);
         fetchingRef.current = false;
