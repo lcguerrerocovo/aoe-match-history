@@ -1,0 +1,24 @@
+{
+  "displayName": "Cloud Run Job failure",
+  "documentation": {
+    "content": "A Cloud Run Job failed. Check logs: gcloud logging read 'resource.type=cloud_run_job AND severity>=ERROR' --freshness=1h",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "conditionThreshold": {
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_SUM"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "duration": "0s",
+        "filter": "resource.type = \"cloud_run_job\" AND metric.type = \"run.googleapis.com/job/completed_task_attempt_count\" AND metric.labels.result = \"failed\""
+      },
+      "displayName": "Job execution failed"
+    }
+  ],
+  "combiner": "OR"
+}

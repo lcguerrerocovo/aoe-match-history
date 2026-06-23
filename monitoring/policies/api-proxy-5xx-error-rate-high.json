@@ -1,0 +1,25 @@
+{
+  "displayName": "API proxy 5xx error rate high",
+  "documentation": {
+    "content": "The aoe2-api-proxy is returning 5xx errors. Check logs: gcloud logging read 'resource.type=cloud_run_revision AND resource.labels.service_name=aoe2-api-proxy AND severity>=ERROR' --freshness=30m",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "conditionThreshold": {
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_SUM"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "duration": "0s",
+        "filter": "resource.type = \"cloud_run_revision\" AND resource.labels.service_name = \"aoe2-api-proxy\" AND metric.type = \"run.googleapis.com/request_count\" AND metric.labels.response_code_class = \"5xx\"",
+        "thresholdValue": 10.0
+      },
+      "displayName": "5xx error count > 10 in 5 min"
+    }
+  ],
+  "combiner": "OR"
+}

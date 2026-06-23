@@ -15,6 +15,8 @@ jobs/collector/      Cloud Run Job — collects match history from Relic API to 
 jobs/stats-generator/ Cloud Run Job — generates civ win rate stats from BigQuery + position stats from PostgreSQL, uploads JSON to GCS
 aoe-search/          Meilisearch VM config (e2-micro, snapshot import, startup scripts)
 aoe-match-db/        PostgreSQL VM config (e2-medium, backup cron, firewall rules)
+cloudflare/          Cloudflare Workers (SPA router)
+monitoring/          GCP Cloud Monitoring alert policies and uptime checks
 scripts/             Utility scripts (player collection, data filtering, tunneling, cleanup, patch note fetching)
 ```
 
@@ -91,6 +93,30 @@ Separate path-triggered workflows:
 - **deploy-stats-generator.yml** — build Docker image, deploy Cloud Run Job, schedule daily at 06:00 UTC (`jobs/stats-generator/**`)
 - **deploy-match-db.yml** — update VM metadata + reset, wait for PG healthy (`aoe-match-db/**`). **Do not deploy while collector is running** — VM reset kills PG connections.
 - **deploy-aoe-search.yml** — update VM + restore Meilisearch snapshot (`aoe-search/**`)
+- **deploy-monitoring.yml** — sync alert policies + uptime checks to GCP Cloud Monitoring (`monitoring/**`)
+
+## Monitoring
+
+Alert policies and uptime checks in `monitoring/`, deployed via `deploy-monitoring.yml`. Alerts email `lcguerrerocovo@gmail.com`.
+
+| Alert | Trigger |
+|-------|---------|
+| DB VM disk > 85% | 5 min sustained |
+| DB VM down | PG port 5432 unresponsive 5 min |
+| Search VM down | Meilisearch port 7700 unresponsive 5 min |
+| Cloud Run Job failure | Any job execution fails |
+| API proxy 5xx errors | >10 errors in 5 min |
+
+To add/edit alerts: modify JSON in `monitoring/policies/` or `monitoring/uptime-checks/`, push to master.
+
+## Infrastructure Style
+
+All infra config follows the same pattern:
+- **Config as code** in a dedicated directory (`aoe-match-db/`, `aoe-search/`, `cloudflare/`, `monitoring/`)
+- **`deploy.sh`** script using `gcloud` CLI directly — idempotent, no Terraform
+- **GitHub Actions workflow** triggered on path changes to auto-deploy
+- **JSON/shell only** — no inline Python, no complex templating
+- Keep deploy scripts simple and readable; prefer multiple `gcloud` commands over clever abstractions
 
 ## Key Data Files
 

@@ -1,0 +1,17 @@
+{
+  "displayName": "Search VM uptime (TCP 7700)",
+  "monitoredResource": {
+    "type": "gce_instance",
+    "labels": {
+      "zone": "us-central1-a",
+      "project_id": "aoe2-site",
+      "instance_id": "3740827547635697070"
+    }
+  },
+  "tcpCheck": {
+    "port": 7700
+  },
+  "period": "300s",
+  "timeout": "10s",
+  "checkerType": "STATIC_IP_CHECKERS"
+}

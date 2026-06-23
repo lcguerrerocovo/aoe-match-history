@@ -1,0 +1,17 @@
+{
+  "displayName": "DB VM uptime (TCP 5432)",
+  "monitoredResource": {
+    "type": "gce_instance",
+    "labels": {
+      "instance_id": "2200483521740248233",
+      "zone": "us-central1-a",
+      "project_id": "aoe2-site"
+    }
+  },
+  "tcpCheck": {
+    "port": 5432
+  },
+  "period": "300s",
+  "timeout": "10s",
+  "checkerType": "STATIC_IP_CHECKERS"
+}

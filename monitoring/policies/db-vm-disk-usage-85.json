@@ -1,0 +1,25 @@
+{
+  "displayName": "DB VM disk usage > 85%",
+  "documentation": {
+    "content": "The aoe-match-db disk is over 85% full. Check PG logs and data size.",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "conditionThreshold": {
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_MEAN"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "duration": "300s",
+        "filter": "resource.type = \"gce_instance\" AND metric.type = \"agent.googleapis.com/disk/percent_used\" AND metric.labels.device = \"/dev/sda1\" AND resource.labels.instance_id = \"2200483521740248233\"",
+        "thresholdValue": 85.0
+      },
+      "displayName": "Disk utilization high"
+    }
+  ],
+  "combiner": "OR"
+}

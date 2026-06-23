@@ -1,0 +1,29 @@
+{
+  "displayName": "DB VM down (PG not responding)",
+  "documentation": {
+    "content": "PostgreSQL on aoe-match-db is not responding on port 5432. SSH in and check: sudo systemctl status postgresql@16-main",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "conditionThreshold": {
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "crossSeriesReducer": "REDUCE_COUNT_FALSE",
+            "groupByFields": [
+              "resource.label.host"
+            ],
+            "perSeriesAligner": "ALIGN_NEXT_OLDER"
+          }
+        ],
+        "comparison": "COMPARISON_LT",
+        "duration": "300s",
+        "filter": "resource.type = \"uptime_url\" AND metric.type = \"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.labels.check_id = \"db-vm-uptime-tcp-5432-_u4Op30464k\"",
+        "thresholdValue": 1.0
+      },
+      "displayName": "Uptime check failing"
+    }
+  ],
+  "combiner": "OR"
+}
