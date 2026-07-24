@@ -92,6 +92,28 @@ describe('LivePage', () => {
     cy.contains('AlphaWolf').should('be.visible');
   });
 
+  it('gives up stale retries after a bound and shows delayed data with a notice', () => {
+    // Real timers: the retry timer is registered only after the stubbed
+    // response is processed, which a mocked clock can't deterministically
+    // interleave with. The 3s retry cadence is paced by cy.wait instead.
+    cy.clock().invoke('restore');
+    // Newest match far in the past — beyond the 5 min staleness threshold
+    const staleMatches = mockLiveMatches.map((m) => ({ ...m, start_time: -601 }));
+    cy.intercept('GET', '/api/live', { body: staleMatches }).as('live');
+    mountWithProviders(<LivePage />);
+    cy.wait('@live'); // initial fetch — stale, enters retry loop
+    cy.wait('@live', { requestTimeout: 8000 }); // retry 1 (after 3s)
+    cy.wait('@live', { requestTimeout: 8000 }); // retry 2
+    cy.wait('@live', { requestTimeout: 8000 }); // retry 3 — bound reached, data accepted
+
+    cy.contains('Scout reports delayed').should('be.visible');
+    cy.contains('AlphaWolf').should('be.visible');
+    cy.get('@live.all').should('have.length', 4);
+    // No retry 4: the loop gives up rather than retrying forever
+    cy.wait(3500);
+    cy.get('@live.all').should('have.length', 4);
+  });
+
   it('has no horizontal overflow at 390px mobile', () => {
     cy.viewport(390, 844);
     cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');

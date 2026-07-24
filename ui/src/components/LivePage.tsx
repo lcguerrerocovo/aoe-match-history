@@ -9,6 +9,7 @@ import type { LiveMatch } from '../types/liveMatch';
 const REFRESH_INTERVAL_MS = 30_000;
 const STALE_THRESHOLD_S = 300; // 5 minutes — retry if newest match is older than this
 const STALE_RETRY_MS = 3_000;
+const MAX_STALE_RETRIES = 3; // then accept the stale data and show a delayed notice
 
 const GAME_TYPE_CATEGORIES = ['RM 1v1', 'RM Team', 'QM RM', 'QM RM Team', 'EW 1v1', 'EW Team', 'QM EW', 'QM EW Team', 'Other'] as const;
 type GameTypeCategory = typeof GAME_TYPE_CATEGORIES[number];
@@ -92,6 +93,8 @@ export function LivePage() {
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());
   const [ratingsLoaded, setRatingsLoaded] = useState(false);
   const [isPartial, setIsPartial] = useState(false);
+  const [dataDelayed, setDataDelayed] = useState(false);
+  const staleRetriesRef = useRef(0);
 
   // Reset map/ELO filters when game type tab changes
   const handleCategorySelect = useCallback((cat: GameTypeCategory) => {
@@ -174,6 +177,20 @@ export function LivePage() {
     try {
       const { matches: data, partial, serverTimeS } = await getLiveMatches();
       setIsPartial(partial);
+
+      const newestStartTime = data.length > 0 ? Math.max(...data.map(m => m.start_time)) : 0;
+      const isStale = data.length > 0 && serverTimeS - newestStartTime > STALE_THRESHOLD_S;
+      if (isStale && staleRetriesRef.current < MAX_STALE_RETRIES) {
+        staleRetriesRef.current += 1;
+        // Only blank the view while retrying if nothing is displayed yet
+        if (prevMatchIdsRef.current.size === 0) setIsLoading(true);
+        fetchingRef.current = false;
+        setTimeout(() => fetchMatches(), STALE_RETRY_MS);
+        return;
+      }
+      if (!isStale) staleRetriesRef.current = 0;
+      setDataDelayed(isStale);
+
       // Detect newly appeared matches for enter animation
       const prev = prevMatchIdsRef.current;
       if (prev.size > 0) {
@@ -181,15 +198,6 @@ export function LivePage() {
         if (fresh.size > 0) setNewMatchIds(fresh);
       }
       prevMatchIdsRef.current = new Set(data.map(m => m.match_id));
-
-      const newestStartTime = Math.max(...data.map(m => m.start_time));
-      const ageSeconds = serverTimeS - newestStartTime;
-      if (data.length > 0 && ageSeconds > STALE_THRESHOLD_S) {
-        setIsLoading(true);
-        fetchingRef.current = false;
-        setTimeout(() => fetchMatches(), STALE_RETRY_MS);
-        return;
-      }
 
       setMatches(data);
       setError(null);
@@ -241,6 +249,11 @@ export function LivePage() {
                   ? `${matches.reduce((sum, m) => sum + m.players.length, 0)} players in ${matches.length} match${matches.length !== 1 ? 'es' : ''}${isPartial ? ' · discovering more…' : ''}`
                   : ''}
             </Text>
+            {!isLoading && dataDelayed && (
+              <Text fontSize="xs" color="brand.redChalk" fontStyle="italic">
+                Scout reports delayed — showing the last known battles
+              </Text>
+            )}
           </VStack>
 
           {/* Game type tabs */}
