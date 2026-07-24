@@ -27,6 +27,7 @@ interface FetchResult {
 
 let cache: CacheEntry | null = null;
 let pendingFetch: Promise<FetchResult> | null = null;
+let pendingBackground: Promise<void> | null = null;
 let fetchGeneration = 0;
 
 
@@ -367,9 +368,12 @@ async function enrichLiveMatchesWithRatings(matches: LiveMatch[]): Promise<LiveM
 }
 
 /**
- * Fetch pages from the Relic API, deduplicating matches and players.
- * Returns { matches, players, lastPage, exhausted } where exhausted=true
- * means the last page was partial (no more data).
+ * Fetch pages [startPage, maxPage) from the Relic API concurrently,
+ * deduplicating matches and players. Pages are merged in page order and only
+ * the contiguous prefix up to the first failed page is kept, so the result
+ * never has gaps. Returns:
+ *   exhausted — a page was partial: no more data upstream
+ *   failed    — a page request failed: data is incomplete and worth retrying
  */
 async function fetchPages(
     gameVersion: number,
@@ -377,24 +381,28 @@ async function fetchPages(
     maxPage: number,
     seenMatchIds: Set<number>,
     seenPlayerIds: Set<number>,
-): Promise<{ matches: unknown[][]; players: unknown[][]; lastPage: number; exhausted: boolean }> {
-    const rawMatches: unknown[][] = [];
-    const rawPlayers: unknown[][] = [];
-    let page = startPage;
+): Promise<{ matches: unknown[][]; players: unknown[][]; lastPage: number; exhausted: boolean; failed: boolean }> {
+    const pageNumbers: number[] = [];
+    for (let p = startPage; p < maxPage; p++) pageNumbers.push(p);
 
-    while (page < maxPage) {
-        const start = page * PAGE_SIZE;
+    const responses = await Promise.all(pageNumbers.map(async (page) => {
         const result = await withAuthRetry(async () => {
             const svc = await getAuthenticatedPlayerService();
-            return svc.findObservableAdvertisements(gameVersion, PAGE_SIZE, start);
+            return svc.findObservableAdvertisements(gameVersion, PAGE_SIZE, page * PAGE_SIZE);
         });
+        return { page, result };
+    }));
 
+    const rawMatches: unknown[][] = [];
+    const rawPlayers: unknown[][] = [];
+    let exhausted = false;
+    let failed = false;
+    let lastPage = startPage - 1;
+
+    for (const { page, result } of responses) {
         if (!result.success || !result.data) {
-            if (page === startPage && startPage === 0) {
-                log.warn({ error: result.error }, 'Failed to fetch live matches');
-                return { matches: [], players: [], lastPage: page, exhausted: true };
-            }
-            log.warn({ error: result.error, page }, 'Failed to fetch page, using partial results');
+            log.warn({ error: result.error, page }, 'Failed to fetch page, discarding later pages');
+            failed = true;
             break;
         }
 
@@ -416,15 +424,16 @@ async function fetchPages(
             }
         }
 
+        lastPage = page;
         log.info({ page, pageMatches: pageMatches.length, totalSoFar: rawMatches.length }, 'Fetched live matches page');
 
         if (pageMatches.length < PAGE_SIZE) {
-            return { matches: rawMatches, players: rawPlayers, lastPage: page, exhausted: true };
+            exhausted = true;
+            break;
         }
-        page++;
     }
 
-    return { matches: rawMatches, players: rawPlayers, lastPage: page - 1, exhausted: false };
+    return { matches: rawMatches, players: rawPlayers, lastPage, exhausted, failed };
 }
 
 /**
@@ -461,23 +470,39 @@ async function fetchAllLiveMatches(): Promise<FetchResult> {
         return { matches: fastMatches, exhausted: true };
     }
 
-    // Phase 2: fetch remaining pages in the background, merge into cache
-    // Always start background fetch — generation counter prevents stale writes
-    (async () => {
+    // Upstream is failing — return what we have, don't crawl further this cycle
+    if (fast.failed) {
+        return { matches: fastMatches, exhausted: false };
+    }
+
+    // Phase 2: fetch remaining pages in the background, merge into cache.
+    // Tracked in pendingBackground so the cache paths don't start a competing
+    // cycle (which would bump the generation and discard this work).
+    const backgroundPromise = (async () => {
         try {
             const remaining = await fetchPages(gameVersion, FAST_PAGES, MAX_PAGES, seenMatchIds, seenPlayerIds);
-            if (remaining.matches.length === 0) return;
+            // Nothing new and the crawl failed: leave the cache untouched so
+            // the stale timestamp triggers a retry on the next request
+            if (remaining.matches.length === 0 && remaining.failed) return;
 
             const remainingMatches = await normalizeMatches(remaining.matches, remaining.players);
             const fullData = [...fastMatches, ...remainingMatches];
 
-            // Only update cache if no newer fetch cycle has started
+            // Only update cache if no newer fetch cycle has started.
+            // A failed crawl is labeled 'fast' (incomplete) so responses stay
+            // X-Partial and the short CDN TTL applies until a clean crawl.
             if (myGeneration === fetchGeneration) {
-                cache = { data: fullData, timestamp: Date.now(), phase: 'complete', generation: myGeneration };
+                cache = {
+                    data: fullData,
+                    timestamp: Date.now(),
+                    phase: remaining.failed ? 'fast' : 'complete',
+                    generation: myGeneration,
+                };
                 log.info({
                     fastCount: fastMatches.length,
                     remainingCount: remainingMatches.length,
                     totalCount: fullData.length,
+                    failed: remaining.failed,
                 }, 'Background pages merged into cache');
             } else {
                 log.info({ myGeneration, currentGeneration: fetchGeneration }, 'Background pages discarded — newer fetch cycle exists');
@@ -486,6 +511,10 @@ async function fetchAllLiveMatches(): Promise<FetchResult> {
             log.warn({ error: (err as Error).message }, 'Background page fetch failed');
         }
     })();
+    pendingBackground = backgroundPromise;
+    void backgroundPromise.finally(() => {
+        if (pendingBackground === backgroundPromise) pendingBackground = null;
+    });
 
     return { matches: fastMatches, exhausted: false };
 }
@@ -509,9 +538,10 @@ async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: 
     }
 
     // Stale cache — serve immediately but trigger background refresh
+    // (unless a refresh cycle is already in flight in either phase)
     if (cache && age < CACHE_STALE_TTL_MS) {
         log.debug({ age, matchCount: cache.data.length }, 'Serving stale live matches, refreshing in background');
-        if (!pendingFetch) {
+        if (!pendingFetch && !pendingBackground) {
             pendingFetch = fetchAllLiveMatches()
                 .then(result => {
                     // Only write to cache if fast phase got everything (exhausted).
@@ -529,6 +559,14 @@ async function getCachedLiveMatches(): Promise<{ matches: LiveMatch[]; partial: 
                 })
                 .finally(() => { pendingFetch = null; });
         }
+        return { matches: cache.data, partial: cache.phase === 'fast' };
+    }
+
+    // Expired, but the current cycle's background phase is still in flight:
+    // serve what we have rather than starting a competing cycle that would
+    // bump the generation and discard the in-flight crawl
+    if (cache && pendingBackground) {
+        log.debug({ age, matchCount: cache.data.length }, 'Cache expired but background pages in flight — serving existing data');
         return { matches: cache.data, partial: cache.phase === 'fast' };
     }
 

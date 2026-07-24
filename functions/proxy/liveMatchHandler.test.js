@@ -133,3 +133,130 @@ describe('handleLiveMatches', () => {
     expect(ratingCalls.map((call) => call[1][1]).sort()).toEqual([3, 4]);
   });
 });
+
+describe('live match cache lifecycle', () => {
+  const PAGE_SIZE = 200;
+  const FAST_STARTS = [0, 200, 400, 600, 800];
+  const BACKGROUND_STARTS = [1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800];
+
+  let now;
+  let dateSpy;
+  let requestedStarts;
+  let deferredByStart;
+
+  const flush = async () => {
+    for (let i = 0; i < 20; i++) await new Promise((resolve) => setImmediate(resolve));
+  };
+
+  // A page of `count` matches with ids unique per start offset
+  const page = (start, count) => ({
+    success: true,
+    data: {
+      players: [],
+      matches: Array.from({ length: count }, (_, i) => {
+        const matchId = 1_000_000 + start * 10 + i;
+        return rawMatch(matchId, 6, [matchId * 10 + 1, matchId * 10 + 2]);
+      }),
+    },
+  });
+
+  const getDeferred = (start) => {
+    let d = deferredByStart.get(start);
+    if (!d) {
+      let resolve;
+      const promise = new Promise((r) => { resolve = r; });
+      d = { promise, resolve };
+      deferredByStart.set(start, d);
+    }
+    return d;
+  };
+
+  const resolvePage = (start, response) => getDeferred(start).resolve(response);
+
+  // Every page request returns a promise resolved manually via resolvePage()
+  const deferPages = () => {
+    mockService.findObservableAdvertisements.mockImplementation((version, count, start) => {
+      requestedStarts.push(start);
+      return getDeferred(start).promise;
+    });
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.resetModules();
+    now = 1_000_000;
+    dateSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
+    requestedStarts = [];
+    deferredByStart = new Map();
+    mockPool.query.mockResolvedValue({ rows: [] });
+  });
+
+  afterEach(() => {
+    dateSpy.mockRestore();
+  });
+
+  it('requests fast-phase pages concurrently', async () => {
+    deferPages();
+    const { handleLiveMatches } = require('./liveMatchHandler');
+
+    const promise = handleLiveMatches();
+    await flush();
+
+    expect(new Set(requestedStarts)).toEqual(new Set(FAST_STARTS));
+
+    resolvePage(0, page(0, 50)); // partial first page — dataset exhausted
+    for (const start of FAST_STARTS.slice(1)) resolvePage(start, page(start, 0));
+
+    const result = await promise;
+    expect(result.data.length).toBe(50);
+    expect(result.headers['X-Partial']).toBeUndefined();
+  });
+
+  it('keeps the response partial when a background page fails', async () => {
+    mockService.findObservableAdvertisements.mockImplementation((version, count, start) => {
+      requestedStarts.push(start);
+      if (start <= 1000) return Promise.resolve(page(start, PAGE_SIZE)); // pages 0-5 full
+      return Promise.resolve({ success: false, error: 'relic 500' });    // page 6+ fails
+    });
+    const { handleLiveMatches } = require('./liveMatchHandler');
+
+    const first = await handleLiveMatches();
+    expect(first.data.length).toBe(1000);
+    expect(first.headers['X-Partial']).toBe('1');
+
+    await flush(); // background phase: page 5 succeeds, page 6 fails mid-crawl
+    now += 1_000;
+
+    const second = await handleLiveMatches();
+    expect(second.data.length).toBe(1200);
+    expect(second.headers['X-Partial']).toBe('1'); // crawl failed partway — still incomplete
+  });
+
+  it('serves cached data instead of starting a second crawl while background pages are in flight', async () => {
+    deferPages();
+    const { handleLiveMatches } = require('./liveMatchHandler');
+
+    const firstPromise = handleLiveMatches();
+    for (const start of FAST_STARTS) resolvePage(start, page(start, PAGE_SIZE));
+    const first = await firstPromise;
+    expect(first.data.length).toBe(1000);
+    expect(first.headers['X-Partial']).toBe('1');
+
+    await flush(); // background phase begins, its pages still unresolved
+    now += 61_000; // cache expired while the background phase is in flight
+
+    const second = await handleLiveMatches();
+    expect(second.data.length).toBe(1000);
+    expect(requestedStarts.filter((s) => s === 0)).toHaveLength(1); // no second crawl
+
+    // Background completes: page 5 partial (dataset ends there), rest empty
+    resolvePage(1000, page(1000, 150));
+    for (const start of BACKGROUND_STARTS.slice(1)) resolvePage(start, page(start, 0));
+    await flush();
+
+    now += 1_000;
+    const third = await handleLiveMatches();
+    expect(third.data.length).toBe(1150); // background merge survived
+    expect(third.headers['X-Partial']).toBeUndefined();
+  });
+});
