@@ -5,9 +5,33 @@ import { log, RELIC_AUTH_STEAM_USER, RELIC_AUTH_STEAM_PASS } from './config';
 import type { AuthResult, SessionData } from './types';
 
 // Global instances
-let authClient: RelicAuthClient | null = null;
 let playerService: RelicPlayerService | null = null;
 let sessionManager: SessionManager | null = null;
+
+// Single in-flight authentication shared by all concurrent callers.
+// Steam rejects concurrent logins for the same account, so parallel callers
+// (e.g. concurrent live-match page fetches after a 401) must collapse into
+// one login instead of each starting their own.
+let pendingAuth: Promise<AuthResult> | null = null;
+
+function authenticateOnce(manager: SessionManager, lastSession: SessionData | null): Promise<AuthResult> {
+    if (!pendingAuth) {
+        const auth = (async () => {
+            const authClient = new RelicAuthClient();
+            const steamData = lastSession?.base64Ticket
+                ? { steamId64: lastSession.steamId64, steamUserName: lastSession.steamUserName }
+                : undefined;
+            const authResult = await authenticateWithFallback(authClient, lastSession?.base64Ticket, steamData);
+            await manager.saveSession(authResult);
+            log.info('Session saved and ready for use');
+            return authResult;
+        })();
+        pendingAuth = auth;
+        const clear = () => { if (pendingAuth === auth) pendingAuth = null; };
+        void auth.then(clear, clear);
+    }
+    return pendingAuth;
+}
 
 async function authenticateWithFallback(
     authClient: RelicAuthClient,
@@ -34,11 +58,7 @@ export async function ensureAuthenticated(): Promise<AuthResult | SessionData> {
 
     if (!session) {
         log.info('No valid session found, authenticating...');
-        const authClient = new RelicAuthClient();
-        const authResult = await authenticateWithFallback(authClient);
-        await sessionManager.saveSession(authResult);
-        log.info('Session saved and ready for use');
-        return authResult;
+        return authenticateOnce(sessionManager, null);
     }
 
     return session;
@@ -53,15 +73,7 @@ export async function getAuthenticatedPlayerService(): Promise<RelicPlayerServic
     const lastSession = await sessionManager.getSession();
 
     log.info('No valid session found, authenticating...');
-    authClient = new RelicAuthClient();
-
-    const steamData = lastSession?.base64Ticket
-      ? { steamId64: lastSession.steamId64, steamUserName: lastSession.steamUserName }
-      : undefined;
-    const authResult = await authenticateWithFallback(authClient, lastSession?.base64Ticket, steamData);
-
-    await sessionManager.saveSession(authResult);
-    log.info('Session saved and ready for use');
+    await authenticateOnce(sessionManager, lastSession);
   }
 
   if (!playerService) {

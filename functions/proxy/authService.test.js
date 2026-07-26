@@ -288,6 +288,89 @@ describe('authService — getAuthenticatedPlayerService', () => {
     expect(result).toBeDefined();
   });
 
+  it('coalesces concurrent callers into a single authentication', async () => {
+    let resolveAuth;
+    const authenticateFn = jest.fn().mockImplementation(
+      () => new Promise((resolve) => { resolveAuth = resolve; })
+    );
+    const { freshService, mockSaveSessionFresh } = requireFreshAuthService({
+      isSessionValid: jest.fn().mockResolvedValue(false),
+      getSession: jest.fn().mockResolvedValue(null),
+      authenticate: authenticateFn,
+    });
+
+    const calls = Promise.all([
+      freshService.getAuthenticatedPlayerService(),
+      freshService.getAuthenticatedPlayerService(),
+      freshService.getAuthenticatedPlayerService(),
+      freshService.getAuthenticatedPlayerService(),
+      freshService.getAuthenticatedPlayerService(),
+    ]);
+
+    // Let all callers reach the auth step before resolving
+    await new Promise((r) => setImmediate(r));
+    resolveAuth({
+      sessionId: 'coalesced-session',
+      steamId64: '76561198012345678',
+      steamUserName: 'testuser',
+      base64Ticket: 'ticket',
+    });
+
+    const results = await calls;
+    expect(results).toHaveLength(5);
+    expect(authenticateFn).toHaveBeenCalledTimes(1);
+    expect(mockSaveSessionFresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('coalesces ensureAuthenticated with getAuthenticatedPlayerService', async () => {
+    let resolveAuth;
+    const authenticateFn = jest.fn().mockImplementation(
+      () => new Promise((resolve) => { resolveAuth = resolve; })
+    );
+    const { freshService } = requireFreshAuthService({
+      isSessionValid: jest.fn().mockResolvedValue(false),
+      getSession: jest.fn().mockResolvedValue(null),
+      authenticate: authenticateFn,
+    });
+
+    const calls = Promise.all([
+      freshService.ensureAuthenticated(),
+      freshService.getAuthenticatedPlayerService(),
+      freshService.ensureAuthenticated(),
+    ]);
+
+    await new Promise((r) => setImmediate(r));
+    resolveAuth({
+      sessionId: 'coalesced-session',
+      steamId64: '76561198012345678',
+      steamUserName: 'testuser',
+      base64Ticket: 'ticket',
+    });
+
+    await calls;
+    expect(authenticateFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows a fresh authentication after a coalesced one fails', async () => {
+    const authenticateFn = jest.fn()
+      .mockRejectedValueOnce(new Error('Steam down'))
+      .mockResolvedValueOnce({
+        sessionId: 'recovered-session',
+        steamId64: '76561198012345678',
+        steamUserName: 'testuser',
+        base64Ticket: 'ticket',
+      });
+    const { freshService } = requireFreshAuthService({
+      isSessionValid: jest.fn().mockResolvedValue(false),
+      getSession: jest.fn().mockResolvedValue(null),
+      authenticate: authenticateFn,
+    });
+
+    await expect(freshService.getAuthenticatedPlayerService()).rejects.toThrow('Steam down');
+    await expect(freshService.getAuthenticatedPlayerService()).resolves.toBeDefined();
+    expect(authenticateFn).toHaveBeenCalledTimes(2);
+  });
+
   it('falls back to full auth when ticket reuse fails', async () => {
     const lastSession = {
       sessionId: 'old-session',
