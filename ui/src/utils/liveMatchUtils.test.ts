@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupByTeam } from './liveMatchUtils';
+import { groupByTeam, getLeaderboardRatingForMatchType } from './liveMatchUtils';
 import type { LiveMatchPlayer } from '../types/liveMatch';
 
 function makePlayer(overrides: Partial<LiveMatchPlayer> & Pick<LiveMatchPlayer, 'name' | 'profile_id' | 'team'>): LiveMatchPlayer {
@@ -45,5 +45,36 @@ describe('groupByTeam', () => {
     const teams = groupByTeam(players);
     expect(teams).toHaveLength(1);
     expect(teams[0].map(p => p.name)).toEqual(['First', 'Second', 'Third']);
+  });
+});
+
+describe('getLeaderboardRatingForMatchType', () => {
+  const stats = [
+    { leaderboard_id: 3, rating: 1220 }, // RM 1v1
+    { leaderboard_id: 4, rating: 1353 }, // RM Team
+  ];
+
+  it('returns RM 1v1 rating for match type 6', () => {
+    expect(getLeaderboardRatingForMatchType(stats, 6)).toBe(1220);
+  });
+
+  it('returns RM Team rating for match types 7/8/9', () => {
+    expect(getLeaderboardRatingForMatchType(stats, 7)).toBe(1353);
+    expect(getLeaderboardRatingForMatchType(stats, 8)).toBe(1353);
+    expect(getLeaderboardRatingForMatchType(stats, 9)).toBe(1353);
+  });
+
+  it('returns null when the player has no rating on that leaderboard', () => {
+    expect(getLeaderboardRatingForMatchType(stats, 26)).toBeNull(); // EW 1v1, not in stats
+  });
+
+  it('returns null for unranked/unknown match types', () => {
+    expect(getLeaderboardRatingForMatchType(stats, 0)).toBeNull();
+    expect(getLeaderboardRatingForMatchType(stats, 999)).toBeNull();
+  });
+
+  it('returns null when stats are missing', () => {
+    expect(getLeaderboardRatingForMatchType(undefined, 6)).toBeNull();
+    expect(getLeaderboardRatingForMatchType([], 6)).toBeNull();
   });
 });

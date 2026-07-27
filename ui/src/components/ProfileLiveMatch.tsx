@@ -3,17 +3,20 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { LiveMatchCard } from './LiveMatchCard';
 import { getMatchAvgRating } from './live';
 import { getLiveMatchForPlayer } from '../services/liveMatchService';
+import { getLeaderboardRatingForMatchType } from '../utils/liveMatchUtils';
 import type { LiveMatch } from '../types/liveMatch';
 import type { Match } from '../types/match';
+import type { LeaderboardStats } from '../types/stats';
 
 const REFRESH_INTERVAL_MS = 30_000;
 
 interface ProfileLiveMatchProps {
   profileId: number;
   matches?: Match[];
+  leaderboardStats?: LeaderboardStats[];
 }
 
-export function ProfileLiveMatch({ profileId, matches = [] }: ProfileLiveMatchProps) {
+export function ProfileLiveMatch({ profileId, matches = [], leaderboardStats }: ProfileLiveMatchProps) {
   const [match, setMatch] = useState<LiveMatch | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -34,29 +37,33 @@ export function ProfileLiveMatch({ profileId, matches = [] }: ProfileLiveMatchPr
     };
   }, [profileId]);
 
-  // Override the viewed player's rating with the latest from match history
+  // Override the viewed player's rating with a fresher source than the
+  // DB-backed enrichment (which lags behind the collector schedule):
+  // personal stats for the match's ladder, else their latest completed
+  // match of the same game type from history.
   const enrichedMatch = useMemo(() => {
-    if (!match || !matches.length) return match;
+    if (!match) return match;
 
-    // Find the latest completed match of the same game type for this player
-    const latestMatch = matches.find(m =>
-      m.diplomacy?.type === match.game_type &&
-      m.players?.some(p => String(p.user_id) === String(profileId))
-    );
+    let freshRating = getLeaderboardRatingForMatchType(leaderboardStats, match.matchtype_id);
 
-    if (!latestMatch) return match;
+    if (freshRating == null && matches.length) {
+      const latestMatch = matches.find(m =>
+        m.diplomacy?.type === match.game_type &&
+        m.players?.some(p => String(p.user_id) === String(profileId))
+      );
+      const latestPlayer = latestMatch?.players.find(p => String(p.user_id) === String(profileId));
+      freshRating = latestPlayer?.rating ?? null;
+    }
 
-    const latestPlayer = latestMatch.players.find(p => String(p.user_id) === String(profileId));
-    if (!latestPlayer?.rating) return match;
+    if (freshRating == null) return match;
 
-    // Clone and override the rating for this player
     return {
       ...match,
       players: match.players.map(p =>
-        p.profile_id === profileId ? { ...p, rating: latestPlayer.rating } : p
+        p.profile_id === profileId ? { ...p, rating: freshRating } : p
       ),
     };
-  }, [match, matches, profileId]);
+  }, [match, matches, profileId, leaderboardStats]);
 
   if (!enrichedMatch) return null;
 

@@ -439,7 +439,7 @@ function App() {
           >
             {profileId && (
               <Box w={layout?.matchList.accordionWidth} mx="auto">
-                <ProfileLiveMatch profileId={Number(profileId)} matches={allMatches} />
+                <ProfileLiveMatch profileId={Number(profileId)} matches={allMatches} leaderboardStats={stats?.leaderboardStats} />
               </Box>
             )}
             <FilterBar
