@@ -1,5 +1,6 @@
 import SessionManager from './sessionManager';
 import { logger } from './config';
+import { AsyncSerializer } from './asyncSerializer';
 import { decodeOptions, doubleBase64Decode, decodeSlotInfo } from './decoders';
 import type { FindProfilesResult, SinglePlayerHistoryResult, SinglePlayerMatch, DecodedOptions, SlotInfoPlayer, LiveMatchesResult } from './types';
 
@@ -8,6 +9,28 @@ const RELIC_API_HOST = "https://aoe-api.worldsedgelink.com/";
 class RelicPlayerService {
     private sessionManager: SessionManager;
     private log: ReturnType<typeof logger.child>;
+    /**
+     * Serializes all Relic API calls on this instance so the shared per-session
+     * callNum is sent strictly increasing on the wire (concurrent calls arrived
+     * out of order → Relic 401 → session wiped; issue #37).
+     *
+     * Granularity: the lock is held for ONE Relic call (~1-2s), not a whole
+     * crawl. fetchAllLiveMatches enqueues background pages one at a time
+     * (sequential await), so other handlers (e.g. gamematch-history from a
+     * profile visit) slot in FIFO between background pages — they wait behind
+     * at most ONE in-flight page (~1-2s), not the whole ~10-15s crawl.
+     *
+     * RESIDUAL (issue #37 — why the snapshot-crawler redesign is high-priority):
+     *  - ~1-2s added latency on a profile-visit API call when a /live
+     *    background page is mid-flight at that instant (only while /live is
+     *    concurrently active; ~20-25% of calls in that window).
+     *  - Cross-instance out-of-order: two instances can each fire one call
+     *    concurrently and arrive out of order at Relic → 401. A per-instance
+     *    serializer cannot fix this; only a global lock or a single-writer
+     *    (the snapshot crawler) fully closes it. Mitigated by
+     *    --min-instances=1 --max-instances=3.
+     */
+    private serializer = new AsyncSerializer();
 
     constructor() {
         this.sessionManager = new SessionManager();
@@ -23,6 +46,10 @@ class RelicPlayerService {
     }
 
     async findProfiles(name: string): Promise<FindProfilesResult> {
+        return this.serializer.run(() => this._findProfiles(name));
+    }
+
+    private async _findProfiles(name: string): Promise<FindProfilesResult> {
         const startTime = Date.now();
         const session = await this.sessionManager.getSession();
         if (!session) {
@@ -143,6 +170,10 @@ class RelicPlayerService {
      * Fetch recent single-player match history for one or more profile IDs via authenticated endpoint.
      */
     async getRecentMatchSinglePlayerHistory(profileIds: string[] = []): Promise<SinglePlayerHistoryResult> {
+        return this.serializer.run(() => this._getRecentMatchSinglePlayerHistory(profileIds));
+    }
+
+    private async _getRecentMatchSinglePlayerHistory(profileIds: string[] = []): Promise<SinglePlayerHistoryResult> {
         const startTime = Date.now();
         const session = await this.sessionManager.getSession();
         if (!session) {
@@ -239,6 +270,10 @@ class RelicPlayerService {
         }
     }
     async findObservableAdvertisements(gameVersion: number, count: number = 50, start: number = 0, profileIds?: number[]): Promise<LiveMatchesResult> {
+        return this.serializer.run(() => this._findObservableAdvertisements(gameVersion, count, start, profileIds));
+    }
+
+    private async _findObservableAdvertisements(gameVersion: number, count: number = 50, start: number = 0, profileIds?: number[]): Promise<LiveMatchesResult> {
         const startTime = Date.now();
         const session = await this.sessionManager.getSession();
         if (!session) {

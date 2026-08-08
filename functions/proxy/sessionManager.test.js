@@ -16,6 +16,7 @@ describe('SessionManager', () => {
   let sessionManager;
   let mockCollection;
   let mockDoc;
+  let mockTransaction;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -43,14 +44,16 @@ describe('SessionManager', () => {
       doc: jest.fn(() => mockDoc)
     };
 
-    Firestore.mockImplementation(() => ({
-      collection: jest.fn(() => mockCollection)
-    }));
-
-    // Mock Firestore.FieldValue.increment
-    Firestore.FieldValue = {
-      increment: (value) => ({ increment: value })
+    mockTransaction = {
+      get: jest.fn(() => Promise.resolve(mockDoc)),
+      update: jest.fn(() => Promise.resolve()),
+      set: jest.fn(() => Promise.resolve())
     };
+
+    Firestore.mockImplementation(() => ({
+      collection: jest.fn(() => mockCollection),
+      runTransaction: jest.fn(async (fn) => fn(mockTransaction))
+    }));
 
     sessionManager = new SessionManager();
   });
@@ -132,27 +135,57 @@ describe('SessionManager', () => {
   });
 
   describe('incrementCallNumber', () => {
-    it('should increment call number', async () => {
+    it('should increment call number atomically via a transaction', async () => {
+      mockDoc._data = { callNumber: 5 };
+      mockDoc.data.mockImplementation(function() { return this._data; });
+
       const result = await sessionManager.incrementCallNumber();
 
-      expect(mockDoc.update).toHaveBeenCalledWith({
-        callNumber: { increment: 1 }
-      });
+      expect(mockTransaction.get).toHaveBeenCalled();
+      expect(mockTransaction.set).toHaveBeenCalledWith(
+        expect.anything(),
+        { callNumber: 6 },
+        { merge: true }
+      );
       expect(result).toBe(6);
     });
 
-    it('should handle error and fallback', async () => {
-      // Fail first update, succeed second
-      mockDoc.update
-        .mockRejectedValueOnce(new Error('Update failed'))
-        .mockResolvedValueOnce();
-
-      mockDoc._data.callNumber = 3;
+    it('should start from 0 when the counter is unset', async () => {
+      mockDoc._data = {};
       mockDoc.data.mockImplementation(function() { return this._data; });
-      mockDoc.get.mockResolvedValue(mockDoc);
 
       const result = await sessionManager.incrementCallNumber();
-      expect(result).toBe(4);
+
+      expect(mockTransaction.set).toHaveBeenCalledWith(
+        expect.anything(),
+        { callNumber: 1 },
+        { merge: true }
+      );
+      expect(result).toBe(1);
+    });
+
+    it('should not throw when the session document is missing (cleared by another instance)', async () => {
+      // Another instance cleared the session doc while this instance's 10s
+      // in-memory cache still holds a stale entry. set+merge must not throw
+      // NOT_FOUND (update would); the call then 401s and self-corrects via the
+      // existing auth-retry path.
+      mockDoc.exists = false;
+      mockDoc.data.mockImplementation(() => undefined);
+
+      const result = await sessionManager.incrementCallNumber();
+
+      expect(mockTransaction.set).toHaveBeenCalledWith(
+        expect.anything(),
+        { callNumber: 1 },
+        { merge: true }
+      );
+      expect(result).toBe(1);
+    });
+
+    it('should propagate transaction failures', async () => {
+      mockTransaction.get.mockRejectedValueOnce(new Error('tx failed'));
+
+      await expect(sessionManager.incrementCallNumber()).rejects.toThrow('tx failed');
     });
   });
 

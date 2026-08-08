@@ -1,4 +1,4 @@
-import { Firestore, FieldValue } from '@google-cloud/firestore';
+import { Firestore } from '@google-cloud/firestore';
 import { logger } from './config';
 import type { SessionData, AuthResult } from './types';
 
@@ -109,34 +109,44 @@ class SessionManager {
 
     async incrementCallNumber(): Promise<number> {
         try {
-            // Atomic server-side increment — safe across multiple Cloud Run instances
-            await this.db.collection(this.collection).doc(this.docId).update({
-                callNumber: FieldValue.increment(1)
+            const ref = this.db.collection(this.collection).doc(this.docId);
+
+            // Reserve a unique, strictly-increasing callNumber via a Firestore
+            // transaction that returns the exact value reserved. The previous
+            // implementation returned a local in-memory counter
+            // (memSession.callNumber++), which is unsafe across multiple Cloud
+            // Run instances: two instances sharing a cached base value both
+            // returned the same number and sent a duplicate callNum to Relic,
+            // causing the recurring 401s (issue #37). The transaction
+            // reads-then-writes the actual document value, so every caller
+            // across every instance gets the exact number it reserved.
+            // (Concurrent transactions on this doc are serialized by Firestore,
+            // with automatic retries on contention.)
+            const newCallNumber = await this.db.runTransaction(async (transaction) => {
+                const doc = await transaction.get(ref);
+                const current = (doc.data()?.callNumber as number) ?? 0;
+                const next = current + 1;
+                // Use set+merge (not update) so a missing document — cleared by
+                // handleAuthFailure()/clearSession() on another instance while
+                // this instance's 10s in-memory session cache still holds a
+                // stale entry — does NOT throw NOT_FOUND. The subsequent Relic
+                // call then 401s on the stale sessionId and self-corrects via
+                // the existing auth-retry path (handleApiError → clearSession →
+                // ensureAuthenticated → saveSession overwrites this write).
+                transaction.set(ref, { callNumber: next }, { merge: true });
+                return next;
             });
 
-            // Update in-memory cache to avoid a Firestore get() round-trip
+            // Keep the in-memory cache roughly in sync (best-effort; the
+            // transaction result is the source of truth, not this cached value).
             if (this.memSession) {
-                this.memSession.callNumber++;
-                this.log.debug({ callNumber: this.memSession.callNumber }, 'Incremented call number');
-                return this.memSession.callNumber;
+                this.memSession.callNumber = newCallNumber;
             }
 
-            // No in-memory cache — must read back from Firestore
-            const doc = await this.db.collection(this.collection).doc(this.docId).get();
-            const data = doc.data()!;
-
-            this.log.debug({ callNumber: data.callNumber }, 'Incremented call number');
-            return data.callNumber;
+            this.log.debug({ callNumber: newCallNumber }, 'Incremented call number');
+            return newCallNumber;
         } catch (error) {
             this.log.error({ error: (error as Error).message }, 'Error incrementing call number');
-            const session = await this.getSession();
-            if (session) {
-                const newCallNumber = (session.callNumber || 0) + 1;
-                await this.db.collection(this.collection).doc(this.docId).update({
-                    callNumber: newCallNumber
-                });
-                return newCallNumber;
-            }
             throw error;
         }
     }

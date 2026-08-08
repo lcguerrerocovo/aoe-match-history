@@ -368,10 +368,12 @@ async function enrichLiveMatchesWithRatings(matches: LiveMatch[]): Promise<LiveM
 }
 
 /**
- * Fetch pages [startPage, maxPage) from the Relic API concurrently,
- * deduplicating matches and players. Pages are merged in page order and only
- * the contiguous prefix up to the first failed page is kept, so the result
- * never has gaps. Returns:
+ * Fetch pages [startPage, maxPage) from the Relic API SEQUENTIALLY (one at a
+ * time, in page order), deduplicating matches and players. Sequential fetch
+ * keeps the shared per-session callNum strictly increasing on the wire —
+ * concurrent page fetches sent call numbers that arrived out of order at Relic
+ * and caused 401s (issue #37). Fetching also stops at the first failed/partial
+ * page, so the result never has gaps. Returns:
  *   exhausted — a page was partial: no more data upstream
  *   failed    — a page request failed: data is incomplete and worth retrying
  */
@@ -382,24 +384,27 @@ async function fetchPages(
     seenMatchIds: Set<number>,
     seenPlayerIds: Set<number>,
 ): Promise<{ matches: unknown[][]; players: unknown[][]; lastPage: number; exhausted: boolean; failed: boolean }> {
-    const pageNumbers: number[] = [];
-    for (let p = startPage; p < maxPage; p++) pageNumbers.push(p);
-
-    const responses = await Promise.all(pageNumbers.map(async (page) => {
-        const result = await withAuthRetry(async () => {
-            const svc = await getAuthenticatedPlayerService();
-            return svc.findObservableAdvertisements(gameVersion, PAGE_SIZE, page * PAGE_SIZE);
-        });
-        return { page, result };
-    }));
-
     const rawMatches: unknown[][] = [];
     const rawPlayers: unknown[][] = [];
     let exhausted = false;
     let failed = false;
     let lastPage = startPage - 1;
 
-    for (const { page, result } of responses) {
+    // Fetch pages sequentially. Every Relic call bumps a shared per-session
+    // callNumber; concurrent page fetches (Promise.all) sent call numbers that
+    // arrived out of order at Relic, which the platform treats as an auth
+    // failure (401) and invalidates the shared session — the documented root
+    // cause of recurring 401s (issue #37). Sequential fetch keeps callNum
+    // strictly increasing on the wire and lets us stop at the first
+    // failed/partial page instead of fetching all and discarding. Auth is
+    // coalesced (authService.authenticateOnce), so the cold-start latency
+    // that originally motivated parallelism is already gone.
+    for (let page = startPage; page < maxPage; page++) {
+        const result = await withAuthRetry(async () => {
+            const svc = await getAuthenticatedPlayerService();
+            return svc.findObservableAdvertisements(gameVersion, PAGE_SIZE, page * PAGE_SIZE);
+        });
+
         if (!result.success || !result.data) {
             log.warn({ error: result.error, page }, 'Failed to fetch page, discarding later pages');
             failed = true;

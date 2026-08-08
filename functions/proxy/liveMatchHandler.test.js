@@ -195,21 +195,69 @@ describe('live match cache lifecycle', () => {
     dateSpy.mockRestore();
   });
 
-  it('requests fast-phase pages concurrently', async () => {
+  it('requests fast-phase pages sequentially (one in flight at a time)', async () => {
     deferPages();
     const { handleLiveMatches } = require('./liveMatchHandler');
 
     const promise = handleLiveMatches();
     await flush();
 
-    expect(new Set(requestedStarts)).toEqual(new Set(FAST_STARTS));
+    // Sequential fetch: blocked on page 0 until it resolves. Concurrent fetch
+    // would have requested all 5 fast pages by now — that out-of-order arrival
+    // is what caused the recurring 401s (issue #37).
+    expect(requestedStarts).toEqual([0]);
 
     resolvePage(0, page(0, 50)); // partial first page — dataset exhausted
-    for (const start of FAST_STARTS.slice(1)) resolvePage(start, page(start, 0));
 
     const result = await promise;
     expect(result.data.length).toBe(50);
     expect(result.headers['X-Partial']).toBeUndefined();
+  });
+
+  it('fetches pages in order and stops at the first partial page', async () => {
+    deferPages();
+    const { handleLiveMatches } = require('./liveMatchHandler');
+
+    const promise = handleLiveMatches();
+    await flush();
+    expect(requestedStarts).toEqual([0]);
+
+    resolvePage(0, page(0, PAGE_SIZE)); // full page → loop requests page 1
+    await flush();
+    expect(requestedStarts).toEqual([0, 200]);
+
+    resolvePage(200, page(200, 0)); // empty page → exhausted, stop
+    const result = await promise;
+    expect(result.data.length).toBe(200);
+    expect(result.headers['X-Partial']).toBeUndefined();
+  });
+
+  it('fetches background-phase pages sequentially', async () => {
+    deferPages();
+    const { handleLiveMatches } = require('./liveMatchHandler');
+
+    // Fast phase: resolve all 5 fast pages full so the background phase starts.
+    const promise = handleLiveMatches();
+    for (const start of FAST_STARTS) resolvePage(start, page(start, PAGE_SIZE));
+    const first = await promise;
+    expect(first.data.length).toBe(1000);
+    expect(first.headers['X-Partial']).toBe('1');
+
+    // Background phase has started but is blocked on the first background page
+    // (start=1000). Sequential fetch: only that page has been requested.
+    await flush();
+    expect(requestedStarts.slice(FAST_STARTS.length)).toEqual([1000]);
+
+    resolvePage(1000, page(1000, PAGE_SIZE)); // full → loop requests page 1200
+    await flush();
+    expect(requestedStarts.slice(FAST_STARTS.length)).toEqual([1000, 1200]);
+
+    resolvePage(1200, page(1200, 0)); // empty → exhausted, stop
+    await flush();
+
+    // Cache flips to complete (no X-Partial) once the background phase settles.
+    const second = await handleLiveMatches();
+    expect(second.headers['X-Partial']).toBeUndefined();
   });
 
   it('keeps the response partial when a background page fails', async () => {
