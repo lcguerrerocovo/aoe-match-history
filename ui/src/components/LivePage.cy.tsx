@@ -7,11 +7,14 @@ import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { LivePage } from './LivePage';
 import { mockLiveMatches } from '../test/mocks';
 
-let lastSearch = '';
+// Spy that exposes the in-memory router's search string via a real (hidden)
+// DOM element so assertions retry cleanly in both Chrome and Electron. A
+// null-returning spy can be optimized out / not re-render, causing hangs.
 const SearchSpy = () => {
   const loc = useLocation();
-  lastSearch = loc.search;
-  return null;
+  return (
+    <span data-testid="url-search" data-search={loc.search} style={{ display: 'none' }} />
+  );
 };
 
 const mountWithProviders = (children: React.ReactNode) => {
@@ -81,14 +84,13 @@ describe('LivePage', () => {
 
   // #38 regression guard: clicking a game-type tab must write ?type= to the URL.
   it('writes ?type= to the router when a game-type tab is clicked', () => {
-    lastSearch = '';
     cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
     mountWithProviders(<LivePage />);
     cy.tick(100);
     cy.wait('@live');
 
     cy.contains('button', /RM Team/).first().click();
-    cy.then(() => expect(lastSearch).to.include('type='));
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'type=');
   });
 
   it('filters by map and shows filter feedback', () => {

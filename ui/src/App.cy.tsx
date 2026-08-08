@@ -206,12 +206,12 @@ describe('App Filter Dropdown Counts', () => {
 describe('App URL-aware filters (#38 regression guard)', () => {
   // Capture the in-memory router's search string via a spy element (cy.location()
   // returns the Cypress runner URL, not MemoryRouter's in-memory URL).
-  let lastSearch = '';
   let personalStatsCalls = 0;
   const SearchSpy = () => {
     const loc = useLocation();
-    lastSearch = loc.search;
-    return null;
+    return (
+      <span data-testid="url-search" data-search={loc.search} style={{ display: 'none' }} />
+    );
   };
 
   const fullMatchHistoryResponse = {
@@ -255,7 +255,6 @@ describe('App URL-aware filters (#38 regression guard)', () => {
   };
 
   beforeEach(() => {
-    lastSearch = '';
     personalStatsCalls = 0;
     cy.on('uncaught:exception', () => false);
     cy.intercept('GET', /match-history\/12345$/, { statusCode: 200, body: { matches: [], name: 'TestPlayer' } });
@@ -281,7 +280,7 @@ describe('App URL-aware filters (#38 regression guard)', () => {
     // the FIRST <select> is the map filter (FilterBar order: map, matchType)
     cy.get('select').eq(0).select('Arabia');
     cy.wait('@fullHistory');
-    cy.then(() => expect(lastSearch).to.include('map=Arabia'));
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'map=Arabia');
   });
 
   it('matchType filter writes ?type= to the router', () => {
@@ -289,7 +288,7 @@ describe('App URL-aware filters (#38 regression guard)', () => {
     cy.wait('@fullHistory');
     cy.get('select').eq(1).select('RM 1v1');
     cy.wait('@fullHistory');
-    cy.then(() => expect(lastSearch).to.include('type='));
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'type=');
   });
 
   // Regression: RR v7 setSearchParams is not stable; it was in the profile-change

@@ -5,15 +5,17 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { CustomThemeProvider } from '../../theme/ThemeProvider';
 import { StatsPage } from './StatsPage';
 
-// Capture the in-memory router's pathname + search (cy.location() returns the
-// Cypress runner URL, not MemoryRouter's in-memory URL).
-let lastPath = '';
-let lastSearch = '';
+// Spy that exposes the in-memory router's pathname + search via real (hidden)
+// DOM elements so assertions retry cleanly in both Chrome and Electron (a
+// null-returning spy can be optimized out / not re-render, causing hangs).
 const RouterSpy = () => {
   const loc = useLocation();
-  lastPath = loc.pathname;
-  lastSearch = loc.search;
-  return null;
+  return (
+    <>
+      <span data-testid="url-path" data-path={loc.pathname} style={{ display: 'none' }} />
+      <span data-testid="url-search" data-search={loc.search} style={{ display: 'none' }} />
+    </>
+  );
 };
 
 // Minimal CivStatsData mock: one civ (Britons) on Arabia in 1v1/all.
@@ -64,8 +66,6 @@ const renderStats = (initial: string) => {
 
 describe('StatsPage URL-aware state (#38 guard)', () => {
   beforeEach(() => {
-    lastPath = '';
-    lastSearch = '';
     cy.on('uncaught:exception', () => false);
     cy.intercept('GET', '/data/civ-stats.json', { statusCode: 200, body: civStatsMock }).as('civStats');
   });
@@ -74,14 +74,14 @@ describe('StatsPage URL-aware state (#38 guard)', () => {
     renderStats('/stats/win-rates');
     cy.wait('@civStats');
     cy.contains('button', /Team Positions/i).click();
-    cy.then(() => expect(lastPath).to.eq('/stats/team-positions'));
+    cy.get('[data-testid="url-path"]').invoke('attr', 'data-path').should('eq', '/stats/team-positions');
   });
 
   it('clicking the Win Rates tab navigates to /stats/win-rates', () => {
     renderStats('/stats/team-positions');
     cy.wait('@civStats');
     cy.contains('button', /Win Rates/i).click();
-    cy.then(() => expect(lastPath).to.eq('/stats/win-rates'));
+    cy.get('[data-testid="url-path"]').invoke('attr', 'data-path').should('eq', '/stats/win-rates');
   });
 
   it('changing matchType filter writes ?matchType= to the router', () => {
@@ -89,17 +89,14 @@ describe('StatsPage URL-aware state (#38 guard)', () => {
     cy.wait('@civStats');
     // matchType is a row of buttons (1v1 / Team), not a <select>.
     cy.contains('button', /^Team$/).click();
-    cy.then(() => expect(lastSearch).to.include('matchType=team'));
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'matchType=team');
   });
 
   it('changing the map filter writes ?map= to the router', () => {
     renderStats('/stats/win-rates');
     cy.wait('@civStats');
     cy.get('option[value="Arabia"]').should('exist');
-    // Verify which select we're targeting + its value right after select.
     cy.get('select').eq(0).select('Arabia').should('have.value', 'Arabia');
-    // Capture immediately, then after a tick, to see if ?map= appears then resets.
-    cy.then(() => cy.log('search right after select: ' + lastSearch));
-    cy.then(() => expect(lastSearch, 'search immediately after select').to.include('map='));
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'map=Arabia');
   });
 });
