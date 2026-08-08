@@ -1,5 +1,6 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useUrlState } from '../hooks/useUrlState';
 import TopBar from './TopBar';
 import { LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
@@ -85,7 +86,7 @@ export function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useUrlState<GameTypeCategory>({ key: 'type', defaultValue: 'RM 1v1' });
+  const [selectedCategory] = useUrlState<GameTypeCategory>({ key: 'type', defaultValue: 'RM 1v1' });
   const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: '' });
   const [selectedEloBracket, setSelectedEloBracket] = useUrlState<string>({ key: 'elo', defaultValue: '' });
   const [civFilter, setCivFilter] = useUrlState<string>({ key: 'civ', defaultValue: '' });
@@ -97,13 +98,22 @@ export function LivePage() {
   const [dataDelayed, setDataDelayed] = useState(false);
   const staleRetriesRef = useRef(0);
 
-  // Reset map/ELO filters when game type tab changes
+  // Reset map/ELO/civ filters when game type tab changes. All four param changes
+  // must go in ONE setSearchParams call — useUrlState setters each issue a
+  // separate navigation, so calling them sequentially clobbers the URL and only
+  // the last write survives (the category was being lost, so the tab didn't
+  // switch). Batch into one navigation to set type + clear the filters together.
+  const setSearchParams = useSearchParams()[1];
   const handleCategorySelect = useCallback((cat: GameTypeCategory) => {
-    setSelectedCategory(cat);
-    setSelectedMap('');
-    setSelectedEloBracket('');
-    setCivFilter('');
-  }, []);
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.set('type', cat);
+      params.delete('map');
+      params.delete('elo');
+      params.delete('civ');
+      return params;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Pre-compute avg ratings ONCE for all matches — shared across all filter chains
   const allAvgRatings = useMemo(() => {

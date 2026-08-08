@@ -8,7 +8,7 @@ import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getS
 import type { FilterOptions, FullMatchHistoryResponse } from './services/matchService';
 import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useLayoutConfig } from './theme/breakpoints';
 import { groupMatchesBySession, searchMatches, createFlatMatchGroup, sortMatchesByStart, sortMatchGroupsByDate } from './utils/matchUtils';
 import { normalizeMapDisplayName } from './utils/mapNameResolver';
@@ -82,18 +82,27 @@ function App() {
     }
   }, [serverFilterOptions]);
 
+  // Profile-change reset. The filter clears (q/map/type/sort) must go in ONE
+  // setSearchParams call — useUrlState setters each issue a separate navigation,
+  // so calling them sequentially clobbers the URL and only the last survives.
+  // (Same regression class as the /live category switch.)
+  const setSearchParams = useSearchParams()[1];
   useEffect(() => {
     window.scrollTo(0, 0);
     // Clear filtering state when switching players
-    setSearchTerm('');
-    setSelectedMap('');
-    setSelectedMatchType('');
-    setSortDirection('desc');
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.delete('q');
+      params.delete('map');
+      params.delete('type');
+      params.delete('sort');
+      return params;
+    }, { replace: true });
     setNextCursor(null);
     setServerFilterOptions(null);
     setProfile(null);
     setStats(null);
-  }, [profileId]);
+  }, [profileId, setSearchParams]);
 
   const applyMatchHistoryResult = useCallback((matchResult: FullMatchHistoryResponse) => {
     setAllMatches(normalizeMatches(matchResult.matches));

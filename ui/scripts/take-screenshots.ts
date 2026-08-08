@@ -97,12 +97,12 @@ function buildViews(): ViewConfig[] {
     },
     {
       name: 'stats',
-      path: '/stats',
+      path: '/stats/win-rates',
       waitForSelector: '[data-testid="topbar-root"]',
     },
     {
-      name: 'stats-insights',
-      path: '/stats/insights',
+      name: 'stats-team-positions',
+      path: '/stats/team-positions',
       waitForSelector: '[data-testid="topbar-root"]',
     },
     {

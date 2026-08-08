@@ -452,7 +452,7 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
 export function StatsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const activeTab: StatsTab = location.pathname.endsWith('/insights') ? 'insights' : 'statistics';
+  const activeTab: StatsTab = location.pathname.endsWith('/team-positions') ? 'insights' : 'statistics';
   const [data, setData] = useState<CivStatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [matchType, setMatchType] = useUrlState<MatchType>({ key: 'matchType', defaultValue: '1v1' });
@@ -461,7 +461,7 @@ export function StatsPage() {
   const [activeView, setActiveView] = useUrlState<StatsView>({ key: 'view', defaultValue: 'winRate' });
 
   const setActiveTab = (tab: StatsTab) => {
-    navigate(tab === 'insights' ? '/stats/insights' : '/stats', { replace: false });
+    navigate(tab === 'insights' ? '/stats/team-positions' : '/stats/win-rates', { replace: false });
   };
 
   useEffect(() => {
