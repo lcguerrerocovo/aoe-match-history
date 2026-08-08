@@ -93,6 +93,17 @@ All state in `App.tsx` — no global store. Props drilled to children.
 - Session grouping: matches within 90 minutes are grouped together
 - Flat mode (no grouping) when any filter is active
 
+### URL-aware state (required for new pages/filters)
+
+Bind user-facing view state (filters, tabs, sort, search) to the URL via the shared `src/hooks/useUrlState.ts` hook so views are shareable and survive reload/back. Current: `/live` (`?type ?map ?elo ?civ`), `/stats/win-rates` + `/stats/team-positions` (`?matchType ?map ?elo ?view` / `?gameSize ?map ?elo`), `/profile_id/:id` (`?q ?map ?type ?sort`), `/match/:id` (`?view ?player`). Tabs as path segments via `useNavigate`.
+
+Gotchas (caused real regressions):
+1. **Batch multi-param changes into ONE `setSearchParams` updater** — each `useUrlState` setter is a separate navigation that clobbers the URL (only last survives). `setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set(...); p.delete(...); return p; }, { replace: true })`.
+2. **Never put `setSearchParams` in effect/useCallback deps** — it's NOT stable in RR v7 (identity changes per URL change), so it re-fires effects on every filter change. Depend only on derived values + route params (`[profileId]`); updater form reads `prev` so stale identity is fine.
+3. Guard async-validated filters with `if (data && ...)` so deep links (`?map=Arabia`) aren't wiped before data loads (`maps=[]`).
+4. Setting a value to its default DELETES the param; for nullable/auto filters use `''` as default.
+5. Adding a route/tab: update `scripts/take-screenshots.ts` + `.claude/commands/ui-review.md`, and `<Navigate>`-redirect old paths.
+
 ## Styling
 
 - Theme: `src/theme/theme.ts` — `createSystem()` with 170+ semantic color tokens

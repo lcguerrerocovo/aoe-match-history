@@ -1,5 +1,6 @@
 import { Box, Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
 import { useEffect, useState, useMemo } from 'react';
+import { useUrlState } from '../../hooks/useUrlState';
 import { getPositionStats } from '../../services/positionStatsService';
 import { FormationView } from './FormationView';
 import type { PositionStatsData, GameSize, PositionEloBracket } from '../../types/positionStats';
@@ -41,9 +42,11 @@ function getTopMap(data: PositionStatsData, gameSize: GameSize, eloBracket: Posi
 export function InsightsTab() {
   const [data, setData] = useState<PositionStatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [gameSize, setGameSize] = useState<GameSize>('4v4');
-  const [selectedMap, setSelectedMap] = useState<string | null>(null);
-  const [eloBracket, setEloBracket] = useState<PositionEloBracket>('all');
+  // URL-bound filters (Team Positions has its own keys distinct from Win Rates).
+  // selectedMap default '' means "auto" (pick the top map); a non-empty value is honored.
+  const [gameSize, setGameSize] = useUrlState<GameSize>({ key: 'gameSize', defaultValue: '4v4' });
+  const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: '' });
+  const [eloBracket, setEloBracket] = useUrlState<PositionEloBracket>({ key: 'elo', defaultValue: 'all' });
 
   useEffect(() => {
     getPositionStats().then(setData).catch(e => setError(e.message));

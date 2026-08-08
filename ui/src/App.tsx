@@ -102,7 +102,13 @@ function App() {
     setServerFilterOptions(null);
     setProfile(null);
     setStats(null);
-  }, [profileId, setSearchParams]);
+    // NOTE: setSearchParams is intentionally excluded from deps. React Router v7's
+    // setSearchParams is NOT stable (it depends on `searchParams`, so its identity
+    // changes on every URL change). Including it would make this effect fire on
+    // every filter change (e.g. picking a map), wiping the profile mid-load.
+    // The updater form reads `prev`, so a slightly-stale setter is harmless.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
 
   const applyMatchHistoryResult = useCallback((matchResult: FullMatchHistoryResponse) => {
     setAllMatches(normalizeMatches(matchResult.matches));

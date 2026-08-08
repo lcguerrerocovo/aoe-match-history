@@ -113,7 +113,11 @@ export function LivePage() {
       params.delete('civ');
       return params;
     }, { replace: true });
-  }, [setSearchParams]);
+    // setSearchParams is intentionally excluded — it's NOT stable in RR v7
+    // (identity changes per URL change), so including it would re-render
+    // GameTypeTabs unnecessarily. The updater reads `prev`, so a stale setter is harmless.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Pre-compute avg ratings ONCE for all matches — shared across all filter chains
   const allAvgRatings = useMemo(() => {
