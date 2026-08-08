@@ -29,17 +29,24 @@ export async function updateSearchIndex(
     log.info("MEILISEARCH_HOST/API_KEY not set — skipping search index update");
     return;
   }
-  if (profileIds.length === 0) {
+
+  // BACKFILL_SEARCH_INDEX=1 → full scan of match_player (one-time catch-up for
+  // participants already in PG before the incremental updater existed). Omit
+  // profileIds; bound by batch.
+  const backfill = process.env.BACKFILL_SEARCH_INDEX === "1";
+  if (!backfill && profileIds.length === 0) {
     log.info("No profiles to index — skipping search index update");
     return;
   }
+  if (backfill) log.info("BACKFILL_SEARCH_INDEX=1 — full scan backfill");
 
   try {
-    const docs = await fetchPlayerDocs(db, profileIds, log);
+    const docs = await fetchPlayerDocs(db, backfill ? null : profileIds, log);
     if (docs.length === 0) {
       log.info("No usable player docs from PG — skipping search index update");
       return;
     }
+    log.info({ backfill, docs: docs.length }, "Fetched player docs from PG");
 
     const base = meiliHost.replace(/\/$/, "");
     const headers = { Authorization: `Bearer ${meiliKey}`, "Content-Type": "application/json" };
@@ -68,14 +75,17 @@ export async function updateSearchIndex(
 }
 
 /** Latest non-null, non-steam player_name + last_match_date (epoch seconds)
- *  for the given profile_ids. Drops profiles with no usable name. */
+ *  for the given profile_ids (or ALL players if profileIds is null = backfill).
+ *  Drops profiles with no usable name. */
 async function fetchPlayerDocs(
   db: Database,
-  profileIds: number[],
+  profileIds: number[] | null,
   log: pino.Logger,
 ): Promise<Record<string, unknown>[]> {
   // Correlated subquery picks the latest qualifying name per profile; the outer
   // GROUP BY gets last_match_date. NULLS LAST so a null start_time never wins.
+  const where = profileIds ? `WHERE mp.profile_id = ANY($1::bigint[])` : "";
+  const params = profileIds ? [profileIds] : [];
   const sql = `
     SELECT mp.profile_id,
            (SELECT mp2.player_name
@@ -89,12 +99,10 @@ async function fetchPlayerDocs(
            EXTRACT(EPOCH FROM MAX(m.start_time))::bigint AS last_match_date
     FROM match_player mp
     JOIN match m ON m.match_id = mp.match_id
-    WHERE mp.profile_id = ANY($1::bigint[])
+    ${where}
     GROUP BY mp.profile_id;
   `;
-  const { rows } = await db.query<{ profile_id: string; name: string | null; last_match_date: string }>(sql, [
-    profileIds,
-  ]);
+  const { rows } = await db.query<{ profile_id: string; name: string | null; last_match_date: string }>(sql, params);
 
   const docs: Record<string, unknown>[] = [];
   for (const r of rows) {

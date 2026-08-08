@@ -18,8 +18,9 @@ export class Collector {
     this.archiveBucket = archiveBucket;
   }
 
-  async run(): Promise<number[]> {
+  async run(): Promise<{ changedProfiles: number[]; participants: number[] }> {
     const startTime = Date.now();
+    const processedParticipants = new Set<number>();
 
     // Step 1: Load civ/map mappings
     log.info('Loading civ/map mappings...');
@@ -75,7 +76,7 @@ export class Collector {
 
     if (changedProfiles.length === 0) {
       log.info('No profiles need updating. Done.');
-      return changedProfiles;
+      return { changedProfiles, participants: Array.from(processedParticipants) };
     }
 
     // Step 5: Concurrent batch fetch and store
@@ -124,6 +125,11 @@ export class Collector {
               winning_team: pm.winningTeam,
               raw_json: pm.rawJson,
             });
+            // Track every match participant (not just the collected profile) —
+            // these are what the search index updater needs, so high-ID players
+            // who appear as participants (e.g. 25543589) get indexed even though
+            // they are not in collection_state.
+            for (const p of pm.players) processedParticipants.add(p.profileId);
           }
           totalMatches += matchStats.length;
 
@@ -210,6 +216,6 @@ export class Collector {
       }
     }
 
-    return changedProfiles;
+    return { changedProfiles, participants: Array.from(processedParticipants) };
   }
 }

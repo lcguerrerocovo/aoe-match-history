@@ -18,15 +18,18 @@ async function main(): Promise<void> {
   const db = new Database(databaseUrl);
   const collector = new Collector(db, archiveBucket);
 
-  let processedProfiles: number[] = [];
+  let participants: number[] = [];
   try {
-    processedProfiles = await collector.run();
+    const result = await collector.run();
+    participants = result.participants; // all match participants this run (incl. high-ID non-collected players)
   } finally {
     // Best-effort PG -> Meilisearch incremental update (Issue #2). Runs before
     // db.close() since it needs PG; never throws (a Meilisearch outage must not
-    // break match ingestion).
-    if (processedProfiles.length > 0) {
-      await updateSearchIndex(db, processedProfiles, logger.child({ module: 'searchIndexUpdater' }));
+    // break match ingestion). Index PARTICIPANTS (not just collected profiles)
+    // so high-ID players like 25543589 who appear in collected players' matches
+    // get indexed even though they're not in collection_state.
+    if (participants.length > 0) {
+      await updateSearchIndex(db, participants, logger.child({ module: 'searchIndexUpdater' }));
     }
     try {
       await db.close();
