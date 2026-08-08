@@ -174,7 +174,7 @@ export function InsightsTab() {
             fontFamily: 'inherit',
           }}
         >
-          <option value="">Auto (Top map{activeMap ? `: ${activeMap}` : ''})</option>
+          <option value="">Auto</option>
           {maps.map(m => (
             <option key={m} value={m}>{m}</option>
           ))}
@@ -220,7 +220,7 @@ export function InsightsTab() {
           overflow="hidden"
         >
           <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontVariantCaps="small-caps" letterSpacing="wide" mb={2} textAlign="center">
-            Top Civilizations by Position — {gameSize}
+            Top Civilizations by Position — {gameSize} · {activeMap}
           </Text>
           <FormationView
             flankCivs={flankCivs}
