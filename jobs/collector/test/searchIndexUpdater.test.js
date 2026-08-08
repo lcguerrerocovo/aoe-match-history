@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-// Mock the Database.query (just needs .query returning rows). We import the
-// compiled module (tests run against dist/ per package.json test script).
+// Mock the Database: .query (for min/max in backfill) and .queryBounded
+// (SELECT with a scoped statement_timeout). Tests run against dist/ per package.json.
 import { updateSearchIndex } from '../dist/searchIndexUpdater.js';
 
 function makeDb(rows) {
+  const queryResult = { rows };
   return {
-    query: async (_sql, _vals) => ({ rows }),
+    query: async (_sql, _vals) => queryResult,
+    queryBounded: async (_sql, _vals, _timeout) => queryResult,
   };
 }
 

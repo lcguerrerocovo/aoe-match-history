@@ -150,6 +150,31 @@ export class Database {
     return this.pool.query<R>(text, values as unknown[]);
   }
 
+  /** Run a SELECT inside a short transaction with a scoped statement_timeout
+   *  (ms). Used by the search index updater so a stuck query fails fast (the
+   *  live DB had the fetchPlayerDocs SQL hung for 1h22m on 39.5M rows) instead
+   *  of hanging the whole 3h collector job. SET LOCAL scopes the timeout to
+   *  the transaction so it never leaks to other pool connections. */
+  async queryBounded<R extends pg.QueryResultRow = pg.QueryResultRow>(
+    text: string,
+    values: unknown[],
+    timeoutMs: number,
+  ): Promise<pg.QueryResult<R>> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`SET LOCAL statement_timeout = ${Number(timeoutMs)}`);
+      const res = await client.query<R>(text, values as unknown[]);
+      await client.query('COMMIT');
+      return res;
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch { /* ignore */ }
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   /**
    * Get collection_state for a batch of profile IDs.
    * Returns a map of profileId → last_fetched_at (Unix timestamp).
