@@ -65,8 +65,11 @@ describe('ProfileHeader Responsive Layout', () => {
     );
 
     cy.get('[data-testid="profile-header-stack"]').should('be.visible');
-    cy.get('.chakra-skeleton').should('exist');
+    // ProfileSkeleton renders the profileId text (not the loaded name) while
+    // profile is null — that's the loading marker (stable across Chakra versions;
+    // the .chakra-skeleton class selector is fragile in Chakra v3).
     cy.contains('ID: 12345').should('be.visible');
+    cy.contains('TestPlayer').should('not.exist');
   });
 
   it('should handle missing profile data correctly', () => {

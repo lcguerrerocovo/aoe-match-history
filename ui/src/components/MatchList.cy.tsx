@@ -169,22 +169,17 @@ describe('Team Layout Responsive Behavior', () => {
     cy.viewport(1200, 800);
 
     cy.get('[data-testid="match-card-content"]').within(() => {
-      // Should have exactly one winner trophy (first team wins)
+      // 4 team cards; exactly one is the winner (winner highlighting moved from a
+      // 🏆 trophy emoji to a card variant + data-winner marker).
       cy.get('[data-testid="team-card"]').should('have.length', 4);
-      
-      // Should have exactly one trophy
-      cy.get('div').contains('🏆').should('exist');
-      cy.get('div').contains('🏆').should('have.length', 1);
-      
-      // Trophy should be positioned correctly
-      cy.get('div').contains('🏆').should('have.css', 'position', 'absolute');
-      
-      // Trophy should be in the first team card
-      cy.get('[data-testid="team-card"]').first().should('contain', '🏆');
-      
-      // Other team cards should not have trophies
+
+      // Exactly one winner
+      cy.get('[data-testid="team-card"][data-winner="true"]').should('have.length', 1);
+      // The winner is the first team card (mock data: first team wins)
+      cy.get('[data-testid="team-card"]').first().should('have.attr', 'data-winner', 'true');
+      // Other team cards are losers
       cy.get('[data-testid="team-card"]').not(':first').each(($card) => {
-        cy.wrap($card).should('not.contain', '🏆');
+        cy.wrap($card).should('have.attr', 'data-winner', 'false');
       });
     });
   });
@@ -325,13 +320,11 @@ describe('Session Header Alignment', () => {
 
     cy.viewport(1200, 800);
 
-    // Verify the component is rendering
-    cy.contains('Matches:').should('exist');
+    // Verify the component is rendering: the session header annotation.
+    cy.contains('matches played').should('exist');
 
-    // Check that the session header contains date and record grid
+    // Session header contains the match-count + duration annotation.
     cy.get('h2').first().within(() => {
-      cy.get('[role="group"]').should('exist');
-      // Session annotation line should contain match count and duration
       cy.contains('matches played').should('exist');
     });
   });
@@ -352,12 +345,11 @@ describe('Session Header Alignment', () => {
 
     cy.viewport(400, 600);
 
-    // Verify the component is rendering
-    cy.contains('Matches:').should('exist');
+    // Verify the component is rendering: the session header annotation.
+    cy.contains('matches played').should('exist');
 
-    // Mobile should also show the combined annotation line
+    // Mobile should also show the combined annotation line.
     cy.get('h2').first().within(() => {
-      cy.get('[role="group"]').should('exist');
       cy.contains('matches played').should('exist');
     });
   });

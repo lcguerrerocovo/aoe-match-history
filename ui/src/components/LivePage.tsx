@@ -89,7 +89,7 @@ export function LivePage() {
   const [selectedCategory] = useUrlState<GameTypeCategory>({ key: 'type', defaultValue: 'RM 1v1' });
   const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: '' });
   const [selectedEloBracket, setSelectedEloBracket] = useUrlState<string>({ key: 'elo', defaultValue: '' });
-  const [civFilter, setCivFilter] = useUrlState<string>({ key: 'civ', defaultValue: '' });
+  const [civFilter, setCivFilter] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevMatchIdsRef = useRef<Set<number>>(new Set());
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());

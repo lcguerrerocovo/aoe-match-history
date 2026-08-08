@@ -47,11 +47,9 @@ describe('ActivityPanel', () => {
     cy.contains('Arabia').should('be.visible');
   });
 
-  it('shows "Other" row when more than 5 unique maps exist', () => {
-    // mockLiveMatches has 7 unique maps (Arabia, Arena, Black Forest, Nomad, Islands, Hideout, MegaRandom)
-    mountWithProviders(<ActivityPanel {...defaultProps} />);
-    cy.contains('Other').should('be.visible');
-  });
+  // (The old "shows 'Other' row when more than 5 unique maps exist" test was removed:
+  // ActivityPanel now lists up to 8 maps directly via .slice(0,8) — there is no
+  // "Other" aggregation row anymore.)
 
   it('shows ELO Distribution section', () => {
     mountWithProviders(<ActivityPanel {...defaultProps} />);

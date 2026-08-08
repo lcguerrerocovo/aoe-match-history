@@ -47,6 +47,7 @@ export function TeamCard({ match }: { match: Match }) {
       <Card.Root
         key={globalTeamIndex}
         data-testid="team-card"
+        data-winner={isWinner ? 'true' : 'false'}
         variant={cardVariant(isWinner ? 'winner' : 'loser')}
         flex="1"
         minW="0"
