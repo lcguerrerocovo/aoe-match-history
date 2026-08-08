@@ -102,11 +102,17 @@ jobs:
       
       - name: Run all tests in parallel
         run: |
-          # Run UI tests (Vitest and Cypress) and proxy function tests in parallel
-          cd ui && npm run test:ci &
-          cd ui && npm run cy:run:ci &
-          cd functions/proxy && npm test &
-          wait
+          # Run UI tests (Vitest and Cypress) and proxy function tests in parallel.
+          # Gate properly: wait on EACH job by PID and fail if ANY exits non-zero.
+          # (Bare `wait` returns only the LAST job's exit code, masking failures.)
+          cd ui && npm run test:ci & PID_VITEST=$!
+          cd ui && npm run cy:run:ci & PID_CYPRESS=$!
+          cd functions/proxy && npm test & PID_PROXY=$!
+          fail=0
+          wait $PID_VITEST   || { echo "Vitest failed"; fail=1; }
+          wait $PID_CYPRESS  || { echo "Cypress failed"; fail=1; }
+          wait $PID_PROXY    || { echo "Proxy tests failed"; fail=1; }
+          exit $fail
       
       - name: Build UI
         working-directory: ui
