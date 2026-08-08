@@ -182,7 +182,9 @@ describe('App Filter Dropdown Counts', () => {
     cy.wait('@fullHistory');
     cy.wait('@personalStats');
 
-    cy.contains('StableProfile').should('be.visible');
+    // Profile header name renders from two async loads; give it room in slow
+    // Electron (was flaking ~1/2 runs in CI). See the matching note below.
+    cy.contains('StableProfile', { timeout: 10000 }).should('be.visible');
     // Capture the count AFTER initial load (StrictMode may double-invoke the
     // mount effect in dev, so the absolute count isn't 1). What matters: a
     // filter change must NOT add a personal-stats call.
@@ -191,7 +193,7 @@ describe('App Filter Dropdown Counts', () => {
 
     cy.get('select').last().select('RM 1v1');
 
-    cy.contains('StableProfile').should('be.visible');
+    cy.contains('StableProfile', { timeout: 10000 }).should('be.visible');
     cy.then(() => {
       expect(personalStatsCalls - callsAfterLoad).to.eq(0, 'no personal-stats reload on filter change');
     });
@@ -300,12 +302,15 @@ describe('App URL-aware filters (#38 regression guard)', () => {
     renderApp();
     cy.wait('@fullHistory');
     cy.wait('@personalStats');
-    cy.contains('TestPlayer').should('be.visible');
+    // Profile header name renders from two async loads; in slow Electron it can
+    // need > the 2s defaultCommandTimeout, so give this assertion room (was
+    // flaking ~1/2 runs in CI with "Expected to find content: 'TestPlayer'").
+    cy.contains('TestPlayer', { timeout: 10000 }).should('be.visible');
     // Snapshot the personal-stats call count after initial load.
     cy.then(() => { callsAfterLoad = personalStatsCalls; });
     cy.get('select').eq(0).select('Arabia');
     cy.wait('@fullHistory');
-    cy.contains('TestPlayer').should('be.visible');
+    cy.contains('TestPlayer', { timeout: 10000 }).should('be.visible');
     cy.then(() => {
       const delta = personalStatsCalls - callsAfterLoad;
       expect(delta).to.eq(0, 'personal-stats should NOT be re-fetched on a filter change');
