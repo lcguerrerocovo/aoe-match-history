@@ -131,6 +131,19 @@ Assets are **not in the repo** (gitignored). Served from CDN.
 - Always use `VITE_AOE_API_URL=/api` when running tests (set in npm scripts)
 - Prevent interactive/watch mode in CI to avoid hanging
 
+### Cypress + URL-state conventions (hard-won)
+- **Asserting the router URL in component tests:** `cy.location()` returns the Cypress *runner* URL (e.g. `?specPath=...`), not the `MemoryRouter`'s in-memory URL. Mount a **spy component that renders a real hidden element** carrying the location, and assert on it:
+  ```tsx
+  const SearchSpy = () => {
+    const loc = useLocation();
+    return <span data-testid="url-search" data-search={loc.search} style={{ display: 'none' }} />;
+  };
+  // then: cy.get('[data-testid="url-search"]').invoke('attr','data-search').should('include', 'type=')
+  ```
+- **Never** use a spy that returns `null` + a module variable (`let lastSearch = ''`). In CI's Electron a null-returning component may not re-render after `setSearchParams`, the var stays stale, the assertion hangs/fails, and (with proper CI gating) it freezes the whole build step.
+- **CI gates properly** (`deploy.yml` waits on each backgrounded test job's PID, not bare `wait`). So a hanging/failing Cypress test now actually blocks the deploy — keep tests fast and non-hanging.
+- CI runs Cypress via `cy:run:ci` (Electron, no `--browser`); local `cy:run` uses Chrome. Tests must pass in **both** — avoid browser-specific behavior (the DOM-attr spy above is cross-browser).
+
 ## Screenshot Tool
 
 Playwright-based tool that captures all key views for visual review. Lives in `scripts/take-screenshots.ts`.

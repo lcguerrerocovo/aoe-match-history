@@ -104,9 +104,14 @@ describe('LivePage', () => {
   });
 
   it('civ filter narrows displayed matches', () => {
+    // Restore real timers: the civ filter is plain useState (no debounce/timers),
+    // and under frozen fake timers the React state update from .type() can wait
+    // on a scheduler timer that never fires → hang in Electron. Real timers are
+    // cross-browser-stable here (same pattern as the 'gives up stale retries'
+    // test). The initial fetch is synchronous-stubbed so no clock tick is needed.
+    cy.clock().invoke('restore');
     cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
     mountWithProviders(<LivePage />);
-    cy.tick(100);
     cy.wait('@live');
 
     cy.get('input[placeholder="Type to filter..."]').type('Britons');
