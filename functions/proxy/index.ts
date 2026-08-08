@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { getFirestoreClient } from './config';
 import { handlePlayerSearch } from './playerSearch';
 import { handleSteamAvatar } from './steamHandler';
+import { handlePlayerInfo } from './playerInfoHandler';
 import { __setPlayerService, __resetPlayerService } from './authService';
 import { handleRawMatchHistory, handleMatchHistory, handlePersonalStats, handleRawMatch, handleMatch } from './matchHandlers';
 import { handleFullMatchHistory } from './fullMatchHistoryHandler';
@@ -34,6 +35,10 @@ const routes: Route[] = [
   {
     pattern: /^\/api\/steam\/avatar\/(\d+)(\?.*)?$/,
     handler: handleSteamAvatar
+  },
+  {
+    pattern: /^\/api\/player\/(\d+)(\?.*)?$/,
+    handler: handlePlayerInfo
   },
   {
     pattern: /^\/api\/raw-match-history\/(\d+)(\?.*)?$/,

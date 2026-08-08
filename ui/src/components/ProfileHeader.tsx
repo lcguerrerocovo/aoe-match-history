@@ -81,10 +81,9 @@ interface ProfileHeaderProps {
   profileId: string;
   profile: { id: string; name: string; avatarUrl?: string } | null;
   stats: PersonalStats | null;
-  isLoading: boolean;
 }
 
-export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileHeaderProps) {
+export function ProfileHeader({ profileId, profile, stats }: ProfileHeaderProps) {
   const recipe = useSlotRecipe({ key: 'profileHeader' });
   const styles = recipe();
   const layout = useLayoutConfig();
@@ -113,7 +112,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
                 bg={{ base: 'linear-gradient(to bottom, transparent, rgba(139,90,43,0.25) 15%, rgba(139,90,43,0.25) 85%, transparent)', _dark: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.1) 15%, rgba(255,255,255,0.1) 85%, transparent)' }}
                 display={{ base: 'none', md: 'block' }}
               />
-              {isLoading ? (
+              {profile == null ? (
                 <ProfileSkeleton profileId={profileId} />
               ) : (
                 <VStack gap={4} align="center" w="100%" className="profile-fade-in">
@@ -160,7 +159,7 @@ export function ProfileHeader({ profileId, profile, stats, isLoading }: ProfileH
               >
                 Record
               </Text>
-              {isLoading ? (
+              {stats == null ? (
                 <StatsSkeleton />
               ) : (
                 <Box className="profile-fade-in"><PlayerStats stats={stats} /></Box>

@@ -3,7 +3,7 @@ import { MatchList } from './components/MatchList';
 import { FilterBar } from './components/FilterBar';
 import { ProfileHeader } from './components/ProfileHeader';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getSteamAvatar } from './services/matchService';
+import { getFullMatchHistory, getMatches, getPersonalStats, extractSteamId, getSteamAvatar, getCachedPlayer } from './services/matchService';
 import type { FilterOptions, FullMatchHistoryResponse } from './services/matchService';
 import type { Match, MatchGroup, Map, MatchType, SortDirection } from './types/match';
 import type { PersonalStats } from './types/stats';
@@ -49,7 +49,6 @@ function App() {
   const [maps, setMaps] = useState<Map[]>([]);
   const [matchTypes, setMatchTypes] = useState<MatchType[]>([]);
   const [openDates, setOpenDates] = useState<string[]>([]);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profile, setProfile] = useState<{ id: string, name: string, avatarUrl?: string, country?: string, clanlist_name?: string } | null>(null);
   const [stats, setStats] = useState<PersonalStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,37 +127,54 @@ function App() {
 
   const updateMatches = useCallback(async () => {
     if (!profileId) return;
-    setIsProfileLoading(true);
     try {
+      // Fast path: render the profile header from the cached Firestore `players`
+      // doc (written by the indexing pipeline) BEFORE the slow Relic
+      // personal-stats call resolves. Falls back silently if not cached.
+      const cached = await getCachedPlayer(profileId).catch(() => null);
+      if (cached?.found && cached.name) {
+        setProfile({
+          id: String(profileId),
+          name: cached.name,
+          country: cached.country,
+          clanlist_name: cached.clanlist_name,
+        });
+      }
+
+      // Slow path in parallel: match history + authoritative profile/stats.
       const [, statsData] = await Promise.all([
         fetchInitialMatchHistory(),
         getPersonalStats(profileId)
       ]);
 
-      // Get Steam avatar if available
+      // Reconcile with the authoritative personal-stats response.
       const playerInfo = statsData.statGroups?.[0]?.members?.[0];
-      let avatarUrl;
-      if (playerInfo?.name) {
-        const steamId = extractSteamId(playerInfo.name);
-        if (steamId) {
-          avatarUrl = await getSteamAvatar(steamId);
-        }
-      }
-
-      const name = playerInfo?.alias || profileId;
+      const name = playerInfo?.alias || cached?.name || profileId;
       setProfile({
         id: String(profileId),
         name: String(name),
-        avatarUrl,
-        country: playerInfo?.country,
-        clanlist_name: playerInfo?.clanlist_name
+        country: playerInfo?.country ?? cached?.country,
+        clanlist_name: playerInfo?.clanlist_name ?? cached?.clanlist_name,
       });
       setStats(statsData);
       setOpenDates([]); // Reset accordion state when profile changes
-    } finally {
-      setIsProfileLoading(false);
+
+      // Avatar is non-critical — fetch it AFTER the header/stats are set so it
+      // never blocks the profile rendering; swap it in when it arrives.
+      if (playerInfo?.name) {
+        const steamId = extractSteamId(playerInfo.name);
+        if (steamId) {
+          getSteamAvatar(steamId).then(avatarUrl => {
+            if (avatarUrl) {
+              setProfile(prev => prev ? { ...prev, avatarUrl } : prev);
+            }
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load profile/matches', e);
     }
-  }, [profileId, fetchInitialMatchHistory]);
+  }, [profileId, fetchInitialMatchHistory, getCachedPlayer]);
 
   const fetchWithServerFilters = useCallback(async (cursor?: string | null) => {
     if (!profileId) return;
@@ -390,7 +406,7 @@ function App() {
           <WatermarkTiled />
           {profileId &&
             <Box w="100%">
-              <ProfileHeader profileId={profileId} profile={profile} stats={stats} isLoading={isProfileLoading} />
+              <ProfileHeader profileId={profileId} profile={profile} stats={stats} />
               <Box
                 w={layout.matchList.width}
                 maxW={layout.matchList.maxWidth}

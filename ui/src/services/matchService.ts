@@ -122,6 +122,28 @@ export async function getPersonalStats(profileId: string): Promise<PersonalStats
   return response.json();
 }
 
+// Fast cached player header (no Relic call) — reads the Firestore `players` doc
+// written by the indexing pipeline. Used to render the profile header
+// instantly while the slow Relic personal-stats call is still in flight.
+export interface CachedPlayer {
+  id: string;
+  found: boolean;
+  name?: string;
+  country?: string;
+  clanlist_name?: string;
+}
+
+export async function getCachedPlayer(profileId: string): Promise<CachedPlayer | null> {
+  try {
+    const response = await fetch(`${API_URL}/player/${profileId}`);
+    if (!response.ok) return null;
+    const data: CachedPlayer = await response.json();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export function extractSteamId(name: string): string | null {
   const match = name.match(/\/steam\/(\d+)/);
   return match ? match[1] : null;
