@@ -115,13 +115,14 @@ describe('LivePage', () => {
     cy.tick(100);
     cy.wait('@live');
 
-    cy.get('input[placeholder="Type to filter..."]').type('Britons');
-    // Advance the frozen clock so the setCivFilter re-render flushes in Electron.
-    // Under fake timers, .type()'s onChange -> setState can stall on a mocked
-    // scheduler timer that never fires (Chrome slips through via MessageChannel;
-    // Electron's Chromium does not) -> hang. The post-type cy.tick makes this
-    // deterministic across both browsers without restoring real timers (which
-    // would reintroduce the setInterval-accumulation SIGSEGV).
+    // Set the value in ONE input event (not 7 .type keystrokes). Each keystroke
+    // fires setCivFilter -> re-filters -> the virtualizer (VirtualMatchList uses
+    // @tanstack/react-virtual measureElement = a ResizeObserver per visible
+    // card) re-renders + re-measures all cards. That ResizeObserver storm crashes
+    // Electron's renderer (SIGSEGV) on the 7th mount in CI. One event = one
+    // re-render = no storm. (The ?type= test's .type() is in the TopBar, which
+    // doesn't re-filter the virtualized list, so it doesn't storm.)
+    cy.get('input[placeholder="Type to filter..."]').invoke('val', 'Britons').trigger('input');
     cy.tick(100);
     cy.contains('AlphaWolf').should('be.visible');
   });
