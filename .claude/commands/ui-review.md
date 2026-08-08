@@ -13,7 +13,7 @@ landing    → /                        → LandingPage
 profile    → /profile_id/:profileId   → App (ProfileHeader, FilterBar, MatchList)
 match      → /match/:matchId          → MatchPage (FullMatchSummaryCard, ApmBreakdownChart)
 live       → /live                    → LivePage (LiveMatchCard, PlayerRow)
-stats      → /stats                   → StatsPage (WinRateChart, PickRateChart, InsightsTab, FormationView)
+stats      → /stats (or /stats/insights) → StatsPage (WinRateChart, PickRateChart, InsightsTab, FormationView)
 ```
 
 ## Prod URL Mapping
@@ -26,6 +26,7 @@ profile    → https://aoe2.site/profile_id/197388
 match      → https://aoe2.site/match/auto (pick a recent match from the profile page)
 live       → https://aoe2.site/live
 stats      → https://aoe2.site/stats
+stats-insights → https://aoe2.site/stats/insights
 ```
 
 If the user provides a full URL, use that instead of the mapping.

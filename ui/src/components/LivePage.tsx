@@ -1,5 +1,6 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
+import { useUrlState } from '../hooks/useUrlState';
 import TopBar from './TopBar';
 import { LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
 import { ActivityPanel, getMatchAvgRating, getEloBracketLabel, VirtualMatchList } from './live';
@@ -84,10 +85,10 @@ export function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<GameTypeCategory>('RM 1v1');
-  const [selectedMap, setSelectedMap] = useState('');
-  const [selectedEloBracket, setSelectedEloBracket] = useState('');
-  const [civFilter, setCivFilter] = useState('');
+  const [selectedCategory, setSelectedCategory] = useUrlState<GameTypeCategory>({ key: 'type', defaultValue: 'RM 1v1' });
+  const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: '' });
+  const [selectedEloBracket, setSelectedEloBracket] = useUrlState<string>({ key: 'elo', defaultValue: '' });
+  const [civFilter, setCivFilter] = useUrlState<string>({ key: 'civ', defaultValue: '' });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevMatchIdsRef = useRef<Set<number>>(new Set());
   const [newMatchIds, setNewMatchIds] = useState<Set<number>>(new Set());

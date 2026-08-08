@@ -1,6 +1,8 @@
 import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { Tooltip } from '../ui/tooltip';
 import { useEffect, useState, useMemo, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useUrlState } from '../../hooks/useUrlState';
 import TopBar from '../TopBar';
 import { getCivStats } from '../../services/civStatsService';
 import { InsightsTab } from './InsightsTab';
@@ -448,13 +450,19 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
 }
 
 export function StatsPage() {
-  const [activeTab, setActiveTab] = useState<StatsTab>('statistics');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab: StatsTab = location.pathname.endsWith('/insights') ? 'insights' : 'statistics';
   const [data, setData] = useState<CivStatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [matchType, setMatchType] = useState<MatchType>('1v1');
-  const [selectedMap, setSelectedMap] = useState('all');
-  const [eloBracket, setEloBracket] = useState<EloBracket>('all');
-  const [activeView, setActiveView] = useState<StatsView>('winRate');
+  const [matchType, setMatchType] = useUrlState<MatchType>({ key: 'matchType', defaultValue: '1v1' });
+  const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: 'all' });
+  const [eloBracket, setEloBracket] = useUrlState<EloBracket>({ key: 'elo', defaultValue: 'all' });
+  const [activeView, setActiveView] = useUrlState<StatsView>({ key: 'view', defaultValue: 'winRate' });
+
+  const setActiveTab = (tab: StatsTab) => {
+    navigate(tab === 'insights' ? '/stats/insights' : '/stats', { replace: false });
+  };
 
   useEffect(() => {
     getCivStats().then(setData).catch(e => setError(e.message));
@@ -471,10 +479,13 @@ export function StatsPage() {
   );
 
   useEffect(() => {
-    if (selectedMap !== 'all' && !maps.includes(selectedMap)) {
+    // Only reset an invalid map once data has loaded (and the valid map set
+    // is known). Without this guard, a deep link like ?map=Arabia would be wiped
+    // on first render when `maps` is still empty (data not loaded yet).
+    if (data && selectedMap !== 'all' && !maps.includes(selectedMap)) {
       setSelectedMap('all');
     }
-  }, [matchType, eloBracket, maps, selectedMap]);
+  }, [data, matchType, eloBracket, maps, selectedMap, setSelectedMap]);
 
   const { currentPicks, previousPicks } = useMemo(() => {
     if (!data) return { currentPicks: 0, previousPicks: 0 };

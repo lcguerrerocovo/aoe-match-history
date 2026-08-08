@@ -15,6 +15,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/match/:matchId" element={<MatchPage />} />
         <Route path="/live" element={<LivePage />} />
         <Route path="/stats" element={<StatsPage />} />
+        <Route path="/stats/insights" element={<StatsPage />} />
         <Route path="/" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>

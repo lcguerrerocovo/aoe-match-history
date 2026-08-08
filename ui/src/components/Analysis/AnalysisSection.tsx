@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useUrlState } from '../../hooks/useUrlState';
 import { Card, VStack } from '@chakra-ui/react';
 import { cardVariant } from '../../types/chakra-overrides';
 import { Watermark } from '../Watermark';
@@ -20,7 +21,7 @@ interface AnalysisSectionProps {
 }
 
 export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) {
-  const [activeView, setActiveView] = useState<AnalysisView>('apm');
+  const [activeView, setActiveView] = useUrlState<AnalysisView>({ key: 'view', defaultValue: 'apm', mode: 'push' });
 
   const hasApm = Boolean(match?.apm?.players && Object.keys(match.apm.players || {}).length);
 
@@ -76,7 +77,7 @@ export function AnalysisSection({ match, onMatchUpdate }: AnalysisSectionProps) 
   };
 
   // Actions view: single-select player
-  const [actionsSelectedPid, setActionsSelectedPid] = useState<string>('');
+  const [actionsSelectedPid, setActionsSelectedPid] = useUrlState<string>({ key: 'player', defaultValue: '' });
 
   useEffect(() => {
     if (match?.apm?.players) {
