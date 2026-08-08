@@ -104,14 +104,15 @@ describe('LivePage', () => {
   });
 
   it('civ filter narrows displayed matches', () => {
-    // Restore real timers: the civ filter is plain useState (no debounce/timers),
-    // and under frozen fake timers the React state update from .type() can wait
-    // on a scheduler timer that never fires → hang in Electron. Real timers are
-    // cross-browser-stable here (same pattern as the 'gives up stale retries'
-    // test). The initial fetch is synchronous-stubbed so no clock tick is needed.
-    cy.clock().invoke('restore');
+    // Keep fake timers (do NOT cy.clock().invoke('restore') here). Restoring real
+    // timers unfreezes LivePage's setInterval/setTimeout and reintroduces the
+    // Electron SIGSEGV ("X connection error" / signal SIGSEGV) in CI that the
+    // beforeEach cy.clock() guard exists to prevent. civFilter is plain useState
+    // (no debounce), so the cy.tick(100) is enough to flush the mount fetch; the
+    // .type() re-render uses React's MessageChannel scheduler (not mocked).
     cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
     mountWithProviders(<LivePage />);
+    cy.tick(100);
     cy.wait('@live');
 
     cy.get('input[placeholder="Type to filter..."]').type('Britons');
