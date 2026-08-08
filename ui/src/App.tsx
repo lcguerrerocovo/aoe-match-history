@@ -316,7 +316,12 @@ function App() {
 
   useEffect(() => {
     updateMatches();
-  }, [profileId, updateMatches]);
+    // updateMatches intentionally excluded: its deps (profileId +
+    // fetchInitialMatchHistory + getCachedPlayer) are all stable across filter
+    // changes, but listing it here re-ran the profile load whenever a filter
+    // changed (because the URL write via useUrlState churned render identity).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
 
   const getMapsWithCounts = (matches: Match[]): Map[] => {
     return mergeMapCounts(matches.map(match => ({ name: match.map, count: 1 })));

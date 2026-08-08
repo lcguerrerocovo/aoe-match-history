@@ -2,15 +2,22 @@
 
 import React from 'react';
 import { mount } from '@cypress/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { CustomThemeProvider } from '../theme/ThemeProvider';
 import { LivePage } from './LivePage';
 import { mockLiveMatches } from '../test/mocks';
 
+let lastSearch = '';
+const SearchSpy = () => {
+  const loc = useLocation();
+  lastSearch = loc.search;
+  return null;
+};
+
 const mountWithProviders = (children: React.ReactNode) => {
   mount(
     <MemoryRouter initialEntries={['/live']}>
-      <CustomThemeProvider>{children}</CustomThemeProvider>
+      <CustomThemeProvider>{children}<SearchSpy /></CustomThemeProvider>
     </MemoryRouter>
   );
 };
@@ -70,6 +77,18 @@ describe('LivePage', () => {
     cy.contains('button', /RM Team/).first().click();
     cy.contains('Player3').should('be.visible');
     cy.contains('AlphaWolf').should('not.exist');
+  });
+
+  // #38 regression guard: clicking a game-type tab must write ?type= to the URL.
+  it('writes ?type= to the router when a game-type tab is clicked', () => {
+    lastSearch = '';
+    cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
+    mountWithProviders(<LivePage />);
+    cy.tick(100);
+    cy.wait('@live');
+
+    cy.contains('button', /RM Team/).first().click();
+    cy.then(() => expect(lastSearch).to.include('type='));
   });
 
   it('filters by map and shows filter feedback', () => {

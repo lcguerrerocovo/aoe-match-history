@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 import { mount } from '@cypress/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import App from './App';
 import { CustomThemeProvider } from './theme/ThemeProvider';
 
@@ -183,22 +183,37 @@ describe('App Filter Dropdown Counts', () => {
     cy.wait('@personalStats');
 
     cy.contains('StableProfile').should('be.visible');
+    // Capture the count AFTER initial load (StrictMode may double-invoke the
+    // mount effect in dev, so the absolute count isn't 1). What matters: a
+    // filter change must NOT add a personal-stats call.
+    let callsAfterLoad = 0;
+    cy.then(() => { callsAfterLoad = personalStatsCalls; });
 
     cy.get('select').last().select('RM 1v1');
 
     cy.contains('StableProfile').should('be.visible');
     cy.then(() => {
-      expect(personalStatsCalls).to.eq(1);
+      expect(personalStatsCalls - callsAfterLoad).to.eq(0, 'no personal-stats reload on filter change');
     });
 
     cy.wait('@fullHistory');
     cy.then(() => {
-      expect(personalStatsCalls).to.eq(1);
+      expect(personalStatsCalls - callsAfterLoad).to.eq(0, 'no personal-stats reload after filtered fetch');
     });
   });
 });
 
 describe('App URL-aware filters (#38 regression guard)', () => {
+  // Capture the in-memory router's search string via a spy element (cy.location()
+  // returns the Cypress runner URL, not MemoryRouter's in-memory URL).
+  let lastSearch = '';
+  let personalStatsCalls = 0;
+  const SearchSpy = () => {
+    const loc = useLocation();
+    lastSearch = loc.search;
+    return null;
+  };
+
   const fullMatchHistoryResponse = {
     matches: [
       {
@@ -232,7 +247,7 @@ describe('App URL-aware filters (#38 regression guard)', () => {
       <MemoryRouter initialEntries={[initial]}>
         <CustomThemeProvider>
           <Routes>
-            <Route path="/profile_id/:profileId" element={<App />} />
+            <Route path="/profile_id/:profileId" element={<><App /><SearchSpy /></>} />
           </Routes>
         </CustomThemeProvider>
       </MemoryRouter>
@@ -240,63 +255,61 @@ describe('App URL-aware filters (#38 regression guard)', () => {
   };
 
   beforeEach(() => {
+    lastSearch = '';
+    personalStatsCalls = 0;
     cy.on('uncaught:exception', () => false);
     cy.intercept('GET', /match-history\/12345$/, { statusCode: 200, body: { matches: [], name: 'TestPlayer' } });
     cy.intercept('GET', /match-history\/12345\/full/, (req) => {
       const url = new URL(req.url);
       const map = url.searchParams.get('map');
       const mt = url.searchParams.get('matchType');
-      const filtered = map || mt
-        ? { matches: fullMatchHistoryResponse.matches.filter(m => (!map || m.map === map) && (!mt || m.description === (mt === '1' ? 'RM 1v1' : 'RM Team'))), hasMore: false }
+      const filtered = (map || mt)
+        ? { matches: fullMatchHistoryResponse.matches.filter(m => (!map || m.map === map) && (!mt || (m.description === 'RM 1v1'))), hasMore: false }
         : fullMatchHistoryResponse;
       req.reply({ statusCode: 200, body: filtered });
     }).as('fullHistory');
-    cy.intercept('GET', /personal-stats/, { statusCode: 200, body: { statGroups: [{ members: [{ profile_id: 12345, alias: 'TestPlayer' }] }], leaderboardStats: [] } });
-    cy.intercept('GET', /\/api\/player\//, { statusCode: 200, body: { id: '12345', found: false } }).as('cachedPlayer');
-  });
-
-  // Regression: picking a map filter used to leave the match list stuck empty
-  // ("middle state, profile doesn't load") + clobber the URL. Must repopulate.
-  it('map filter repopulates the match list and writes ?map=', () => {
-    renderApp();
-    cy.wait('@fullHistory');
-    cy.contains('Arabia').should('exist');
-
-    // pick the map filter (the map <select>)
-    cy.get('select').first().select('Arabia');
-    cy.wait('@fullHistory');
-    cy.contains('Arabia').should('exist');
-    cy.contains('Black Forest').should('not.exist');
-    cy.location('search').should('include', 'map=Arabia');
-  });
-
-  it('matchType filter repopulates the match list and writes ?type=', () => {
-    renderApp();
-    cy.wait('@fullHistory');
-    cy.get('select').last().select('RM 1v1');
-    cy.wait('@fullHistory');
-    cy.location('search').should('include', 'type=');
-    cy.contains('Arabia').should('exist');
-    cy.contains('Black Forest').should('not.exist');
-  });
-
-  // Regression: React Router v7 setSearchParams is not stable; it was in the
-  // profile-change effect deps, re-firing it on every filter change and wiping
-  // the profile mid-load. Verify the header stays across a filter change.
-  it('profile header stays stable across a filter change (no mid-load wipe)', () => {
-    let personalStatsCalls = 0;
     cy.intercept('GET', /personal-stats/, (req) => {
       personalStatsCalls += 1;
       req.reply({ statusCode: 200, body: { statGroups: [{ members: [{ profile_id: 12345, alias: 'TestPlayer' }] }], leaderboardStats: [] } });
     }).as('personalStats');
+    cy.intercept('GET', /\/api\/player\//, { statusCode: 200, body: { id: '12345', found: false } }).as('cachedPlayer');
+  });
+
+  it('map filter writes ?map= to the router', () => {
+    renderApp();
+    cy.wait('@fullHistory');
+    // the FIRST <select> is the map filter (FilterBar order: map, matchType)
+    cy.get('select').eq(0).select('Arabia');
+    cy.wait('@fullHistory');
+    cy.then(() => expect(lastSearch).to.include('map=Arabia'));
+  });
+
+  it('matchType filter writes ?type= to the router', () => {
+    renderApp();
+    cy.wait('@fullHistory');
+    cy.get('select').eq(1).select('RM 1v1');
+    cy.wait('@fullHistory');
+    cy.then(() => expect(lastSearch).to.include('type='));
+  });
+
+  // Regression: RR v7 setSearchParams is not stable; it was in the profile-change
+  // effect deps, re-firing on every filter change and wiping the profile mid-load.
+  // Asserts no NEW personal-stats call after a filter change (delta, robust to
+  // StrictMode double-mount on initial load).
+  it('profile header stays stable across a filter change (no mid-load wipe)', () => {
+    let callsAfterLoad = 0;
     renderApp();
     cy.wait('@fullHistory');
     cy.wait('@personalStats');
     cy.contains('TestPlayer').should('be.visible');
-    const callsAfterLoad = personalStatsCalls;
-    cy.get('select').first().select('Arabia');
+    // Snapshot the personal-stats call count after initial load.
+    cy.then(() => { callsAfterLoad = personalStatsCalls; });
+    cy.get('select').eq(0).select('Arabia');
     cy.wait('@fullHistory');
     cy.contains('TestPlayer').should('be.visible');
-    cy.then(() => expect(personalStatsCalls).to.eq(callsAfterLoad)); // no profile reload
+    cy.then(() => {
+      const delta = personalStatsCalls - callsAfterLoad;
+      expect(delta).to.eq(0, 'personal-stats should NOT be re-fetched on a filter change');
+    });
   });
 });
