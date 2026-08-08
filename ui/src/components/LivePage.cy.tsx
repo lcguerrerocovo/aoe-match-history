@@ -116,6 +116,13 @@ describe('LivePage', () => {
     cy.wait('@live');
 
     cy.get('input[placeholder="Type to filter..."]').type('Britons');
+    // Advance the frozen clock so the setCivFilter re-render flushes in Electron.
+    // Under fake timers, .type()'s onChange -> setState can stall on a mocked
+    // scheduler timer that never fires (Chrome slips through via MessageChannel;
+    // Electron's Chromium does not) -> hang. The post-type cy.tick makes this
+    // deterministic across both browsers without restoring real timers (which
+    // would reintroduce the setInterval-accumulation SIGSEGV).
+    cy.tick(100);
     cy.contains('AlphaWolf').should('be.visible');
   });
 
