@@ -1,6 +1,7 @@
 import pino from "pino";
 import { Database } from './db.js';
 import { Collector } from './collector.js';
+import { updateSearchIndex } from './searchIndexUpdater.js';
 
 const logger = pino({ name: "match-collector" });
 
@@ -17,9 +18,16 @@ async function main(): Promise<void> {
   const db = new Database(databaseUrl);
   const collector = new Collector(db, archiveBucket);
 
+  let processedProfiles: number[] = [];
   try {
-    await collector.run();
+    processedProfiles = await collector.run();
   } finally {
+    // Best-effort PG -> Meilisearch incremental update (Issue #2). Runs before
+    // db.close() since it needs PG; never throws (a Meilisearch outage must not
+    // break match ingestion).
+    if (processedProfiles.length > 0) {
+      await updateSearchIndex(db, processedProfiles, logger.child({ module: 'searchIndexUpdater' }));
+    }
     try {
       await db.close();
     } catch {

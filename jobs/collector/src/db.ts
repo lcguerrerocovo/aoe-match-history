@@ -142,6 +142,14 @@ export class Database {
     await this.pool.end();
   }
 
+  /** Run a parameterized query (used by the search index updater). */
+  async query<R extends pg.QueryResultRow = pg.QueryResultRow>(
+    text: string,
+    values?: unknown[],
+  ): Promise<pg.QueryResult<R>> {
+    return this.pool.query<R>(text, values as unknown[]);
+  }
+
   /**
    * Get collection_state for a batch of profile IDs.
    * Returns a map of profileId → last_fetched_at (Unix timestamp).

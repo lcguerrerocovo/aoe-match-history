@@ -70,6 +70,17 @@ jobs:
         echo "✅ Found PostgreSQL VM at external IP: $PG_IP"
         echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
 
+    - name: Get Meilisearch VM External IP
+      run: |
+        MEILI_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+        if [ -z "$MEILI_IP" ]; then
+          echo "⚠️ Meilisearch VM not found — search index update will be skipped."
+          echo "MEILISEARCH_HOST=" >> $GITHUB_ENV
+        else
+          echo "✅ Found Meilisearch VM at external IP: $MEILI_IP"
+          echo "MEILISEARCH_HOST=http://$MEILI_IP:7700" >> $GITHUB_ENV
+        fi
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -138,7 +149,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=10800 \
-            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15,MEILISEARCH_HOST=${{ env.MEILISEARCH_HOST }},MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }}" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         else
           echo "Job does not exist, creating..."
@@ -149,7 +160,7 @@ jobs:
             --cpu=1 \
             --max-retries=1 \
             --task-timeout=10800 \
-            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15" \
+            --set-env-vars="DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${{ env.MATCH_DB_HOST }}:5432/aoe2_matches,RATE_LIMIT_RPS=30,COLLECTOR_CONCURRENCY=15,MEILISEARCH_HOST=${{ env.MEILISEARCH_HOST }},MEILISEARCH_API_KEY=${{ secrets.MEILISEARCH_API_KEY }}" \
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
 

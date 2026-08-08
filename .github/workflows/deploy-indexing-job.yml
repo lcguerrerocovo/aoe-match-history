@@ -96,17 +96,16 @@ jobs:
             --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
         fi
 
-    - name: Create Cloud Scheduler Job
+    - name: Remove 6h Cloud Scheduler Job (indexing is now on-demand)
       run: |
-        # Create a scheduled job that runs every 6 hours
-        gcloud scheduler jobs create http meilisearch-indexing-scheduler \
-          --schedule="0 */6 * * *" \
-          --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/$JOB_NAME:run" \
-          --http-method=POST \
-          --oauth-service-account-email="$PROJECT_ID@appspot.gserviceaccount.com" \
-          --location=$REGION \
-          --description="Runs Meilisearch indexing job every 6 hours" \
-          || echo "Scheduler job already exists or failed to create"
+        # Issue #2: the Relic profile-ID sweep can't keep up with the growing
+        # profile-ID space (never reaches high IDs), so PG now drives the index
+        # incrementally (collector job). The sweep is kept only for breadth /
+        # full reindex and run manually (workflow_dispatch run_job=true, or
+        # `gcloud run jobs execute $JOB_NAME`). Delete the old 6h schedule so it
+        # stops running. (create-only `|| echo exists` would leave it running.)
+        gcloud scheduler jobs delete meilisearch-indexing-scheduler \
+          --location=$REGION --quiet || echo "Scheduler job not found (already removed)"
 
     - name: Run indexing job
       if: ${{ github.event.inputs.run_job == 'true' }}

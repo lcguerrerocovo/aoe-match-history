@@ -18,7 +18,7 @@ export class Collector {
     this.archiveBucket = archiveBucket;
   }
 
-  async run(): Promise<void> {
+  async run(): Promise<number[]> {
     const startTime = Date.now();
 
     // Step 1: Load civ/map mappings
@@ -75,7 +75,7 @@ export class Collector {
 
     if (changedProfiles.length === 0) {
       log.info('No profiles need updating. Done.');
-      return;
+      return changedProfiles;
     }
 
     // Step 5: Concurrent batch fetch and store
@@ -209,5 +209,7 @@ export class Collector {
         log.fatal({ totalErrors, totalMatches, errorRate: `${(errorRate * 100).toFixed(1)}%` }, 'ALERT: Match error rate exceeds 10%');
       }
     }
+
+    return changedProfiles;
   }
 }
