@@ -8,6 +8,7 @@ Used by the indexing job to collect and filter player data before indexing.
 
 import json
 import time
+import os
 import asyncio
 import aiohttp
 import logging
@@ -29,7 +30,6 @@ LEADERBOARD_IDS = [int(x) for x in os.getenv('LEADERBOARD_IDS', '3,4').split(','
 LEADERBOARD_PAGE_SIZE = 200
 
 # Environment variable configuration with defaults
-import os
 
 # Aggressive defaults for Cloud Run Jobs (4Gi RAM, 2 CPU, 1 hour timeout)
 RATE_LIMIT_RPS = int(os.getenv('RATE_LIMIT_RPS', '50'))  # API rate limit is 50 RPS
