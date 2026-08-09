@@ -325,8 +325,10 @@ def read_pg_profile_ids() -> List[int]:
             timeout=15,
         )
         try:
-            cur = conn.execute("SELECT profile_id FROM collection_state")
-            ids = [int(r[0]) for r in cur.fetchall()]
+            cur = conn.cursor()
+            cur.execute("SELECT profile_id FROM collection_state")
+            rows = cur.fetchall()
+            ids = [int(r[0]) for r in rows]
             logging.info(f"PG collection_state: {len(ids)} profile_ids (max id {max(ids) if ids else 0})")
             return ids
         finally:
