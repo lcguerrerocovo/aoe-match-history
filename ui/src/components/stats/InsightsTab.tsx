@@ -160,7 +160,7 @@ export function InsightsTab() {
         </HStack>
 
         <select
-          value={selectedMap}
+          value={activeMap}
           onChange={e => setSelectedMap(e.target.value)}
           style={{
             background: 'var(--chakra-colors-brand-stoneLight)',
@@ -174,7 +174,6 @@ export function InsightsTab() {
             fontFamily: 'inherit',
           }}
         >
-          <option value="">Auto</option>
           {maps.map(m => (
             <option key={m} value={m}>{m}</option>
           ))}
