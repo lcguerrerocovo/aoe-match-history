@@ -310,8 +310,20 @@ def read_pg_profile_ids() -> List[int]:
         logging.info("DATABASE_URL not set — skipping PG collection_state source")
         return []
     try:
+        from urllib.parse import urlparse, unquote
         import pg8000
-        conn = pg8000.connect(db_url, timeout=15)
+        # pg8000.connect() does NOT parse a postgresql:// URL string as a URL
+        # (it treats a plain positional arg as the database name and defaults
+        # host to localhost). Parse the URL and pass explicit params instead.
+        p = urlparse(db_url)
+        conn = pg8000.connect(
+            host=p.hostname,
+            port=p.port or 5432,
+            user=p.username,
+            password=unquote(p.password) if p.password else None,
+            database=p.path.lstrip('/'),
+            timeout=15,
+        )
         try:
             cur = conn.execute("SELECT profile_id FROM collection_state")
             ids = [int(r[0]) for r in cur.fetchall()]
