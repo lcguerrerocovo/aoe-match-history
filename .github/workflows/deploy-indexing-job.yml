@@ -71,7 +71,7 @@ jobs:
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }}
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
 
-    - name: Resolve Meilisearch VM IP
+    - name: Resolve VM IPs (Meilisearch + Postgres)
       run: |
         # Phase 2 / issue #40: index DIRECTLY to the prod Meilisearch (non-destructive
         # upsert via add_documents) instead of local-build + snapshot + destructive VM
@@ -82,15 +82,24 @@ jobs:
         fi
         echo "MEILI_IP=$MEILI_IP" >> $GITHUB_ENV
         echo "Resolved Meilisearch VM IP: $MEILI_IP"
+        # Option B (hybrid ID source): the indexer also reads PG `collection_state`
+        # for profile_ids of players who've appeared in collected matches (active,
+        # any mode) — the leaderboard only has ranked players. Resolve the
+        # aoe-match-db VM's IP so the indexer can connect.
+        PG_IP=$(gcloud compute instances describe aoe-match-db --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+        echo "MATCH_DB_HOST=$PG_IP" >> $GITHUB_ENV
+        echo "Resolved Postgres VM IP: $PG_IP"
 
     - name: Deploy Cloud Run Job
       run: |
         # Deploy the Cloud Run Job (create if not exists, update if exists)
         # Phase 2: set MEILISEARCH_HOST/API_KEY so the indexer upserts DIRECTLY to prod
-        # (non-destructive). Falls back to local-build mode if MEILI_IP is empty.
+        # (non-destructive). Option B: also set DATABASE_URL so the indexer can read
+        # collection_state (active-any-mode profile_ids) to union with the leaderboard.
+        # Falls back to local-build mode if MEILI_IP is empty.
         ENV_VARS=""
         if [ -n "$MEILI_IP" ]; then
-          ENV_VARS="--set-env-vars=MEILISEARCH_HOST=http://${MEILI_IP}:7700,MEILISEARCH_API_KEY=a-secure-master-key-change-this"
+          ENV_VARS="--set-env-vars=MEILISEARCH_HOST=http://${MEILI_IP}:7700,MEILISEARCH_API_KEY=a-secure-master-key-change-this,DATABASE_URL=postgresql://collector:${{ secrets.MATCH_DB_PASSWORD }}@${MATCH_DB_HOST}:5432/aoe2_matches"
         fi
         if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
           echo "Job exists, updating..."

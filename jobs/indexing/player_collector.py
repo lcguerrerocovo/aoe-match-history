@@ -17,6 +17,16 @@ from typing import List, Dict, Optional
 
 # Configuration
 API_BASE_URL = "https://aoe-api.worldsedgelink.com/community/leaderboard/GetPersonalStat"
+LEADERBOARD_API = "https://aoe-api.worldsedgelink.com/community/leaderboard/getLeaderBoard2"
+# Option B (hybrid ID source): union the leaderboard (all RANKED players, by rank
+# — active + inactive-ranked) with PG `collection_state` (players who've appeared
+# in collected matches — active, any mode, incl. unranked/quick-match). GetPersonalStat
+# then gives all-mode total_matches for the union. Replaces the old blind 1..26M
+# profile-ID sweep + MAX_CONSECUTIVE_EMPTY_BATCHES early-exit (which bailed on sparse
+# high IDs -> missed players with 0 total_matches). LEADERBOARD_IDS default 3,4 =
+# RM 1v1 + RM Team (same as the collector's scanAllLeaderboards).
+LEADERBOARD_IDS = [int(x) for x in os.getenv('LEADERBOARD_IDS', '3,4').split(',') if x.strip()]
+LEADERBOARD_PAGE_SIZE = 200
 
 # Environment variable configuration with defaults
 import os
@@ -111,14 +121,8 @@ def should_include_player(player_data: Dict) -> bool:
         if profile_id and profile_id <= 10:
             logging.debug(f"Player {profile_id}: Excluded - insufficient matches ({total_matches} < {MIN_MATCHES})")
         return False
-    
-    # Must be recently active
-    if not is_recently_active(last_match_date):
-        if profile_id and profile_id <= 10:
-            logging.debug(f"Player {profile_id}: Excluded - not recently active (last_match={last_match_date})")
-        return False
-    
-    # Must have basic required fields
+
+    # Must have basic required fields (searchable by name/alias)
     if not (profile_id and (name or alias)):
         if profile_id and profile_id <= 10:
             logging.debug(f"Player {profile_id}: Excluded - missing required fields")
@@ -292,113 +296,164 @@ def save_players_batch(players_data: List[Dict], output_file: str) -> None:
     except Exception as e:
         logging.error(f"Failed to save batch of players: {e}")
 
+def read_pg_profile_ids() -> List[int]:
+    """
+    Option B: read profile_ids the collector has seen (players who've appeared in
+    collected matches — active, any mode incl. unranked/quick-match). `collection_state`
+    is one row per collected profile (~165k rows, ~40ms), far faster than
+    SELECT DISTINCT profile_id FROM match_player (times out on 39.5M rows).
+    Best-effort: if DATABASE_URL is unset or the query fails, return [] (the
+    leaderboard source still covers all ranked players).
+    """
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        logging.info("DATABASE_URL not set — skipping PG collection_state source")
+        return []
+    try:
+        import pg8000
+        conn = pg8000.connect(db_url, timeout=15)
+        try:
+            cur = conn.execute("SELECT profile_id FROM collection_state")
+            ids = [int(r[0]) for r in cur.fetchall()]
+            logging.info(f"PG collection_state: {len(ids)} profile_ids (max id {max(ids) if ids else 0})")
+            return ids
+        finally:
+            conn.close()
+    except Exception as e:
+        logging.warning(f"PG collection_state read failed (best-effort, ignored): {e}")
+        return []
+
+
+async def scan_leaderboards_for_profile_ids(session, rate_limiter: 'RateLimiter') -> List[int]:
+    """
+    Option B: source RANKED profile_ids from getLeaderBoard2 (rank-paginated). This
+    returns the complete set of ranked players by rank (active + inactive-ranked),
+    so there's no blind ID sweep / no early-exit / no missed high IDs. Scans
+    LEADERBOARD_IDS (default 3,4 = RM 1v1 + RM Team) and dedupes.
+    """
+    profile_ids: set = set()
+    for leaderboard_id in LEADERBOARD_IDS:
+        start = 1
+        total = 0
+        logging.info(f"Scanning leaderboard {leaderboard_id} (rank-paginated)...")
+        while True:
+            url = (
+                f"{LEADERBOARD_API}?title=age2&platform=PC_STEAM"
+                f"&leaderboard_id={leaderboard_id}&start={start}&count={LEADERBOARD_PAGE_SIZE}"
+            )
+            await rate_limiter.acquire()
+            try:
+                async with session.get(url) as resp:
+                    if resp.status != 200:
+                        logging.warning(f"leaderboard {leaderboard_id} start={start}: HTTP {resp.status}; stopping this board")
+                        break
+                    data = await resp.json()
+                    result = data.get('result', {})
+                    if result.get('message') != 'SUCCESS':
+                        logging.warning(f"leaderboard {leaderboard_id} start={start}: {result.get('message')}; stopping")
+                        break
+                    rank_total = data.get('rankTotal', 0) or 0
+                    if not total:
+                        total = rank_total
+                        logging.info(f"leaderboard {leaderboard_id}: rankTotal={total}")
+                    stat_groups = data.get('statGroups', []) or []
+                    if not stat_groups:
+                        break
+                    for sg in stat_groups:
+                        for m in (sg.get('members') or []):
+                            pid = m.get('profile_id')
+                            if pid is not None:
+                                profile_ids.add(int(pid))
+                    start += LEADERBOARD_PAGE_SIZE
+                    if start > (total or start):  # done once we pass rankTotal
+                        break
+            except Exception as e:
+                logging.error(f"leaderboard {leaderboard_id} start={start}: {e}; stopping this board")
+                break
+        logging.info(f"leaderboard {leaderboard_id}: scanned through start={start}")
+    ids = sorted(profile_ids)
+    logging.info(f"Leaderboard scan complete: {len(ids)} unique ranked profile_ids across {LEADERBOARD_IDS}")
+    return ids
+
+
 async def collect_active_players(output_file: str, start_profile_id: int = START_PROFILE_ID) -> tuple[int, int]:
     """
-    Collect and filter active players from the API
-    
-    Args:
-        output_file: Path to save the filtered players
-        start_profile_id: Profile ID to start collection from
-        
-    Returns:
-        tuple: (total_players_collected, final_profile_id_reached)
+    Collect and filter players. Option B (hybrid ID source): union the leaderboard
+    (all ranked players, by rank — active + inactive-ranked) with PG collection_state
+    (players who've appeared in collected matches — active, any mode), then call
+    GetPersonalStat for each to get all-mode total_matches (sum wins+losses across
+    all leaderboards). No blind 1..26M sweep, no early-exit heuristic, no missed
+    high IDs. The hybrid's max profile_id also reveals the effective "true max".
     """
-    logging.info("Starting async player data collection and filtering")
+    logging.info("Starting player data collection (hybrid: leaderboard + PG, Option B)")
     logging.info(f"Rate limit: {RATE_LIMIT_RPS} requests per second")
     logging.info(f"Concurrent requests: {CONCURRENT_REQUESTS}")
     logging.info(f"API batch size: {API_BATCH_SIZE} IDs per request")
     logging.info(f"Active years: {ACTIVE_YEARS}")
     logging.info(f"Min matches: {MIN_MATCHES}")
-    logging.info(f"Timeout: {TIMEOUT_SECONDS} seconds")
-    logging.info(f"Max empty batches: {MAX_CONSECUTIVE_EMPTY_BATCHES}")
-    logging.info(f"Start profile ID: {START_PROFILE_ID}")
+    logging.info(f"Leaderboard IDs (ranked source): {LEADERBOARD_IDS}")
     logging.info(f"Output file: {output_file}")
-    logging.info(f"Starting from profile_id: {start_profile_id}")
-    
-    # Ensure output directory exists
+
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    
-    # Clear output file
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w'):
         pass  # Create empty file
-    
-    current_id = start_profile_id
-    consecutive_empty_batches = 0
+
     successful_collections = 0
     failed_collections = 0
     batch_count = 0
-    
-    # Create rate limiter and aiohttp session
+
     rate_limiter = RateLimiter(RATE_LIMIT_RPS)
     timeout = aiohttp.ClientTimeout(total=TIMEOUT_SECONDS)
-    
+
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        while consecutive_empty_batches < MAX_CONSECUTIVE_EMPTY_BATCHES:
-            # Create multiple batches for concurrent processing
+        # 1. Source the profile IDs to fetch: leaderboard (ranked) + PG (active any-mode).
+        leaderboard_ids = await scan_leaderboards_for_profile_ids(session, rate_limiter)
+        pg_ids = read_pg_profile_ids()
+        profile_ids = sorted(set(leaderboard_ids) | set(pg_ids))
+        if not profile_ids:
+            logging.error("No profile IDs from leaderboard or PG — aborting")
+            return 0, 0
+        logging.info(f"Hybrid ID source: {len(profile_ids)} unique profile_ids "
+                     f"(leaderboard {len(leaderboard_ids)} + PG {len(pg_ids)}); "
+                     f"max id {profile_ids[-1]} (effective 'true max')")
+
+        # 2. Fetch all-mode stats for those IDs in batches (no early-exit; real list).
+        i = 0
+        total_ids = len(profile_ids)
+        while i < total_ids:
             batch_group = []
             for _ in range(CONCURRENT_REQUESTS):
-                if consecutive_empty_batches >= MAX_CONSECUTIVE_EMPTY_BATCHES:
+                if i >= total_ids:
                     break
-                batch_ids = list(range(current_id, current_id + API_BATCH_SIZE))
-                batch_group.append(batch_ids)
-                current_id += API_BATCH_SIZE
-            
-            if not batch_group:
-                break
-            
+                batch_group.append(profile_ids[i:i + API_BATCH_SIZE])
+                i += API_BATCH_SIZE
             try:
-                # Process batch group concurrently
                 group_successful, group_failed, collected_players = await process_batch_group(
                     session, rate_limiter, batch_group
                 )
-                
-                # Update counters
                 successful_collections += group_successful
                 failed_collections += group_failed
                 batch_count += len(batch_group)
-                
                 if collected_players:
-                    # Sort players by profile_id before saving
                     collected_players.sort(key=lambda p: p['profile_id'])
-                    
-                    # Save entire batch group at once
                     save_players_batch(collected_players, output_file)
-                    
-                    # Reset empty counter on success
-                    consecutive_empty_batches = 0
-                    logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: Found {len(collected_players)} active players from {len(batch_group)} batches")
-                else:
-                    # Only increment empty counter if ALL batches in the group failed
-                    # (i.e., no successful API responses at all)
-                    if group_failed == len(batch_group):
-                        consecutive_empty_batches += len(batch_group)
-                        logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: All {len(batch_group)} batches failed ({consecutive_empty_batches}/{MAX_CONSECUTIVE_EMPTY_BATCHES} empty)")
-                    else:
-                        # Some batches succeeded but had no active players - this is normal
-                        consecutive_empty_batches = 0  # Reset counter
-                        logging.info(f"Batch group {batch_count//CONCURRENT_REQUESTS}: API calls succeeded but no active players found in {len(batch_group)} batches")
-                
-                # Progress update
                 if (batch_count // CONCURRENT_REQUESTS) % 5 == 0:
-                    logging.info(f"Progress: {batch_count} batches processed, {successful_collections} active players collected, current ID: {current_id}")
-                    
+                    logging.info(f"Progress: {batch_count} batches, {successful_collections} players, {i}/{total_ids} IDs fetched")
             except KeyboardInterrupt:
                 logging.info("Collection interrupted by user")
                 break
             except Exception as e:
                 logging.error(f"Unexpected error processing batch group: {e}")
                 failed_collections += len(batch_group)
-                consecutive_empty_batches += len(batch_group)
                 continue
-    
-    # Final summary
+
+    final_id = profile_ids[-1] if profile_ids else 0
     logging.info("Collection completed!")
     logging.info(f"Total batches processed: {batch_count}")
-    logging.info(f"Total active players collected: {successful_collections}")
-    logging.info(f"Final profile ID reached: {current_id}")
+    logging.info(f"Total players collected: {successful_collections}")
+    logging.info(f"Hybrid IDs fetched: {len(profile_ids)} (max id: {final_id})")
     logging.info(f"Data saved to: {output_file}")
-    
-    return successful_collections, current_id
+    return successful_collections, final_id
 
 if __name__ == "__main__":
     # For testing the module independently
