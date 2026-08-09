@@ -116,16 +116,24 @@ jobs:
             $ENV_VARS
         fi
 
-    - name: Remove 6h Cloud Scheduler Job (indexing is now on-demand)
+    - name: Create Cloud Scheduler Job (weekly full reindex)
       run: |
-        # Issue #2: the Relic profile-ID sweep can't keep up with the growing
-        # profile-ID space (never reaches high IDs), so PG now drives the index
-        # incrementally (collector job). The sweep is kept only for breadth /
-        # full reindex and run manually (workflow_dispatch run_job=true, or
-        # `gcloud run jobs execute $JOB_NAME`). Delete the old 6h schedule so it
-        # stops running. (create-only `|| echo exists` would leave it running.)
-        gcloud scheduler jobs delete meilisearch-indexing-scheduler \
-          --location=$REGION --quiet || echo "Scheduler job not found (already removed)"
+        # The sweep provides total_matches/country/clanlist (from the Relic API
+        # leaderboard) which the PG-driven incremental updater can't compute, so it
+        # must run periodically. Weekly is enough — those fields change slowly and
+        # the full profile-ID sweep is expensive. (Was removed in issue #2 when PG
+        # took over incremental name/last_match_date freshness; re-added now that we
+        # know total_matches still needs the sweep.) Non-destructive in prod-upsert
+        # mode (Phase 2 / issue #40), so a weekly run won't wipe the PG updater's
+        # fresher data.
+        gcloud scheduler jobs create http meilisearch-indexing-scheduler \
+          --schedule="0 0 * * 0" \
+          --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/$JOB_NAME:run" \
+          --http-method=POST \
+          --oauth-service-account-email="$PROJECT_ID@appspot.gserviceaccount.com" \
+          --location=$REGION \
+          --description="Weekly full Meilisearch reindex (total_matches/country/clanlist)" \
+          || echo "Scheduler job already exists or failed to create"
 
     - name: Run indexing job
       if: ${{ github.event.inputs.run_job == 'true' }}
