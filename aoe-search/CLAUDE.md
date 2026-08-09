@@ -1,6 +1,6 @@
 # Meilisearch VM — Search Infrastructure
 
-GCE e2-micro VM running Meilisearch v1.7.3 in Docker. Provides typo-tolerant player name search for the UI via the proxy.
+GCE e2-medium VM running Meilisearch v1.7.3 in Docker. Provides typo-tolerant player name search for the UI via the proxy.
 
 ## How It Works
 
@@ -12,7 +12,8 @@ jobs/indexing → GCS snapshot → VM imports → proxy queries → UI search
 
 ## Scripts
 
-- `deploy-vm.sh` — Creates/updates the GCE VM (e2-micro, cos-stable, 10GB disk). Sets firewall rules (7700 internal-only, 22 public SSH).
+- `deploy-vm.sh` — Creates/updates the GCE VM (e2-medium, cos-stable, 10GB disk). Sets firewall rules (7700 internal-only, 22 public SSH).
+  - **e2-medium (4GB RAM) is required** — the index (~650k docs, ~738MB idle) + incremental indexing (the collector's per-3h PG-driven upserts / backfill) OOMs the e2-micro's 1GB. The old weekly-bulk-import-only workload fit on e2-micro; the new incremental updater does not.
 - `startup.sh` — VM boot script: fetches master key from metadata, starts Meilisearch Docker container.
 - `meilisearch-wrapper.sh` — Post-boot orchestration: imports snapshot, applies settings, verifies index has documents.
 - `meilisearch_config.json` — Index settings (searchable: `alias`, filterable: country/clan/matches/date, ranking prioritizes exactness then match count). **Must stay in sync with `jobs/indexing/meilisearch_config.json`.**

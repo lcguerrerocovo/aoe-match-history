@@ -35,7 +35,7 @@ else
     gcloud compute instances create "$VM_NAME" \
       --project="$PROJECT_ID" \
       --zone="$ZONE" \
-      --machine-type="e2-micro" \
+      --machine-type="e2-medium" \
       --network-interface="network-tier=PREMIUM,subnet=default" \
       --maintenance-policy="MIGRATE" \
       --scopes="https://www.googleapis.com/auth/cloud-platform" \
