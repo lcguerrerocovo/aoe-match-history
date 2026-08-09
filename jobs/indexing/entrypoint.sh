@@ -7,6 +7,25 @@ echo "Checking Meilisearch binary..."
 ls -la /usr/local/bin/meilisearch || echo "Meilisearch not found in /usr/local/bin"
 which meilisearch || echo "Meilisearch not found in PATH"
 
+# PROD MODE (non-destructive upsert, Phase 2 / issue #40): MEILISEARCH_HOST is set ->
+# add_documents directly to the PROD Meilisearch. No in-container local Meilisearch,
+# no snapshot, no destructive VM reset. Just run the indexer against prod.
+if [ -n "$MEILISEARCH_HOST" ]; then
+    echo "🌐 PROD MODE: targeting $MEILISEARCH_HOST (non-destructive upsert, no local Meilisearch/snapshot)"
+    echo "Starting indexing (prod upsert)..."
+    python3 /indexer.py
+    if [ $? -ne 0 ]; then
+        echo "Indexing failed"
+        exit 1
+    fi
+    echo "✅ Prod upsert job completed successfully!"
+    exit 0
+fi
+
+# LOCAL BUILD MODE (default): run an in-container Meilisearch, index into it, build
+# a snapshot, upload to GCS, and trigger the destructive VM reset/hot-swap.
+echo "🏠 LOCAL BUILD MODE: starting in-container Meilisearch for snapshot build"
+
 # Start Meilisearch in the background (let it use available memory)
 /usr/local/bin/meilisearch --master-key=masterKey --no-analytics --log-level=WARN --snapshot-dir=/meili_data/snapshots &
 MEILI_PID=$!

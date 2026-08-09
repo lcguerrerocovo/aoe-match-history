@@ -23,8 +23,15 @@ from player_collector import collect_active_players
 # --- Configuration ---
 INDEX_NAME = "players"
 MEILISEARCH_BATCH_SIZE = 2500
-MEILI_URL = "http://localhost:7700"
-MEILI_MASTER_KEY = "masterKey"
+# Prod (non-destructive upsert): set MEILISEARCH_HOST + MEILISEARCH_API_KEY env ->
+# add_documents directly to the PROD index, skip the local-build + snapshot +
+# destructive VM reset/hot-swap (Phase 2 / issue #40). Local build mode (no env)
+# keeps the old flow: run a local Meilisearch in the container, add_documents,
+# create_snapshot -> GCS -> trigger_vm_restart (wipes prod + re-imports).
+MEILI_URL = os.getenv("MEILISEARCH_HOST", "http://localhost:7700")
+MEILI_MASTER_KEY = os.getenv("MEILISEARCH_API_KEY", "masterKey")
+# Prod mode = targeting a remote Meilisearch (not the in-container localhost).
+PROD_MODE = os.getenv("MEILISEARCH_HOST") is not None
 
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -502,7 +509,18 @@ def main():
     
     # 6. Wait for all tasks to complete and create snapshot
     if successful_batches > 0:
-        # Check if Meilisearch is still running before attempting snapshot
+        # PROD MODE (non-destructive upsert, Phase 2 / issue #40): documents were
+        # added DIRECTLY to the prod Meilisearch. Nothing to snapshot/hot-swap —
+        # skip create_snapshot + GCS upload + trigger_vm_restart (which would wipe
+        # the prod index + re-import). total_matches/country/clanlist now live on
+        # the existing prod docs alongside the PG updater's name/last_match_date.
+        if PROD_MODE:
+            logging.info("✅ Prod upsert complete (non-destructive) — skipping snapshot/hot-swap")
+            logging.info("✅ Job completed successfully!")
+            sys.exit(0)
+
+        # LOCAL BUILD MODE: build snapshot in the in-container Meilisearch, upload
+        # to GCS, and trigger the destructive VM reset/hot-swap (wipes prod index).
         if not check_meilisearch_running():
             logging.error("❌ Meilisearch is not running - cannot create snapshot")
             sys.exit(1)

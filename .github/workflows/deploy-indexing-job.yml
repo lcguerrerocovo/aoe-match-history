@@ -71,9 +71,27 @@ jobs:
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:${{ github.sha }}
         docker push $REGION-docker.pkg.dev/$PROJECT_ID/meilisearch/$IMAGE_NAME:latest
 
+    - name: Resolve Meilisearch VM IP
+      run: |
+        # Phase 2 / issue #40: index DIRECTLY to the prod Meilisearch (non-destructive
+        # upsert via add_documents) instead of local-build + snapshot + destructive VM
+        # reset/hot-swap. Resolve the aoe-search VM's external IP at deploy time.
+        MEILI_IP=$(gcloud compute instances describe aoe-search --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+        if [ -z "$MEILI_IP" ]; then
+          echo "⚠️  aoe-search VM natIP not found; indexing job will fall back to local-build mode"
+        fi
+        echo "MEILI_IP=$MEILI_IP" >> $GITHUB_ENV
+        echo "Resolved Meilisearch VM IP: $MEILI_IP"
+
     - name: Deploy Cloud Run Job
       run: |
         # Deploy the Cloud Run Job (create if not exists, update if exists)
+        # Phase 2: set MEILISEARCH_HOST/API_KEY so the indexer upserts DIRECTLY to prod
+        # (non-destructive). Falls back to local-build mode if MEILI_IP is empty.
+        ENV_VARS=""
+        if [ -n "$MEILI_IP" ]; then
+          ENV_VARS="--set-env-vars=MEILISEARCH_HOST=http://${MEILI_IP}:7700,MEILISEARCH_API_KEY=a-secure-master-key-change-this"
+        fi
         if gcloud run jobs describe ${JOB_NAME} --region=${REGION} &>/dev/null; then
           echo "Job exists, updating..."
           gcloud run jobs update ${JOB_NAME} \
@@ -83,7 +101,8 @@ jobs:
             --cpu=2 \
             --max-retries=3 \
             --task-timeout=3600 \
-            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com \
+            $ENV_VARS
         else
           echo "Job does not exist, creating..."
           gcloud run jobs create ${JOB_NAME} \
@@ -93,7 +112,8 @@ jobs:
             --cpu=2 \
             --max-retries=3 \
             --task-timeout=3600 \
-            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com
+            --service-account=aoe2-site-bot@${PROJECT_ID}.iam.gserviceaccount.com \
+            $ENV_VARS
         fi
 
     - name: Remove 6h Cloud Scheduler Job (indexing is now on-demand)
