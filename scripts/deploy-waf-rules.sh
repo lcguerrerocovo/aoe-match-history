@@ -51,11 +51,11 @@ PAYLOAD=$(jq -n '{
 RESULT=$(curl -sS -X PUT \
   -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  "${API}/rulesets/phases/http_custom_firewall/entrypoint" \
+  "${API}/rulesets/phases/http_request_firewall_custom/entrypoint" \
   --data "$PAYLOAD")
 
 if echo "$RESULT" | jq -e '.success' > /dev/null; then
-  echo "Deployed WAF custom rules (phase http_custom_firewall):"
+  echo "Deployed WAF custom rules (phase http_request_firewall_custom):"
   echo "$RESULT" | jq -r '.result.rules[] | "  \(.description) — \(.action) [enabled=\(.enabled)]"'
   echo "Verify in dashboard: Security -> WAF -> Custom rules"
 else
