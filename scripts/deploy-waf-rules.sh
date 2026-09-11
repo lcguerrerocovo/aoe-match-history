@@ -7,13 +7,14 @@
 # here. Every one returned 404/302 — burning request quota and billable instance
 # time. Blocking at the edge drops ~61% of origin requests for free.
 #
-# Usage:
-#   export CLOUDFLARE_API_TOKEN=...   # needs Zone:Firewall Services:Edit (or Zone:Edit)
-#   export CLOUDFLARE_ZONE_ID=...     # same name as the GH Actions secret
-#   bash scripts/deploy-waf-rules.sh
+# Uses the Rulesets API (phase http_custom_firewall): the classic firewall rules
+# API is deprecated (error 10020). PUT replaces the phase's rules with this set,
+# so re-running is idempotent.
 #
-# Idempotent: skips rules whose description already exists. Free plan allows 5
-# classic firewall rules; this uses 4, leaving one spare.
+# Usage:
+#   export CLOUDFLARE_API_TOKEN=...   # Zone:Firewall Services:Edit (or Zone:WAF:Edit)
+#   export CLOUDFLARE_ZONE_ID=...     # aoe2.site zone id (GH secret has it)
+#   bash scripts/deploy-waf-rules.sh
 
 set -euo pipefail
 
@@ -22,42 +23,43 @@ set -euo pipefail
 
 API="https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}"
 
-api() {
-  curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-       -H "Content-Type: application/json" "$@"
-}
+PAYLOAD=$(jq -n '{
+  rules: [
+    {
+      action: "block",
+      description: "PHP probes",
+      expression: "ends_with(http.request.uri.path, \".php\")"
+    },
+    {
+      action: "block",
+      description: "Env file probes",
+      expression: "http.request.uri.path contains \".env\""
+    },
+    {
+      action: "block",
+      description: "WordPress path probes",
+      expression: "http.request.uri.path contains \"/wp-admin\" or http.request.uri.path contains \"/wp-content\" or http.request.uri.path contains \"/wp-includes\" or http.request.uri.path contains \"/wp-json\""
+    },
+    {
+      action: "block",
+      description: "AI crawlers",
+      expression: "http.user_agent contains \"GPTBot\" or http.user_agent contains \"Applebot-Extended\""
+    }
+  ]
+}')
 
-RULES=(
-  'PHP probes|ends_with(http.request.uri.path, ".php")'
-  'Env file probes|http.request.uri.path contains ".env"'
-  'WordPress path probes|http.request.uri.path contains "/wp-admin" or http.request.uri.path contains "/wp-content" or http.request.uri.path contains "/wp-includes" or http.request.uri.path contains "/wp-json"'
-  'AI crawlers|http.user_agent contains "GPTBot" or http.user_agent contains "Applebot-Extended"'
-)
+RESULT=$(curl -sS -X PUT \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  "${API}/rulesets/phases/http_custom_firewall/entrypoint" \
+  --data "$PAYLOAD")
 
-echo "Fetching existing firewall rules..."
-EXISTING=$(api "${API}/firewall/rules?per_page=100")
-echo "${EXISTING}" | jq -e '.success' > /dev/null || { echo "API error: ${EXISTING}"; exit 1; }
-
-for entry in "${RULES[@]}"; do
-  DESC="${entry%%|*}"
-  EXPR="${entry#*|}"
-
-  if echo "${EXISTING}" | jq -e --arg d "${DESC}" '.result[] | select(.description == $d)' > /dev/null; then
-    echo "skip: \"${DESC}\" already exists"
-    continue
-  fi
-
-  RESULT=$(api -X POST "${API}/firewall/rules" \
-    --data "$(jq -n --arg d "${DESC}" --arg e "${EXPR}" \
-      '[{action: "block", description: $d, filter: {expression: $e}}]')")
-
-  if echo "${RESULT}" | jq -e '.success' > /dev/null; then
-    echo "created: \"${DESC}\" -> ${EXPR}"
-  else
-    echo "FAILED: \"${DESC}\""
-    echo "${RESULT}" | jq '.errors'
-    exit 1
-  fi
-done
-
-echo "Done. Verify in dashboard: Security -> WAF -> Custom rules"
+if echo "$RESULT" | jq -e '.success' > /dev/null; then
+  echo "Deployed WAF custom rules (phase http_custom_firewall):"
+  echo "$RESULT" | jq -r '.result.rules[] | "  \(.description) — \(.action) [enabled=\(.enabled)]"'
+  echo "Verify in dashboard: Security -> WAF -> Custom rules"
+else
+  echo "FAILED:"
+  echo "$RESULT" | jq '.errors'
+  exit 1
+fi
