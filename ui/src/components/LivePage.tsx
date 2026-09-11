@@ -226,11 +226,37 @@ export function LivePage() {
     }
   }, []);
 
+  // Pause polling while the tab is hidden — a background tab left open generates
+  // 2,880 requests/day and was 89% of all human API traffic (issue #44, from 30
+  // days of Cloud Run logs). On becoming visible: refetch immediately so the user
+  // never sees stale data, then restart the interval.
   useEffect(() => {
     fetchMatches();
-    intervalRef.current = setInterval(fetchMatches, REFRESH_INTERVAL_MS);
+    const stopPolling = () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+    const startPolling = () => {
+      if (intervalRef.current === null) {
+        intervalRef.current = setInterval(fetchMatches, REFRESH_INTERVAL_MS);
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        fetchMatches();
+        startPolling();
+      }
+    };
+    // Background-tab open: load data once, but don't poll until the tab is seen
+    if (!document.hidden) startPolling();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopPolling();
     };
   }, [fetchMatches]);
 

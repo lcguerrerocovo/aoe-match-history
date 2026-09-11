@@ -160,4 +160,36 @@ describe('LivePage', () => {
       expect(doc.documentElement.scrollWidth).to.be.at.most(390);
     });
   });
+
+  // #44 regression guard: polling must pause while the tab is hidden and
+  // refetch when it becomes visible again. Runs on REAL timers (restored like
+  // the stale-retries test above): probe-verified that cy.tick() does not fire
+  // setInterval callbacks registered in the AUT under cy.clock(), so fake
+  // timers cannot prove pausing. The 32s wait covers one full 30s interval
+  // period with the tab hidden — if the pause regressed, a poll would land
+  // inside that window and the count assertion would fail.
+  // document.hidden is read-only, so it is redefined via Object.defineProperty.
+  it('pauses polling while the tab is hidden and refetches on visible', () => {
+    cy.clock().invoke('restore');
+    cy.intercept('GET', '/api/live', { body: mockLiveMatches }).as('live');
+    mountWithProviders(<LivePage />);
+    cy.wait('@live');
+    cy.get('@live.all').should('have.length', 1);
+
+    // Hide the tab — no poll may fire for a full 30s interval period
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'hidden', { value: true, configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    cy.wait(32_000);
+    cy.get('@live.all').should('have.length', 1);
+
+    // Show the tab — immediate refetch so data is never stale
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'hidden', { value: false, configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    cy.wait('@live');
+    cy.get('@live.all').should('have.length', 2);
+  });
 });
