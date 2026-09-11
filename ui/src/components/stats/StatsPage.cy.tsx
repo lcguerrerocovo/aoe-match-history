@@ -151,17 +151,17 @@ describe('StatsPage URL-aware state (#38 guard)', () => {
     });
 
     it('honors a valid deep-linked map once data loads', () => {
-      renderStats('/stats/team-positions?gameSize=3v3&map=Arabia');
+      renderStats('/stats/team-positions?gameSize=3v3&posMap=Arabia');
       cy.wait('@posStats');
       // Arabia is in the 3v3/all map set — the deep link must survive the load
-      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'map=Arabia');
+      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'posMap=Arabia');
     });
 
     it('clears a stale map param once data loads (auto falls back)', () => {
-      renderStats('/stats/team-positions?gameSize=3v3&map=BlackForest');
+      renderStats('/stats/team-positions?gameSize=3v3&posMap=BlackForest');
       cy.wait('@posStats');
       // BlackForest has no position data — the param is cleared and auto resolves
-      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('not.include', 'map=');
+      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('not.include', 'posMap=');
       cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'gameSize=3v3');
     });
   });

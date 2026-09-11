@@ -44,8 +44,14 @@ export function InsightsTab() {
   const [error, setError] = useState<string | null>(null);
   // URL-bound filters (Team Positions has its own keys distinct from Win Rates).
   // selectedMap default '' means "auto" (pick the top map); a non-empty value is honored.
+  // URL-bound filters (Team Positions has its own keys distinct from Win Rates).
+  // selectedMap default '' means "auto" (pick the top map); a non-empty value is honored.
+  // NOTE: the map key is 'posMap' — NOT the Win Rates tab's 'map'. The two tabs
+  // validate maps against DIFFERENT universes (position maps vs 1v1 win-rate
+  // maps); sharing one key let the inactive tab's reset effect wipe valid
+  // selections (e.g. Hideout has position data but no 1v1 win-rate data).
   const [gameSize, setGameSize] = useUrlState<GameSize>({ key: 'gameSize', defaultValue: '4v4' });
-  const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'map', defaultValue: '' });
+  const [selectedMap, setSelectedMap] = useUrlState<string>({ key: 'posMap', defaultValue: '' });
   const [eloBracket, setEloBracket] = useUrlState<PositionEloBracket>({ key: 'elo', defaultValue: 'all' });
 
   useEffect(() => {
@@ -68,12 +74,10 @@ export function InsightsTab() {
     return getTopMap(data, gameSize, eloBracket);
   }, [data, selectedMap, maps, gameSize, eloBracket]);
 
-  // Clear a stale map param once data has loaded (and the valid map set is
+  // Clear a stale posMap param once data has loaded (and the valid map set is
   // known) — mirrors the Win Rates reset. Without the data guard, a deep link
-  // like ?map=Arabia would be wiped on first render when `maps` is still empty.
-  // The shared ?map param from the Win Rates tab can name a map that has no
-  // position data; without this reset the URL would claim a map the dropdown
-  // isn't showing.
+  // like ?posMap=Arabia would be wiped on first render when `maps` is still
+  // empty (data not loaded yet).
   useEffect(() => {
     if (data && selectedMap && !maps.includes(selectedMap)) {
       setSelectedMap('');
