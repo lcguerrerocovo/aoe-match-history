@@ -64,6 +64,35 @@ const renderStats = (initial: string) => {
   );
 };
 
+// Minimal PositionStatsData mock: Arabia (more games) + Arena for 3v3/all.
+const positionStatsMock = {
+  meta: {
+    generatedAt: '2026-08-08T00:00:00Z',
+    dateRange: { start: '2026-03-01', end: '2026-09-01' },
+    minPickRate: 0.01,
+    minMapGames: 1500,
+    excludedMaps: [],
+  },
+  '3v3': {
+    all: {
+      Arabia: {
+        totalGames: 500,
+        pocket: { totalPicks: 250, civs: { Britons: { wins: 300, losses: 200, totalGames: 500, winRate: 0.6, pickRate: 1 } } },
+        flank: { totalPicks: 250, civs: { Britons: { wins: 250, losses: 250, totalGames: 500, winRate: 0.5, pickRate: 1 } } },
+      },
+      Arena: {
+        totalGames: 400,
+        pocket: { totalPicks: 200, civs: { Britons: { wins: 200, losses: 200, totalGames: 400, winRate: 0.5, pickRate: 1 } } },
+        flank: { totalPicks: 200, civs: { Britons: { wins: 180, losses: 220, totalGames: 400, winRate: 0.45, pickRate: 1 } } },
+      },
+    },
+    '<1000': {},
+    '1000-1500': {},
+    '1500+': {},
+  },
+  '4v4': { all: {}, '<1000': {}, '1000-1500': {}, '1500+': {} },
+};
+
 describe('StatsPage URL-aware state (#38 guard)', () => {
   beforeEach(() => {
     cy.on('uncaught:exception', () => false);
@@ -98,5 +127,42 @@ describe('StatsPage URL-aware state (#38 guard)', () => {
     cy.get('option[value="Arabia"]').should('exist');
     cy.get('select').eq(0).select('Arabia').should('have.value', 'Arabia');
     cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'map=Arabia');
+  });
+
+  // Regression: the tab-switch handler navigated to a bare path, wiping the
+  // query string (matchType, map, elo, gameSize, view) on every tab change.
+  it('switching tabs preserves filters in the URL', () => {
+    cy.intercept('GET', '/data/position-stats.json', { statusCode: 200, body: positionStatsMock }).as('posStats');
+    renderStats('/stats/win-rates?elo=1500%2B');
+    cy.wait('@civStats');
+    cy.contains('button', /Team Positions/i).click();
+    cy.get('[data-testid="url-path"]').invoke('attr', 'data-path').should('eq', '/stats/team-positions');
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'elo=1500');
+
+    // And the return trip keeps them too
+    cy.contains('button', /Win Rates/i).click();
+    cy.get('[data-testid="url-path"]').invoke('attr', 'data-path').should('eq', '/stats/win-rates');
+    cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'elo=1500');
+  });
+
+  describe('Team Positions map param', () => {
+    beforeEach(() => {
+      cy.intercept('GET', '/data/position-stats.json', { statusCode: 200, body: positionStatsMock }).as('posStats');
+    });
+
+    it('honors a valid deep-linked map once data loads', () => {
+      renderStats('/stats/team-positions?gameSize=3v3&map=Arabia');
+      cy.wait('@posStats');
+      // Arabia is in the 3v3/all map set — the deep link must survive the load
+      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'map=Arabia');
+    });
+
+    it('clears a stale map param once data loads (auto falls back)', () => {
+      renderStats('/stats/team-positions?gameSize=3v3&map=BlackForest');
+      cy.wait('@posStats');
+      // BlackForest has no position data — the param is cleared and auto resolves
+      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('not.include', 'map=');
+      cy.get('[data-testid="url-search"]').invoke('attr', 'data-search').should('include', 'gameSize=3v3');
+    });
   });
 });

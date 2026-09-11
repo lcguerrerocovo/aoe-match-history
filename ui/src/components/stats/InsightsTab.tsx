@@ -68,6 +68,18 @@ export function InsightsTab() {
     return getTopMap(data, gameSize, eloBracket);
   }, [data, selectedMap, maps, gameSize, eloBracket]);
 
+  // Clear a stale map param once data has loaded (and the valid map set is
+  // known) — mirrors the Win Rates reset. Without the data guard, a deep link
+  // like ?map=Arabia would be wiped on first render when `maps` is still empty.
+  // The shared ?map param from the Win Rates tab can name a map that has no
+  // position data; without this reset the URL would claim a map the dropdown
+  // isn't showing.
+  useEffect(() => {
+    if (data && selectedMap && !maps.includes(selectedMap)) {
+      setSelectedMap('');
+    }
+  }, [data, gameSize, eloBracket, maps, selectedMap, setSelectedMap]);
+
   const { flankCivs, pocketCivs, totalGames } = useMemo(() => {
     if (!data || !activeMap) return { flankCivs: [], pocketCivs: [], totalGames: 0 };
     const bracketData = data[gameSize][eloBracket];

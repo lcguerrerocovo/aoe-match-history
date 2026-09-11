@@ -461,7 +461,11 @@ export function StatsPage() {
   const [activeView, setActiveView] = useUrlState<StatsView>({ key: 'view', defaultValue: 'winRate' });
 
   const setActiveTab = (tab: StatsTab) => {
-    navigate(tab === 'insights' ? '/stats/team-positions' : '/stats/win-rates', { replace: false });
+    // Preserve the query string: a bare path wipes every filter (matchType, map,
+    // elo, gameSize, view) back to defaults on every tab switch. Tab switches
+    // share the map/elo params and keep the tab-specific ones for the return trip.
+    const path = tab === 'insights' ? '/stats/team-positions' : '/stats/win-rates';
+    navigate(`${path}${location.search}`, { replace: false });
   };
 
   useEffect(() => {
