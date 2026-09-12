@@ -226,7 +226,9 @@ export function LivePage() {
     } finally {
       fetchingRef.current = false;
     }
-  }, []);
+    // `t` is a dependency: i18next returns a new function identity on language
+    // change, and the error copy below must follow the active language.
+  }, [t]);
 
   // Pause polling while the tab is hidden — a background tab left open generates
   // 2,880 requests/day and was 89% of all human API traffic (issue #44, from 30
