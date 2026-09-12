@@ -3,6 +3,7 @@ import { Box, Card, Input, Spinner, HStack, Text, Portal } from '@chakra-ui/reac
 import { system } from '../theme/theme';
 import { cardVariant } from '../types/chakra-overrides';
 import ReactCountryFlag from 'react-country-flag';
+import { useTranslation } from 'react-i18next';
 
 function useDebouncedValue(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -102,7 +103,8 @@ const PlayerSearchDropdown: React.FC<PlayerSearchDropdownProps> = ({ anchorRef, 
   );
 };
 
-export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, placeholder = 'Search players...', size = 'md', context }) => {
+export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, placeholder, size = 'md', context }) => {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -176,7 +178,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
         <Box position="relative">
           <Input
             ref={inputRef}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('common.searchPlayers')}
             width="100%"
             variant="outline"
             fontSize={size === 'sm' ? 'sm' : { base: 'md', md: 'lg' }}
@@ -259,7 +261,7 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onSelect, searchFn, 
               </Card.Root>
             ))
         ) : (
-          <Text color="brand.inkMuted" fontSize="sm" textAlign="center" py={2}>No players found</Text>
+          <Text color="brand.inkMuted" fontSize="sm" textAlign="center" py={2}>{t('common.noPlayersFound')}</Text>
         )}
       </PlayerSearchDropdown>
     </Box>

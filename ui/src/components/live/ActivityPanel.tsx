@@ -2,6 +2,7 @@ import { Box, Text, Flex, HStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { keyframes } from '@emotion/react';
 import type { LiveMatch } from '../../types/liveMatch';
+import { useTranslation } from 'react-i18next';
 
 const shimmerWave = keyframes`
   0%, 100% { opacity: 0.2; transform: scaleY(0.7); }
@@ -52,6 +53,7 @@ export function ActivityPanel({
   onMapSelect,
   onEloBracketSelect,
 }: ActivityPanelProps) {
+  const { t } = useTranslation();
   const matchCount = matches.length;
   const playerCount = useMemo(
     () => matches.reduce((sum, m) => sum + m.players.length, 0),
@@ -151,7 +153,7 @@ export function ActivityPanel({
                 _hover={{ textDecoration: 'underline' }}
                 onClick={() => { onMapSelect(''); onEloBracketSelect(''); }}
               >
-                Clear filters
+                {t('filter.clearFilters')}
               </Text>
             )}
           </HStack>
@@ -167,7 +169,7 @@ export function ActivityPanel({
                 fontWeight="bold"
                 mb={2}
               >
-                Top Maps
+                {t('stats.topMaps')}
               </Text>
               {topMaps.map(({ name, count }) => {
                 const isSelected = selectedMap === name;
@@ -230,7 +232,7 @@ export function ActivityPanel({
                 fontWeight="bold"
                 mb={2}
               >
-                ELO Distribution
+                {t('stats.eloDistribution')}
               </Text>
               {!ratingsLoaded ? (
                 <HStack gap={1} align="flex-end" h="72px">
@@ -327,7 +329,7 @@ export function ActivityPanel({
                 fontWeight="bold"
                 mb={2}
               >
-                Match Age
+                {t('stats.matchAge')}
               </Text>
               {freshness.total > 0 && (
                 <>

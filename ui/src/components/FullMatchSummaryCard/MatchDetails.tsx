@@ -2,8 +2,10 @@ import { Box, VStack, HStack, Text } from '@chakra-ui/react';
 import type { Match } from '../../types/match';
 import { formatDateTime } from '../../utils/matchUtils';
 import { formatDuration, parseDuration } from '../../utils/timeUtils';
+import { useTranslation } from 'react-i18next';
 
 export function MatchDetails({ match }: { match: Match }) {
+  const { t } = useTranslation();
   const durationSec = parseDuration(match.duration);
   const gameTimeSec = Math.round(durationSec * 1.7);
 
@@ -58,7 +60,7 @@ export function MatchDetails({ match }: { match: Match }) {
           {/* Date & Time */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "100px", md: "auto" }}>
             <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
-              <Box as="span" display={{ base: "inline", md: "none" }}>Date</Box>
+              <Box as="span" display={{ base: "inline", md: "none" }}>{t('common.date')}</Box>
               <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
             </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
@@ -69,8 +71,8 @@ export function MatchDetails({ match }: { match: Match }) {
           {/* Game Duration */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
             <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
-              <Box as="span" display={{ base: "inline", md: "none" }}>Game</Box>
-              <Box as="span" display={{ base: "none", md: "inline" }}>Game Duration</Box>
+              <Box as="span" display={{ base: "inline", md: "none" }}>{t('common.game')}</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>{t('match.gameDuration')}</Box>
             </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(gameTimeSec)}
@@ -80,8 +82,8 @@ export function MatchDetails({ match }: { match: Match }) {
           {/* Real Time */}
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "80px", md: "auto" }}>
             <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
-              <Box as="span" display={{ base: "inline", md: "none" }}>Real</Box>
-              <Box as="span" display={{ base: "none", md: "inline" }}>Real Time</Box>
+              <Box as="span" display={{ base: "inline", md: "none" }}>{t('common.real')}</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>{t('common.realTime')}</Box>
             </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDuration(durationSec)}

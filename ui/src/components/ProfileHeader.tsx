@@ -8,6 +8,7 @@ import { componentSpacing } from '../theme/theme';
 import { FaFlag } from 'react-icons/fa';
 import { Icon } from '@chakra-ui/react';
 import { AnimatedHeight } from './ui/animated-height';
+import { useTranslation } from 'react-i18next';
 
 function ProfileSkeleton({ profileId }: { profileId: string }) {
   const recipe = useSlotRecipe({ key: 'profileHeader' });
@@ -84,6 +85,7 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profileId, profile, stats }: ProfileHeaderProps) {
+  const { t } = useTranslation();
   const recipe = useSlotRecipe({ key: 'profileHeader' });
   const styles = recipe();
   const layout = useLayoutConfig();
@@ -157,7 +159,7 @@ export function ProfileHeader({ profileId, profile, stats }: ProfileHeaderProps)
                 lineHeight="1"
                 textAlign={{ base: 'center', md: 'left' }}
               >
-                Record
+                {t('stats.record')}
               </Text>
               {stats == null ? (
                 <StatsSkeleton />

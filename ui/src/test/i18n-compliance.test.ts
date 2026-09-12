@@ -12,17 +12,23 @@ import itLocale from '../i18n/locales/it.json';
 const LOCALES: Record<string, unknown> = { es, de, it: itLocale };
 const COMPONENTS_DIR = join(process.cwd(), 'src/components');
 
-/**
- * Components migrated to useTranslation(). Append as each file is converted;
- * never remove an entry — a migrated file must not reacquire hardcoded copy.
- * Paths are relative to src/components.
- */
-const MIGRATED_FILES: string[] = [
-  'FilterBar.tsx',
-  'LivePage.tsx',
-  'stats/StatsPage.tsx',
-  'stats/InsightsTab.tsx',
+const SKIP_FILES = [
+  // Inline SVG geometry, not user copy
+  'Watermark.tsx',
 ];
+
+async function componentFiles(dir: string): Promise<string[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const out: string[] = [];
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) out.push(...await componentFiles(full));
+    else if (/\.tsx$/.test(e.name) && !/\.cy\.|\.test\./.test(e.name) && !SKIP_FILES.includes(e.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
 
 /** Copy that is deliberately never translated. */
 const ALLOWED_LITERALS = [
@@ -96,15 +102,18 @@ describe('interpolation parity', () => {
   });
 });
 
-describe('no hardcoded strings in migrated files', () => {
-  const jsxText = />\s*([A-Z][A-Za-z0-9 ,.'’!?:%\-()/]{2,})\s*</g;
+describe('no hardcoded strings in components', () => {
+  // Negative lookbehind on `=` so a `=> Promise<T>` type annotation is not
+  // mistaken for JSX text.
+  const jsxText = /(?<!=)>\s*([A-Z][A-Za-z0-9 ,.'’!?:%\-()/]{2,})\s*</g;
   const textProp = /\b(placeholder|aria-label|title|alt)\s*=\s*"([^"]{3,})"/g;
 
   it('every migrated component routes user copy through t()', async () => {
     const offenders: string[] = [];
 
-    for (const rel of MIGRATED_FILES) {
-      const src = await fs.readFile(join(COMPONENTS_DIR, rel), 'utf8');
+    for (const abs of await componentFiles(COMPONENTS_DIR)) {
+      const rel = abs.slice(COMPONENTS_DIR.length + 1);
+      const src = await fs.readFile(abs, 'utf8');
       const found = new Set<string>();
       let m: RegExpExecArray | null;
 

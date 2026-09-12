@@ -3,6 +3,7 @@ import { CivPositionCard } from './CivPositionCard';
 import { PLAYER_COLORS } from '../../utils/playerColors';
 import { assetManager } from '../../utils/assetManager';
 import type { PositionCivStats } from '../../types/positionStats';
+import { useTranslation } from 'react-i18next';
 
 export interface FormationCiv {
   name: string;
@@ -41,6 +42,7 @@ const STRIP_COLORS = {
 };
 
 export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: FormationViewProps) {
+  const { t } = useTranslation();
   // Zigzag: #1 left, #2 right, #3 left, #4 right
   const leftFlanks = [flankCivs[0], flankCivs[2]].filter(Boolean);
   const rightFlanks = [flankCivs[1], flankCivs[3]].filter(Boolean);
@@ -103,7 +105,7 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
               textTransform="uppercase"
               letterSpacing="widest"
             >
-              Flank
+              {t('stats.flank')}
             </Text>
             {leftFlanks.map((civ, i) => (
               <CivPositionCard
@@ -128,7 +130,7 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
               textTransform="uppercase"
               letterSpacing="widest"
             >
-              Flank
+              {t('stats.flank')}
             </Text>
             {rightFlanks.map((civ, i) => (
               <CivPositionCard
@@ -156,7 +158,7 @@ export function FormationView({ flankCivs, pocketCivs, mapName, gameSize }: Form
             textAlign="center"
             mb={3}
           >
-            Pocket
+            {t('stats.pocket')}
           </Text>
 
           <Flex gap={{ base: 4, md: 6 }} justify="center">
