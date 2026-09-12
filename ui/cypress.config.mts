@@ -22,6 +22,25 @@ export default defineConfig({
           // Belt and braces: never resolve two React copies.
           dedupe: ['react', 'react-dom'],
         },
+        // react/jsx-dev-runtime is pulled in by the JSX transform, not by any
+        // import statement, so Vite's scanner misses it and discovers it while
+        // the first spec is already running. It then logs "new dependencies
+        // optimized: react/jsx-dev-runtime" followed by "optimized dependencies
+        // changed. reloading", re-bundling React under a fresh hash while the
+        // loaded copy stays — hooks then read a null dispatcher. Naming it here
+        // puts it in the first pass so there is no mid-run re-optimise.
+        optimizeDeps: {
+          include: [
+            'react',
+            'react-dom',
+            'react-dom/client',
+            'react/jsx-runtime',
+            'react/jsx-dev-runtime',
+            'i18next',
+            'react-i18next',
+            'i18next-browser-languagedetector',
+          ],
+        },
         // Optimize Vite for faster builds
         build: { minify: false },
         server: { hmr: false }
