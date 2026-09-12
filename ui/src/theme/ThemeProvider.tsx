@@ -1,4 +1,11 @@
 import React, { createContext, useContext } from 'react';
+// Initialises the i18n singleton as a side effect. This is the root provider
+// for both the app and every component spec, so importing it here guarantees
+// translations are ready wherever components render. Doing it from a Cypress
+// support file instead created a second module graph, which Vite optimised
+// separately and loaded a second React ("Cannot read properties of null
+// (reading 'useContext')").
+import '../i18n';
 import { ChakraProvider } from '@chakra-ui/react';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { system } from './theme';

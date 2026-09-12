@@ -37,6 +37,10 @@ export const i18nConfig: InitOptions = {
   load: 'languageOnly',
   interpolation: { escapeValue: false },
   react: { useSuspense: false },
+  // Resources are bundled, so there is nothing to fetch. Left async, i18next
+  // defers init and the first render sees raw keys instead of copy — invisible
+  // once warm, and the cause of first-spec failures in CI.
+  initAsync: false,
 };
 
 i18next
