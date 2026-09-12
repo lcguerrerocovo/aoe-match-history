@@ -3,12 +3,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES, type SupportedLanguage } from '../i18n';
 
+interface LanguageSwitcherProps {
+  /**
+   * Which surface the control sits on. The top bar is dark, so its label needs
+   * light text; the landing page is parchment and needs ink.
+   */
+  tone?: 'topbar' | 'surface';
+}
+
 /**
- * Language picker for the top bar. Options are listed in their native names —
- * never translated — because someone hunting for their language cannot read
- * the one currently active.
+ * Language picker. Options are listed in their native names — never translated
+ * — because someone hunting for their language cannot read the one currently
+ * active.
  */
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ tone = 'topbar' }: LanguageSwitcherProps = {}) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -30,12 +38,12 @@ export function LanguageSwitcher() {
         variant="ghost"
         aria-label={`Language: ${LANGUAGE_NAMES[active]}`}
         aria-expanded={open}
-        color="brand.topbarText"
+        color={tone === 'topbar' ? 'brand.topbarText' : 'brand.inkDark'}
         fontSize="xs"
         fontWeight="600"
         letterSpacing="wide"
         px={2}
-        opacity={0.8}
+        opacity={tone === 'topbar' ? 0.8 : 0.9}
         _hover={{ opacity: 1, bg: 'brand.stoneLight' }}
       >
         {active.toUpperCase()}

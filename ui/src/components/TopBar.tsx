@@ -56,6 +56,9 @@ const TopBar = () => {
           align="center"
           justify="space-between"
           display={{ base: 'none', md: 'flex' }}
+          // Reserve room for the absolutely-positioned language + theme cluster
+          // at the far right, so the nav row can never run underneath it.
+          pr="104px"
           data-testid="desktop-layout"
         >
           {/* Left: Site title */}
@@ -126,7 +129,6 @@ const TopBar = () => {
             <Box w="220px" ref={searchContainerRef}>
               <PlayerSearch onSelect={handlePlayerSelect} placeholder={t('common.searchPlayers')} size="sm" context="topbar" searchFn={searchPlayers} />
             </Box>
-            <LanguageSwitcher />
           </Flex>
         </Flex>
 
@@ -159,14 +161,17 @@ const TopBar = () => {
                         </RouterLink></Text>
 
           {/* Mobile toggle - positioned at same level as title */}
-          <Box
+          <Flex
             position="absolute"
             right={0}
-            display={{ base: 'block', md: 'none' }}
+            align="center"
+            gap={1}
+            display={{ base: 'flex', md: 'none' }}
             data-testid="mobile-toggle"
           >
+            <LanguageSwitcher />
             <ThemeToggle />
-          </Box>
+          </Flex>
         </Flex>
 
         {/* Mobile: Nav row */}
@@ -215,24 +220,22 @@ const TopBar = () => {
         >
           <PlayerSearch onSelect={handlePlayerSelect} placeholder={t('common.searchPlayers')} size="sm" context="topbar" searchFn={searchPlayers} />
         </Box>
-
-        {/* Mobile language switcher - below search */}
-        <Box display={{ base: 'flex', md: 'none' }} justifyContent="center" mt={2}>
-          <LanguageSwitcher />
-        </Box>
       </Box>
-      {/* Theme toggle - always at absolute far right */}
-      <Box
+      {/* Language + theme: global controls, always at absolute far right */}
+      <Flex
         position="absolute"
         right={4}
         top="50%"
         transform="translateY(-50%)"
         zIndex={3}
-        display={{ base: 'none', md: 'block' }}
+        align="center"
+        gap={2}
+        display={{ base: 'none', md: 'flex' }}
         data-testid="desktop-toggle"
       >
+        <LanguageSwitcher />
         <ThemeToggle />
-      </Box>
+      </Flex>
     </Box>
   );
 };

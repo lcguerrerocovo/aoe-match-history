@@ -6,6 +6,7 @@ import type { PlayerSearchResult } from './PlayerSearch';
 import { useNavigate } from 'react-router-dom';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { PulsingDot } from './LiveMatchCard';
 import { responsiveSpacing } from '../theme/theme';
 import { Watermark } from './Watermark';
@@ -29,15 +30,18 @@ export function LandingPage() {
       py={{ md: 8 }}
       position="relative"
     >
-      {/* Floating Theme Toggle */}
-      <Box
+      {/* Floating language + theme controls — same top-right cluster as TopBar */}
+      <Flex
         position="absolute"
         top={{ base: 4, md: 8 }}
         right={{ base: 4, md: 8 }}
         zIndex={1000}
+        align="center"
+        gap={2}
       >
+        <LanguageSwitcher tone="surface" />
         <ThemeToggle />
-      </Box>
+      </Flex>
       <VStack
         gap={responsiveSpacing.landingSpacing}
         align="center"
