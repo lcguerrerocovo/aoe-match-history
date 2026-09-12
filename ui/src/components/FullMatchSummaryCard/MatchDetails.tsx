@@ -61,7 +61,7 @@ export function MatchDetails({ match }: { match: Match }) {
           <VStack align="start" gap={1} flex={{ base: "1", md: "auto" }} minW={{ base: "100px", md: "auto" }}>
             <Text fontSize="xs" fontStyle="italic" color="brand.inkMuted">
               <Box as="span" display={{ base: "inline", md: "none" }}>{t('common.date')}</Box>
-              <Box as="span" display={{ base: "none", md: "inline" }}>Date & Time</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>{t('common.dateTime')}</Box>
             </Text>
             <Text color="brand.inkDark" fontSize={{ base: "xs", md: "md" }} fontWeight="medium" data-testid="match-detail-value">
               {formatDateTime(match.start_time)}

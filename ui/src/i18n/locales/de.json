@@ -16,7 +16,10 @@
     "real": "Real",
     "realTime": "Echtzeit",
     "noPlayersFound": "Keine Spieler gefunden",
-    "tryBroadening": "Erweitere deine Suche"
+    "tryBroadening": "Erweitere deine Suche",
+    "dateTime": "Datum & Uhrzeit",
+    "matchesUnit": "Partien",
+    "playersUnit": "Spieler"
   },
   "filter": {
     "map": "Karte",
@@ -44,7 +47,10 @@
     "playersInMatches_one": "{{players}} Spieler in {{count}} Partie",
     "playersInMatches_other": "{{players}} Spieler in {{count}} Partien",
     "discoveringMore": " · weitere werden gesucht…",
-    "dataDelayed": "Spähberichte verzögert — zeige die zuletzt bekannten Schlachten"
+    "dataDelayed": "Spähberichte verzögert — zeige die zuletzt bekannten Schlachten",
+    "freshUnder5": "<5 Min",
+    "fresh5to15": "5–15 Min",
+    "freshOver15": "15+ Min"
   },
   "stats": {
     "winRates": "Siegraten",
@@ -78,7 +84,9 @@
     "loadFailed": "Statistiken konnten nicht geladen werden",
     "mapsExcluded": "Karten mit < 1.500 Partien ausgeschlossen",
     "civsExcluded": "Zivilisationen mit < 1 % Wahlrate ausgeschlossen",
-    "rankedBy": "Sortiert nach 𝑊 ("
+    "rankedBy": "Sortiert nach 𝑊 (",
+    "civSpecificHint": " — siehe die hervorgehobenen Zivilisationen unten für zivilisationsspezifische Änderungen",
+    "eloGapExcluded": "Partien mit ELO-Differenz > 200 ausgeschlossen, um Verzerrung durch Niveauunterschiede zu verringern"
   },
   "match": {
     "notFound": "Partie nicht gefunden",
@@ -93,7 +101,8 @@
     "processingReplay": "Aufzeichnung wird verarbeitet...",
     "apmOverTime": "APM im Zeitverlauf",
     "actionBreakdown": "Aktionsaufschlüsselung",
-    "loadFailed": "Partie konnte nicht geladen werden"
+    "loadFailed": "Partie konnte nicht geladen werden",
+    "replay": "Aufzeichnung"
   },
   "profile": {
     "collectingSince": "Partieverlauf wird seit {{date}} erfasst. Ältere Partien können erscheinen, sind aber nicht garantiert.",

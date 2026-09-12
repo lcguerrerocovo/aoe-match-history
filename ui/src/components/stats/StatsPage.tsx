@@ -195,7 +195,7 @@ function GeneralChanges({ changes, civCount }: { changes: string[]; civCount: nu
         </Text>
         <Text fontSize="xs" fontWeight="700" color="brand.inkMuted" letterSpacing="wide">
           {t('stats.balanceChanges', { count: changes.length })}
-          {civCount > 0 && <Text as="span" fontWeight="500"> — see highlighted civs below for civ-specific changes</Text>}
+          {civCount > 0 && <Text as="span" fontWeight="500">{t('stats.civSpecificHint')}</Text>}
         </Text>
       </Flex>
       {expanded && (
@@ -795,7 +795,7 @@ export function StatsPage() {
                 opacity={0.75}
               >
                 <Text fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
-                  Matches with ELO gap &gt; 200 excluded to reduce skill-gap noise
+                  {t('stats.eloGapExcluded')}
                 </Text>
               </Flex>
             )}

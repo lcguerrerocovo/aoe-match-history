@@ -16,7 +16,10 @@
     "real": "Real",
     "realTime": "Real Time",
     "noPlayersFound": "No players found",
-    "tryBroadening": "Try broadening your search"
+    "tryBroadening": "Try broadening your search",
+    "dateTime": "Date & Time",
+    "matchesUnit": "matches",
+    "playersUnit": "players"
   },
   "filter": {
     "map": "Map",
@@ -44,7 +47,10 @@
     "playersInMatches_one": "{{players}} players in {{count}} match",
     "playersInMatches_other": "{{players}} players in {{count}} matches",
     "discoveringMore": " · discovering more…",
-    "dataDelayed": "Scout reports delayed — showing the last known battles"
+    "dataDelayed": "Scout reports delayed — showing the last known battles",
+    "freshUnder5": "<5 min",
+    "fresh5to15": "5–15 min",
+    "freshOver15": "15+ min"
   },
   "stats": {
     "winRates": "Win Rates",
@@ -78,7 +84,9 @@
     "loadFailed": "Failed to load stats",
     "mapsExcluded": "Maps with < 1,500 games excluded",
     "civsExcluded": "Civs with < 1% pick rate excluded",
-    "rankedBy": "Ranked by 𝑊 ("
+    "rankedBy": "Ranked by 𝑊 (",
+    "civSpecificHint": " — see highlighted civs below for civ-specific changes",
+    "eloGapExcluded": "Matches with ELO gap > 200 excluded to reduce skill-gap noise"
   },
   "match": {
     "notFound": "Match not found",
@@ -93,7 +101,8 @@
     "processingReplay": "Processing replay...",
     "apmOverTime": "APM Over Time",
     "actionBreakdown": "Action Breakdown",
-    "loadFailed": "Failed to load match"
+    "loadFailed": "Failed to load match",
+    "replay": "replay"
   },
   "profile": {
     "collectingSince": "Collecting match history since {{date}}. Older matches may appear but are not guaranteed.",

@@ -16,7 +16,10 @@
     "real": "Real",
     "realTime": "Tiempo real",
     "noPlayersFound": "No se encontraron jugadores",
-    "tryBroadening": "Prueba ampliando tu búsqueda"
+    "tryBroadening": "Prueba ampliando tu búsqueda",
+    "dateTime": "Fecha y hora",
+    "matchesUnit": "partidas",
+    "playersUnit": "jugadores"
   },
   "filter": {
     "map": "Mapa",
@@ -44,7 +47,10 @@
     "playersInMatches_one": "{{players}} jugadores en {{count}} partida",
     "playersInMatches_other": "{{players}} jugadores en {{count}} partidas",
     "discoveringMore": " · buscando más…",
-    "dataDelayed": "Informes de exploradores retrasados — mostrando las últimas batallas conocidas"
+    "dataDelayed": "Informes de exploradores retrasados — mostrando las últimas batallas conocidas",
+    "freshUnder5": "<5 min",
+    "fresh5to15": "5–15 min",
+    "freshOver15": "15+ min"
   },
   "stats": {
     "winRates": "Tasas de victoria",
@@ -78,7 +84,9 @@
     "loadFailed": "Error al cargar las estadísticas",
     "mapsExcluded": "Mapas con < 1.500 partidas excluidos",
     "civsExcluded": "Civilizaciones con < 1 % de elección excluidas",
-    "rankedBy": "Clasificado por 𝑊 ("
+    "rankedBy": "Clasificado por 𝑊 (",
+    "civSpecificHint": " — consulta las civilizaciones destacadas abajo para los cambios específicos",
+    "eloGapExcluded": "Se excluyen las partidas con diferencia de ELO > 200 para reducir el ruido por desnivel"
   },
   "match": {
     "notFound": "Partida no encontrada",
@@ -93,7 +101,8 @@
     "processingReplay": "Procesando repetición...",
     "apmOverTime": "APM a lo largo del tiempo",
     "actionBreakdown": "Desglose de acciones",
-    "loadFailed": "Error al cargar la partida"
+    "loadFailed": "Error al cargar la partida",
+    "replay": "repetición"
   },
   "profile": {
     "collectingSince": "Recopilando historial de partidas desde {{date}}. Pueden aparecer partidas más antiguas, pero no está garantizado.",

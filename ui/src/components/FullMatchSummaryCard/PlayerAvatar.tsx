@@ -8,6 +8,7 @@ import type { Player } from '../../types/match';
 import { assetManager } from '../../utils/assetManager';
 import { PLAYER_COLORS } from '../../utils/playerColors';
 import { getSteamAvatar, extractSteamId } from '../../services/matchService';
+import { useTranslation } from 'react-i18next';
 
 interface PlayerAvatarProps {
   player: Player;
@@ -16,6 +17,7 @@ interface PlayerAvatarProps {
 }
 
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, teamSize = 4 }) => {
+  const { t } = useTranslation();
   const { isDark } = useThemeMode();
   const isExpansive = teamSize <= 2;
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
@@ -201,7 +203,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
               data-testid="download-button"
             >
               <Icon boxSize={3}><FiDownload /></Icon>
-              <Text as="span" fontSize="inherit" fontStyle="inherit">replay</Text>
+              <Text as="span" fontSize="inherit" fontStyle="inherit">{t('match.replay')}</Text>
             </Link>
           </Tooltip>
         </VStack>

@@ -104,8 +104,10 @@ describe('interpolation parity', () => {
 
 describe('no hardcoded strings in components', () => {
   // Negative lookbehind on `=` so a `=> Promise<T>` type annotation is not
-  // mistaken for JSX text.
-  const jsxText = /(?<!=)>\s*([A-Z][A-Za-z0-9 ,.'’!?:%\-()/\s]{2,})\s*</g;
+  // mistaken for JSX text. The leading class allows an em dash or middot so
+  // sentence fragments appended to other copy are caught, and the body allows
+  // `&`/`;` so an HTML entity such as `&gt;` does not truncate the match.
+  const jsxText = /(?<!=)>\s*([A-Z—·][A-Za-z0-9 ,.'’!?:%&;\-()/\s]{2,})\s*</g;
   const textProp = /\b(placeholder|aria-label|title|alt)\s*=\s*"([^"]{3,})"/g;
 
   it('every migrated component routes user copy through t()', async () => {

@@ -138,11 +138,11 @@ export function ActivityPanel({
           <HStack gap={4} mb={3} pb={3} borderBottomWidth="1px" borderColor="brand.stone">
             <HStack gap={1}>
               <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" transition="opacity 0.3s ease">{matchCount}</Text>
-              <Text fontSize="xs" color="brand.inkMuted">matches</Text>
+              <Text fontSize="xs" color="brand.inkMuted">{t('common.matchesUnit')}</Text>
             </HStack>
             <HStack gap={1}>
               <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" transition="opacity 0.3s ease">{playerCount}</Text>
-              <Text fontSize="xs" color="brand.inkMuted">players</Text>
+              <Text fontSize="xs" color="brand.inkMuted">{t('common.playersUnit')}</Text>
             </HStack>
             {hasFilter && (
               <Text
@@ -364,19 +364,19 @@ export function ActivityPanel({
                     <HStack gap={1.5}>
                       <Box w="8px" h="8px" borderRadius="full" bg="brand.darkWin" flexShrink={0} />
                       <Text fontSize="2xs" color="brand.inkMedium">
-                        <Text as="span" fontWeight="bold">{freshness.under5}</Text> &lt;5 min
+                        <Text as="span" fontWeight="bold">{freshness.under5}</Text> {t('live.freshUnder5')}
                       </Text>
                     </HStack>
                     <HStack gap={1.5}>
                       <Box w="8px" h="8px" borderRadius="full" bg="brand.bronze" flexShrink={0} />
                       <Text fontSize="2xs" color="brand.inkMedium">
-                        <Text as="span" fontWeight="bold">{freshness.under15}</Text> 5–15 min
+                        <Text as="span" fontWeight="bold">{freshness.under15}</Text> {t('live.fresh5to15')}
                       </Text>
                     </HStack>
                     <HStack gap={1.5}>
                       <Box w="8px" h="8px" borderRadius="full" bg="brand.inkMuted" opacity={0.5} flexShrink={0} />
                       <Text fontSize="2xs" color="brand.inkMedium">
-                        <Text as="span" fontWeight="bold">{freshness.over15}</Text> 15+ min
+                        <Text as="span" fontWeight="bold">{freshness.over15}</Text> {t('live.freshOver15')}
                       </Text>
                     </HStack>
                   </Flex>
