@@ -27,8 +27,11 @@ export default defineConfig({
     animationDistanceThreshold: 0,
     // Optimize for speed
     watchForFileChanges: false,
+    // One retry in CI only. The timeouts above are deliberately tight for local
+    // speed, but CI runners are slower — the long-polling specs and the first
+    // spec's cold Vite compile both sit close to the limit there.
     retries: {
-      runMode: 0,
+      runMode: 1,
       openMode: 0
     }
   },
