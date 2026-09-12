@@ -5,6 +5,7 @@ import type { Map, MatchType, SortDirection } from '../types/match';
 import { useLayoutConfig } from '../theme/breakpoints';
 import { system } from '../theme/theme';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface FilterBarProps {
   onMapChange: (map: string) => void;
@@ -63,6 +64,7 @@ const AnnotationLabel = ({ children }: { children: string }) => (
 );
 
 export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSearchChange, onClearSearch, maps, matchTypes, searchResultsCount, searchValue: externalSearchValue = '', selectedMap: externalSelectedMap = '', selectedMatchType: externalSelectedMatchType = '', sortDirection: externalSortDirection = 'desc' }: FilterBarProps) => {
+  const { t } = useTranslation();
   const layout = useLayoutConfig();
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const [searchValue, setSearchValue] = useState(externalSearchValue);
@@ -106,16 +108,16 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
 
   const getSearchPlaceholder = () => {
     if (searchValue && searchResultsCount !== undefined) {
-      return `${searchResultsCount} matches found`;
+      return t('filter.matchesFound', { count: searchResultsCount });
     }
-    return 'Filter matches...';
+    return t('filter.filterMatches');
   };
 
   const shouldShowDropdown = searchValue && searchResultsCount !== undefined && isSearchFocused;
 
   return (
     <Box w={layout?.matchList.width} maxWidth={layout?.matchList.maxWidth}>
-      {isDesktop && <AnnotationLabel>Index</AnnotationLabel>}
+      {isDesktop && <AnnotationLabel>{t('common.index')}</AnnotationLabel>}
       <Card.Root
         variant={cardVariant('filter')}
         w="100%"
@@ -125,7 +127,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
         <HStack justify="space-between" align="flex-end">
           {/* Left: Search input with annotation */}
           <VStack align="flex-start" gap={0} flex="1" maxW={{ base: "300px", md: "220px" }} mr={4}>
-            <AnnotationLabel>Search</AnnotationLabel>
+            <AnnotationLabel>{t('common.search')}</AnnotationLabel>
             <Box
               position="relative"
               w="100%"
@@ -180,7 +182,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                   boxShadow={{ base: '1px 2px 6px rgba(107,82,64,0.15), 0 0 0 0.5px rgba(139,90,43,0.2)', _dark: '1px 2px 6px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.15)' }}
                 >
                   <Text color="brand.inkDark" textAlign="center">
-                    {searchResultsCount} matches found
+                    {t('filter.matchesFound', { count: searchResultsCount })}
                   </Text>
                 </Box>
               )}
@@ -190,7 +192,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
           {/* Right: Filter Controls with annotations */}
           <HStack gap={layout?.filterBar.gap} align="flex-end">
             <VStack align="flex-start" gap={0}>
-              <AnnotationLabel>Map</AnnotationLabel>
+              <AnnotationLabel>{t('filter.map')}</AnnotationLabel>
               <NativeSelect.Root
                 w={{ base: '90px', md: layout?.filterBar.selectWidth }}
               >
@@ -203,7 +205,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                   fontSize={{ base: 'xs', md: 'sm' }}
                   {...ruledInputStyles}
                 >
-                  <option key="all-maps" value="">All maps</option>
+                  <option key="all-maps" value="">{t('filter.allMaps')}</option>
                   {maps
                     .filter(({ name }) => name && name.trim().length > 0)
                     .map(({ name, count }, index) => (
@@ -215,7 +217,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
               </NativeSelect.Root>
             </VStack>
             <VStack align="flex-start" gap={0}>
-              <AnnotationLabel>Type</AnnotationLabel>
+              <AnnotationLabel>{t('filter.type')}</AnnotationLabel>
               <NativeSelect.Root
                 w={{ base: '85px', md: layout?.filterBar.selectWidth }}
               >
@@ -228,7 +230,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                   fontSize={{ base: 'xs', md: 'sm' }}
                   {...ruledInputStyles}
                 >
-                  <option key="all-match-types" value="">All types</option>
+                  <option key="all-match-types" value="">{t('filter.allTypes')}</option>
                   {matchTypes
                     .filter(({ name }) => name && name.trim().length > 0)
                     .map(({ name, count }, index) => (

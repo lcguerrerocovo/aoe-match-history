@@ -17,7 +17,9 @@ const COMPONENTS_DIR = join(process.cwd(), 'src/components');
  * never remove an entry — a migrated file must not reacquire hardcoded copy.
  * Paths are relative to src/components.
  */
-const MIGRATED_FILES: string[] = [];
+const MIGRATED_FILES: string[] = [
+  'FilterBar.tsx',
+];
 
 /** Copy that is deliberately never translated. */
 const ALLOWED_LITERALS = [
