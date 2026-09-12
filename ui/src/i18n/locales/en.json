@@ -74,7 +74,11 @@
     "noDataForSelection": "No data available for this selection.",
     "noPositionData": "No position data available for this selection.",
     "balanceChanges_one": "{{count}} general balance change this patch",
-    "balanceChanges_other": "{{count}} general balance changes this patch"
+    "balanceChanges_other": "{{count}} general balance changes this patch",
+    "loadFailed": "Failed to load stats",
+    "mapsExcluded": "Maps with < 1,500 games excluded",
+    "civsExcluded": "Civs with < 1% pick rate excluded",
+    "rankedBy": "Ranked by 𝑊 ("
   },
   "match": {
     "notFound": "Match not found",

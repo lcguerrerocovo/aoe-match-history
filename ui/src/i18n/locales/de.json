@@ -74,7 +74,11 @@
     "noDataForSelection": "Für diese Auswahl sind keine Daten verfügbar.",
     "noPositionData": "Für diese Auswahl sind keine Positionsdaten verfügbar.",
     "balanceChanges_one": "{{count}} allgemeine Balance-Änderung in diesem Patch",
-    "balanceChanges_other": "{{count}} allgemeine Balance-Änderungen in diesem Patch"
+    "balanceChanges_other": "{{count}} allgemeine Balance-Änderungen in diesem Patch",
+    "loadFailed": "Statistiken konnten nicht geladen werden",
+    "mapsExcluded": "Karten mit < 1.500 Partien ausgeschlossen",
+    "civsExcluded": "Zivilisationen mit < 1 % Wahlrate ausgeschlossen",
+    "rankedBy": "Sortiert nach 𝑊 ("
   },
   "match": {
     "notFound": "Partie nicht gefunden",

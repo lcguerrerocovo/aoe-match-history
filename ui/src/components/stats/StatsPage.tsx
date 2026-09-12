@@ -8,12 +8,13 @@ import { getCivStats } from '../../services/civStatsService';
 import { InsightsTab } from './InsightsTab';
 import { assetManager } from '../../utils/assetManager';
 import type { CivStatsData, MatchType, CivPatchStats, EloBracket } from '../../types/civStats';
+import { useTranslation } from 'react-i18next';
 
 type StatsView = 'winRate' | 'pickRate';
 type StatsTab = 'statistics' | 'insights';
 
-const ELO_LABELS: { value: EloBracket; label: string }[] = [
-  { value: 'all', label: 'All ELO' },
+const ELO_LABELS: { value: EloBracket; label: string; labelKey?: string }[] = [
+  { value: 'all', label: 'All ELO', labelKey: 'stats.allElo' },
   { value: '<1000', label: '< 1000' },
   { value: '1000-1500', label: '1000–1500' },
   { value: '1500+', label: '1500+' },
@@ -142,19 +143,20 @@ function RankBadge({ value }: { value: number }) {
 }
 
 function ChartColumnHeaders() {
+  const { t } = useTranslation();
   return (
     <Flex align="center" h="18px" px={1} mb={0.5}>
       <Box w="24px" flexShrink={0} />
       <Box w={LABEL_W} flexShrink={0} />
       <Box flex={1} />
       <Text fontSize="2xs" color="brand.inkMuted" fontWeight="600" w="46px" textAlign="right" flexShrink={0} pl={2}>
-        Rate
+        {t('stats.rate')}
       </Text>
       <Text fontSize="2xs" color="brand.inkMuted" fontWeight="600" w="40px" textAlign="right" flexShrink={0}>
         Δ
       </Text>
       <Text fontSize="2xs" color="brand.inkMuted" fontWeight="600" w="30px" textAlign="right" flexShrink={0}>
-        Pos
+        {t('stats.position')}
       </Text>
     </Flex>
   );
@@ -172,6 +174,7 @@ function formatChange(text: string): ReactNode {
 }
 
 function GeneralChanges({ changes, civCount }: { changes: string[]; civCount: number }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   return (
     <Box mb={3}>
@@ -191,7 +194,7 @@ function GeneralChanges({ changes, civCount }: { changes: string[]; civCount: nu
           {expanded ? '▾' : '▸'}
         </Text>
         <Text fontSize="xs" fontWeight="700" color="brand.inkMuted" letterSpacing="wide">
-          {changes.length} general balance change{changes.length !== 1 ? 's' : ''} this patch
+          {t('stats.balanceChanges', { count: changes.length })}
           {civCount > 0 && <Text as="span" fontWeight="500"> — see highlighted civs below for civ-specific changes</Text>}
         </Text>
       </Flex>
@@ -368,6 +371,7 @@ function CivRowEl({
 }
 
 function WinRateChart({ rows }: { rows: CivRow[] }) {
+  const { t } = useTranslation();
   const sorted = useMemo(
     () => [...rows].sort((a, b) => b.winRate - a.winRate),
     [rows],
@@ -380,7 +384,7 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
   return (
     <Box>
       <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontVariantCaps="small-caps" letterSpacing="wide" mb={3}>
-        Win Rate by Civilization
+        {t('stats.winRateByCiv')}
       </Text>
 
       <ChartColumnHeaders />
@@ -414,6 +418,7 @@ function WinRateChart({ rows }: { rows: CivRow[] }) {
 }
 
 function PickRateChart({ rows }: { rows: CivRow[] }) {
+  const { t } = useTranslation();
   const sorted = useMemo(
     () => [...rows].sort((a, b) => b.pickRate - a.pickRate),
     [rows],
@@ -424,7 +429,7 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
     <Box>
       <Flex justify="space-between" align="baseline" mb={3}>
         <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontVariantCaps="small-caps" letterSpacing="wide">
-          Pick Rate by Civilization
+          {t('stats.pickRateByCiv')}
         </Text>
         <Text fontSize="2xs" color="brand.inkMuted">{sorted.length} civs</Text>
       </Flex>
@@ -450,6 +455,7 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
 }
 
 export function StatsPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const activeTab: StatsTab = location.pathname.endsWith('/team-positions') ? 'insights' : 'statistics';
@@ -527,8 +533,8 @@ export function StatsPage() {
         {/* Chapter tabs */}
         <HStack gap={0} mb={4} borderBottom="1px solid" borderColor="brand.borderLight">
           {([
-            { key: 'statistics' as const, label: 'Win Rates' },
-            { key: 'insights' as const, label: 'Team Positions' },
+            { key: 'statistics' as const, label: t('stats.winRates') },
+            { key: 'insights' as const, label: t('stats.teamPositions') },
           ]).map(({ key, label }) => (
             <Box
               key={key}
@@ -576,7 +582,7 @@ export function StatsPage() {
               >
                 <VStack gap={0} align="start">
                   <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                    Current Patch
+                    {t('stats.currentPatch')}
                   </Text>
                   <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontFamily="mono">
                     {patchLabel(data.meta.patches.current.title)}
@@ -586,7 +592,7 @@ export function StatsPage() {
                 <Box w="1px" h="32px" bg="brand.inkLight" />
                 <VStack gap={0} align="start">
                   <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                    Picks
+                    {t('stats.picks')}
                   </Text>
                   <Text fontSize="sm" fontWeight="600" color="brand.inkDark">
                     {currentPicks.toLocaleString()}
@@ -607,7 +613,7 @@ export function StatsPage() {
               >
                 <VStack gap={0} align="start">
                   <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                    Compared To
+                    {t('stats.comparedTo')}
                   </Text>
                   <Text fontSize="sm" fontWeight="700" color="brand.inkMuted" fontFamily="mono">
                     {patchLabel(data.meta.patches.previous.title)}
@@ -617,7 +623,7 @@ export function StatsPage() {
                 <Box w="1px" h="32px" bg="brand.inkLight" />
                 <VStack gap={0} align="start">
                   <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                    Picks
+                    {t('stats.picks')}
                   </Text>
                   <Text fontSize="sm" fontWeight="600" color="brand.inkMuted">
                     {previousPicks.toLocaleString()}
@@ -680,8 +686,8 @@ export function StatsPage() {
                 gap="2px"
               >
                 {([
-                  { key: 'winRate' as const, label: 'Win Rate' },
-                  { key: 'pickRate' as const, label: 'Pick Rate' },
+                  { key: 'winRate' as const, label: t('stats.winRate') },
+                  { key: 'pickRate' as const, label: t('stats.pickRate') },
                 ]).map(({ key, label }) => (
                   <Box
                     key={key}
@@ -721,7 +727,7 @@ export function StatsPage() {
                   fontFamily: 'inherit',
                 }}
               >
-                <option value="all">All Maps</option>
+                <option value="all">{t('filter.allMaps')}</option>
                 {maps.map(m => (
                   <option key={m} value={m}>{m}</option>
                 ))}
@@ -742,19 +748,19 @@ export function StatsPage() {
                   fontFamily: 'inherit',
                 }}
               >
-                {ELO_LABELS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                {ELO_LABELS.map(({ value, label, labelKey }) => (
+                  <option key={value} value={value}>{labelKey ? t(labelKey) : label}</option>
                 ))}
               </select>
             </Flex>
 
             {/* Content */}
             {error && (
-              <Text color="brand.darkLoss" fontSize="sm">Failed to load stats: {error}</Text>
+              <Text color="brand.darkLoss" fontSize="sm">{t('stats.loadFailed')}: {error}</Text>
             )}
 
             {!data && !error && (
-              <Text color="brand.inkMuted" fontSize="sm">Loading statistics...</Text>
+              <Text color="brand.inkMuted" fontSize="sm">{t('stats.loadingStats')}</Text>
             )}
 
             {data && rows.length > 0 && (
@@ -775,7 +781,7 @@ export function StatsPage() {
             )}
 
             {data && rows.length === 0 && (
-              <Text color="brand.inkMuted" fontSize="sm">No data available for this selection.</Text>
+              <Text color="brand.inkMuted" fontSize="sm">{t('stats.noDataForSelection')}</Text>
             )}
 
             {data && (
