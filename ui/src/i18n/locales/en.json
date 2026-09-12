@@ -1,0 +1,7 @@
+{
+  "common": { "loading": "Loading..." },
+  "live": {
+    "count_one": "{{count}} match",
+    "count_other": "{{count}} matches"
+  }
+}

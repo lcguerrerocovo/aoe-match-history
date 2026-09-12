@@ -1,0 +1,7 @@
+{
+  "common": { "loading": "Cargando..." },
+  "live": {
+    "count_one": "{{count}} partida",
+    "count_other": "{{count}} partidas"
+  }
+}

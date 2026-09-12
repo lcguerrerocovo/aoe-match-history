@@ -1,0 +1,7 @@
+{
+  "common": { "loading": "Caricamento..." },
+  "live": {
+    "count_one": "{{count}} partita",
+    "count_other": "{{count}} partite"
+  }
+}
