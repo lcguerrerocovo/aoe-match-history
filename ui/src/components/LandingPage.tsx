@@ -9,8 +9,10 @@ import { ThemeToggle } from './ThemeToggle';
 import { PulsingDot } from './LiveMatchCard';
 import { responsiveSpacing } from '../theme/theme';
 import { Watermark } from './Watermark';
+import { useTranslation } from 'react-i18next';
 
 export function LandingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   function handlePlayerSelect(player: PlayerSearchResult) {
@@ -91,7 +93,7 @@ export function LandingPage() {
             textAlign="center"
             lineHeight="1.4"
           >
-            Your recent Age of Empires 2 matches with detailed analytics at a glance.
+            {t('profile.tagline')}
           </Text>
           <Box width="60px" height="2px" bg="brand.inkMedium" mx="auto" />
           <Box
@@ -104,9 +106,7 @@ export function LandingPage() {
               color="brand.inkDark"
               lineHeight="1.6"
             >
-              Analyze your recent Age of Empires II ranked match history with detailed performance
-              metrics. View player statistics and performance, as well as detailed match APM insights
-              broken down by action types from your latest games in a clean, competitive-focused interface.
+              {t('profile.description')}
             </Text>
           </Box>
           <HStack gap={3} justify="center">
@@ -127,7 +127,7 @@ export function LandingPage() {
               >
                 <PulsingDot size="6px" />
                 <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
-                  Live Matches
+                  {t('live.title')}
                 </Text>
               </Flex>
             </RouterLink>
@@ -147,7 +147,7 @@ export function LandingPage() {
                 w="fit-content"
               >
                 <Text fontSize="sm" fontWeight="bold" color="brand.inkDark" letterSpacing="wide">
-                  Insights
+                  {t('common.insights')}
                 </Text>
               </Flex>
             </RouterLink>

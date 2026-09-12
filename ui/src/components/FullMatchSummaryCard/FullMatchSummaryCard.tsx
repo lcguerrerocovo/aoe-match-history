@@ -4,6 +4,7 @@ import type { Match, Player } from '../../types/match';
 import { PlayerAvatar } from './PlayerAvatar';
 import { MapCard } from './MapCard';
 import { MatchDetails } from './MatchDetails';
+import { useTranslation } from 'react-i18next';
 
 interface FullMatchSummaryCardProps {
   match: Match;
@@ -20,6 +21,7 @@ function TeamColumn({
   matchId: string;
   teamSize: number;
 }) {
+  const { t } = useTranslation();
   const playerGap = teamSize <= 1 ? 5 : teamSize <= 2 ? 4 : 2;
   const playerPy = teamSize <= 1 ? 3 : teamSize <= 2 ? 2 : 1;
 
@@ -48,7 +50,7 @@ function TeamColumn({
             data-testid="victory-label"
           >
             <Text as="span" fontSize="xs" mr={1}>&#x2726;</Text>
-            Victory
+            {t('common.victory')}
           </Text>
         ) : (
           <Text
@@ -59,7 +61,7 @@ function TeamColumn({
             color="brand.inkMuted"
             data-testid="victory-label"
           >
-            Defeat
+            {t('common.defeat')}
           </Text>
         )}
         {isWinner && (

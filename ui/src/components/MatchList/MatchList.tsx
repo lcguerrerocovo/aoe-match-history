@@ -7,6 +7,7 @@ import { sumDurations, countByDiplomacy, formatSessionTimingData } from '../../u
 import { shortenMatchTypeName } from '../../utils/gameUtils';
 import { MatchCard } from './MatchCard';
 import { useBatchAnalysis } from '../../hooks/useBatchAnalysis';
+import { useTranslation } from 'react-i18next';
 
 // Convert number to Roman numerals (handles up to ~20)
 function toRoman(num: number): string {
@@ -33,6 +34,7 @@ interface MatchListProps {
 }
 
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId, hasMore, isLoadingMore, onLoadMore }: MatchListProps) {
+  const { t } = useTranslation();
   const layout = useLayoutConfig();
   const token = (path: string) => system.token(path, '');
   const isFlatMode = matchGroups.length === 1 && matchGroups[0].date === 'flat';
@@ -323,7 +325,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
             {isLoadingMore ? (
               <HStack gap={2}>
                 <Spinner size="sm" color="brand.bronze" />
-                <Text>Loading...</Text>
+                <Text>{t('common.loading')}</Text>
               </HStack>
             ) : (
               'Load More Matches'

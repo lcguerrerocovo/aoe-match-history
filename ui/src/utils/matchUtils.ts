@@ -1,4 +1,5 @@
 import { parseDuration } from './timeUtils';
+import { getLocale } from '../i18n/locale';
 import type { Match, MatchGroup } from '../types/match';
 
 export function groupMatchesBySession(matches: Match[]): MatchGroup[] {
@@ -108,21 +109,21 @@ export function formatDuration(seconds: number): string {
   }
 }
 
-export function formatDateTime(dt: string): string {
+export function formatDateTime(dt: string, locale: string = getLocale()): string {
   // Parse UTC timestamp and convert to local time
   const d = new Date(dt);
   if (isNaN(d.getTime())) return dt;
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
 }
 
-export function formatDayDate(dateStr: string): string {
+export function formatDayDate(dateStr: string, locale: string = getLocale()): string {
   // Parse UTC date and format for display
   const d = new Date(dateStr + 'T00:00:00Z');
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(locale, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -131,14 +132,14 @@ export function formatDayDate(dateStr: string): string {
   });
 }
 
-export function formatSessionTimingData(sessionId: string, timePlayedSec: number, matchCount: number = 1): { dateDisplay: string; timeRange: string; sessionDuration: string; timePlayed: string; avgGapMinutes: number; isCrossDay: boolean } {
+export function formatSessionTimingData(sessionId: string, timePlayedSec: number, matchCount: number = 1, locale: string = getLocale()): { dateDisplay: string; timeRange: string; sessionDuration: string; timePlayed: string; avgGapMinutes: number; isCrossDay: boolean } {
   // Session ID format is "startISO_endISO"
   try {
     const [startIso, endIso] = sessionId.split('_');
 
     if (!endIso) {
       // Fallback for any single-value format that might still exist
-      const fallbackDate = new Date(sessionId).toLocaleString();
+      const fallbackDate = new Date(sessionId).toLocaleString(locale);
       return {
         dateDisplay: fallbackDate,
         timeRange: '',
@@ -175,64 +176,27 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
     const isCrossDay = startDate.getDate() !== endDate.getDate();
 
     // Date formatting — always use start date (cross-day is indicated by moon icon)
-    const dateFormatted = startDate.toLocaleString(undefined, {
+    const dateFormatted = startDate.toLocaleString(locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
 
-    if (isCrossDay) {
-      const startTimeFormatted = startDate.toLocaleString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
+    // formatRange collapses a shared AM/PM, and uses a 24-hour clock where the
+    // locale expects one, without any manual period arithmetic.
+    const timeFormatter = new Intl.DateTimeFormat(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
 
-      const endTimeFormatted = endDate.toLocaleString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-
-      return {
-        dateDisplay: dateFormatted,
-        timeRange: `${startTimeFormatted}–${endTimeFormatted}`,
-        sessionDuration: formatDuration(sessionDurationSec),
-        timePlayed: formatDuration(timePlayedSec),
-        avgGapMinutes,
-        isCrossDay: true
-      };
-    } else {
-      // Get hour periods for both times
-      const startHourPeriod = startDate.getHours() >= 12 ? 'PM' : 'AM';
-      const endHourPeriod = endDate.getHours() >= 12 ? 'PM' : 'AM';
-
-      // Convert 24h to 12h for start time
-      const startHour24 = startDate.getHours();
-      const startHour12 = startHour24 === 0 ? 12 : startHour24 > 12 ? startHour24 - 12 : startHour24;
-      const startMinute = startDate.getMinutes().toString().padStart(2, '0');
-      const startTime12 = `${startHour12}:${startMinute}`;
-
-      const endTimeFormatted = endDate.toLocaleString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-
-      // Only show AM/PM on end time if different from start, otherwise show on both
-      const timeRange = startHourPeriod !== endHourPeriod
-        ? `${startTime12} ${startHourPeriod}–${endTimeFormatted}`
-        : `${startTime12}–${endTimeFormatted}`;
-
-      return {
-        dateDisplay: dateFormatted,
-        timeRange: timeRange,
-        sessionDuration: formatDuration(sessionDurationSec),
-        timePlayed: formatDuration(timePlayedSec),
-        avgGapMinutes,
-        isCrossDay: false
-      };
-    }
+    return {
+      dateDisplay: dateFormatted,
+      timeRange: timeFormatter.formatRange(startDate, endDate),
+      sessionDuration: formatDuration(sessionDurationSec),
+      timePlayed: formatDuration(timePlayedSec),
+      avgGapMinutes,
+      isCrossDay
+    };
   } catch (error) {
     return {
       dateDisplay: sessionId,

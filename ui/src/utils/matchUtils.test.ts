@@ -437,4 +437,36 @@ describe('matchUtils', () => {
       expect(result.totalReal).toBe(0);
     });
   });
+});
+
+describe('locale-aware formatting', () => {
+  it('formats a date in the requested locale', () => {
+    // en-US renders a medium date as an abbreviated month name and a 12-hour
+    // clock; de-DE renders it numerically on a 24-hour clock.
+    expect(formatDateTime('2023-06-20T15:30:00Z', 'en')).toMatch(/Jun 20, 2023/);
+    expect(formatDateTime('2023-06-20T15:30:00Z', 'de')).toMatch(/20\.06\.2023/);
+    expect(formatDateTime('2023-06-20T15:30:00Z', 'de')).not.toMatch(/[AP]M/);
+  });
+
+  it('uses 12-hour time for en and 24-hour for de', () => {
+    const session = '2023-06-20T14:00:00Z_2023-06-20T16:30:00Z';
+    const en = formatSessionTimingData(session, 7200, 5, 'en');
+    const de = formatSessionTimingData(session, 7200, 5, 'de');
+
+    expect(en.timeRange).toMatch(/[AP]M/);
+    expect(de.timeRange).not.toMatch(/[AP]M/);
+    expect(de.timeRange).toMatch(/16[:.]30/);
+  });
+
+  it('formats a cross-day session range without AM/PM in de', () => {
+    const session = '2023-06-20T23:45:00Z_2023-06-21T00:15:00Z';
+    const de = formatSessionTimingData(session, 1800, 2, 'de');
+
+    expect(de.isCrossDay).toBe(true);
+    expect(de.timeRange).not.toMatch(/[AP]M/);
+  });
+
+  it('formats the day date in the requested locale', () => {
+    expect(formatDayDate('2023-06-20', 'de')).toMatch(/Di|Dienstag/);
+  });
 }); 

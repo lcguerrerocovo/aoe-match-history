@@ -14,8 +14,10 @@ import type { Match } from '../types/match';
 import { getMatch } from '../services/matchService';
 import { AnalysisSection } from './Analysis';
 import { CornerFlourishes } from './CornerFlourishes';
+import { useTranslation } from 'react-i18next';
 
 export function MatchPage() {
+  const { t } = useTranslation();
   const { matchId } = useParams<{ matchId: string }>();
   const [match, setMatch] = useState<Match | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +66,7 @@ export function MatchPage() {
             justify="center"
           >
             <Spinner size="xl" color="brand.redChalk" />
-            <Text color="brand.inkMuted">Loading match details...</Text>
+            <Text color="brand.inkMuted">{t('match.loadingDetails')}</Text>
           </VStack>
         </Box>
       </>
@@ -115,7 +117,7 @@ export function MatchPage() {
           >
             <Alert.Root status="info">
               <Alert.Indicator />
-              Match not found
+              {t('match.notFound')}
             </Alert.Root>
           </VStack>
         </Box>

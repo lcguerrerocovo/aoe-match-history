@@ -8,9 +8,12 @@ import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { PulsingDot } from './LiveMatchCard';
+import { useTranslation } from 'react-i18next';
 
 const TopBar = () => {
+  const { t } = useTranslation();
   const layout = useLayoutConfig();
   const contentMaxWidth = layout?.matchList?.width || '100%';
   const navigate = useNavigate();
@@ -18,8 +21,8 @@ const TopBar = () => {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const mobileNavItems = [
-    { label: 'Insights', path: '/stats', dot: false },
-    { label: 'Live', path: '/live', dot: true },
+    { label: t('common.insights'), path: '/stats', dot: false },
+    { label: t('common.live'), path: '/live', dot: true },
   ];
 
   function handlePlayerSelect(player: PlayerSearchResult) {
@@ -108,7 +111,7 @@ const TopBar = () => {
               letterSpacing="wide"
               textTransform="uppercase"
               asChild
-            ><RouterLink to="/stats">Insights</RouterLink></Flex>
+            ><RouterLink to="/stats">{t('common.insights')}</RouterLink></Flex>
             <Flex
               align="center"
               gap={1.5}
@@ -119,10 +122,11 @@ const TopBar = () => {
               letterSpacing="wide"
               textTransform="uppercase"
               asChild
-            ><RouterLink to="/live"><PulsingDot size="6px" />Live</RouterLink></Flex>
+            ><RouterLink to="/live"><PulsingDot size="6px" />{t('common.live')}</RouterLink></Flex>
             <Box w="220px" ref={searchContainerRef}>
-              <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
+              <PlayerSearch onSelect={handlePlayerSelect} placeholder={t('common.searchPlayers')} size="sm" context="topbar" searchFn={searchPlayers} />
             </Box>
+            <LanguageSwitcher />
           </Flex>
         </Flex>
 
@@ -209,7 +213,12 @@ const TopBar = () => {
           mx="auto"
           data-testid="mobile-search"
         >
-          <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
+          <PlayerSearch onSelect={handlePlayerSelect} placeholder={t('common.searchPlayers')} size="sm" context="topbar" searchFn={searchPlayers} />
+        </Box>
+
+        {/* Mobile language switcher - below search */}
+        <Box display={{ base: 'flex', md: 'none' }} justifyContent="center" mt={2}>
+          <LanguageSwitcher />
         </Box>
       </Box>
       {/* Theme toggle - always at absolute far right */}

@@ -15,7 +15,7 @@ export default defineConfig({
       }
     },
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: false,
+    supportFile: 'cypress/support/component.ts',
     // Reduce timeouts for faster test execution
     defaultCommandTimeout: 2000,
     requestTimeout: 3000,

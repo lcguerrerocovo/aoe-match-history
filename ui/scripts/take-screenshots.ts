@@ -271,6 +271,11 @@ function parseArgs(): Source[] {
   return ['dev'];
 }
 
+function parseLocale(): string {
+  const arg = process.argv.find(a => a.startsWith('--locale='));
+  return arg ? arg.split('=')[1] : 'en';
+}
+
 function printUsage() {
   console.log(`Usage: tsx scripts/take-screenshots.ts [options]
 
@@ -278,10 +283,12 @@ Options:
   (none)      Capture dev server only (default)
   --prod      Capture production site only
   --compare   Capture both dev and prod for side-by-side comparison
+  --locale=X  Capture with the UI in language X (default: en)
 
 Output:
   Single source  → screenshots/*.png
   --compare      → screenshots/dev/*.png + screenshots/prod/*.png
+  --locale=de    → screenshots/de/*.png
 `);
 }
 
@@ -317,16 +324,23 @@ async function main() {
   }
 
   const browser = await chromium.launch();
-  const context = await browser.newContext({ colorScheme: 'light' });
+  const locale = parseLocale();
+  // Playwright's `locale` drives navigator.language; seeding localStorage
+  // covers the detector's first lookup, which takes precedence over it.
+  const context = await browser.newContext({ colorScheme: 'light', locale });
+  await context.addInitScript((lng: string) => {
+    window.localStorage.setItem('i18nextLng', lng);
+  }, locale);
 
   try {
     let totalCaptured = 0;
 
     for (const source of sources) {
       const baseUrl = SOURCES[source];
-      const outputDir = isCompare
-        ? join(CONFIG.outputDir, source)
-        : CONFIG.outputDir;
+      const outputDir = join(
+        isCompare ? join(CONFIG.outputDir, source) : CONFIG.outputDir,
+        locale === 'en' ? '' : locale,
+      );
 
       totalCaptured += await captureSource(context, source, baseUrl, outputDir);
     }

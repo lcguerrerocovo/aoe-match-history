@@ -4,6 +4,7 @@ import { useUrlState } from '../../hooks/useUrlState';
 import { getPositionStats } from '../../services/positionStatsService';
 import { FormationView } from './FormationView';
 import type { PositionStatsData, GameSize, PositionEloBracket } from '../../types/positionStats';
+import { useTranslation } from 'react-i18next';
 
 // Wilson score lower bound (95% confidence)
 // Ranks civs by the lower end of the confidence interval,
@@ -18,8 +19,8 @@ function wilsonLower(wins: number, n: number): number {
   return (center - spread) / denominator;
 }
 
-const ELO_LABELS: { value: PositionEloBracket; label: string }[] = [
-  { value: 'all', label: 'All ELO' },
+const ELO_LABELS: { value: PositionEloBracket; label: string; labelKey?: string }[] = [
+  { value: 'all', label: 'All ELO', labelKey: 'stats.allElo' },
   { value: '<1000', label: '< 1000' },
   { value: '1000-1500', label: '1000–1500' },
   { value: '1500+', label: '1500+' },
@@ -40,6 +41,7 @@ function getTopMap(data: PositionStatsData, gameSize: GameSize, eloBracket: Posi
 }
 
 export function InsightsTab() {
+  const { t } = useTranslation();
   const [data, setData] = useState<PositionStatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   // URL-bound filters (Team Positions has its own keys distinct from Win Rates).
@@ -122,16 +124,16 @@ export function InsightsTab() {
           >
             <VStack gap={0} align="start">
               <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                Period
+                {t('stats.period')}
               </Text>
               <Text fontSize="sm" fontWeight="700" color="brand.inkDark" fontFamily="mono">
-                Last 6 months
+                {t('stats.lastSixMonths')}
               </Text>
             </VStack>
             <Box w="1px" h="24px" bg="brand.inkLight" />
             <VStack gap={0} align="start">
               <Text fontSize="2xs" color="brand.inkMuted" textTransform="uppercase" letterSpacing="wider" fontWeight="bold">
-                Matches
+                {t('common.matches')}
               </Text>
               <Text fontSize="sm" fontWeight="600" color="brand.inkDark">
                 {totalGames.toLocaleString()}
@@ -222,7 +224,7 @@ export function InsightsTab() {
       )}
 
       {!data && !error && (
-        <Text color="brand.inkMuted" fontSize="sm">Loading position stats...</Text>
+        <Text color="brand.inkMuted" fontSize="sm">{t('stats.loadingPositions')}</Text>
       )}
 
       {data && (flankCivs.length > 0 || pocketCivs.length > 0) && (
@@ -247,7 +249,7 @@ export function InsightsTab() {
       )}
 
       {data && flankCivs.length === 0 && pocketCivs.length === 0 && (
-        <Text color="brand.inkMuted" fontSize="sm">No position data available for this selection.</Text>
+        <Text color="brand.inkMuted" fontSize="sm">{t('stats.noPositionData')}</Text>
       )}
 
       {data && (
@@ -263,9 +265,9 @@ export function InsightsTab() {
           opacity={0.75}
         >
           {[
-            'Last 6 months',
-            'Maps with < 1,500 games excluded',
-            'Civs with < 1% pick rate excluded',
+            t('stats.lastSixMonths'),
+            t('stats.mapsExcluded'),
+            t('stats.civsExcluded'),
           ].map((item, i) => (
             <Text key={i} fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
               {i > 0 && <Text as="span" color="brand.bronze" mx={0.5}>·</Text>}
@@ -274,7 +276,7 @@ export function InsightsTab() {
           ))}
           <Text fontSize="2xs" color="brand.inkMuted" fontStyle="italic">
             <Text as="span" color="brand.bronze" mx={0.5}>·</Text>
-            Ranked by 𝑊 (
+            {t('stats.rankedBy')}
             <Link
               href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval"
               target="_blank"

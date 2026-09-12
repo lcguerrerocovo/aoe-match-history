@@ -8,6 +8,7 @@ import { assetManager } from '../utils/assetManager';
 import { groupByTeam } from '../utils/liveMatchUtils';
 import { PLAYER_COLORS } from '../utils/playerColors';
 import { calculateWinProbability } from '../utils/winProbability';
+import { useTranslation } from 'react-i18next';
 
 const livePulse = keyframes`
   0%, 100% { opacity: 0.85; box-shadow: 0 0 3px var(--chakra-colors-brand-red-chalk); }
@@ -178,6 +179,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
   highlightProfileId?: number;
   avgRating?: number | null;
 }) {
+  const { t } = useTranslation();
   const teams = useMemo(() => groupByTeam(match.players), [match.players]);
   const winProb = useMemo(() => calculateWinProbability(teams), [teams]);
   const elapsedRef = useRef<HTMLSpanElement>(null);
@@ -240,7 +242,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
             lineHeight="1.2"
             css={{ animation: `${livePulse} 2s ease-in-out infinite` }}
           >
-            Live
+            {t('common.live')}
           </Text>
         </Flex>
       </Flex>
@@ -300,7 +302,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
               />
             </Flex>
             <Text fontSize="2xs" color="brand.inkMuted" fontVariantCaps="small-caps" letterSpacing="wider" fontWeight="600" lineHeight="1">
-              Win %
+              {t('stats.winPercent')}
             </Text>
           </Flex>
           <Text fontSize="xs" fontWeight="700" color="brand.inkDark" minW="32px" textAlign="left">
@@ -342,7 +344,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
           transition="color 0.2s ease"
         >
           <FiEye size={14} />
-          Spectate
+          {t('live.spectate')}
         </Link>
       </Flex>
     </Box>
