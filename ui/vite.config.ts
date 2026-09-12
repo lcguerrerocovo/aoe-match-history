@@ -49,7 +49,9 @@ export default defineConfig({
     },
     proxy: process.env.NODE_ENV === 'test' ? {} : {
       '/api': {
-        target: 'http://localhost:8080',
+        // Override to point dev at a deployed API (e.g. https://api.aoe2.site)
+        // when the local proxy service isn't running.
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
         changeOrigin: true,
         secure: false
       },

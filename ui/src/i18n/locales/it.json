@@ -100,6 +100,7 @@
     "loadMore": "Carica altre partite",
     "noMatchesForFilters": "Nessuna partita per questi filtri",
     "loadFailed": "Impossibile caricare il profilo o le partite",
-    "tagline": "Le tue partite recenti di Age of Empires 2 con analisi dettagliate a colpo d'occhio."
+    "tagline": "Le tue partite recenti di Age of Empires 2 con analisi dettagliate a colpo d'occhio.",
+    "description": "Analizza il tuo storico recente di partite classificate di Age of Empires II con metriche di prestazione dettagliate. Consulta statistiche e rendimento dei giocatori, oltre a un'analisi dettagliata degli APM suddivisa per tipo di azione dalle tue ultime partite, in un'interfaccia pulita e orientata alla competizione."
   }
 }

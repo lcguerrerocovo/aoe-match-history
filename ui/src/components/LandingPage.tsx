@@ -106,9 +106,7 @@ export function LandingPage() {
               color="brand.inkDark"
               lineHeight="1.6"
             >
-              Analyze your recent Age of Empires II ranked match history with detailed performance
-              metrics. View player statistics and performance, as well as detailed match APM insights
-              broken down by action types from your latest games in a clean, competitive-focused interface.
+              {t('profile.description')}
             </Text>
           </Box>
           <HStack gap={3} justify="center">

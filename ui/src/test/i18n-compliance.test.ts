@@ -105,7 +105,7 @@ describe('interpolation parity', () => {
 describe('no hardcoded strings in components', () => {
   // Negative lookbehind on `=` so a `=> Promise<T>` type annotation is not
   // mistaken for JSX text.
-  const jsxText = /(?<!=)>\s*([A-Z][A-Za-z0-9 ,.'’!?:%\-()/]{2,})\s*</g;
+  const jsxText = /(?<!=)>\s*([A-Z][A-Za-z0-9 ,.'’!?:%\-()/\s]{2,})\s*</g;
   const textProp = /\b(placeholder|aria-label|title|alt)\s*=\s*"([^"]{3,})"/g;
 
   it('every migrated component routes user copy through t()', async () => {
@@ -118,7 +118,7 @@ describe('no hardcoded strings in components', () => {
       let m: RegExpExecArray | null;
 
       while ((m = jsxText.exec(src))) {
-        if (/[a-z]/.test(m[1])) found.add(m[1].trim());
+        if (/[a-z]/.test(m[1])) found.add(m[1].trim().replace(/\s+/g, ' '));
       }
       while ((m = textProp.exec(src))) {
         found.add(m[2].trim());
