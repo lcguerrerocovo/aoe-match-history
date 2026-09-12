@@ -8,6 +8,7 @@ import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useRef } from 'react';
 import { searchPlayers } from '../services/playerSearchService';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { PulsingDot } from './LiveMatchCard';
 
 const TopBar = () => {
@@ -123,6 +124,7 @@ const TopBar = () => {
             <Box w="220px" ref={searchContainerRef}>
               <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
             </Box>
+            <LanguageSwitcher />
           </Flex>
         </Flex>
 
@@ -210,6 +212,11 @@ const TopBar = () => {
           data-testid="mobile-search"
         >
           <PlayerSearch onSelect={handlePlayerSelect} placeholder="Search players..." size="sm" context="topbar" searchFn={searchPlayers} />
+        </Box>
+
+        {/* Mobile language switcher - below search */}
+        <Box display={{ base: 'flex', md: 'none' }} justifyContent="center" mt={2}>
+          <LanguageSwitcher />
         </Box>
       </Box>
       {/* Theme toggle - always at absolute far right */}
