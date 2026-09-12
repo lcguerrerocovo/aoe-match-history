@@ -9,6 +9,21 @@ export default defineConfig({
         define: {
           'process.env.NODE_ENV': '"test"'
         },
+        // Declare every dep that is only reachable through the component tree,
+        // so they all land in Vite's first optimise pass. Discovered late, they
+        // trigger a re-optimise mid-run: React gets re-bundled under a new hash
+        // while the already-loaded copy stays, and hooks then read from the
+        // wrong instance — "Cannot read properties of null (reading
+        // 'useContext')". Two chunk hashes in one stack trace is that bug.
+        optimizeDeps: {
+          include: [
+            'react',
+            'react-dom',
+            'i18next',
+            'react-i18next',
+            'i18next-browser-languagedetector',
+          ],
+        },
         // Optimize Vite for faster builds
         build: { minify: false },
         server: { hmr: false }
