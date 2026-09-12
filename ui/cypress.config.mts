@@ -9,20 +9,18 @@ export default defineConfig({
         define: {
           'process.env.NODE_ENV': '"test"'
         },
-        // Declare every dep that is only reachable through the component tree,
-        // so they all land in Vite's first optimise pass. Discovered late, they
-        // trigger a re-optimise mid-run: React gets re-bundled under a new hash
-        // while the already-loaded copy stays, and hooks then read from the
-        // wrong instance — "Cannot read properties of null (reading
-        // 'useContext')". Two chunk hashes in one stack trace is that bug.
-        optimizeDeps: {
-          include: [
-            'react',
-            'react-dom',
-            'i18next',
-            'react-i18next',
-            'i18next-browser-languagedetector',
-          ],
+        // Cypress and Vitest run CONCURRENTLY in CI (deploy.yml, "Run all
+        // tests in parallel"), both as Vite processes in this directory.
+        // Sharing node_modules/.vite makes them race on the dependency
+        // optimiser: one re-optimises while the other has already served
+        // modules, so React and react-dom come from different generations and
+        // hooks read a null dispatcher — "Cannot read properties of null
+        // (reading 'useContext')", with two chunk hashes in one stack trace.
+        // A private cache removes the shared resource the race needs.
+        cacheDir: 'node_modules/.vite-cypress',
+        resolve: {
+          // Belt and braces: never resolve two React copies.
+          dedupe: ['react', 'react-dom'],
         },
         // Optimize Vite for faster builds
         build: { minify: false },

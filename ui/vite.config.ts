@@ -63,6 +63,12 @@ export default defineConfig({
     }
   },
   resolve: {
+    // Force a single React instance. Cypress component tests load React via
+    // @cypress/react while the component tree pulls it in separately; without
+    // dedupe those can resolve to two copies from different optimiser passes,
+    // and hooks then read a null dispatcher ("Cannot read properties of null
+    // (reading 'useContext')").
+    dedupe: ['react', 'react-dom'],
     alias: {
       '@': resolve(__dirname, './src')
     }
