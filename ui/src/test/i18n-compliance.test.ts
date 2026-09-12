@@ -19,6 +19,7 @@ const COMPONENTS_DIR = join(process.cwd(), 'src/components');
  */
 const MIGRATED_FILES: string[] = [
   'FilterBar.tsx',
+  'LivePage.tsx',
 ];
 
 /** Copy that is deliberately never translated. */

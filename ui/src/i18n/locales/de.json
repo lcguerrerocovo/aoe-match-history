@@ -43,7 +43,8 @@
     "loadFailed": "Laufende Partien konnten nicht geladen werden",
     "playersInMatches_one": "{{players}} Spieler in {{count}} Partie",
     "playersInMatches_other": "{{players}} Spieler in {{count}} Partien",
-    "discoveringMore": " · weitere werden gesucht…"
+    "discoveringMore": " · weitere werden gesucht…",
+    "dataDelayed": "Spähberichte verzögert — zeige die zuletzt bekannten Schlachten"
   },
   "stats": {
     "winRates": "Siegraten",

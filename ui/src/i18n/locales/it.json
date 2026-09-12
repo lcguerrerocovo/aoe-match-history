@@ -43,7 +43,8 @@
     "loadFailed": "Impossibile caricare le partite dal vivo",
     "playersInMatches_one": "{{players}} giocatori in {{count}} partita",
     "playersInMatches_other": "{{players}} giocatori in {{count}} partite",
-    "discoveringMore": " · ne stiamo cercando altre…"
+    "discoveringMore": " · ne stiamo cercando altre…",
+    "dataDelayed": "Rapporti degli esploratori in ritardo — mostro le ultime battaglie note"
   },
   "stats": {
     "winRates": "Tassi di vittoria",

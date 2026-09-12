@@ -43,7 +43,8 @@
     "loadFailed": "Failed to load live matches",
     "playersInMatches_one": "{{players}} players in {{count}} match",
     "playersInMatches_other": "{{players}} players in {{count}} matches",
-    "discoveringMore": " · discovering more…"
+    "discoveringMore": " · discovering more…",
+    "dataDelayed": "Scout reports delayed — showing the last known battles"
   },
   "stats": {
     "winRates": "Win Rates",

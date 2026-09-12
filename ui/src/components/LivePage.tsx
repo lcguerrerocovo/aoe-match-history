@@ -1,6 +1,7 @@
 import { Box, VStack, Text, Flex, HStack, Input } from '@chakra-ui/react';
 import { useEffect, useState, useRef, useMemo, useCallback, memo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUrlState } from '../hooks/useUrlState';
 import TopBar from './TopBar';
 import { LiveMatchCardSkeleton, PulsingDot } from './LiveMatchCard';
@@ -83,6 +84,7 @@ const GameTypeTabs = memo(function GameTypeTabs({
 });
 
 export function LivePage() {
+  const { t } = useTranslation();
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -219,7 +221,7 @@ export function LivePage() {
       setIsLoading(false);
       setRatingsLoaded(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load live matches');
+      setError(err instanceof Error ? err.message : t('live.loadFailed'));
       setIsLoading(false);
     } finally {
       fetchingRef.current = false;
@@ -280,19 +282,19 @@ export function LivePage() {
                 color="brand.inkDark"
                 letterSpacing="wide"
               >
-                Live Matches
+                {t('live.title')}
               </Text>
             </Flex>
             <Text fontSize="sm" color="brand.inkMuted" fontStyle="italic">
               {isLoading
                 ? ''
                 : matches.length > 0
-                  ? `${matches.reduce((sum, m) => sum + m.players.length, 0)} players in ${matches.length} match${matches.length !== 1 ? 'es' : ''}${isPartial ? ' · discovering more…' : ''}`
+                  ? t('live.playersInMatches', { players: matches.reduce((sum, m) => sum + m.players.length, 0), count: matches.length }) + (isPartial ? t('live.discoveringMore') : '')
                   : ''}
             </Text>
             {!isLoading && dataDelayed && (
               <Text fontSize="xs" color="brand.redChalk" fontStyle="italic">
-                Scout reports delayed — showing the last known battles
+                {t('live.dataDelayed')}
               </Text>
             )}
           </VStack>
@@ -333,12 +335,12 @@ export function LivePage() {
                   mb={0.5}
                   lineHeight="1"
                 >
-                  Civilization
+                  {t('stats.civilization')}
                 </Text>
                 <Input
                   value={civFilter}
                   onChange={(e) => setCivFilter(e.target.value)}
-                  placeholder="Type to filter..."
+                  placeholder={t('filter.typeToFilter')}
                   fontSize={{ base: 'xs', md: 'sm' }}
                   bg="transparent"
                   borderWidth="0 0 1px 0"
@@ -382,11 +384,11 @@ export function LivePage() {
           {error && !isLoading && (
             <Box py={16} textAlign="center">
               <Text fontSize="lg" color="brand.redChalk" fontStyle="italic">
-                The scouts have lost their signal
+                {t('live.offlineTitle')}
               </Text>
               <Box w="60px" h="1px" bg="brand.borderWarm" mx="auto" my={4} />
               <Text fontSize="xs" color="brand.inkMuted">
-                Matches will return when the connection is restored
+                {t('live.offlineBody')}
               </Text>
             </Box>
           )}
@@ -394,11 +396,11 @@ export function LivePage() {
           {!isLoading && !error && matches.length === 0 && (
             <Box py={20} textAlign="center">
               <Text color="brand.inkMuted" fontSize="lg" fontStyle="italic">
-                No battles rage at this hour
+                {t('live.empty')}
               </Text>
               <Box w="60px" h="1px" bg="brand.borderWarm" mx="auto" my={4} />
               <Text color="brand.inkMuted" fontSize="xs">
-                Matches refresh automatically every 30 seconds
+                {t('live.refreshNote')}
               </Text>
             </Box>
           )}
@@ -421,10 +423,10 @@ export function LivePage() {
           {!isLoading && matches.length > 0 && filteredMatches.length === 0 && (
             <Box py={12} textAlign="center">
               <Text color="brand.inkMuted" fontSize="sm" fontStyle="italic">
-                No matches for these filters
+                {t('profile.noMatchesForFilters')}
               </Text>
               <Text color="brand.inkMuted" fontSize="xs" mt={1}>
-                Try broadening your search
+                {t('common.tryBroadening')}
               </Text>
             </Box>
           )}
@@ -432,7 +434,7 @@ export function LivePage() {
           {/* Footer */}
           {!isLoading && matches.length > 0 && (
             <Text fontSize="xs" color="brand.inkMuted" fontStyle="italic" textAlign="center" py={2}>
-              Refreshes every 30 seconds
+              {t('live.refreshShort')}
             </Text>
           )}
         </VStack>

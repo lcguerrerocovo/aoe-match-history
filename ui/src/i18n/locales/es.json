@@ -43,7 +43,8 @@
     "loadFailed": "Error al cargar las partidas en vivo",
     "playersInMatches_one": "{{players}} jugadores en {{count}} partida",
     "playersInMatches_other": "{{players}} jugadores en {{count}} partidas",
-    "discoveringMore": " · buscando más…"
+    "discoveringMore": " · buscando más…",
+    "dataDelayed": "Informes de exploradores retrasados — mostrando las últimas batallas conocidas"
   },
   "stats": {
     "winRates": "Tasas de victoria",
