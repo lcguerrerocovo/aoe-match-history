@@ -9,6 +9,7 @@ import { assetManager } from '../../utils/assetManager';
 import { PLAYER_COLORS } from '../../utils/playerColors';
 import { getSteamAvatar, extractSteamId } from '../../services/matchService';
 import { useTranslation } from 'react-i18next';
+import { useGameNames } from '../../i18n/useGameNames';
 
 interface PlayerAvatarProps {
   player: Player;
@@ -18,6 +19,7 @@ interface PlayerAvatarProps {
 
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, teamSize = 4 }) => {
   const { t } = useTranslation();
+  const { civName } = useGameNames();
   const { isDark } = useThemeMode();
   const isExpansive = teamSize <= 2;
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
@@ -141,7 +143,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, matchId, tea
               </Box>
             </Box>
             <Text fontSize={{ base: "2xs", md: "xs" }} color="brand.inkDark" lineClamp={1}>
-              {player.civ}
+              {civName(player.civ)}
             </Text>
           </HStack>
 

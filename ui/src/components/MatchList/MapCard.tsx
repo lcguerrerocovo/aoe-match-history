@@ -3,10 +3,12 @@ import { Box, Text } from '@chakra-ui/react';
 import { useLayoutConfig } from '../../theme/breakpoints';
 import type { Match } from '../../types/match';
 import { assetManager } from '../../utils/assetManager';
+import { useGameNames } from '../../i18n/useGameNames';
 
 export function MapCard({ match }: { match: Match }) {
   const layout = useLayoutConfig();
   const mapName = match.map || '';
+  const { mapName: gameMapName } = useGameNames();
   const [imageError, setImageError] = useState(false);
 
   const imageUrl = imageError
@@ -57,7 +59,7 @@ export function MapCard({ match }: { match: Match }) {
       </Box>
       {/* Map name below image */}
       <Box mt={1} textAlign="center" fontSize="xs">
-        <Text as="span" color="brand.inkMuted">{mapName}</Text>
+        <Text as="span" color="brand.inkMuted">{gameMapName(mapName)}</Text>
       </Box>
     </Box>
   );

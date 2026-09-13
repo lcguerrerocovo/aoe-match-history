@@ -9,6 +9,7 @@ import { InsightsTab } from './InsightsTab';
 import { assetManager } from '../../utils/assetManager';
 import type { CivStatsData, MatchType, CivPatchStats, EloBracket } from '../../types/civStats';
 import { useTranslation } from 'react-i18next';
+import { useGameNames } from '../../i18n/useGameNames';
 
 type StatsView = 'winRate' | 'pickRate';
 type StatsTab = 'statistics' | 'insights';
@@ -242,6 +243,7 @@ function CivRowEl({
   refLinePct?: number;
   showRefLabel?: boolean;
 }) {
+  const { civName } = useGameNames();
   const hasChanges = row.balanceChanges && row.balanceChanges.length > 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -266,7 +268,7 @@ function CivRowEl({
 
       <Flex align="center" gap={1.5} w={LABEL_W} flexShrink={0} justify="flex-end" pr={2}>
         <Text fontSize="xs" fontWeight={hasChanges ? '700' : '600'} color="brand.inkDark" truncate>
-          {row.name}
+          {civName(row.name)}
         </Text>
         <CivIcon row={row} />
       </Flex>
@@ -456,6 +458,7 @@ function PickRateChart({ rows }: { rows: CivRow[] }) {
 
 export function StatsPage() {
   const { t } = useTranslation();
+  const { mapName } = useGameNames();
   const location = useLocation();
   const navigate = useNavigate();
   const activeTab: StatsTab = location.pathname.endsWith('/team-positions') ? 'insights' : 'statistics';
@@ -729,7 +732,7 @@ export function StatsPage() {
               >
                 <option value="all">{t('filter.allMaps')}</option>
                 {maps.map(m => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>{mapName(m)}</option>
                 ))}
               </select>
 

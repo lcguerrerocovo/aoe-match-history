@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { keyframes } from '@emotion/react';
 import type { LiveMatch } from '../../types/liveMatch';
 import { useTranslation } from 'react-i18next';
+import { useGameNames } from '../../i18n/useGameNames';
 
 const shimmerWave = keyframes`
   0%, 100% { opacity: 0.2; transform: scaleY(0.7); }
@@ -54,6 +55,7 @@ export function ActivityPanel({
   onEloBracketSelect,
 }: ActivityPanelProps) {
   const { t } = useTranslation();
+  const { mapName } = useGameNames();
   const matchCount = matches.length;
   const playerCount = useMemo(
     () => matches.reduce((sum, m) => sum + m.players.length, 0),
@@ -198,7 +200,7 @@ export function ActivityPanel({
                       textOverflow="ellipsis"
                       transition="color 0.2s ease"
                     >
-                      {name}
+                      {mapName(name)}
                     </Text>
                     <Box flex="1" h="12px" bg="brand.parchmentDark" borderRadius="sm" overflow="hidden">
                       <Box

@@ -13,7 +13,8 @@
  *
  * Output is keyed by the API names the app already uses, so consumers never
  * touch string IDs. Only the names actually rendered are emitted — the raw
- * tables are ~8 MB across four languages versus ~19 KB for this.
+ * tables are ~8 MB across four languages versus ~44 KB for this, so it is
+ * bundled with the UI rather than fetched.
  *
  * Re-run after a game patch that adds civs or maps, the same way
  * rl_api_mappings.json is maintained.
@@ -68,7 +69,7 @@ const normalize = (s) => s.toLowerCase().replace(/[^a-z]/g, '');
 
 function main() {
   const resources = arg('resources', DEFAULT_RESOURCES);
-  const out = arg('out', join(ROOT, 'data/game-names.json'));
+  const out = arg('out', join(ROOT, 'ui/src/i18n/game-names.json'));
 
   if (!existsSync(resources)) {
     console.error(`AoE2 DE resources not found at:\n  ${resources}\n`);

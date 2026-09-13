@@ -6,6 +6,7 @@ import { useLayoutConfig } from '../theme/breakpoints';
 import { system } from '../theme/theme';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useGameNames } from '../i18n/useGameNames';
 
 interface FilterBarProps {
   onMapChange: (map: string) => void;
@@ -65,6 +66,7 @@ const AnnotationLabel = ({ children }: { children: string }) => (
 
 export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSearchChange, onClearSearch, maps, matchTypes, searchResultsCount, searchValue: externalSearchValue = '', selectedMap: externalSelectedMap = '', selectedMatchType: externalSelectedMatchType = '', sortDirection: externalSortDirection = 'desc' }: FilterBarProps) => {
   const { t } = useTranslation();
+  const { mapName } = useGameNames();
   const layout = useLayoutConfig();
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const [searchValue, setSearchValue] = useState(externalSearchValue);
@@ -210,7 +212,7 @@ export const FilterBar = ({ onMapChange, onMatchTypeChange, onSortChange, onSear
                     .filter(({ name }) => name && name.trim().length > 0)
                     .map(({ name, count }, index) => (
                       <option key={`${name}-${index}`} value={name}>
-                        {name} ({count || 0})
+                        {mapName(name)} ({count || 0})
                       </option>
                     ))}
                 </NativeSelect.Field>

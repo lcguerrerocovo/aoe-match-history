@@ -9,6 +9,7 @@ import { groupByTeam } from '../utils/liveMatchUtils';
 import { PLAYER_COLORS } from '../utils/playerColors';
 import { calculateWinProbability } from '../utils/winProbability';
 import { useTranslation } from 'react-i18next';
+import { useGameNames } from '../i18n/useGameNames';
 
 const livePulse = keyframes`
   0%, 100% { opacity: 0.85; box-shadow: 0 0 3px var(--chakra-colors-brand-red-chalk); }
@@ -180,6 +181,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
   avgRating?: number | null;
 }) {
   const { t } = useTranslation();
+  const { mapName } = useGameNames();
   const teams = useMemo(() => groupByTeam(match.players), [match.players]);
   const winProb = useMemo(() => calculateWinProbability(teams), [teams]);
   const elapsedRef = useRef<HTMLSpanElement>(null);
@@ -216,7 +218,7 @@ export const LiveMatchCard = memo(function LiveMatchCard({
             {match.game_type}
           </Text>
           <Text fontSize="sm" color="brand.parchment" opacity={0.6} fontStyle="italic" truncate>
-            {match.map}
+            {mapName(match.map)}
           </Text>
         </Flex>
         <Flex align="center" gap={3} flexShrink={0}>

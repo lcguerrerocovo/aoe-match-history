@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Box, VStack, Text } from '@chakra-ui/react';
 import type { Match } from '../../types/match';
 import { assetManager } from '../../utils/assetManager';
+import { useGameNames } from '../../i18n/useGameNames';
 
 export function MapCard({ match }: { match: Match }) {
   const mapName = match.map || '';
+  const { mapName: gameMapName } = useGameNames();
   const [imageError, setImageError] = useState(false);
 
   const imageUrl = imageError
@@ -50,7 +52,7 @@ export function MapCard({ match }: { match: Match }) {
         color="brand.inkMuted"
         textAlign="center"
       >
-        {mapName}
+        {gameMapName(mapName)}
       </Text>
 
       {/* Game type marginal note */}

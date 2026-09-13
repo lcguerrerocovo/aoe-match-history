@@ -1,5 +1,6 @@
 import { Flex, Text, VStack } from '@chakra-ui/react';
 import { assetManager } from '../../utils/assetManager';
+import { useGameNames } from '../../i18n/useGameNames';
 
 interface CivPositionCardProps {
   rank: number;
@@ -14,6 +15,7 @@ interface CivPositionCardProps {
 export function CivPositionCard({
   rank, civName, winRate, totalGames, wilson, stripColor, stripSide,
 }: CivPositionCardProps) {
+  const { civName: localizedCivName } = useGameNames();
   const showLeft = stripColor && (stripSide === 'left' || stripSide === 'both');
   const showRight = stripColor && (stripSide === 'right' || stripSide === 'both');
 
@@ -85,7 +87,7 @@ export function CivPositionCard({
           lineHeight="1.2"
           truncate
         >
-          {civName}
+          {localizedCivName(civName)}
         </Text>
 
         <Text fontSize="sm" fontWeight="800" color="brand.darkWin" lineHeight="1.4">
