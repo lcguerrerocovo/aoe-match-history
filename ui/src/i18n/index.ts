@@ -6,8 +6,10 @@ import en from './locales/en.json';
 import es from './locales/es.json';
 import de from './locales/de.json';
 import it from './locales/it.json';
+import pt from './locales/pt.json';
+import zh from './locales/zh.json';
 
-export const SUPPORTED_LANGUAGES = ['en', 'es', 'de', 'it'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'es', 'de', 'it', 'pt', 'zh'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /** Native names — never translated, since a user hunting for their language
@@ -17,6 +19,8 @@ export const LANGUAGE_NAMES: Record<SupportedLanguage, string> = Object.freeze({
   es: 'Español',
   de: 'Deutsch',
   it: 'Italiano',
+  pt: 'Português',
+  zh: '中文',
 });
 
 export const LOCALSTORAGE_KEY = 'i18nextLng';
@@ -29,6 +33,8 @@ export const i18nConfig: InitOptions = {
     es: { translation: es },
     de: { translation: de },
     it: { translation: it },
+    pt: { translation: pt },
+    zh: { translation: zh },
   },
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],

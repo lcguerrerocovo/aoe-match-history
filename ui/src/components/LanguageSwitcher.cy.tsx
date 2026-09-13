@@ -27,10 +27,10 @@ describe('LanguageSwitcher', () => {
     cy.get('[data-testid="language-switcher"]').should('contain.text', 'EN');
   });
 
-  it('lists all four languages in their native names', () => {
+  it('lists every language in its native name', () => {
     mountSwitcher();
     cy.get('[data-testid="language-switcher"] button').first().click();
-    ['English', 'Español', 'Deutsch', 'Italiano'].forEach(name => {
+    ['English', 'Español', 'Deutsch', 'Italiano', 'Português', '中文'].forEach(name => {
       cy.contains(name).should('be.visible');
     });
   });

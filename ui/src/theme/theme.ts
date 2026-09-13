@@ -519,7 +519,9 @@ const config = defineConfig({
         _dark: 'none',
       },
       color: '{colors.brand.black}',
-      fontFamily: "'Lora', serif",
+      // Noto Serif SC only supplies glyphs Lora lacks (CJK); Latin text still
+      // renders in Lora because it comes first in the stack.
+      fontFamily: "'Lora', 'Noto Serif SC', serif",
       fontSize: '15px',
       transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     },

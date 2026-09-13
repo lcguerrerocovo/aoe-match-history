@@ -5,7 +5,7 @@
     "searchPlayers": "Spieler suchen...",
     "date": "Datum",
     "game": "Spiel",
-    "map": "Karte",
+    "map": "Landkarte",
     "type": "Typ",
     "index": "Index",
     "insights": "Analysen",
@@ -22,7 +22,7 @@
     "playersUnit": "Spieler"
   },
   "filter": {
-    "map": "Karte",
+    "map": "Landkarte",
     "allMaps": "Alle Karten",
     "type": "Typ",
     "allTypes": "Alle Typen",
@@ -59,7 +59,7 @@
     "pickRate": "Wahlrate",
     "winRateByCiv": "Siegrate nach Zivilisation",
     "pickRateByCiv": "Wahlrate nach Zivilisation",
-    "civilization": "Zivilisation",
+    "civilization": "Volk",
     "currentPatch": "Aktueller Patch",
     "comparedTo": "Verglichen mit",
     "eloDistribution": "ELO-Verteilung",

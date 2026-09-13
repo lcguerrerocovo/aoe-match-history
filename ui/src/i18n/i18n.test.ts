@@ -10,17 +10,18 @@ async function freshInstance(lng: string): Promise<I18nType> {
 
 describe('i18n configuration', () => {
   it('supports exactly en, es, de, it', () => {
-    expect([...SUPPORTED_LANGUAGES]).toEqual(['en', 'es', 'de', 'it']);
+    expect([...SUPPORTED_LANGUAGES]).toEqual(['en', 'es', 'de', 'it', 'pt', 'zh']);
   });
 
   it('names every language natively', () => {
     expect(LANGUAGE_NAMES).toEqual({
       en: 'English', es: 'Español', de: 'Deutsch', it: 'Italiano',
+      pt: 'Português', zh: '中文',
     });
   });
 
   it('falls back to en for an unsupported language', async () => {
-    const inst = await freshInstance('pt-BR');
+    const inst = await freshInstance('sv-SE');
     expect(inst.resolvedLanguage).toBe('en');
     expect(inst.t('common.loading')).toBe('Loading...');
   });
@@ -29,6 +30,8 @@ describe('i18n configuration', () => {
     ['es-MX', 'es'],
     ['de-AT', 'de'],
     ['it-CH', 'it'],
+    ['pt-BR', 'pt'],
+    ['zh-CN', 'zh'],
   ])('collapses region variant %s to %s', async (input, expected) => {
     const inst = await freshInstance(input);
     expect(inst.resolvedLanguage).toBe(expected);
@@ -41,6 +44,11 @@ describe('pluralization', () => {
     es: ['0 partidas', '1 partida', '2 partidas'],
     de: ['0 Partien', '1 Partie', '2 Partien'],
     it: ['0 partite', '1 partita', '2 partite'],
+    // Portuguese CLDR puts 0 in the 'one' category (i = 0..1), unlike
+    // Spanish and Italian, so zero takes the singular form.
+    pt: ['0 partida', '1 partida', '2 partidas'],
+    // Chinese has a single plural category, so every count uses the same form.
+    zh: ['0 场对局', '1 场对局', '2 场对局'],
   };
 
   it.each(SUPPORTED_LANGUAGES)('resolves live.count for %s at n=0,1,2', async (lng) => {

@@ -8,8 +8,10 @@ import es from '../i18n/locales/es.json';
 import de from '../i18n/locales/de.json';
 // Aliased: a bare `it` would shadow Vitest's `it`.
 import itLocale from '../i18n/locales/it.json';
+import pt from '../i18n/locales/pt.json';
+import zh from '../i18n/locales/zh.json';
 
-const LOCALES: Record<string, unknown> = { es, de, it: itLocale };
+const LOCALES: Record<string, unknown> = { es, de, it: itLocale, pt, zh };
 const COMPONENTS_DIR = join(process.cwd(), 'src/components');
 
 const SKIP_FILES = [
