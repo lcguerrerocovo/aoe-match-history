@@ -45,7 +45,7 @@ export function MatchPage() {
     };
 
     loadMatch();
-  }, [matchId]);
+  }, [matchId, t]);
 
   if (isLoading) {
     return (
