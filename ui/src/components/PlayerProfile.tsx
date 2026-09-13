@@ -2,6 +2,7 @@ import { Box, Text, VStack, HStack, Icon, Avatar, useSlotRecipe } from '@chakra-
 import { FaUser, FaFlag } from 'react-icons/fa';
 import ReactCountryFlag from 'react-country-flag';
 import { componentSpacing } from '../theme/theme';
+import { useTranslation } from 'react-i18next';
 
 interface PlayerProfileProps {
   profileId: string;
@@ -10,6 +11,7 @@ interface PlayerProfileProps {
 }
 
 export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfileProps) {
+  const { t } = useTranslation();
   const playerName = isLoading ? 'Loading...' : profile?.name ?? profileId;
   const recipe = useSlotRecipe({ key: 'profileHeader' });
   const styles = recipe();
@@ -48,7 +50,7 @@ export function PlayerProfile({ profileId, profile, isLoading }: PlayerProfilePr
               <Icon w={3} h={3} color="brand.inkMuted"><FaFlag /></Icon>
             )}
             {profile?.clanlist_name && (
-              <Text fontSize="xs" color="brand.inkMuted" fontStyle="italic">Clan: {profile.clanlist_name}</Text>
+              <Text fontSize="xs" color="brand.inkMuted" fontStyle="italic">{t('profile.clan', { name: profile.clanlist_name })}</Text>
             )}
           </HStack>
           <Text css={styles.id} letterSpacing="wider">ID: {profileId}</Text>

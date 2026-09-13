@@ -28,8 +28,8 @@ function ActionsIcon() {
 }
 
 const navItems: Array<{ view: AnalysisView; label: string; icon: () => React.JSX.Element }> = [
-  { view: 'apm', label: 'APM', icon: ApmIcon },
-  { view: 'actions', label: 'Actions', icon: ActionsIcon },
+  { view: 'apm', label: 'match.apm', icon: ApmIcon },
+  { view: 'actions', label: 'match.actions', icon: ActionsIcon },
 ];
 
 export function ChartNav({ activeView, onChangeView, disabled }: ChartNavProps) {

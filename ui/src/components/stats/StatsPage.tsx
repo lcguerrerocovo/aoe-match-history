@@ -14,8 +14,8 @@ import { useGameNames } from '../../i18n/useGameNames';
 type StatsView = 'winRate' | 'pickRate';
 type StatsTab = 'statistics' | 'insights';
 
-const ELO_LABELS: { value: EloBracket; label: string; labelKey?: string }[] = [
-  { value: 'all', label: 'All ELO', labelKey: 'stats.allElo' },
+const ELO_LABELS: { value: EloBracket; label?: string; labelKey?: string }[] = [
+  { value: 'all', labelKey: 'stats.allElo' },
   { value: '<1000', label: '< 1000' },
   { value: '1000-1500', label: '1000–1500' },
   { value: '1500+', label: '1500+' },

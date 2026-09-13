@@ -12,19 +12,27 @@ import pt from '../i18n/locales/pt.json';
 import zh from '../i18n/locales/zh.json';
 
 const LOCALES: Record<string, unknown> = { es, de, it: itLocale, pt, zh };
-const COMPONENTS_DIR = join(process.cwd(), 'src/components');
+// All of src/, not just components: App.tsx sat outside the old scope and
+// kept untranslated copy for exactly that reason.
+const SRC_DIR = join(process.cwd(), 'src');
 
 const SKIP_FILES = [
   // Inline SVG geometry, not user copy
   'Watermark.tsx',
 ];
 
+/** Developer-facing or non-rendering trees. */
+const SKIP_DIRS = ['dev', 'test', 'i18n', 'theme'];
+
 async function componentFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const out: string[] = [];
   for (const e of entries) {
     const full = join(dir, e.name);
-    if (e.isDirectory()) out.push(...await componentFiles(full));
+    if (e.isDirectory()) {
+      if (SKIP_DIRS.includes(e.name)) continue;
+      out.push(...await componentFiles(full));
+    }
     else if (/\.tsx$/.test(e.name) && !/\.cy\.|\.test\./.test(e.name) && !SKIP_FILES.includes(e.name)) {
       out.push(full);
     }
@@ -111,12 +119,22 @@ describe('no hardcoded strings in components', () => {
   // `&`/`;` so an HTML entity such as `&gt;` does not truncate the match.
   const jsxText = /(?<!=)>\s*([A-Z—·][A-Za-z0-9 ,.'’!?:%&;\-()/\s]{2,})\s*</g;
   const textProp = /\b(placeholder|aria-label|title|alt)\s*=\s*"([^"]{3,})"/g;
+  // Copy also hides in config objects — `header: 'Board'`, `label: 'Insights'` —
+  // which no JSX pattern can see. The ranking board's column headers sat
+  // untranslated behind exactly this.
+  const configValue = /\b(header|label|caption|heading|tooltip)\s*:\s*'([A-Z][^']{2,})'/g;
+  // NOTE: copy sandwiched between a tag and an expression — `</Text> matches
+  // played · {duration}` — is NOT detectable here. Any regex broad enough to
+  // catch it also matches ordinary TypeScript (`} catch (e) {`). Catching that
+  // case needs a real JSX parser; until then it is found by eye.
+  // A bare string used as a JSX child: `'Load More Matches'` in a ternary.
+  const bareProse = /'([A-Z][a-z]+(?: [A-Za-z]+){2,})'/g;
 
   it('every migrated component routes user copy through t()', async () => {
     const offenders: string[] = [];
 
-    for (const abs of await componentFiles(COMPONENTS_DIR)) {
-      const rel = abs.slice(COMPONENTS_DIR.length + 1);
+    for (const abs of await componentFiles(SRC_DIR)) {
+      const rel = abs.slice(SRC_DIR.length + 1);
       const src = await fs.readFile(abs, 'utf8');
       const found = new Set<string>();
       let m: RegExpExecArray | null;
@@ -126,6 +144,12 @@ describe('no hardcoded strings in components', () => {
       }
       while ((m = textProp.exec(src))) {
         found.add(m[2].trim());
+      }
+      while ((m = configValue.exec(src))) {
+        found.add(m[2].trim());
+      }
+      while ((m = bareProse.exec(src))) {
+        found.add(m[1].trim());
       }
 
       for (const s of found) {

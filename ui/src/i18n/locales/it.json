@@ -102,7 +102,8 @@
     "apmOverTime": "APM nel tempo",
     "actionBreakdown": "Suddivisione delle azioni",
     "loadFailed": "Impossibile caricare la partita",
-    "replay": "replay"
+    "replay": "replay",
+    "idRequired": "È richiesto l'ID della partita"
   },
   "profile": {
     "collectingSince": "Raccolta dello storico partite da {{date}}. Le partite più vecchie possono comparire, ma non è garantito.",
@@ -110,6 +111,18 @@
     "noMatchesForFilters": "Nessuna partita per questi filtri",
     "loadFailed": "Impossibile caricare il profilo o le partite",
     "tagline": "Le tue partite recenti di Age of Empires 2 con analisi dettagliate a colpo d'occhio.",
-    "description": "Analizza il tuo storico recente di partite classificate di Age of Empires II con metriche di prestazione dettagliate. Consulta statistiche e rendimento dei giocatori, oltre a un'analisi dettagliata degli APM suddivisa per tipo di azione dalle tue ultime partite, in un'interfaccia pulita e orientata alla competizione."
+    "description": "Analizza il tuo storico recente di partite classificate di Age of Empires II con metriche di prestazione dettagliate. Consulta statistiche e rendimento dei giocatori, oltre a un'analisi dettagliata degli APM suddivisa per tipo di azione dalle tue ultime partite, in un'interfaccia pulita e orientata alla competizione.",
+    "board": "Classifica",
+    "rating": "Punteggio",
+    "max": "Max",
+    "diff": "Diff",
+    "games": "Partite",
+    "won": "Vittorie",
+    "streak": "Serie",
+    "topPercent": "Top {{percent}}%",
+    "clan": "Clan: {{name}}",
+    "id": "ID: {{id}}",
+    "matchesPlayed": "partite giocate",
+    "betweenGames": " (~{{minutes}} min tra le partite)"
   }
 }

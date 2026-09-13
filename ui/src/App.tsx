@@ -16,6 +16,10 @@ import TopBar from './components/TopBar';
 import { WatermarkTiled } from './components/Watermark';
 import { CornerFlourishes } from './components/CornerFlourishes';
 import { ProfileLiveMatch } from './components/ProfileLiveMatch';
+import { useTranslation } from 'react-i18next';
+
+/** Earliest date the collector has match history for. */
+const COLLECTION_START = 'March 22, 2026';
 
 function mergeMapCounts(maps: Map[]): Map[] {
   return Array.from(
@@ -45,6 +49,7 @@ function normalizeMatches(matches: Match[]): Match[] {
 }
 
 function App() {
+  const { t } = useTranslation();
   const { profileId } = useParams<{ profileId: string }>();
   const [matchGroups, setMatchGroups] = useState<MatchGroup[]>([]);
   const [maps, setMaps] = useState<Map[]>([]);
@@ -501,7 +506,7 @@ function App() {
                 fontStyle="italic"
                 py={1}
               >
-                Collecting match history since March 22, 2026. Older matches may appear but are not guaranteed.
+                {t('profile.collectingSince', { date: COLLECTION_START })}
               </Text>
             )}
             {profileId && (

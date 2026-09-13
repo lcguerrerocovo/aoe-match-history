@@ -6,12 +6,15 @@ import { getTier } from '../utils/gameUtils';
 import { useThemeMode } from '../theme/ThemeProvider';
 import { assetManager } from '../utils/assetManager';
 import { system } from '../theme/theme';
+import { useTranslation } from 'react-i18next';
+import { formatOrdinal } from '../i18n/ordinal';
 
 interface RankingCardProps {
   stats: LeaderboardStats[];
 }
 
 export function RankingCard({ stats }: RankingCardProps) {
+  const { t, i18n } = useTranslation();
   const recipe = useSlotRecipe({ key: 'rankingCard' });
   const styles = recipe();
   const { isDark } = useThemeMode();
@@ -70,18 +73,8 @@ export function RankingCard({ stats }: RankingCardProps) {
             return { color: tier.color };
           })();
 
-          // Create ordinal suffix for rank
-          const getOrdinalSuffix = (num: number) => {
-            if (num >= 11 && num <= 13) return 'th';
-            switch (num % 10) {
-              case 1: return 'st';
-              case 2: return 'nd';
-              case 3: return 'rd';
-              default: return 'th';
-            }
-          };
 
-          const ordinalRank = `${stat.rank}${getOrdinalSuffix(stat.rank)}`;
+          const ordinalRank = formatOrdinal(stat.rank, i18n.resolvedLanguage ?? 'en');
 
           // Tier illumination — subtle background tint + left border accent for medaled players
           const illuminationProps = (() => {
@@ -115,7 +108,7 @@ export function RankingCard({ stats }: RankingCardProps) {
                   {ordinalRank}
                 </Text>
                 <Text css={styles.percentileText}>
-                  Top {percentile}%
+                  {t('profile.topPercent', { percent: percentile })}
                 </Text>
               </HStack>
               {tier && tier.showCrown && stat.rank !== -1 && (

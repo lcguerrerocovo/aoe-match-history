@@ -162,8 +162,8 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                             color="brand.inkMuted"
                             mb={1}
                           >
-                            <Text as="span" fontSize={{ base: '12px', md: '13px' }} fontStyle="normal" fontWeight={700}>{toRoman(group.matches.length)}</Text> matches played · {timingData.sessionDuration}
-                            {timingData.avgGapMinutes >= 2 && group.matches.length > 1 && ` (~${timingData.avgGapMinutes}m between games)`}
+                            <Text as="span" fontSize={{ base: '12px', md: '13px' }} fontStyle="normal" fontWeight={700}>{toRoman(group.matches.length)}</Text> {t('profile.matchesPlayed')} · {timingData.sessionDuration}
+                            {timingData.avgGapMinutes >= 2 && group.matches.length > 1 && t('profile.betweenGames', { minutes: timingData.avgGapMinutes })}
                           </Text>
 
                           {/* Record grid */}
@@ -337,7 +337,7 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                 <Text>{t('common.loading')}</Text>
               </HStack>
             ) : (
-              'Load More Matches'
+              t('profile.loadMore')
             )}
           </Button>
         </Box>

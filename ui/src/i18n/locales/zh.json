@@ -102,7 +102,8 @@
     "apmOverTime": "APM 变化",
     "actionBreakdown": "操作类型分布",
     "loadFailed": "无法加载对局",
-    "replay": "录像"
+    "replay": "录像",
+    "idRequired": "需要提供对局 ID"
   },
   "profile": {
     "collectingSince": "自 {{date}} 起收集对局记录。更早的对局可能出现，但不保证完整。",
@@ -110,6 +111,18 @@
     "noMatchesForFilters": "该筛选条件下没有对局",
     "loadFailed": "无法加载资料或对局",
     "tagline": "一目了然地查看你最近的《帝国时代 II》对局与详细数据分析。",
-    "description": "通过详细的表现指标分析你最近的《帝国时代 II》排位对局记录。在简洁、面向竞技的界面中查看玩家统计与表现，以及按操作类型细分的最新对局 APM 分析。"
+    "description": "通过详细的表现指标分析你最近的《帝国时代 II》排位对局记录。在简洁、面向竞技的界面中查看玩家统计与表现，以及按操作类型细分的最新对局 APM 分析。",
+    "board": "排行榜",
+    "rating": "积分",
+    "max": "最高",
+    "diff": "变化",
+    "games": "对局",
+    "won": "胜率",
+    "streak": "连胜",
+    "topPercent": "前 {{percent}}%",
+    "clan": "战队：{{name}}",
+    "id": "ID：{{id}}",
+    "matchesPlayed": "场对局",
+    "betweenGames": "（对局间隔约 {{minutes}} 分钟）"
   }
 }

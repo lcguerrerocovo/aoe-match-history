@@ -102,7 +102,8 @@
     "apmOverTime": "APM im Zeitverlauf",
     "actionBreakdown": "Aktionsaufschlüsselung",
     "loadFailed": "Partie konnte nicht geladen werden",
-    "replay": "Aufzeichnung"
+    "replay": "Aufzeichnung",
+    "idRequired": "Partie-ID erforderlich"
   },
   "profile": {
     "collectingSince": "Partieverlauf wird seit {{date}} erfasst. Ältere Partien können erscheinen, sind aber nicht garantiert.",
@@ -110,6 +111,18 @@
     "noMatchesForFilters": "Keine Partien für diese Filter",
     "loadFailed": "Profil oder Partien konnten nicht geladen werden",
     "tagline": "Deine letzten Age-of-Empires-2-Partien mit detaillierten Analysen auf einen Blick.",
-    "description": "Analysiere deinen aktuellen Age-of-Empires-II-Ranglistenverlauf mit detaillierten Leistungskennzahlen. Sieh dir Spielerstatistiken und Leistung an sowie detaillierte APM-Auswertungen, aufgeschlüsselt nach Aktionstypen aus deinen letzten Partien, in einer klaren, auf den Wettkampf ausgerichteten Oberfläche."
+    "description": "Analysiere deinen aktuellen Age-of-Empires-II-Ranglistenverlauf mit detaillierten Leistungskennzahlen. Sieh dir Spielerstatistiken und Leistung an sowie detaillierte APM-Auswertungen, aufgeschlüsselt nach Aktionstypen aus deinen letzten Partien, in einer klaren, auf den Wettkampf ausgerichteten Oberfläche.",
+    "board": "Rangliste",
+    "rating": "Wertung",
+    "max": "Max",
+    "diff": "Diff",
+    "games": "Partien",
+    "won": "Siege",
+    "streak": "Serie",
+    "topPercent": "Top {{percent}}%",
+    "clan": "Clan: {{name}}",
+    "id": "ID: {{id}}",
+    "matchesPlayed": "Partien gespielt",
+    "betweenGames": " (~{{minutes}} Min. zwischen Partien)"
   }
 }

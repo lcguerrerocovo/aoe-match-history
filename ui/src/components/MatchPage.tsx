@@ -27,7 +27,7 @@ export function MatchPage() {
   useEffect(() => {
     const loadMatch = async () => {
       if (!matchId) {
-        setError('Match ID is required');
+        setError(t('match.idRequired'));
         setIsLoading(false);
         return;
       }
@@ -38,7 +38,7 @@ export function MatchPage() {
         const matchData = await getMatch(matchId);
         setMatch(matchData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load match');
+        setError(err instanceof Error ? err.message : t('match.loadFailed'));
       } finally {
         setIsLoading(false);
       }

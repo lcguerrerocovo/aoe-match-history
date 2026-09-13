@@ -19,8 +19,8 @@ function wilsonLower(wins: number, n: number): number {
   return (center - spread) / denominator;
 }
 
-const ELO_LABELS: { value: PositionEloBracket; label: string; labelKey?: string }[] = [
-  { value: 'all', label: 'All ELO', labelKey: 'stats.allElo' },
+const ELO_LABELS: { value: PositionEloBracket; label?: string; labelKey?: string }[] = [
+  { value: 'all', labelKey: 'stats.allElo' },
   { value: '<1000', label: '< 1000' },
   { value: '1000-1500', label: '1000–1500' },
   { value: '1500+', label: '1500+' },

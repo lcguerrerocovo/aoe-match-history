@@ -11,6 +11,7 @@ import { AnimatedHeight } from './ui/animated-height';
 import { useTranslation } from 'react-i18next';
 
 function ProfileSkeleton({ profileId }: { profileId: string }) {
+  const { t } = useTranslation();
   const recipe = useSlotRecipe({ key: 'profileHeader' });
   const styles = recipe();
 
@@ -41,7 +42,7 @@ function ProfileSkeleton({ profileId }: { profileId: string }) {
             <HStack gap="0.5rem" align="center">
               <Icon w={3} h={3} color="brand.inkMuted"><FaFlag /></Icon>
             </HStack>
-            <Text css={styles.id} letterSpacing="wider">ID: {profileId}</Text>
+            <Text css={styles.id} letterSpacing="wider">{t('profile.id', { id: profileId })}</Text>
           </VStack>
         </VStack>
       </VStack>

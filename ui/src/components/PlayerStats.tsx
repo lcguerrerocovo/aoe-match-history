@@ -2,12 +2,14 @@ import { Box, Text, useSlotRecipe } from '@chakra-ui/react';
 import type { PersonalStats, LeaderboardStats } from '../types/stats';
 import { getLeaderboardName } from '../utils/mappingUtils';
 import { StatsTable } from './StatsTable';
+import { useTranslation } from 'react-i18next';
 
 interface PlayerStatsProps {
   stats: PersonalStats | null;
 }
 
 export function PlayerStats({ stats }: PlayerStatsProps) {
+  const { t } = useTranslation();
   const recipe = useSlotRecipe({ key: 'playerStats' });
   const styles = recipe();
 
@@ -26,21 +28,21 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
 
   const combinedColumns = [
     {
-      header: 'Board',
+      header: t('profile.board'),
       render: (stat: LeaderboardStats) => getLeaderboardName(stat.leaderboard_id)
     },
     {
-      header: 'Rating',
+      header: t('profile.rating'),
       isNumeric: true,
       render: (stat: LeaderboardStats) => stat.rating
     },
     {
-      header: 'Max',
+      header: t('profile.max'),
       isNumeric: true,
       render: (stat: LeaderboardStats) => stat.highestrating || '-'
     },
     {
-      header: 'Diff',
+      header: t('profile.diff'),
       textAlign: 'right' as const,
       render: (stat: LeaderboardStats) => {
         if (stat.highestrating === 0) return null;
@@ -52,12 +54,12 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
       }
     },
     {
-      header: 'Games',
+      header: t('profile.games'),
       isNumeric: true,
       render: (stat: LeaderboardStats) => stat.wins + stat.losses
     },
     {
-      header: 'Won',
+      header: t('profile.won'),
       isNumeric: true,
       render: (stat: LeaderboardStats) => {
         const totalGames = stat.wins + stat.losses;
@@ -66,7 +68,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
       }
     },
     {
-      header: 'Streak',
+      header: t('profile.streak'),
       isNumeric: true,
       render: (stat: LeaderboardStats) => {
         if (stat.streak > 0) {

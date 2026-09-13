@@ -146,6 +146,80 @@ Assets are **not in the repo** (gitignored). Served from CDN.
 - **Never `cy.clock().invoke('restore')` just to make a `.type()` test pass.** `LivePage.cy.tsx` `beforeEach` calls `cy.clock()` (fake timers) on purpose — it freezes LivePage's `setInterval`/`setTimeout` so they can't accumulate and SIGSEGV Electron in CI ("X connection error" / signal SIGSEGV). Restoring real timers in one test re-enables those intervals and crashes CI *after* the prior test passes (looks like the *next* test hung). For a `.type()` test under fake timers, use `cy.tick(100)` (or a few small ticks) to flush the mount fetch — the `.type()` re-render goes through React's MessageChannel scheduler, which `cy.clock()` does **not** mock, so it proceeds fine. Only the "gives up stale retries" test restores real timers, because it explicitly tests a `setTimeout`-based retry and un-registers before the interval runs.
 - **Before "fixing" a flaky/hanging Cypress test, pull CI ground truth first:** `gh run list --json databaseId,headSha,conclusion` → find the last green commit → `git diff <green> -- <spec>` to see what actually changed. A plausible-looking timer fix can silently turn a hang into a SIGSEGV. The task premise ("X test hangs") can be stale or wrong; the green baseline is the source of truth.
 
+## Internationalization
+
+Six languages: `en`, `es`, `de`, `it`, `pt`, `zh`. i18next with bundled locale
+files and browser language detection (`localStorage` → `navigator`, region
+variants collapse, unsupported falls back to `en`).
+
+- `src/i18n/index.ts` — runtime, `SUPPORTED_LANGUAGES`, `LANGUAGE_NAMES`
+- `src/i18n/locales/<lang>.json` — UI copy
+- `src/i18n/game-names.json` — civ and map names, **generated** by
+  `scripts/extract-game-names.mjs` from a local AoE2 DE install; re-run after a
+  patch adds civs or maps, the way `rl_api_mappings.json` is maintained
+- `src/i18n/gameNames.ts` + `useGameNames()` — localized names for display
+- `src/i18n/ordinal.ts` — rank ordinals (8375th / 8375º / 8375. / 第8375)
+
+### Localize at render, never at the source
+
+Canonical English civ and map names are load-bearing: `resolveMapFilename` and
+`getCivAssetFilename` derive CDN paths from them, and `App.tsx` compares them to
+decide which matches a filter selects. Localizing them at the source breaks
+images, filters and URL state together. So:
+
+- Use `useGameNames()` for anything rendered.
+- Keep `<option value>` canonical; localize only the label.
+- Game-mode codes (`RM 1v1`, `EW Team`) stay as-is.
+- The proxy's `civNames.ts`/`mapNames.ts` stay English — they are DB lookup keys.
+
+### The compliance test is the guard
+
+`src/test/i18n-compliance.test.ts` runs in `npm test`, so it gates CI and the
+pre-commit hook. It checks locale completeness, plural pairing, `{{placeholder}}`
+parity, and scans all of `src/` for hardcoded user-facing copy.
+
+**When sweeping for missed strings, run it first** — but know what it cannot see.
+Every gap below was a real bug it missed:
+
+| Blind spot | Example | Status |
+|---|---|---|
+| Config object values | `header: 'Board'` | now scanned |
+| Bare string as JSX child | `cond ? 'Load More Matches' : …` | now scanned |
+| Multi-line JSX text | a `<Text>` spanning 3 lines | now scanned |
+| Leading punctuation / entities | `— see below`, `ELO &gt; 200` | now scanned |
+| Outside `src/components` | `App.tsx` | now scanned (all of `src/`) |
+| **Text adjacent to an expression** | `</Text> matches played · {duration}` | **still invisible** |
+
+The last one needs a real JSX parser — any regex broad enough also matches
+ordinary TypeScript (`} catch (e) {`). Check those by eye.
+
+### Adapting the game's own terminology
+
+The game's string tables carry its UI vocabulary, not just nouns. Comparing ours
+against it corrected four terms (German `Volk` for civilization, `Landkarte` for
+map; Spanish/Italian `Partida`/`Partita` for a match) and caught a Spanish word
+sitting in the Italian file. The game is not automatically right, though —
+reject its space-constrained abbreviations, its trailing-colon artifacts, and
+its `flank`/`pocket` strings, which name the unit formation rather than the team
+position.
+
+### Gotchas
+
+- Dates are composed **month-first in every Latin locale**
+  (`formatMonthFirstDate`) because the session header drop-caps the first
+  character and that only works on a letter. Chinese is exempt (numeric month)
+  and the drop cap steps aside. This deliberately trades idiomatic word order
+  for the manuscript styling — do not "fix" it back.
+- `initAsync: false` is required: resources are bundled, and deferring init lets
+  the first render show raw keys.
+- Cypress `optimizeDeps.include` must list `react/jsx-dev-runtime`. It is
+  injected by the JSX transform rather than imported, so Vite discovers it
+  mid-run, re-optimizes, and loads a second React — surfacing as
+  `Cannot read properties of null (reading 'useContext')`.
+- Verify locale layout with `scripts/check-locale-layout.ts --locale=de` and
+  `scripts/check-topbar-overlap.ts`. German is the longest; Chinese is the
+  shortest and safest.
+
 ## Screenshot Tool
 
 Playwright-based tool that captures all key views for visual review. Lives in `scripts/take-screenshots.ts`.
