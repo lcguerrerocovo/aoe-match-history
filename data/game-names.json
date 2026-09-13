@@ -1,0 +1,1809 @@
+{
+  "description": "Localized civ and map names extracted from an AoE2 DE install by scripts/extract-game-names.mjs. Keyed by the names the Relic API uses. Regenerate after a patch that adds civs or maps.",
+  "locales": [
+    "en",
+    "es",
+    "de",
+    "it",
+    "zh",
+    "pt"
+  ],
+  "civs": {
+    "Aztec": {
+      "en": "Aztecs",
+      "es": "Aztecas",
+      "de": "Azteken",
+      "it": "Aztechi",
+      "zh": "阿兹特克",
+      "pt": "Astecas"
+    },
+    "Bengalis": {
+      "en": "Bengalis",
+      "es": "Bengalíes",
+      "de": "Bengalen",
+      "it": "Bengalesi",
+      "zh": "孟加拉",
+      "pt": "Bengalis"
+    },
+    "Berbers": {
+      "en": "Berbers",
+      "es": "Bereberes",
+      "de": "Berber",
+      "it": "Berberi",
+      "zh": "柏柏尔",
+      "pt": "Berberes"
+    },
+    "Bohemians": {
+      "en": "Bohemians",
+      "es": "Bohemios",
+      "de": "Böhmen",
+      "it": "Boemi",
+      "zh": "波希米亚",
+      "pt": "Boêmios"
+    },
+    "Britons": {
+      "en": "Britons",
+      "es": "Britanos",
+      "de": "Briten",
+      "it": "Britanni",
+      "zh": "不列颠",
+      "pt": "Bretões"
+    },
+    "Bulgarians": {
+      "en": "Bulgarians",
+      "es": "Búlgaros",
+      "de": "Bulgaren",
+      "it": "Bulgari",
+      "zh": "保加利亚",
+      "pt": "Búlgaros"
+    },
+    "Burgundians": {
+      "en": "Burgundians",
+      "es": "Borgoñones",
+      "de": "Burgunder",
+      "it": "Borgognoni",
+      "zh": "勃艮第",
+      "pt": "Borgonheses"
+    },
+    "Burmese": {
+      "en": "Burmese",
+      "es": "Birmanos",
+      "de": "Birmanen",
+      "it": "Birmani",
+      "zh": "缅甸",
+      "pt": "Birmaneses"
+    },
+    "Byzantines": {
+      "en": "Byzantines",
+      "es": "Bizantinos",
+      "de": "Byzantiner",
+      "it": "Bizantini",
+      "zh": "拜占庭",
+      "pt": "Bizantinos"
+    },
+    "Celts": {
+      "en": "Celts",
+      "es": "Celtas",
+      "de": "Kelten",
+      "it": "Celti",
+      "zh": "凯尔特",
+      "pt": "Celtas"
+    },
+    "Chinese": {
+      "en": "Chinese",
+      "es": "Chinos",
+      "de": "Chinesen",
+      "it": "Cinesi",
+      "zh": "中国",
+      "pt": "Chineses"
+    },
+    "Cumans": {
+      "en": "Cumans",
+      "es": "Cumanos",
+      "de": "Kumanen",
+      "it": "Cumani",
+      "zh": "库曼",
+      "pt": "Cumanos"
+    },
+    "Dravidians": {
+      "en": "Dravidians",
+      "es": "Dravídicos",
+      "de": "Draviden",
+      "it": "Dravidi",
+      "zh": "达罗毗荼",
+      "pt": "Dravidianos"
+    },
+    "Ethiopians": {
+      "en": "Ethiopians",
+      "es": "Etíopes",
+      "de": "Äthiopier",
+      "it": "Etiopi",
+      "zh": "埃塞俄比亚",
+      "pt": "Etíopes"
+    },
+    "Franks": {
+      "en": "Franks",
+      "es": "Francos",
+      "de": "Franken",
+      "it": "Franchi",
+      "zh": "法兰克",
+      "pt": "Francos"
+    },
+    "Goths": {
+      "en": "Goths",
+      "es": "Godos",
+      "de": "Goten",
+      "it": "Goti",
+      "zh": "哥特",
+      "pt": "Godos"
+    },
+    "Gurjaras": {
+      "en": "Gurjaras",
+      "es": "Gurjaras",
+      "de": "Gurjara",
+      "it": "Gurjara",
+      "zh": "瞿折罗",
+      "pt": "Os gurjares"
+    },
+    "Huns": {
+      "en": "Huns",
+      "es": "Hunos",
+      "de": "Hunnen",
+      "it": "Unni",
+      "zh": "匈奴",
+      "pt": "Hunos"
+    },
+    "Incas": {
+      "en": "Inca",
+      "es": "Inca",
+      "de": "Inka",
+      "it": "Inca",
+      "zh": "印加",
+      "pt": "Incas"
+    },
+    "Hindustanis": {
+      "en": "Hindustanis",
+      "es": "Indostaníes",
+      "de": "Hindustani",
+      "it": "Indostani",
+      "zh": "印度斯坦",
+      "pt": "Hindustânis"
+    },
+    "Italians": {
+      "en": "Italians",
+      "es": "Italianos",
+      "de": "Italiener",
+      "it": "Italiani",
+      "zh": "意大利",
+      "pt": "Italianos"
+    },
+    "Japanese": {
+      "en": "Japanese",
+      "es": "Japoneses",
+      "de": "Japaner",
+      "it": "Giapponesi",
+      "zh": "日本",
+      "pt": "Japoneses"
+    },
+    "Khmer": {
+      "en": "Khmer",
+      "es": "Jemeres",
+      "de": "Khmer",
+      "it": "Khmer",
+      "zh": "高棉",
+      "pt": "Khmers"
+    },
+    "Koreans": {
+      "en": "Koreans",
+      "es": "Coreanos",
+      "de": "Koreaner",
+      "it": "Coreani",
+      "zh": "高丽",
+      "pt": "Coreanos"
+    },
+    "Lithuanians": {
+      "en": "Lithuanians",
+      "es": "Lituanos",
+      "de": "Litauer",
+      "it": "Lituani",
+      "zh": "立陶宛",
+      "pt": "Lituanos"
+    },
+    "Magyars": {
+      "en": "Magyars",
+      "es": "Magiares",
+      "de": "Ungarn",
+      "it": "Magiari",
+      "zh": "马扎尔",
+      "pt": "Magiares"
+    },
+    "Malay": {
+      "en": "Malay",
+      "es": "Malayos",
+      "de": "Malaien",
+      "it": "Malesi",
+      "zh": "马来",
+      "pt": "Malaios"
+    },
+    "Malians": {
+      "en": "Malians",
+      "es": "Malíes",
+      "de": "Malier",
+      "it": "Maliani",
+      "zh": "马里",
+      "pt": "Malineses"
+    },
+    "Mayans": {
+      "en": "Maya",
+      "es": "Maya",
+      "de": "Maya",
+      "it": "Maya",
+      "zh": "玛雅",
+      "pt": "Maias"
+    },
+    "Mongols": {
+      "en": "Mongols",
+      "es": "Mongoles",
+      "de": "Mongolen",
+      "it": "Mongoli",
+      "zh": "蒙古",
+      "pt": "Mongóis"
+    },
+    "Persians": {
+      "en": "Persians",
+      "es": "Persas",
+      "de": "Perser",
+      "it": "Persiani",
+      "zh": "波斯",
+      "pt": "Persas"
+    },
+    "Poles": {
+      "en": "Poles",
+      "es": "Polacos",
+      "de": "Polen",
+      "it": "Polacchi",
+      "zh": "波兰",
+      "pt": "Poloneses"
+    },
+    "Portuguese": {
+      "en": "Portuguese",
+      "es": "Portugueses",
+      "de": "Portugiesen",
+      "it": "Portoghesi",
+      "zh": "葡萄牙",
+      "pt": "Portugueses"
+    },
+    "Saracens": {
+      "en": "Saracens",
+      "es": "Sarracenos",
+      "de": "Sarazenen",
+      "it": "Saraceni",
+      "zh": "萨拉森",
+      "pt": "Sarracenos"
+    },
+    "Sicilians": {
+      "en": "Sicilians",
+      "es": "Sicilianos",
+      "de": "Sizilianer",
+      "it": "Siciliani",
+      "zh": "西西里",
+      "pt": "Sicilianos"
+    },
+    "Slavs": {
+      "en": "Slavs",
+      "es": "Eslavos",
+      "de": "Slawen",
+      "it": "Slavi",
+      "zh": "斯拉夫",
+      "pt": "Eslavos"
+    },
+    "Spanish": {
+      "en": "Spanish",
+      "es": "Españoles",
+      "de": "Spanier",
+      "it": "Spagnoli",
+      "zh": "西班牙",
+      "pt": "Espanhóis"
+    },
+    "Tatars": {
+      "en": "Tatars",
+      "es": "Tártaros",
+      "de": "Tataren",
+      "it": "Tartari",
+      "zh": "鞑靼",
+      "pt": "Tártaros"
+    },
+    "Teutons": {
+      "en": "Teutons",
+      "es": "Teutones",
+      "de": "Teutonen",
+      "it": "Teutoni",
+      "zh": "条顿",
+      "pt": "Teutões"
+    },
+    "Turks": {
+      "en": "Turks",
+      "es": "Turcos",
+      "de": "Türken",
+      "it": "Turchi",
+      "zh": "土耳其",
+      "pt": "Turcos"
+    },
+    "Vietnamese": {
+      "en": "Vietnamese",
+      "es": "Vietnamitas",
+      "de": "Vietnamesen",
+      "it": "Vietnamiti",
+      "zh": "越南",
+      "pt": "Vietnamitas"
+    },
+    "Vikings": {
+      "en": "Vikings",
+      "es": "Vikingos",
+      "de": "Wikinger",
+      "it": "Vichinghi",
+      "zh": "维京",
+      "pt": "Vikings"
+    },
+    "Romans": {
+      "en": "Romans",
+      "es": "Romanos",
+      "de": "Römer",
+      "it": "Romani",
+      "zh": "罗马",
+      "pt": "Romanos"
+    },
+    "Armenians": {
+      "en": "Armenians",
+      "es": "Armenios",
+      "de": "Armenier",
+      "it": "Armeni",
+      "zh": "亚美尼亚",
+      "pt": "Armênios"
+    },
+    "Georgians": {
+      "en": "Georgians",
+      "es": "Georgianos",
+      "de": "Georgier",
+      "it": "Georgiani",
+      "zh": "格鲁吉亚",
+      "pt": "Georgianos"
+    },
+    "Shu": {
+      "en": "Shu",
+      "es": "Shu",
+      "de": "Shu",
+      "it": "Shu",
+      "zh": "蜀",
+      "pt": "Shu"
+    },
+    "Wu": {
+      "en": "Wu",
+      "es": "Wu",
+      "de": "Wu",
+      "it": "Wu",
+      "zh": "吴",
+      "pt": "Wu"
+    },
+    "Wei": {
+      "en": "Wei",
+      "es": "Wei",
+      "de": "Wei",
+      "it": "Wei",
+      "zh": "魏",
+      "pt": "Wei"
+    },
+    "Jurchens": {
+      "en": "Jurchens",
+      "es": "Jurchens",
+      "de": "Jurchen",
+      "it": "Juzhen",
+      "zh": "女真",
+      "pt": "Jurchéns"
+    },
+    "Khitans": {
+      "en": "Khitans",
+      "es": "Kitáns",
+      "de": "Kitan",
+      "it": "Kitai",
+      "zh": "契丹",
+      "pt": "Quitais"
+    },
+    "Achaemenids": {
+      "en": "Achaemenids",
+      "es": "Aqueménidas",
+      "de": "Achämeniden",
+      "it": "Achemenidi",
+      "zh": "阿契美尼德",
+      "pt": "Aquemênidas"
+    },
+    "Athenians": {
+      "en": "Athenians",
+      "es": "Atenienses",
+      "de": "Athener",
+      "it": "Ateniesi",
+      "zh": "雅典",
+      "pt": "Atenienses"
+    },
+    "Spartans": {
+      "en": "Spartans",
+      "es": "Espartanos",
+      "de": "Spartaner",
+      "it": "Spartani",
+      "zh": "斯巴达",
+      "pt": "Espartanos"
+    },
+    "Macedonians": {
+      "en": "Macedonians",
+      "es": "Macedonios",
+      "de": "Makedonen",
+      "it": "Macedoni",
+      "zh": "马其顿人",
+      "pt": "Macedônios"
+    },
+    "Thracians": {
+      "en": "Thracians",
+      "es": "Tracios",
+      "de": "Thraker",
+      "it": "Traci",
+      "zh": "色雷斯人",
+      "pt": "Trácios"
+    },
+    "Muisca": {
+      "en": "Muisca",
+      "es": "Muiscas",
+      "de": "Muisca",
+      "it": "Muisca",
+      "zh": "穆伊斯卡",
+      "pt": "Chibchas"
+    },
+    "Mapuche": {
+      "en": "Mapuche",
+      "es": "Mapuches",
+      "de": "Mapuche",
+      "it": "Mapuche",
+      "zh": "马普切",
+      "pt": "Mapuches"
+    },
+    "Tupi": {
+      "en": "Tupi",
+      "es": "Tupí",
+      "de": "Tupi",
+      "it": "Tupi",
+      "zh": "图皮",
+      "pt": "Tupi"
+    }
+  },
+  "maps": {
+    "Arabia": {
+      "en": "Arabia",
+      "es": "Arabia",
+      "de": "Arabien",
+      "it": "Arabia",
+      "zh": "阿拉伯半岛",
+      "pt": "Arábia"
+    },
+    "Archipelago": {
+      "en": "Archipelago",
+      "es": "Archipiélago",
+      "de": "Archipel",
+      "it": "Arcipelago",
+      "zh": "群岛",
+      "pt": "Arquipélago"
+    },
+    "Baltic": {
+      "en": "Baltic",
+      "es": "Báltico",
+      "de": "Ostsee",
+      "it": "Baltico",
+      "zh": "波罗的海",
+      "pt": "Báltico"
+    },
+    "BlackForest": {
+      "en": "Black Forest",
+      "es": "Selva negra",
+      "de": "Schwarzwald",
+      "it": "Foresta Nera",
+      "zh": "黑森林",
+      "pt": "Floresta Negra"
+    },
+    "Coastal": {
+      "en": "Coastal",
+      "es": "Costa",
+      "de": "Küste",
+      "it": "Costa",
+      "zh": "沿海",
+      "pt": "Litorâneo"
+    },
+    "Continental": {
+      "en": "Continental",
+      "es": "Continental",
+      "de": "Kontinent",
+      "it": "Continentale",
+      "zh": "大陆",
+      "pt": "Continental"
+    },
+    "CraterLake": {
+      "en": "Crater Lake",
+      "es": "Lago de cráter",
+      "de": "Kratersee",
+      "it": "Lago vulcanico",
+      "zh": "火山湖",
+      "pt": "Lago da Cratera"
+    },
+    "Fortress": {
+      "en": "Fortress",
+      "es": "Fortaleza",
+      "de": "Festung",
+      "it": "Fortezza",
+      "zh": "堡垒",
+      "pt": "Fortaleza"
+    },
+    "GoldRush": {
+      "en": "Gold Rush",
+      "es": "Fiebre del oro",
+      "de": "Goldrausch",
+      "it": "Corsa all'oro",
+      "zh": "淘金潮",
+      "pt": "Febre do Ouro"
+    },
+    "Highland": {
+      "en": "Highland",
+      "es": "Montañas",
+      "de": "Hochland",
+      "it": "Altopiano",
+      "zh": "高地",
+      "pt": "Terras Altas"
+    },
+    "Islands": {
+      "en": "Islands",
+      "es": "Islas",
+      "de": "Inseln",
+      "it": "Isole",
+      "zh": "岛屿",
+      "pt": "Ilhas"
+    },
+    "Mediterranean": {
+      "en": "Mediterranean",
+      "es": "Mediterráneo",
+      "de": "Mittelmeer",
+      "it": "Mediterraneo",
+      "zh": "地中海",
+      "pt": "Mediterrâneo"
+    },
+    "Migration": {
+      "en": "Migration",
+      "es": "Migración",
+      "de": "Völkerwanderung",
+      "it": "Migrazione",
+      "zh": "迁移",
+      "pt": "Migração"
+    },
+    "Rivers": {
+      "en": "Rivers",
+      "es": "Ríos",
+      "de": "Flüsse",
+      "it": "Fiumi",
+      "zh": "河流",
+      "pt": "Rios"
+    },
+    "TeamIslands": {
+      "en": "Team Islands",
+      "es": "Islas de equipo",
+      "de": "Team-Inseln",
+      "it": "Isole della squadra",
+      "zh": "团队岛屿",
+      "pt": "Ilhas de Equipe"
+    },
+    "Scandanavia": {
+      "en": "Scandinavia",
+      "es": "Escandinavia",
+      "de": "Skandinavien",
+      "it": "Scandinavia",
+      "zh": "斯堪的纳维亚",
+      "pt": "Escandinávia"
+    },
+    "Mongolia": {
+      "en": "Mongolia",
+      "es": "Mongolia",
+      "de": "Mongolei",
+      "it": "Mongolia",
+      "zh": "蒙古",
+      "pt": "Mongólia"
+    },
+    "Yucatan": {
+      "en": "Yucatan",
+      "es": "Yucatán",
+      "de": "Yucatán",
+      "it": "Yucatán",
+      "zh": "尤卡坦",
+      "pt": "Iucatã"
+    },
+    "SaltMarsh": {
+      "en": "Salt Marsh",
+      "es": "Marisma",
+      "de": "Salzsumpf",
+      "it": "Palude salmastra",
+      "zh": "盐碱沼泽",
+      "pt": "Pântano Salgado"
+    },
+    "Arena": {
+      "en": "Arena",
+      "es": "Arena",
+      "de": "Arena",
+      "it": "Arena",
+      "zh": "竞技场",
+      "pt": "Arena"
+    },
+    "Oasis": {
+      "en": "Oasis",
+      "es": "Oasis",
+      "de": "Oase",
+      "it": "Oasi",
+      "zh": "绿洲",
+      "pt": "Oásis"
+    },
+    "GhostLake": {
+      "en": "Ghost Lake",
+      "es": "Lago fantasma",
+      "de": "Geistersee",
+      "it": "Lago ghiacciato",
+      "zh": "幽灵湖",
+      "pt": "Lago Fantasma"
+    },
+    "Nomad": {
+      "en": "Nomad",
+      "es": "Nómada",
+      "de": "Nomade",
+      "it": "Nomade",
+      "zh": "游牧",
+      "pt": "Nômade"
+    },
+    "Canals": {
+      "en": "Canals",
+      "es": "Canales",
+      "de": "Kanäle",
+      "it": "Canali",
+      "zh": "运河",
+      "pt": "Canais"
+    },
+    "Capricious": {
+      "en": "Capricious",
+      "es": "Caprichoso",
+      "de": "Launisch",
+      "it": "Capriccioso",
+      "zh": "变幻莫测",
+      "pt": "Caprichoso"
+    },
+    "Dingos": {
+      "en": "Dingos",
+      "es": "Dingos",
+      "de": "Dingos",
+      "it": "Dingo",
+      "zh": "澳洲野犬",
+      "pt": "Dingos"
+    },
+    "Graveyards": {
+      "en": "Graveyards",
+      "es": "Cementerios",
+      "de": "Friedhöfe",
+      "it": "Cimiteri",
+      "zh": "坟墓",
+      "pt": "Cemitérios"
+    },
+    "Metropolis": {
+      "en": "Metropolis",
+      "es": "Metrópoli",
+      "de": "Metropole",
+      "it": "Metropoli",
+      "zh": "大都市",
+      "pt": "Metrópole"
+    },
+    "Moats": {
+      "en": "Team Moats",
+      "es": "Fosos en equipo",
+      "de": "Team-Burggräben",
+      "it": "Fossati a squadre",
+      "zh": "团队护城河",
+      "pt": "Fossos de Equipe"
+    },
+    "ParadiseIsland": {
+      "en": "Paradise Island",
+      "es": "Isla Paraíso",
+      "de": "Paradiesische Insel",
+      "it": "Isola paradiso",
+      "zh": "天堂岛",
+      "pt": "Ilha Paradisíaca"
+    },
+    "Pilgrims": {
+      "en": "Pilgrims",
+      "es": "Peregrinos",
+      "de": "Pilger",
+      "it": "Pellegrini",
+      "zh": "朝圣者",
+      "pt": "Peregrinos"
+    },
+    "Prairie": {
+      "en": "Prairie",
+      "es": "Pradera",
+      "de": "Prärie",
+      "it": "Prateria",
+      "zh": "大草原",
+      "pt": "Pradaria"
+    },
+    "Seasons": {
+      "en": "Seasons",
+      "es": "Estaciones",
+      "de": "Jahreszeiten",
+      "it": "Stagioni",
+      "zh": "四季",
+      "pt": "Estações"
+    },
+    "SherwoodForest": {
+      "en": "Sherwood Forest",
+      "es": "Bosque de Sherwood",
+      "de": "Wald von Sherwood",
+      "it": "Foresta di Sherwood",
+      "zh": "雪伍德森林",
+      "pt": "Floresta de Sherwood"
+    },
+    "SherwoodHeroes": {},
+    "Shipwreck": {
+      "en": "Shipwreck",
+      "es": "Naufragio",
+      "de": "Schiffswrack",
+      "it": "Relitto",
+      "zh": "船只遗骸",
+      "pt": "Naufrágio"
+    },
+    "TeamGlaciers": {
+      "en": "Team Glaciers",
+      "es": "Glaciares en equipos",
+      "de": "Team-Gletscher",
+      "it": "Ghiacciai a squadre",
+      "zh": "团队冰川",
+      "pt": "Geleiras de Equipe"
+    },
+    "TheUnknown": {},
+    "RealWorldSpain": {
+      "en": "Iberia",
+      "es": "Iberia",
+      "de": "Iberien",
+      "it": "Penisola iberica",
+      "zh": "伊比利亚",
+      "pt": "Ibéria"
+    },
+    "RealWorldEngland": {
+      "en": "Britain",
+      "es": "Inglaterra",
+      "de": "Britannien",
+      "it": "Britannia",
+      "zh": "不列颠",
+      "pt": "Bretanha"
+    },
+    "RealWorldMideast": {
+      "en": "Mideast",
+      "es": "Oriente Medio",
+      "de": "Naher Osten",
+      "it": "Medio Oriente",
+      "zh": "中东",
+      "pt": "Oriente Médio"
+    },
+    "RealWorldTexas": {
+      "en": "Texas",
+      "es": "Texas",
+      "de": "Texas",
+      "it": "Texas",
+      "zh": "德克萨斯",
+      "pt": "Texas"
+    },
+    "RealWorldItaly": {
+      "en": "Italy",
+      "es": "Italia",
+      "de": "Italien",
+      "it": "Italia",
+      "zh": "意大利半岛",
+      "pt": "Itália"
+    },
+    "RealWorldCaribbean": {
+      "en": "Central America",
+      "es": "América Central",
+      "de": "Mittelamerika",
+      "it": "America centrale",
+      "zh": "中美洲",
+      "pt": "América Central"
+    },
+    "RealWorldFrance": {
+      "en": "France",
+      "es": "Francia",
+      "de": "Frankreich",
+      "it": "Francia",
+      "zh": "法兰西",
+      "pt": "França"
+    },
+    "RealWorldJutland": {
+      "en": "Norse Lands",
+      "es": "Tierras Nórdicas",
+      "de": "Nordische Länder",
+      "it": "Territori vichinghi",
+      "zh": "北欧",
+      "pt": "Terras Nórdicas"
+    },
+    "RealWorldNippon": {
+      "en": "Sea of Japan (East Sea)",
+      "es": "Mar del Japón",
+      "de": "Japanisches Meer (Östliche See)",
+      "it": "Mar del Giappone",
+      "zh": "日本海 (东海)",
+      "pt": "Mar do Japão (Mar do Leste)"
+    },
+    "RealWorldByzantium": {
+      "en": "Byzantium",
+      "es": "Bizancio",
+      "de": "Byzanz",
+      "it": "Bisanzio",
+      "zh": "拜占庭",
+      "pt": "Bizâncio"
+    },
+    "Acropolis": {
+      "en": "Acropolis",
+      "es": "Acrópolis",
+      "de": "Akropolis",
+      "it": "Acropoli",
+      "zh": "雅典卫城",
+      "pt": "Acrópole"
+    },
+    "Budapest": {
+      "en": "Budapest",
+      "es": "Budapest",
+      "de": "Budapest",
+      "it": "Budapest",
+      "zh": "布达佩斯",
+      "pt": "Budapeste"
+    },
+    "Cenotes": {
+      "en": "Cenotes",
+      "es": "Cenotes",
+      "de": "Cenoten",
+      "it": "Cenote",
+      "zh": "岩坑池地",
+      "pt": "Cenotes"
+    },
+    "Cityoflakes": {
+      "en": "City of Lakes",
+      "es": "La Ciudad de los Lagos",
+      "de": "Stadt der Seen",
+      "it": "Città dei Laghi",
+      "zh": "百湖之城",
+      "pt": "Cidade dos Lagos"
+    },
+    "Goldenpit": {
+      "en": "Golden Pit",
+      "es": "Cuenca del oro",
+      "de": "Goldgrube",
+      "it": "Fossa dorata",
+      "zh": "金矿谷",
+      "pt": "Buraco de Ouro"
+    },
+    "Hideout": {
+      "en": "Hideout",
+      "es": "Guaridas",
+      "de": "Versteck",
+      "it": "Nascondiglio",
+      "zh": "藏身之处",
+      "pt": "Esconderijo"
+    },
+    "Hillfort": {
+      "en": "Hill Fort",
+      "es": "Castros",
+      "de": "Hügelfestung",
+      "it": "Forte sulla Collina",
+      "zh": "山寨",
+      "pt": "Forte de Colina"
+    },
+    "Lombardia": {
+      "en": "Lombardia",
+      "es": "Lombardía",
+      "de": "Lombardei",
+      "it": "Lombardia",
+      "zh": "伦巴第",
+      "pt": "Lombardia"
+    },
+    "Steppe": {
+      "en": "Steppe",
+      "es": "Estepa",
+      "de": "Steppe",
+      "it": "Steppe",
+      "zh": "干草原",
+      "pt": "Estepe"
+    },
+    "Valley": {
+      "en": "Valley",
+      "es": "Valle",
+      "de": "Tal",
+      "it": "Valle",
+      "zh": "峡谷",
+      "pt": "Vale"
+    },
+    "Megarandom": {
+      "en": "MegaRandom",
+      "es": "Mega-Aleatorio",
+      "de": "Mega-Zufällig",
+      "it": "Mega-Casuale",
+      "zh": "超级随机",
+      "pt": "Mega-Aleatório"
+    },
+    "Hamburger": {
+      "en": "Hamburger",
+      "es": "Hamburger",
+      "de": "Hamburger",
+      "it": "Hamburger",
+      "zh": "汉堡包",
+      "pt": "Hamburger"
+    },
+    "CtrRandom": {
+      "en": "CtR Random",
+      "es": "ClR Aleatorio",
+      "de": "RE Zufällig",
+      "it": "CtR Casuale",
+      "zh": "争夺圣物随机地图",
+      "pt": "CtR Aleatório"
+    },
+    "CtrMonsoon": {
+      "en": "CtR Monsoon",
+      "es": "ClR Región monzónica",
+      "de": "RE Monsun",
+      "it": "CtR Monsoni",
+      "zh": "争夺圣物雨季沼泽",
+      "pt": "CtR Monção"
+    },
+    "CtrPyramidDescent": {
+      "en": "CtR Pyramid Descent",
+      "es": "ClR Pirámide abajo",
+      "de": "RE Pyramide",
+      "it": "CtR Discesa della Piramide",
+      "zh": "争夺圣物决战金字塔之巅",
+      "pt": "CtR Descida de Pirâmide"
+    },
+    "CtrSpiral": {
+      "en": "CtR Spiral",
+      "es": "ClR Espiral",
+      "de": "RE Spirale",
+      "it": "CtR Spirale",
+      "zh": "争夺圣物漩涡迷航",
+      "pt": "CtR Espiral"
+    },
+    "Kilimanjaro": {
+      "en": "Kilimanjaro",
+      "es": "Kilimanjaro",
+      "de": "Kilimandscharo",
+      "it": "Kilimangiaro",
+      "zh": "乞力马扎罗山",
+      "pt": "Quilimanjaro"
+    },
+    "MountainPass": {
+      "en": "Mountain Pass",
+      "es": "Pasaje montañoso",
+      "de": "Gebirgspass",
+      "it": "Passo di montagna",
+      "zh": "雪山地",
+      "pt": "Passo de Montanha"
+    },
+    "NileDelta": {
+      "en": "Nile Delta",
+      "es": "Delta del Nilo",
+      "de": "Nildelta",
+      "it": "Delta del Nilo",
+      "zh": "尼罗河三角洲",
+      "pt": "Delta do Nilo"
+    },
+    "Serengeti": {
+      "en": "Serengeti",
+      "es": "Serengueti",
+      "de": "Serengeti",
+      "it": "Serengeti",
+      "zh": "塞伦盖蒂平原",
+      "pt": "Serengeti"
+    },
+    "Socotra": {
+      "en": "Socotra",
+      "es": "Socotra",
+      "de": "Sokotra",
+      "it": "Socotra",
+      "zh": "索科特拉岛",
+      "pt": "Socotra"
+    },
+    "RealWorldAmazon": {
+      "en": "Amazon",
+      "es": "Amazonia",
+      "de": "Amazonas",
+      "it": "Amazzonia",
+      "zh": "亚马逊流域",
+      "pt": "Amazônia"
+    },
+    "RealWorldChina": {
+      "en": "China",
+      "es": "China",
+      "de": "China",
+      "it": "Cina",
+      "zh": "华夏",
+      "pt": "China"
+    },
+    "RealWorldHornOfAfrica": {
+      "en": "Horn of Africa",
+      "es": "Cuerno de África",
+      "de": "Horn von Afrika",
+      "it": "Corno d'Africa",
+      "zh": "非洲之角",
+      "pt": "Chifre da África"
+    },
+    "RealWorldIndia": {
+      "en": "India",
+      "es": "India",
+      "de": "Indien",
+      "it": "India",
+      "zh": "印度",
+      "pt": "Índia"
+    },
+    "RealWorldMadagascar": {
+      "en": "Madagascar",
+      "es": "Madagascar",
+      "de": "Madagaskar",
+      "it": "Madagascar",
+      "zh": "马达加斯加岛",
+      "pt": "Madagáscar"
+    },
+    "RealWorldWestAfrica": {
+      "en": "West Africa",
+      "es": "África Occidental",
+      "de": "Westafrika",
+      "it": "Africa Occidentale",
+      "zh": "西非",
+      "pt": "África Ocidental"
+    },
+    "RealWorldBohemia": {
+      "en": "Bohemia",
+      "es": "Bohemia",
+      "de": "Böhmen",
+      "it": "Boemia",
+      "zh": "波希米亚",
+      "pt": "Boêmia"
+    },
+    "RealWorldEarth": {
+      "en": "Earth",
+      "es": "La Tierra",
+      "de": "Erde",
+      "it": "Terra",
+      "zh": "世界",
+      "pt": "Terra"
+    },
+    "SpecialMapCanyons": {
+      "en": "Canyons",
+      "es": "Cañones",
+      "de": "Schluchten",
+      "it": "Canyons",
+      "zh": "大峡谷",
+      "pt": "Cânions"
+    },
+    "SpecialMapArchipelago": {
+      "en": "Enemy Archipelago",
+      "es": "Archirrivales de archipiélago",
+      "de": "Gegner-Archipel",
+      "it": "Arcipelago dei Nemici",
+      "zh": "敌对群岛",
+      "pt": "Arquipélago Inimigo"
+    },
+    "SpecialMapEnemyIslands": {
+      "en": "Enemy Islands",
+      "es": "Rivales intraisleños",
+      "de": "Gegner-Inseln",
+      "it": "Isole dei Nemici",
+      "zh": "敌对大岛",
+      "pt": "Ilhas Inimigas"
+    },
+    "SpecialMapFarOut": {
+      "en": "Far Out",
+      "es": "Apartados",
+      "de": "Weit weg",
+      "it": "Estremo",
+      "zh": "塞外",
+      "pt": "Distante"
+    },
+    "SpecialMapFrontLine": {
+      "en": "Front Line",
+      "es": "Frente de batalla",
+      "de": "Frontlinie",
+      "it": "Prima Linea",
+      "zh": "前线",
+      "pt": "Linha de Frente"
+    },
+    "SpecialMapInnerCircle": {
+      "en": "Inner Circle",
+      "es": "Círculo interno",
+      "de": "Innerer Kreis",
+      "it": "Circolo Interno",
+      "zh": "内圈",
+      "pt": "Círculo Interior"
+    },
+    "SpecialMapMotherland": {
+      "en": "Motherland",
+      "es": "Cuna de la humanidad",
+      "de": "Mutterland",
+      "it": "Madrepatria",
+      "zh": "故土",
+      "pt": "Terra-mãe"
+    },
+    "SpecialMapOpenPlains": {
+      "en": "Open Plains",
+      "es": "Planicie",
+      "de": "Offene Ebenen",
+      "it": "Pianure Aperte",
+      "zh": "开阔草原",
+      "pt": "Planícies Abertas"
+    },
+    "SpecialMapRingOfWater": {
+      "en": "Ring of Water",
+      "es": "Anillo de agua",
+      "de": "Ring aus Wasser",
+      "it": "Anello d'Acqua",
+      "zh": "水环",
+      "pt": "Anel d'Água"
+    },
+    "SpecialMapSnakePit": {
+      "en": "Snakepit",
+      "es": "Pozo de serpientes",
+      "de": "Schlangengrube",
+      "it": "Fossa di serpi",
+      "zh": "羊肠小道",
+      "pt": "Ninho de Cobras"
+    },
+    "SpecialMapTheEye": {
+      "en": "The Eye",
+      "es": "El ojo",
+      "de": "Das Auge",
+      "it": "L'Occhio",
+      "zh": "眼睛",
+      "pt": "O Olho"
+    },
+    "RealWorldAustralia": {
+      "en": "Australia",
+      "es": "Australia",
+      "de": "Australien",
+      "it": "Australia",
+      "zh": "澳洲",
+      "pt": "Austrália"
+    },
+    "RealWorldIndochina": {
+      "en": "Indochina",
+      "es": "Indochina",
+      "de": "Indochina",
+      "it": "Indocina",
+      "zh": "中南半岛",
+      "pt": "Indochina"
+    },
+    "RealWorldIndonesia": {
+      "en": "Indonesia",
+      "es": "Indonesia",
+      "de": "Indonesien",
+      "it": "Indonesia",
+      "zh": "印度尼西亚",
+      "pt": "Indonésia"
+    },
+    "RealWorldMalacca": {
+      "en": "Strait of Malacca",
+      "es": "Estrecho de Malaca",
+      "de": "Straße von Malakka",
+      "it": "Stretto Malacca",
+      "zh": "马六甲海峡",
+      "pt": "Estreito de Malaca"
+    },
+    "RealWorldPhilippines": {
+      "en": "Philippines",
+      "es": "Filipinas",
+      "de": "Philippinen",
+      "it": "Filippine",
+      "zh": "菲律宾",
+      "pt": "Filipinas"
+    },
+    "BogIslands": {
+      "en": "Bog Islands",
+      "es": "Islas pantanosas",
+      "de": "Sumpfinseln",
+      "it": "Isole paludose",
+      "zh": "禁闭岛",
+      "pt": "Ilhas de Pântano"
+    },
+    "MangroveJungle": {
+      "en": "Mangrove Jungle",
+      "es": "Manglar",
+      "de": "Mangrovendschungel",
+      "it": "Giungla di mangrovie",
+      "zh": "红树林",
+      "pt": "Manguezal"
+    },
+    "PacificIslands": {
+      "en": "Pacific Islands",
+      "es": "Islas del Pacífico",
+      "de": "Pazifische Inseln",
+      "it": "Isole del Pacifico",
+      "zh": "太平洋岛屿",
+      "pt": "Ilhas do Pacífico"
+    },
+    "Sandbank": {
+      "en": "Sandbank",
+      "es": "Istmo de arena",
+      "de": "Sandbank",
+      "it": "Banchi di sabbia",
+      "zh": "沙坝",
+      "pt": "Barra"
+    },
+    "WaterNomad": {
+      "en": "Water Nomad",
+      "es": "Nómadas marítimos",
+      "de": "Wassernomade",
+      "it": "Nomadi marittimi",
+      "zh": "水上游牧",
+      "pt": "Nômade de Água"
+    },
+    "SpecialMapJungleIslands": {
+      "en": "Jungle Islands",
+      "es": "Islas silvanas",
+      "de": "Dschungelinseln",
+      "it": "Isole selvagge",
+      "zh": "丛林岛屿",
+      "pt": "Ilhas de Selva"
+    },
+    "SpecialMapHolyLine": {
+      "en": "Holy Line",
+      "es": "Franja sagrada",
+      "de": "Heilige Linie",
+      "it": "Confine sacro",
+      "zh": "圣界",
+      "pt": "Linha Sagrada"
+    },
+    "SpecialMapBorderStones": {
+      "en": "Border Stones",
+      "es": "Fronteras de piedra",
+      "de": "Grenzsteine",
+      "it": "Confini di pietra",
+      "zh": "石界",
+      "pt": "Fronteira de Pedra"
+    },
+    "SpecialMapYinYang": {
+      "en": "Yin Yang",
+      "es": "Yin-yang",
+      "de": "Yin und Yang",
+      "it": "Yin Yang",
+      "zh": "阴阳",
+      "pt": "Yin-Yang"
+    },
+    "SpecialMapJungleLanes": {
+      "en": "Jungle Lanes",
+      "es": "Rutas selváticas",
+      "de": "Dschungelwege",
+      "it": "Sentieri selvaggi",
+      "zh": "丛林小道",
+      "pt": "Travessias Silvestres"
+    },
+    "AlpineLakes": {
+      "en": "Alpine Lakes",
+      "es": "Lagos alpinos",
+      "de": "Alpenseen",
+      "it": "Laghi alpini",
+      "zh": "高山湖泊",
+      "pt": "Lagos Alpinos"
+    },
+    "Bogland": {
+      "en": "Bogland",
+      "es": "Ciénaga",
+      "de": "Moorland",
+      "it": "Torbiera",
+      "zh": "沼泽",
+      "pt": "Brejo"
+    },
+    "MountainRidge": {
+      "en": "Mountain Ridge",
+      "es": "Crestas montañosas",
+      "de": "Gebirgszug",
+      "it": "Catena montuosa",
+      "zh": "山脊",
+      "pt": "Cordilheira"
+    },
+    "Ravines": {
+      "en": "Ravines",
+      "es": "Cañadas",
+      "de": "Klamm",
+      "it": "Gravine",
+      "zh": "山涧",
+      "pt": "Ravinas"
+    },
+    "WolfHill": {
+      "en": "Wolf Hill",
+      "es": "Colina del lobo",
+      "de": "Wolfshügel",
+      "it": "La collina del lupo",
+      "zh": "狼山",
+      "pt": "Langshan"
+    },
+    "SwirlingRiverSpecial": {
+      "en": "Swirling River",
+      "es": "Río arremolinado",
+      "de": "Gewundener Fluss",
+      "it": "Fiume impetuoso",
+      "zh": "旋涡河",
+      "pt": "Rio Sinuoso"
+    },
+    "TwinForestsSpecial": {
+      "en": "Twin Forests",
+      "es": "Bosques gemelos",
+      "de": "Zwillingswälder",
+      "it": "Foreste gemelle",
+      "zh": "双子森林",
+      "pt": "Florestas Gêmeas"
+    },
+    "JourneySouthSpecial": {
+      "en": "Journey South",
+      "es": "Travesía al sur",
+      "de": "Die Reise nach Süden",
+      "it": "Viaggio a sud",
+      "zh": "南方之旅",
+      "pt": "Jornada ao Sul"
+    },
+    "SnakeForestSpecial": {
+      "en": "Snake Forest",
+      "es": "Bosque de serpientes",
+      "de": "Schlangenwald",
+      "it": "Foresta dei serpenti",
+      "zh": "蛇行森林",
+      "pt": "Floresta da Serpente"
+    },
+    "SprawlingStreamsSpecial": {
+      "en": "Sprawling Streams",
+      "es": "Corrientes brotantes",
+      "de": "Flusslandschaft",
+      "it": "Ruscelli floridi",
+      "zh": "源远之流",
+      "pt": "Córregos Numerosos"
+    },
+    "RealWorldAntarctica": {
+      "en": "Antarctica",
+      "es": "Antártida",
+      "de": "Antarktis",
+      "it": "Antartide",
+      "zh": "南极",
+      "pt": "Antártida"
+    },
+    "RealWorldAralSea": {
+      "en": "Aral Sea",
+      "es": "Mar de Aral",
+      "de": "Aralsee",
+      "it": "Lago d'Aral",
+      "zh": "咸海",
+      "pt": "Mar de Aral"
+    },
+    "RealWorldBlackSea": {
+      "en": "Black Sea",
+      "es": "Mar Negro",
+      "de": "Schwarzes Meer",
+      "it": "Mar Nero",
+      "zh": "黑海",
+      "pt": "Mar Negro"
+    },
+    "RealWorldCaucasus": {
+      "en": "Caucasus",
+      "es": "Cáucaso",
+      "de": "Kaukasus",
+      "it": "Caucaso",
+      "zh": "高加索",
+      "pt": "Cáucaso"
+    },
+    "RealWorldSiberia": {
+      "en": "Siberia",
+      "es": "Siberia",
+      "de": "Sibirien",
+      "it": "Siberia",
+      "zh": "西伯利亚",
+      "pt": "Sibéria"
+    },
+    "GoldenSwamp": {
+      "en": "Golden Swamp",
+      "es": "Pantano Dorado",
+      "de": "Goldener Sumpf",
+      "it": "Palude dorata",
+      "zh": "金沼泽",
+      "pt": "Pântano Dourado"
+    },
+    "FourLakes": {
+      "en": "Four Lakes",
+      "es": "Cuatro Lagos",
+      "de": "Vier Seen",
+      "it": "Quattro laghi",
+      "zh": "四片湖泊",
+      "pt": "Quatro Lagos"
+    },
+    "LandNomad": {
+      "en": "Land Nomad",
+      "es": "Nómadas de tierra",
+      "de": "Landnomade",
+      "it": "Nomade di terra",
+      "zh": "陆地游牧",
+      "pt": "Nômade de Terra"
+    },
+    "BattleOnTheIce": {
+      "en": "BR Battle On Ice",
+      "es": "CT sobre hielo",
+      "de": "BR Eisige Schlacht",
+      "it": "BR Battaglia sul ghiaccio",
+      "zh": "大逃杀冰上战斗",
+      "pt": "Batalha no Gelo (BR)"
+    },
+    "ElDorado": {
+      "en": "BR El Dorado",
+      "es": "El Dorado BC",
+      "de": "BR El Dorado",
+      "it": "BR El Dorado",
+      "zh": "大逃杀黄金国",
+      "pt": "El Dorado (BR)"
+    },
+    "FallOfAxum": {
+      "en": "BR Fall of Axum",
+      "es": "La caída de Aksum BC",
+      "de": "BR Der Fall Aksums",
+      "it": "BR Caduta di Aksum",
+      "zh": "大逃杀阿克苏姆的衰落",
+      "pt": "Queda de Axum (BR)"
+    },
+    "FallOfRome": {
+      "en": "BR Fall of Rome",
+      "es": "La caída de Roma BC",
+      "de": "BR Der Niedergang Roms",
+      "it": "BR Caduta di Roma",
+      "zh": "大逃杀罗马的衰落",
+      "pt": "A queda de Roma"
+    },
+    "TheMajapahitEmpire": {
+      "en": "BR Majapahit Empire",
+      "es": "Imperio mayapahit BC",
+      "de": "BR Das Reich der Majapahit",
+      "it": "BR Impero majapahit",
+      "zh": "大逃杀满者伯夷帝国",
+      "pt": "Império Majapahit (BR)"
+    },
+    "AmazonTunnel": {
+      "en": "Amazon Tunnel",
+      "es": "Túnel del Amazonas",
+      "de": "Amazonas-Tunnel",
+      "it": "Tunnel nell'Amazzonia",
+      "zh": "亚马逊隧道",
+      "pt": "Passagem da Amazônia"
+    },
+    "CoastalForest": {
+      "en": "Coastal Forest",
+      "es": "Bosque costero",
+      "de": "Küstenwald",
+      "it": "Foresta costiera",
+      "zh": "沿海森林",
+      "pt": "Floresta Costeira"
+    },
+    "AfricanClearing": {
+      "en": "African Clearing",
+      "es": "Claro africano",
+      "de": "Afrikalichtung",
+      "it": "Rad. africana",
+      "zh": "非洲林中空地",
+      "pt": "Clareira Africana"
+    },
+    "Atacama": {
+      "en": "Atacama",
+      "es": "Atacama",
+      "de": "Atacama-Wüste",
+      "it": "Atacama",
+      "zh": "阿塔卡马",
+      "pt": "Atacama"
+    },
+    "SeizeTheMountain": {
+      "en": "Seize The Mountain",
+      "es": "Apodérate de la montaña",
+      "de": "Den Berg einnehmen",
+      "it": "Conquista la montagna",
+      "zh": "攻占山头",
+      "pt": "Ocupar a Montanha"
+    },
+    "Crater": {
+      "en": "Crater",
+      "es": "Cráter",
+      "de": "Krater",
+      "it": "Cratere",
+      "zh": "弹坑",
+      "pt": "Cratera"
+    },
+    "Crossroads": {
+      "en": "Crossroads",
+      "es": "Encrucijada",
+      "de": "Kreuzung",
+      "it": "Crocevia",
+      "zh": "十字路口",
+      "pt": "Encruzilhadas"
+    },
+    "Michi": {
+      "en": "Michi",
+      "es": "Michi",
+      "de": "Michi",
+      "it": "Michi",
+      "zh": "开道",
+      "pt": "Michi"
+    },
+    "VolcanicIsland": {
+      "en": "Volcanic Island",
+      "es": "Isla volcánica",
+      "de": "Vulkanische Insel",
+      "it": "Isola vulcanica",
+      "zh": "火山岛",
+      "pt": "Ilha Vulcânica"
+    },
+    "Acclivity": {
+      "en": "Acclivity",
+      "es": "Cuesta",
+      "de": "Hang",
+      "it": "Pendio",
+      "zh": "上坡",
+      "pt": "Encosta"
+    },
+    "Eruption": {
+      "en": "Eruption",
+      "es": "Erupción",
+      "de": "Ausbruch",
+      "it": "Eruzione",
+      "zh": "火山喷发",
+      "pt": "Erupção"
+    },
+    "FrigidLake": {
+      "en": "Frigid Lake",
+      "es": "Lago gélido",
+      "de": "Eisiger See",
+      "it": "Lago gelido",
+      "zh": "酷寒之湖",
+      "pt": "Lago Gélido"
+    },
+    "Greenland": {
+      "en": "Greenland",
+      "es": "Groenlandia",
+      "de": "Grönland",
+      "it": "Groenlandia",
+      "zh": "格陵兰",
+      "pt": "Terreno Verde"
+    },
+    "Lowland": {
+      "en": "Lowland",
+      "es": "Tierras bajas",
+      "de": "Tiefland",
+      "it": "Bassopiano",
+      "zh": "低地",
+      "pt": "Terras Baixas"
+    },
+    "Marketplace": {
+      "en": "Marketplace",
+      "es": "Mercado",
+      "de": "Marktplatz",
+      "it": "Mercato",
+      "zh": "市场",
+      "pt": "Mercado"
+    },
+    "Meadow": {
+      "en": "Meadow",
+      "es": "Pradera",
+      "de": "Wiese",
+      "it": "Prato",
+      "zh": "草地",
+      "pt": "Prado"
+    },
+    "MountainRange": {
+      "en": "Mountain Range",
+      "es": "Cordillera",
+      "de": "Berggrat",
+      "it": "Catena montuosa",
+      "zh": "山脉",
+      "pt": "Cordilheira"
+    },
+    "NorthernIsles": {
+      "en": "Northern Isles",
+      "es": "Islas del Norte",
+      "de": "Nordinseln",
+      "it": "Isole settentrionali",
+      "zh": "北方群岛",
+      "pt": "Ilhas do Norte"
+    },
+    "RingFortress": {
+      "en": "Ring Fortress",
+      "es": "Fortaleza del anillo",
+      "de": "Wikingerburg",
+      "it": "Trelleborg",
+      "zh": "环形要塞",
+      "pt": "Fortaleza do Anel"
+    },
+    "Runestones": {
+      "en": "Runestones",
+      "es": "Piedras rúnicas",
+      "de": "Runensteine",
+      "it": "Pietre runiche",
+      "zh": "符文石群",
+      "pt": "Pedras Rúnicas"
+    },
+    "Aftermath": {
+      "en": "Aftermath",
+      "es": "Resultados",
+      "de": "Aus der Asche",
+      "it": "Conseguenze",
+      "zh": "余波荡漾",
+      "pt": "Resquícios"
+    },
+    "Enclosed": {
+      "en": "Enclosed",
+      "es": "Encerrado",
+      "de": "Umschlossen",
+      "it": "Circondati",
+      "zh": "与世隔绝",
+      "pt": "Reclusão"
+    },
+    "Haboob": {
+      "en": "Haboob",
+      "es": "Haboob",
+      "de": "Habub",
+      "it": "Haboob",
+      "zh": "哈布风暴",
+      "pt": "Haboob"
+    },
+    "Kawasan": {
+      "en": "Kawasan",
+      "es": "Kawasan",
+      "de": "Kawasan",
+      "it": "Kawasan",
+      "zh": "卡瓦森",
+      "pt": "Kawasan"
+    },
+    "LandMadness": {
+      "en": "Land Madness",
+      "es": "Locura de la tierra",
+      "de": "Landwahn",
+      "it": "Follia terrestre",
+      "zh": "癫狂之地",
+      "pt": "Terra Insana"
+    },
+    "SacredSprings": {
+      "en": "Sacred Springs",
+      "es": "Manantiales Sagrados",
+      "de": "Heilige Quellen",
+      "it": "Sorgenti sacre",
+      "zh": "圣泉",
+      "pt": "Fontes Sagradas"
+    },
+    "Wade": {
+      "en": "Wade",
+      "es": "Wade",
+      "de": "Marsch",
+      "it": "Guadi",
+      "zh": "浅滩",
+      "pt": "Terreno Tortuoso"
+    },
+    "Morass": {
+      "en": "Morass",
+      "es": "Pantano",
+      "de": "Morast",
+      "it": "Acquitrino",
+      "zh": "沼泽",
+      "pt": "Pântano"
+    },
+    "Shoals": {
+      "en": "Shoals",
+      "es": "Cardúmenes",
+      "de": "Untiefen",
+      "it": "Secche",
+      "zh": "浅滩",
+      "pt": "Cardumes"
+    },
+    "Cliffbound": {
+      "en": "Cliffbound",
+      "es": "Acantilados",
+      "de": "Felsengebunden",
+      "it": "Scogliere",
+      "zh": "紧邻悬崖",
+      "pt": "Cadeia de Penhascos"
+    },
+    "Isthmus": {
+      "en": "Isthmus",
+      "es": "Istmo",
+      "de": "Landenge",
+      "it": "Istmo",
+      "zh": "地峡",
+      "pt": "Istmo"
+    },
+    "Dunesprings": {
+      "en": "Dunesprings",
+      "es": "Dunas y manantiales",
+      "de": "Dünenquellen",
+      "it": "Sorgenti tra le dune",
+      "zh": "沙丘泉",
+      "pt": "Nascentes da Duna"
+    },
+    "GoldenStream": {
+      "en": "Golden Stream",
+      "es": "Arroyo dorado",
+      "de": "Goldener Strom",
+      "it": "Fiume d'oro",
+      "zh": "金色溪流",
+      "pt": "Corrente Dourada"
+    },
+    "MountainDunes": {
+      "en": "Mountain Dunes",
+      "es": "Dunas de montaña",
+      "de": "Bergdünen",
+      "it": "Dune collinari",
+      "zh": "山地沙丘",
+      "pt": "Dunas da Montanha"
+    },
+    "RiverDivide": {
+      "en": "River Divide",
+      "es": "Bifurcación de río",
+      "de": "Wasserscheide",
+      "it": "Territorio fluviale",
+      "zh": "河流分叉口",
+      "pt": "Entrerrios"
+    },
+    "Sandrift": {
+      "en": "Sandrift",
+      "es": "Montículo de arena",
+      "de": "Sandtreiben",
+      "it": "Cumuli di sabbia",
+      "zh": "流沙",
+      "pt": "Deriva Arenosa"
+    },
+    "Shrubland": {
+      "en": "Shrubland",
+      "es": "Matorral",
+      "de": "Strauchland",
+      "it": "Terra di arbusti",
+      "zh": "灌木丛",
+      "pt": "Matagal"
+    },
+    "Passage": {
+      "en": "The Passage",
+      "es": "El pasaje",
+      "de": "Die Passage",
+      "it": "Il passaggio",
+      "zh": "走廊",
+      "pt": "A Passagem"
+    },
+    "HollowWoodlands": {
+      "en": "Hollow Woodlands",
+      "es": "Bosque hueco",
+      "de": "Hohle Wälder",
+      "it": "Foresta isolata",
+      "zh": "山谷林地",
+      "pt": "Bosques Ocos"
+    },
+    "Karsts": {
+      "en": "Karsts",
+      "es": "Karsts",
+      "de": "Karst",
+      "it": "Carso",
+      "zh": "喀斯特地貌",
+      "pt": "Carstes"
+    },
+    "Glade": {
+      "en": "Glade",
+      "es": "Claro",
+      "de": "Lichtung",
+      "it": "Radura",
+      "zh": "林间空地",
+      "pt": "Clareira"
+    },
+    "BorderDispute": {
+      "en": "Border Dispute",
+      "es": "Conflicto fronterizo",
+      "de": "Grenzkonflikt",
+      "it": "Disputa territoriale",
+      "zh": "边境纷争",
+      "pt": "Disputa de Fronteira"
+    }
+  }
+}
