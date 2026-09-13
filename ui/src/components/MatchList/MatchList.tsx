@@ -33,6 +33,15 @@ interface MatchListProps {
   onLoadMore?: () => void;
 }
 
+/**
+ * Splits a date for the illuminated drop cap. Locales whose date cannot lead
+ * with a letter (Chinese) render whole, with no cap, rather than enlarging a
+ * digit and splitting the number.
+ */
+function dropCap(text: string): { cap: string; rest: string } {
+  return /^\p{L}/u.test(text) ? { cap: text.charAt(0), rest: text.slice(1) } : { cap: '', rest: text };
+}
+
 export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId, hasMore, isLoadingMore, onLoadMore }: MatchListProps) {
   const { t } = useTranslation();
   const layout = useLayoutConfig();
@@ -217,9 +226,9 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               {/* Mobile */}
                               <HStack gap={1} alignItems="baseline" display={{ base: "flex", md: "none" }}>
                                 <Text fontSize="28px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif">
-                                  {timingData.dateDisplay.charAt(0)}
+                                  {dropCap(timingData.dateDisplay).cap}
                                 </Text>
-                                <Text fontWeight="bold" color="brand.inkDark" fontSize="sm" fontFamily="'Lora', serif">{timingData.dateDisplay.slice(1)}</Text>
+                                <Text fontWeight="bold" color="brand.inkDark" fontSize="sm" fontFamily="'Lora', serif">{dropCap(timingData.dateDisplay).rest}</Text>
                                 {timingData.isCrossDay && (
                                   <svg width="14" height="14" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />
@@ -236,9 +245,9 @@ export function MatchList({ matchGroups, openDates, onOpenDatesChange, profileId
                               {/* Desktop */}
                               <HStack gap={1} alignItems="baseline" display={{ base: "none", md: "flex" }}>
                                 <Text fontSize="44px" color="brand.redChalk" fontWeight={700} lineHeight="0.85" fontFamily="'Lora', serif">
-                                  {timingData.dateDisplay.charAt(0)}
+                                  {dropCap(timingData.dateDisplay).cap}
                                 </Text>
-                                <Text fontWeight="bold" color="brand.inkDark" fontSize="md" fontFamily="'Lora', serif">{timingData.dateDisplay.slice(1)}</Text>
+                                <Text fontWeight="bold" color="brand.inkDark" fontSize="md" fontFamily="'Lora', serif">{dropCap(timingData.dateDisplay).rest}</Text>
                                 {timingData.isCrossDay && (
                                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ opacity: 0.45, flexShrink: 0 }}>
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.1 0-2.15-.22-3.1-.62A8.996 8.996 0 0 0 15 12a8.996 8.996 0 0 0-6.1-7.38c.95-.4 2-.62 3.1-.62 4.42 0 8 3.58 8 8s-3.58 8-8 8z" fill={moonColor} />

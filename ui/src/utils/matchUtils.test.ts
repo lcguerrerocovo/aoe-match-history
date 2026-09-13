@@ -470,3 +470,28 @@ describe('locale-aware formatting', () => {
     expect(formatDayDate('2023-06-20', 'de')).toMatch(/Di|Dienstag/);
   });
 }); 
+describe('month-first session dates', () => {
+  const session = '2026-08-23T14:00:00Z_2026-08-23T16:30:00Z';
+
+  it.each([
+    ['en', /^Aug/],
+    ['es', /^Ago/],
+    ['de', /^Aug/],
+    ['it', /^Ago/],
+    ['pt', /^Ago/],
+  ])('starts the %s date with the localized month name', (locale, expected) => {
+    // The session header drop-caps the first character, so it must be a letter.
+    const { dateDisplay } = formatSessionTimingData(session, 7200, 5, locale);
+    expect(dateDisplay).toMatch(expected);
+    // Drop cap needs an uppercase letter, not a digit or a lowercase one.
+    expect(dateDisplay[0]).toMatch(/\p{Lu}/u);
+  });
+
+  it('keeps the day and year in every locale', () => {
+    for (const locale of ['en', 'es', 'de', 'it', 'pt']) {
+      const { dateDisplay } = formatSessionTimingData(session, 7200, 5, locale);
+      expect(dateDisplay).toContain('23');
+      expect(dateDisplay).toContain('2026');
+    }
+  });
+});

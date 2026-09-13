@@ -109,6 +109,43 @@ export function formatDuration(seconds: number): string {
   }
 }
 
+/**
+ * Date as "<month> <day>, <year>" in every locale, with the month name itself
+ * localized (Aug. / ago / ago / 8月).
+ *
+ * Most locales write the day first, but the session header renders the first
+ * character as an illuminated drop cap, which only works when that character is
+ * a letter. Day-first order puts a digit there and splits the day number in
+ * half. Forcing month-first keeps the drop cap intact everywhere — a deliberate
+ * trade of idiomatic word order for the manuscript styling.
+ */
+export function formatMonthFirstDate(date: Date, locale: string = getLocale()): string {
+  const parts = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).formatToParts(date);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value;
+
+  const month = get('month');
+  const day = get('day');
+  const year = get('year');
+
+  // Locales we cannot decompose, and those whose month is numeric rather than a
+  // name (Chinese writes 8月), keep their own ordering: there is no letter to
+  // lead with, so reordering would only mangle the date.
+  if (!month || !day || !year || !/\p{L}/u.test(month)) {
+    return date.toLocaleString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  // Spanish, Italian and Portuguese do not capitalize month names ("ago"), but
+  // this sits at the head of a session and is drop-capped, so the first letter
+  // is capitalized the way any heading's would be.
+  const capitalized = month.charAt(0).toLocaleUpperCase(locale) + month.slice(1);
+  return `${capitalized} ${day}, ${year}`;
+}
+
 export function formatDateTime(dt: string, locale: string = getLocale()): string {
   // Parse UTC timestamp and convert to local time
   const d = new Date(dt);
@@ -176,11 +213,7 @@ export function formatSessionTimingData(sessionId: string, timePlayedSec: number
     const isCrossDay = startDate.getDate() !== endDate.getDate();
 
     // Date formatting — always use start date (cross-day is indicated by moon icon)
-    const dateFormatted = startDate.toLocaleString(locale, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    const dateFormatted = formatMonthFirstDate(startDate, locale);
 
     // formatRange collapses a shared AM/PM, and uses a 24-hour clock where the
     // locale expects one, without any manual period arithmetic.
